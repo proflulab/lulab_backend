@@ -1,0 +1,61 @@
+// 产品分类枚举
+enum ProductCategory {
+    COURSE // 课程
+    MEMBERSHIP // 会员
+    CONSULTATION // 咨询
+    MATERIAL // 资料
+    OTHER // 其他
+}
+
+// 产品状态枚举
+enum ProductStatus {
+    ACTIVE // 上架
+    INACTIVE // 下架
+    DRAFT // 草稿
+    ARCHIVED // 已归档
+}
+
+// 产品表
+model Product {
+    id               String          @id @default(cuid()) // 内部主键
+    productCode      String          @unique // 产品编号
+    name             String // 产品名称
+    description      String? // 产品描述
+    shortDescription String? // 简短描述
+    category         ProductCategory // 产品分类
+    status           ProductStatus   @default(DRAFT) // 产品状态
+    price            Int? // 价格（分为单位）
+    originalPrice    Int? // 原价（分为单位）
+    currency         Currency        @default(CNY) // 币种
+    durationDays     Int? // 有效期天数
+    maxUsers         Int? // 最大用户数限制
+    tags             String[] // 标签数组
+    imageUrl         String? // 产品图片
+    videoUrl         String? // 产品视频
+    downloadUrl      String? // 下载链接
+    externalUrl      String? // 外部链接
+    sortOrder        Int             @default(0) // 排序权重
+    isRecommended    Boolean         @default(false) // 是否推荐
+    isFeatured       Boolean         @default(false) // 是否精选
+    salesCount       Int             @default(0) // 销售数量
+    viewCount        Int             @default(0) // 浏览次数
+    rating           Decimal?        @db.Decimal(3, 2) // 评分 (0-5)
+    reviewCount      Int             @default(0) // 评价数量
+    createdBy        String? // 创建人（系统用户ID）
+    updatedBy        String? // 更新人（系统用户ID）
+    publishedAt      DateTime? // 发布时间
+    archivedAt       DateTime? // 归档时间
+
+    // 关联关系
+    creator User?   @relation("ProductCreator", fields: [createdBy], references: [id])
+    updater User?   @relation("ProductUpdater", fields: [updatedBy], references: [id])
+    orders  Order[] // 产品的订单记录
+
+    createdAt DateTime @default(now()) // 创建时间
+    updatedAt DateTime @updatedAt // 更新时间
+
+    @@index([category])
+    @@index([status])
+    @@index([createdAt])
+    @@index([publishedAt])
+}
