@@ -4,13 +4,13 @@ import { SendEmailDto } from '../dto/send-email.dto';
 
 @Controller('email')
 export class EmailController {
-  constructor(private readonly emailService: EmailService) {}
+  constructor(private readonly emailService: EmailService) { }
 
   @Post('send')
   async sendEmail(@Body() sendEmailDto: SendEmailDto) {
     try {
       const result = await this.emailService.sendEmail(sendEmailDto);
-      
+
       if (result.success) {
         return {
           statusCode: HttpStatus.OK,
@@ -45,7 +45,7 @@ export class EmailController {
   async verifyConnection() {
     try {
       const isConnected = await this.emailService.verifyConnection();
-      
+
       return {
         statusCode: HttpStatus.OK,
         message: isConnected ? 'SMTP连接正常' : 'SMTP连接失败',
