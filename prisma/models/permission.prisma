@@ -1,0 +1,60 @@
+// 权限表
+model Permission {
+  id          String         @id @default(cuid())
+  name        String // 权限名称
+  code        String         @unique // 权限编码
+  description String? // 权限描述
+  resource    String // 资源标识
+  action      String // 操作类型
+  type        PermissionType @default(MENU) // 权限类型
+  parentId    String? // 父权限ID
+  level       Int            @default(1) // 权限层级
+  sortOrder   Int            @default(0) // 排序
+  active      Boolean        @default(true) // 是否启用
+
+  // 自关联
+  parent   Permission?  @relation("PermissionHierarchy", fields: [parentId], references: [id])
+  children Permission[] @relation("PermissionHierarchy")
+
+  // 关联关系
+  roles RolePermission[]
+  users UserPermission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([code])
+  @@index([resource])
+  @@index([type])
+  @@index([parentId])
+}
+
+// 权限类型枚举
+enum PermissionType {
+  MENU // 菜单权限
+  BUTTON // 按钮权限
+  API // 接口权限
+  DATA // 数据权限
+  FIELD // 字段权限
+}
+
+// 数据权限规则表
+model DataPermissionRule {
+  id          String  @id @default(cuid())
+  name        String // 规则名称
+  code        String  @unique // 规则编码
+  description String? // 规则描述
+  resource    String // 资源标识
+  condition   String // 权限条件（JSON格式）
+  active      Boolean @default(true) // 是否启用
+
+  // 关联关系
+  roles RoleDataPermission[]
+  users UserDataPermission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([code])
+  @@index([resource])
+}

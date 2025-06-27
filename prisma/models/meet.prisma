@@ -1,0 +1,159 @@
+// 会议平台枚举
+enum MeetingPlatform {
+    TENCENT_MEETING // 腾讯会议
+    ZOOM // Zoom
+    TEAMS // Microsoft Teams
+    DINGTALK // 钉钉
+    FEISHU // 飞书
+    WEBEX // Cisco Webex
+    VOOV // 腾讯会议国际版
+    OTHER // 其他平台
+}
+
+// 会议类型枚举
+enum MeetingType {
+    ONE_TIME // 一次性会议
+    RECURRING // 周期性会议
+    INSTANT // 即时会议
+    SCHEDULED // 预定会议
+    WEBINAR // 网络研讨会
+}
+
+// 文件类型枚举
+enum FileType {
+    VIDEO // 视频文件
+    AUDIO // 音频文件
+    TRANSCRIPT // 转录文件
+    SUMMARY // 会议纪要
+    CHAT // 聊天记录
+    SHARED_SCREEN // 共享屏幕录制
+    WHITEBOARD // 白板内容
+    DOCUMENT // 文档
+    OTHER // 其他类型
+}
+
+// 文件存储方式枚举
+enum StorageType {
+    LOCAL // 本地存储
+    OSS // 阿里云OSS
+    COS // 腾讯云COS
+    S3 // AWS S3
+    MINIO // MinIO
+    URL // 外部URL
+}
+
+// 处理状态枚举
+enum ProcessingStatus {
+    PENDING // 待处理
+    PROCESSING // 处理中
+    COMPLETED // 已完成
+    FAILED // 处理失败
+    SKIPPED // 已跳过
+}
+
+// 通用会议记录模型
+model MeetingRecord {
+    id String @id @default(cuid())
+
+    // 平台和来源信息
+    platform            MeetingPlatform // 会议平台
+    platformMeetingId   String // 平台会议ID
+    platformRecordingId String? // 平台录制ID
+    externalId          String? // 外部系统ID
+
+    // 会议基本信息
+    title       String // 会议标题
+    description String? // 会议描述
+    meetingCode String? // 会议号码
+    type        MeetingType @default(SCHEDULED)
+
+    // 主持人和参与者
+    hostUserId       String? // 主持人用户ID
+    hostUserName     String? // 主持人姓名
+    hostEmail        String? // 主持人邮箱
+    participantCount Int? // 参与人数
+    participantList  Json? // 参与者详细列表
+
+    // 时间信息
+    scheduledStartAt DateTime? // 预定开始时间
+    actualStartAt    DateTime? // 实际开始时间
+    endedAt          DateTime? // 结束时间
+    duration         Int? // 持续时长(分钟)
+
+    // 录制和处理状态
+    hasRecording     Boolean          @default(false)
+    recordingStatus  ProcessingStatus @default(PENDING)
+    processingStatus ProcessingStatus @default(PENDING)
+
+    // AI处理结果
+    transcript  String? // 完整转录文本
+    summary     String? // 会议总结
+    keyPoints   Json? // 关键要点
+    actionItems Json? // 行动项
+    decisions   Json? // 决策记录
+
+    // 元数据
+    metadata Json? // 平台特定的元数据
+    tags     String[] // 标签
+
+    // 关联关系
+    files MeetingFile[] // 关联的文件
+
+    // 系统字段
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([platform, platformMeetingId])
+    @@index([platform])
+    @@index([hostUserId])
+    @@index([actualStartAt])
+    @@index([recordingStatus])
+    @@index([processingStatus])
+    @@index([tags])
+    @@map("meeting_records")
+}
+
+// 会议文件模型
+model MeetingFile {
+    id String @id @default(cuid())
+
+    // 关联会议
+    meetingRecordId String
+    meetingRecord   MeetingRecord @relation(fields: [meetingRecordId], references: [id], onDelete: Cascade)
+
+    // 文件基本信息
+    fileName         String // 文件名
+    originalFileName String? // 原始文件名
+    fileType         FileType // 文件类型
+    mimeType         String? // MIME类型
+    fileSize         BigInt? // 文件大小(字节)
+    duration         Int? // 文件时长(秒，适用于音视频)
+
+    // 存储信息
+    storageType StorageType // 存储方式
+    storagePath String? // 存储路径
+    storageUrl  String? // 访问URL
+    downloadUrl String? // 下载链接
+    expiresAt   DateTime? // 链接过期时间
+
+    // 文件内容(适用于文本文件)
+    content     String? // 文件文本内容
+    contentHash String? // 内容哈希值
+
+    // 处理状态
+    processingStatus ProcessingStatus @default(PENDING)
+    errorMessage     String? // 错误信息
+
+    // 元数据
+    metadata Json? // 文件元数据
+
+    // 系统字段
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([meetingRecordId])
+    @@index([fileType])
+    @@index([storageType])
+    @@index([processingStatus])
+    @@map("meeting_files")
+}
