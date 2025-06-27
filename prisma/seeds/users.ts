@@ -2,8 +2,8 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-06-19 21:41:26
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-06-20 16:08:06
- * @FilePath: /lulab_dashboard/prisma/seeds/users.ts
+ * @LastEditTime: 2025-06-27 18:18:56
+ * @FilePath: /lulab_backend/prisma/seeds/users.ts
  * @Description: 用户数据种子模块
  * 
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
@@ -120,7 +120,7 @@ export async function createUsers(prisma: PrismaClient): Promise<CreatedUsers> {
   })
 
   // 创建普通用户
-  const normalUsers = []
+  const normalUsers: User[] = []
   const userProfiles = [
     { name: '张三', firstName: '三', lastName: '张', gender: $Enums.Gender.MALE, city: '北京', bio: '软件工程师，热爱编程' },
     { name: '李四', firstName: '四', lastName: '李', gender: $Enums.Gender.FEMALE, city: '上海', bio: '产品经理，关注用户体验' },

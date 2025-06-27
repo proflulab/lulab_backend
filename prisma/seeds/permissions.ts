@@ -89,7 +89,7 @@ export async function createPermissions(prisma: PrismaClient): Promise<CreatedPe
   ]
 
   // 创建权限
-  const permissions = []
+  const permissions: Permission[] = []
   for (const permissionData of basePermissions) {
     const permission = await prisma.permission.upsert({
       where: { code: permissionData.code },

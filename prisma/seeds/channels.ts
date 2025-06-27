@@ -50,7 +50,7 @@ export async function createChannels(prisma: PrismaClient): Promise<CreatedChann
             }
         ]
 
-        const channels = []
+        const channels: Channel[] = []
         for (const data of channelData) {
             // 先检查是否已存在相同编码的渠道
             const existingChannel = await prisma.channel.findFirst({

@@ -2,12 +2,13 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-06-15 20:26:06
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-06-27 14:26:19
- * @FilePath: /lulab_backend/prisma/prisma/seed.ts
+ * @LastEditTime: 2025-06-27 18:12:13
+ * @FilePath: /lulab_backend/prisma/seed.ts
  * @Description: 数据库种子数据主协调脚本
  * 
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
  */
+
 import { PrismaClient } from '@prisma/client'
 import { createUsers } from './seeds/users'
 import { createPermissions } from './seeds/permissions'

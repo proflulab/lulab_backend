@@ -1,4 +1,15 @@
-import { PrismaClient, ProductCategory, ProductStatus, User, Product } from '@prisma/client'
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-06-22 03:48:43
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-06-22 03:54:51
+ * @FilePath: /lulab_dashboard/prisma/seeds/products.ts
+ * @Description: 
+ * 
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ */
+
+import { PrismaClient, Product, User, ProductCategory, ProductStatus } from '@prisma/client'
 
 export interface CreatedProducts {
     products: Product[]
@@ -6,7 +17,7 @@ export interface CreatedProducts {
 
 export async function createProducts(prisma: PrismaClient, adminUser: User): Promise<CreatedProducts> {
     try {
-        const productList = []
+        const productList: Product[] = []
 
         // 1. Python 课程
         const product1 = await prisma.product.upsert({
