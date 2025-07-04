@@ -2,8 +2,8 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-06-20 21:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-06-20 21:00:00
- * @FilePath: /lulab_dashboard/prisma/seeds/relations.ts
+ * @LastEditTime: 2025-07-04 10:21:48
+ * @FilePath: /lulab_backend/prisma/seeds/relations.ts
  * @Description: 关联表种子数据模块
  * 
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
@@ -92,7 +92,7 @@ export async function createRolePermissionRelations(
 ): Promise<void> {
     // 获取所有权限
     const permissions = await prisma.permission.findMany()
-    
+
     if (permissions.length === 0) {
         console.log('No permissions found, skipping role permission relations')
         return
@@ -116,13 +116,13 @@ export async function createRolePermissionRelations(
     }
 
     // 财务角色分配财务相关权限
-    const financePermissions = permissions.filter(p => 
-        p.code.includes('FINANCE') || 
-        p.code.includes('ORDER') || 
+    const financePermissions = permissions.filter(p =>
+        p.code.includes('FINANCE') ||
+        p.code.includes('ORDER') ||
         p.code.includes('REFUND') ||
         p.code.includes('REPORT')
     )
-    
+
     for (const permission of financePermissions) {
         await prisma.rolePermission.upsert({
             where: {
@@ -140,13 +140,13 @@ export async function createRolePermissionRelations(
     }
 
     // 客服角色分配客服相关权限
-    const customerServicePermissions = permissions.filter(p => 
-        p.code.includes('CUSTOMER') || 
-        p.code.includes('ORDER') || 
+    const customerServicePermissions = permissions.filter(p =>
+        p.code.includes('CUSTOMER') ||
+        p.code.includes('ORDER') ||
         p.code.includes('REFUND') ||
         p.code.includes('USER_READ')
     )
-    
+
     for (const permission of customerServicePermissions) {
         await prisma.rolePermission.upsert({
             where: {
@@ -164,10 +164,10 @@ export async function createRolePermissionRelations(
     }
 
     // 普通用户角色分配基础权限
-    const userPermissions = permissions.filter(p => 
+    const userPermissions = permissions.filter(p =>
         p.code.includes('READ') && !p.code.includes('ADMIN')
     )
-    
+
     for (const permission of userPermissions) {
         await prisma.rolePermission.upsert({
             where: {
@@ -194,7 +194,7 @@ export async function createUserPermissionRelations(
     const permissions = await prisma.permission.findMany({
         take: 3
     })
-    
+
     if (permissions.length === 0) {
         console.log('No permissions found, skipping user permission relations')
         return
@@ -244,7 +244,7 @@ export async function createDataPermissionRelations(
 ): Promise<void> {
     // 获取数据权限规则
     const dataRules = await prisma.dataPermissionRule.findMany()
-    
+
     if (dataRules.length === 0) {
         console.log('No data permission rules found, skipping data permission relations')
         return
@@ -268,12 +268,12 @@ export async function createDataPermissionRelations(
     }
 
     // 为财务角色分配财务相关数据权限
-    const financeRules = dataRules.filter(rule => 
-        rule.resource.includes('finance') || 
+    const financeRules = dataRules.filter(rule =>
+        rule.resource.includes('finance') ||
         rule.resource.includes('order') ||
         rule.resource.includes('refund')
     )
-    
+
     for (const rule of financeRules) {
         await prisma.roleDataPermission.upsert({
             where: {
@@ -317,15 +317,15 @@ export async function createAllRelations(
 ): Promise<void> {
     console.log('Creating user organization relations...')
     await createUserOrganizationRelations(prisma, organizationId, users)
-    
+
     console.log('Creating role permission relations...')
     await createRolePermissionRelations(prisma, users)
-    
+
     console.log('Creating user permission relations...')
     await createUserPermissionRelations(prisma, users)
-    
+
     console.log('Creating data permission relations...')
     await createDataPermissionRelations(prisma, users)
-    
+
     console.log('All relations created successfully!')
 }

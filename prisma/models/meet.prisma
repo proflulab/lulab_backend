@@ -58,6 +58,7 @@ model MeetingRecord {
     // 平台和来源信息
     platform            MeetingPlatform // 会议平台
     platformMeetingId   String // 平台会议ID
+    subMeetingId        String? // 子会议ID，用于区分同一主会议下的不同子会议
     platformRecordingId String? // 平台录制ID
     externalId          String? // 外部系统ID
 
@@ -69,6 +70,7 @@ model MeetingRecord {
 
     // 主持人和参与者
     hostUserId       String? // 主持人用户ID
+    hostUser         User?   @relation("HostedMeetings", fields: [hostUserId], references: [id])
     hostUserName     String? // 主持人姓名
     hostEmail        String? // 主持人邮箱
     participantCount Int? // 参与人数
@@ -86,7 +88,7 @@ model MeetingRecord {
     processingStatus ProcessingStatus @default(PENDING)
 
     // AI处理结果
-    transcript  String? // 完整转录文本
+    transcript  Json? // 完整转录文本
     summary     String? // 会议总结
     keyPoints   Json? // 关键要点
     actionItems Json? // 行动项

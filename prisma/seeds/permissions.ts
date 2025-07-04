@@ -2,8 +2,8 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-06-19 21:41:26
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-06-20 13:28:11
- * @FilePath: /lulab_dashboard/prisma/seeds/permissions.ts
+ * @LastEditTime: 2025-07-04 10:17:13
+ * @FilePath: /lulab_backend/prisma/seeds/permissions.ts
  * @Description: 权限和角色权限分配种子模块
  * 
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 

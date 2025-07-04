@@ -2,8 +2,8 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-06-19 21:41:26
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-06-20 13:30:17
- * @FilePath: /lulab_dashboard/prisma/seeds/departments.ts
+ * @LastEditTime: 2025-07-04 10:22:26
+ * @FilePath: /lulab_backend/prisma/seeds/departments.ts
  * @Description: 部门种子模块
  * 
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 

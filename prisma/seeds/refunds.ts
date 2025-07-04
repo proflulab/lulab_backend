@@ -2,8 +2,8 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-06-20 04:09:42
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-06-20 16:23:20
- * @FilePath: /lulab_dashboard/prisma/seeds/refunds.ts
+ * @LastEditTime: 2025-07-04 10:21:54
+ * @FilePath: /lulab_backend/prisma/seeds/refunds.ts
  * @Description: 退款种子数据
  * 
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
