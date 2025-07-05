@@ -11,11 +11,13 @@ import {
     Logger
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam, ApiHeader, ApiBody } from '@nestjs/swagger';
 import { MeetingService } from './meeting.service';
 import { verifySignature, aesDecrypt } from '../utils/tencent-meeting/crypto';
 import { TencentMeetingEvent } from '../utils/tencent-meeting/types';
-import { MeetingPlatform } from '../../generated/prisma';
+import { MeetingPlatform } from '@prisma/client';
 
+@ApiTags('会议管理')
 @Controller('meeting')
 export class MeetingController {
     private readonly logger = new Logger(MeetingController.name);
@@ -23,12 +25,21 @@ export class MeetingController {
     constructor(
         private meetingService: MeetingService,
         private configService: ConfigService
-    ) {}
+    ) { }
 
     /**
      * 腾讯会议webhook验证端点 (GET)
      * 用于URL有效性验证
      */
+    @ApiOperation({ summary: '腾讯会议webhook验证', description: '用于腾讯会议webhook URL有效性验证' })
+    @ApiQuery({ name: 'check_str', description: '验证字符串', required: true })
+    @ApiHeader({ name: 'timestamp', description: '时间戳', required: true })
+    @ApiHeader({ name: 'nonce', description: '随机数', required: true })
+    @ApiHeader({ name: 'signature', description: '签名', required: true })
+    @ApiResponse({ status: 200, description: '验证成功，返回解密后的明文' })
+    @ApiResponse({ status: 400, description: '缺少必要参数' })
+    @ApiResponse({ status: 403, description: '签名验证失败' })
+    @ApiResponse({ status: 500, description: '服务器内部错误' })
     @Get('tencent/webhook')
     async verifyTencentWebhook(
         @Query('check_str') checkStr: string,
@@ -79,6 +90,27 @@ export class MeetingController {
      * 腾讯会议webhook事件接收端点 (POST)
      * 用于接收事件消息
      */
+    @ApiOperation({ summary: '腾讯会议webhook事件接收', description: '接收腾讯会议的事件回调消息' })
+    @ApiHeader({ name: 'timestamp', description: '时间戳', required: true })
+    @ApiHeader({ name: 'nonce', description: '随机数', required: true })
+    @ApiHeader({ name: 'signature', description: '签名', required: true })
+    @ApiBody({
+        description: '加密的事件数据',
+        schema: {
+            type: 'object',
+            properties: {
+                data: {
+                    type: 'string',
+                    description: '加密的事件数据'
+                }
+            },
+            required: ['data']
+        }
+    })
+    @ApiResponse({ status: 200, description: '事件处理成功' })
+    @ApiResponse({ status: 400, description: '缺少必要参数或数据' })
+    @ApiResponse({ status: 403, description: '签名验证失败' })
+    @ApiResponse({ status: 500, description: '服务器内部错误' })
     @Post('tencent/webhook')
     async handleTencentWebhook(
         @Body() body: { data: string },
@@ -148,6 +180,13 @@ export class MeetingController {
     /**
      * 获取会议记录列表
      */
+    @ApiOperation({ summary: '获取会议记录列表', description: '根据条件查询会议记录列表' })
+    @ApiQuery({ name: 'platform', description: '会议平台', required: false, enum: ['TENCENT_MEETING', 'ZOOM', 'OTHER'] })
+    @ApiQuery({ name: 'startDate', description: '开始日期 (YYYY-MM-DD)', required: false })
+    @ApiQuery({ name: 'endDate', description: '结束日期 (YYYY-MM-DD)', required: false })
+    @ApiQuery({ name: 'page', description: '页码', required: false, type: 'number' })
+    @ApiQuery({ name: 'limit', description: '每页数量', required: false, type: 'number' })
+    @ApiResponse({ status: 200, description: '成功获取会议记录列表' })
     @Get('records')
     async getMeetingRecords(
         @Query('platform') platform?: string,
@@ -180,6 +219,10 @@ export class MeetingController {
     /**
      * 获取会议记录详情
      */
+    @ApiOperation({ summary: '获取会议记录详情', description: '根据ID获取特定会议记录的详细信息' })
+    @ApiParam({ name: 'id', description: '会议记录ID', required: true })
+    @ApiResponse({ status: 200, description: '成功获取会议记录详情' })
+    @ApiResponse({ status: 404, description: '会议记录不存在' })
     @Get('records/:id')
     async getMeetingRecordById(@Param('id') id: string) {
         const record = await this.meetingService.getMeetingRecordById(id);
@@ -192,6 +235,19 @@ export class MeetingController {
     /**
      * 健康检查端点
      */
+    @ApiOperation({ summary: '健康检查', description: '检查会议服务的运行状态' })
+    @ApiResponse({
+        status: 200,
+        description: '服务正常运行',
+        schema: {
+            type: 'object',
+            properties: {
+                status: { type: 'string', example: 'ok' },
+                timestamp: { type: 'string', example: '2023-12-01T10:00:00.000Z' },
+                service: { type: 'string', example: 'meeting-service' }
+            }
+        }
+    })
     @Get('health')
     async healthCheck() {
         return {
