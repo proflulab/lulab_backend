@@ -1,0 +1,22 @@
+// 项目表
+model Project {
+  id            String  @id @default(uuid()) @db.VarChar(50)
+  title         String  @db.VarChar(100) // 项目标题
+  subtitle      String? @db.VarChar(150) // 项目副标题
+  category      String? @db.VarChar(50) // 项目分类
+  image         String? @db.VarChar(200) // 项目图片
+  duration      String? @db.VarChar(20) // 项目时长
+  level         String? @db.VarChar(20) // 难度级别
+  maxStudents   Int?    @map("max_students") // 最大学生数
+  description   String? @db.Text // 项目描述
+  slug          String? @db.VarChar(50) // URL slug
+  prerequisites Json? // 前置要求
+  outcomes      Json? // 学习成果
+
+  // 关联关系
+  curriculums Curriculum[] // 项目的课程
+
+  @@map("projects")
+  @@index([category])
+  @@index([slug])
+}

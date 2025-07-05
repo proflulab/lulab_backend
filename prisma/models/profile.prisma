@@ -1,0 +1,36 @@
+// 在文件开头添加性别枚举
+enum Gender {
+    MALE // 男性
+    FEMALE // 女性
+    OTHER // 其他
+    PREFER_NOT_TO_SAY // 不愿透露
+}
+
+model UserProfile {
+    id     String @id @default(cuid())
+    userId String @unique
+
+    // 个人展示信息
+    name   String?
+    avatar String?
+    bio    String?
+
+    // 详细个人信息
+    firstName   String?
+    lastName    String?
+    dateOfBirth DateTime?
+    gender      Gender?
+    address     String?
+    city        String?
+    country     String?
+    zipCode     String?
+    website     String?
+
+    // 关联到用户
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([userId]) // 用户关联查询优化
+}

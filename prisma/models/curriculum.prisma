@@ -1,0 +1,16 @@
+// 课程表
+model Curriculum {
+  id          String  @id @default(uuid()) @db.VarChar(50)
+  projectId   String? @map("project_id") @db.VarChar(50) // 项目ID
+  title       String? @db.VarChar(100) // 课程标题
+  description String? @db.Text // 课程描述
+  week        Int? // 第几周
+  topics      Json? // 主题列表
+  goals       Json? // 学习目标
+
+  // 关联关系
+  project Project? @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+  @@map("curriculums")
+}
