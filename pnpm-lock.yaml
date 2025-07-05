@@ -4604,9 +4604,9 @@ snapshots:
 
   '@pkgr/core@0.2.7': {}
 
-<<<<<<< HEAD
+
   '@scarf/scarf@1.4.0': {}
-=======
+
   '@prisma/client@6.10.1(prisma@6.10.1(typescript@5.8.3))(typescript@5.8.3)':
     optionalDependencies:
       prisma: 6.10.1(typescript@5.8.3)
@@ -4636,7 +4636,6 @@ snapshots:
   '@prisma/get-platform@6.10.1':
     dependencies:
       '@prisma/debug': 6.10.1
->>>>>>> develop
 
   '@sec-ant/readable-stream@0.4.1': {}
 
