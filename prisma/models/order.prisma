@@ -1,0 +1,63 @@
+// 币种枚举
+enum Currency {
+    CNY // 人民币
+    USD // 美元
+    EUR // 欧元
+    GBP // 英镑
+    JPY // 日元
+    HKD // 港币
+    TWD // 台币
+    SGD // 新加坡元
+    AUD // 澳元
+    CAD // 加元
+}
+
+// 订单表
+model Order {
+    id                   String    @id @default(cuid()) // 内部主键
+    orderCode            String    @unique // 系统生成的订单编号
+    orderNumber          String    @unique // 订单号码（对外显示）
+    externalOrderId      String? // 外部平台订单编号
+    externalOrderData    Json?     @db.JsonB // 外部订单数据
+    productId            String? // 产品ID（外键）
+    productName          String? // 产品标题（冗余存储）
+    customerEmail        String? // 用户邮箱
+    customerPhone        String? // 订单手机号
+    customerPhoneCode    String? // 手机号区号
+    userId               String? // 用户ID（外键）
+    channelId            Int? // 渠道ID（外键）
+    currentOwnerId       String? // 当前负责人（系统用户ID）
+    financialCloserId    String? // 财务结单人（系统用户ID）
+    financialClosedAt    DateTime? // 财务结单时间
+    financialClosed      Boolean   @default(false) // 是否财务结单
+    amount               Int // 金额（分为单位）
+    currency             Currency? // 币种
+    amountCny            Int // 折算后的人民币金额
+    paidAt               DateTime? // 支付时间
+    effectiveDate        DateTime? @db.Date // 生效时间
+    benefitStartDate     DateTime? @db.Date // 权益开始时间
+    benefitDurationDays  Int? // 权益时长（天）
+    activeDays           Int? // 在籍时长（天）
+    benefitDaysRemaining Int? // 权益剩余时间（天）
+
+    // 关联关系
+    product         Product?      @relation(fields: [productId], references: [id])
+    user            User?         @relation("UserOrders", fields: [userId], references: [id])
+    channel         Channel?      @relation(fields: [channelId], references: [id])
+    currentOwner    User?         @relation("CurrentOwnerOrders", fields: [currentOwnerId], references: [id])
+    financialCloser User?         @relation("FinancialCloserOrders", fields: [financialCloserId], references: [id])
+    refunds         OrderRefund[] // 订单的退款记录
+
+    createdAt DateTime @default(now()) // 创建时间
+    updatedAt DateTime @updatedAt // 更新时间
+
+    @@index([userId]) // 用户订单查询
+    @@index([productId]) // 产品订单查询
+    @@index([channelId]) // 渠道订单查询
+    @@index([currentOwnerId]) // 负责人查询
+    @@index([financialClosed]) // 财务状态查询
+    @@index([paidAt]) // 支付时间查询
+    @@index([effectiveDate]) // 生效时间查询
+    @@index([orderNumber]) // 订单号码查询
+    @@index([orderCode]) // 订单编号查询
+}
