@@ -10,7 +10,8 @@
  */
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { MeetingController } from './meeting.controller';
+import { MeetingController } from './controllers/meeting.controller';
+import { TencentController } from './controllers/platforms/tencent.controller';
 import { MeetingService } from './meeting.service';
 import { TencentMeetingApiService } from '../utils/tencent-meeting/meeting-api.service';
 import { PrismaService } from '../prisma.service';
@@ -18,7 +19,7 @@ import { MeetingRepository } from './repositories/meeting.repository';
 
 @Module({
     imports: [ConfigModule],
-    controllers: [MeetingController],
+    controllers: [MeetingController, TencentController],
     providers: [
         MeetingService,
         TencentMeetingApiService,
