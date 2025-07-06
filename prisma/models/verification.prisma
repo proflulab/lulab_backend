@@ -1,0 +1,25 @@
+// 验证码类型枚举
+enum VerificationCodeType {
+  REGISTER // 注册
+  LOGIN // 登录
+  RESET_PASSWORD // 重置密码
+}
+
+// 验证码模型
+model VerificationCode {
+  id        String               @id @default(cuid())
+  target    String // 邮箱或手机号
+  code      String // 验证码
+  type      VerificationCodeType // 验证码类型
+  expiresAt DateTime // 过期时间
+  used      Boolean              @default(false) // 是否已使用
+  ip        String? // 发送时的IP地址
+  userAgent String? // 用户代理
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([target, type]) // 查询优化
+  @@index([expiresAt]) // 清理过期验证码
+  @@index([code]) // 验证码查询
+}
