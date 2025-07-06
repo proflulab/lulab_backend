@@ -14,7 +14,7 @@
 
 ## 项目结构
 
-```
+```text
 src/
 ├── meeting/                          # 会议模块
 │   ├── dto/
@@ -52,7 +52,7 @@ TENCENT_MEETING_ENCODING_AES_KEY="your_encoding_aes_key"
 
 #### 1. Webhook验证 (GET)
 
-```
+```text
 GET /meeting/tencent/webhook
 ```
 
@@ -60,7 +60,7 @@ GET /meeting/tencent/webhook
 
 #### 2. Webhook事件接收 (POST)
 
-```
+```text
 POST /meeting/tencent/webhook
 ```
 
@@ -72,7 +72,7 @@ POST /meeting/tencent/webhook
 
 #### 3. 获取会议记录列表
 
-```
+```text
 GET /meeting/records
 ```
 
@@ -86,13 +86,13 @@ GET /meeting/records
 
 #### 4. 获取会议记录详情
 
-```
+```text
 GET /meeting/records/:id
 ```
 
 #### 5. 健康检查
 
-```
+```text
 GET /meeting/health
 ```
 

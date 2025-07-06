@@ -59,7 +59,7 @@ npx prisma migrate reset
 
 ## 文件结构
 
-```
+```text
 src/
 ├── prisma.service.ts     # Prisma 服务
 ├── user.service.ts       # 用户业务逻辑
@@ -84,7 +84,7 @@ generated/
    # macOS (使用 Homebrew)
    brew install postgresql
    brew services start postgresql
-   
+
    # 或使用 Docker
    docker run --name postgres-dev -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres
    ```
@@ -94,10 +94,10 @@ generated/
    ```bash
    # 连接到 PostgreSQL
    psql -U postgres
-   
+
    # 创建数据库
    CREATE DATABASE lulab_backend;
-   
+
    # 退出
    \q
    ```
@@ -105,7 +105,7 @@ generated/
 3. **配置连接字符串**
    在 `.env` 文件中更新 `DATABASE_URL`：
 
-   ```
+   ```text
    DATABASE_URL="postgresql://postgres:password@localhost:5432/lulab_backend?schema=public"
    ```
 
