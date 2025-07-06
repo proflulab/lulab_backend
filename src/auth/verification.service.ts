@@ -9,7 +9,7 @@ export class VerificationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
-  ) {}
+  ) { }
 
   // 发送验证码
   async sendCode(
@@ -213,7 +213,7 @@ export class VerificationService {
   ): Promise<void> {
     // TODO: 集成短信服务提供商（如阿里云、腾讯云等）
     console.log(`发送短信验证码到 ${countryCode}${phone}: ${code}`);
-    
+
     // 暂时抛出异常，提示未实现
     throw new BadRequestException('短信验证码功能暂未开放，请使用邮箱验证');
   }

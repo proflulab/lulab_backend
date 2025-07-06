@@ -199,10 +199,10 @@ export class AuthService {
       }
 
       // 更新最后登录时间
-      // await this.prisma.user.update({
-      //   where: { id: user.id },
-      //   data: { lastLoginAt: new Date() },
-      // });
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() },
+      });
 
       // 记录成功登录日志
       await this.createLoginLog(
@@ -580,28 +580,26 @@ export class AuthService {
     const fifteenMinutesAgo = new Date(Date.now() - this.lockoutDuration);
 
     // 检查同一目标的失败次数
-    // const targetFailures = await this.prisma.loginLog.count({
-    //   where: {
-    //     target,
-    //     success: false,
-    //     createdAt: {
-    //       gte: fifteenMinutesAgo,
-    //     },
-    //   },
-    // });
+    const targetFailures = await this.prisma.loginLog.count({
+      where: {
+        target,
+        success: false,
+        createdAt: {
+          gte: fifteenMinutesAgo,
+        },
+      },
+    });
 
     // 检查同一IP的失败次数
-    // const ipFailures = await this.prisma.loginLog.count({
-    //   where: {
-    //     ip,
-    //     success: false,
-    //     createdAt: {
-    //       gte: fifteenMinutesAgo,
-    //     },
-    //   },
-    // });
-    const targetFailures = 0;
-    const ipFailures = 0;
+    const ipFailures = await this.prisma.loginLog.count({
+      where: {
+        ip,
+        success: false,
+        createdAt: {
+          gte: fifteenMinutesAgo,
+        },
+      },
+    });
 
     if (targetFailures >= this.maxLoginAttempts) {
       throw new HttpException(
@@ -627,17 +625,17 @@ export class AuthService {
     userAgent?: string,
     failureReason?: string,
   ): Promise<void> {
-    // await this.prisma.loginLog.create({
-    //   data: {
-    //     userId,
-    //     target,
-    //     loginType: type,
-    //     success,
-    //     ip,
-    //     userAgent,
-    //     failReason: failureReason,
-    //   },
-    // });
+    await this.prisma.loginLog.create({
+      data: {
+        userId,
+        target,
+        loginType: type,
+        success,
+        ip,
+        userAgent,
+        failReason: failureReason,
+      },
+    });
   }
 
   private async generateTokens(
@@ -667,7 +665,7 @@ export class AuthService {
       phone: user.phone,
       emailVerified: !!user.emailVerifiedAt,
       phoneVerified: !!user.phoneVerifiedAt,
-      // lastLoginAt: user.lastLoginAt,
+      lastLoginAt: user.lastLoginAt,
       createdAt: user.createdAt,
       profile: user.profile
         ? {
