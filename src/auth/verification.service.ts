@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { EmailService } from '../email/email.service';
+import { AliyunSmsService } from './aliyun-sms.service';
 import { CodeType } from '../dto/auth.dto';
 import { VerificationCodeType } from '@prisma/client';
 
@@ -9,6 +10,7 @@ export class VerificationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
+    private readonly aliyunSmsService: AliyunSmsService,
   ) { }
 
   // 发送验证码
@@ -204,18 +206,20 @@ export class VerificationService {
     );
   }
 
-  // 发送短信验证码（待实现）
+  // 发送短信验证码
   private async sendSmsCode(
     phone: string,
     code: string,
     type: CodeType,
     countryCode?: string,
   ): Promise<void> {
-    // TODO: 集成短信服务提供商（如阿里云、腾讯云等）
-    console.log(`发送短信验证码到 ${countryCode}${phone}: ${code}`);
-
-    // 暂时抛出异常，提示未实现
-    throw new BadRequestException('短信验证码功能暂未开放，请使用邮箱验证');
+    // TODO: 集成短信服务提供商（如腾讯云、Twilio（美国）等）
+    try {
+      await this.aliyunSmsService.sendSms(phone, code, type, countryCode);
+    } catch (error) {
+      console.error('短信发送失败:', error.message);
+      throw new BadRequestException(`短信发送失败: ${error.message}`);
+    }
   }
 
   // 生成6位数字验证码

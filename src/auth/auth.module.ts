@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { VerificationService } from './verification.service';
+import { AliyunSmsService } from './aliyun-sms.service';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { PrismaService } from '../prisma.service';
@@ -28,6 +29,7 @@ import { EmailService } from '../email/email.service';
   providers: [
     AuthService,
     VerificationService,
+    AliyunSmsService,
     JwtStrategy,
     JwtAuthGuard,
     PrismaService,
