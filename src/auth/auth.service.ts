@@ -48,7 +48,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly verificationService: VerificationService,
     private readonly emailService: EmailService,
-  ) {}
+  ) { }
 
   // 用户注册
   async register(
@@ -64,7 +64,7 @@ export class AuthService {
     // 检查用户是否已存在
     await this.checkUserExists(username, email, phone, countryCode);
 
-    // 验证验证码（如果需要）
+    // 验证验证码（现在所有注册都需要验证码）
     if (type === AuthType.EMAIL_CODE || type === AuthType.PHONE_CODE) {
       const target = type === AuthType.EMAIL_CODE ? email : phone;
       const verifyResult = await this.verificationService.verifyCode(
@@ -75,20 +75,28 @@ export class AuthService {
       if (!verifyResult.valid) {
         throw new BadRequestException(verifyResult.message);
       }
+    } else {
+      // 其他类型的注册方式已被禁用
+      throw new BadRequestException('无效的注册方式');
     }
 
     // 创建用户
     const hashedPassword = password ? await this.hashPassword(password) : null;
+    const now = new Date();
+
     const user = await this.prisma.user.create({
       data: {
-        // username,
-        email: email!,
+        username,
+        email: email || null, // 如果没有邮箱则为null
         phone,
         countryCode,
         password: hashedPassword,
+        // 根据注册方式设置验证状态
+        emailVerifiedAt: type === AuthType.EMAIL_CODE ? now : null,
+        phoneVerifiedAt: type === AuthType.PHONE_CODE ? now : null,
         profile: {
           create: {
-            name: username || email?.split('@')[0] || phone,
+            name: username || email?.split('@')[0] || phone || '用户',
           },
         },
       },
@@ -282,8 +290,8 @@ export class AuthService {
     // 验证验证码
     const verifyResult = await this.verificationService.verifyCode(
       target!,
-        code,
-        CodeType.RESET_PASSWORD,
+      code,
+      CodeType.RESET_PASSWORD,
     );
     if (!verifyResult.valid) {
       throw new BadRequestException(verifyResult.message);
@@ -381,7 +389,7 @@ export class AuthService {
     // 检查用户名、邮箱、手机号的唯一性
     if (username && username !== existingUser.username) {
       const usernameExists = await this.prisma.user.findUnique({
-        where: { email: username },
+        where: { username: username },
       });
       if (usernameExists) {
         throw new ConflictException('用户名已被使用');
@@ -399,7 +407,7 @@ export class AuthService {
 
     if (phone && (phone !== existingUser.phone || updateProfileDto.countryCode !== existingUser.countryCode)) {
       const phoneExists = await this.prisma.user.findUnique({
-        where: { 
+        where: {
           unique_phone_combination: {
             countryCode: updateProfileDto.countryCode || existingUser.countryCode,
             phone
@@ -415,7 +423,7 @@ export class AuthService {
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
       data: {
-        // username,
+        ...(username ? { username } : {}),
         email,
         phone,
         countryCode,
@@ -458,7 +466,7 @@ export class AuthService {
       }
 
       const accessToken = this.jwtService.sign(
-        { sub: user.id, username: user.username },
+        { sub: user.id },
         {
           secret: process.env.JWT_SECRET,
           expiresIn: '15m',
@@ -481,17 +489,15 @@ export class AuthService {
 
     switch (type) {
       case AuthType.USERNAME_PASSWORD:
-        if (!username || !password) {
-          throw new BadRequestException('用户名和密码不能为空');
-        }
-        this.validatePassword(password);
-        break;
+        // 不再支持纯用户名密码注册，必须提供邮箱或手机号进行验证
+        throw new BadRequestException('为了账户安全，注册需要邮箱或手机号验证，请使用邮箱验证码或手机验证码注册');
       case AuthType.EMAIL_PASSWORD:
         if (!email || !password) {
           throw new BadRequestException('邮箱和密码不能为空');
         }
         this.validatePassword(password);
-        break;
+        // 邮箱密码注册也需要先验证邮箱
+        throw new BadRequestException('为了账户安全，请先通过邮箱验证码验证您的邮箱地址');
       case AuthType.EMAIL_CODE:
         if (!email || !code) {
           throw new BadRequestException('邮箱和验证码不能为空');
@@ -502,7 +508,8 @@ export class AuthService {
           throw new BadRequestException('手机号和密码不能为空');
         }
         this.validatePassword(password);
-        break;
+        // 手机密码注册也需要先验证手机号
+        throw new BadRequestException('为了账户安全，请先通过手机验证码验证您的手机号码');
       case AuthType.PHONE_CODE:
         if (!phone || !code) {
           throw new BadRequestException('手机号和验证码不能为空');
@@ -521,7 +528,7 @@ export class AuthService {
   ): Promise<void> {
     const conditions: any[] = [];
     if (username) conditions.push({ username });
-    if (email) conditions.push({ email });
+    if (email) conditions.push({ email }); // 只有当email不为空时才检查
     if (phone && countryCode) conditions.push({ unique_phone_combination: { countryCode, phone } });
 
     if (conditions.length === 0) return;
@@ -533,13 +540,13 @@ export class AuthService {
     });
 
     if (existingUser) {
-      // if (existingUser.username === username) {
-      //   throw new ConflictException('用户名已被注册');
-      // }
-      if (existingUser.email === email) {
+      if (username && (existingUser as any).username === username) {
+        throw new ConflictException('用户名已被注册');
+      }
+      if (email && existingUser.email === email) {
         throw new ConflictException('邮箱已被注册');
       }
-      if (existingUser.phone === phone && existingUser.countryCode === countryCode) {
+      if (phone && countryCode && existingUser.phone === phone && existingUser.countryCode === countryCode) {
         throw new ConflictException('手机号已被注册');
       }
     }
@@ -550,7 +557,7 @@ export class AuthService {
       { username: target },
       { email: target },
     ];
-    
+
     // 如果提供了国家代码，则添加手机号查询条件
     if (countryCode) {
       conditions.push({ unique_phone_combination: { countryCode, phone: target } });
@@ -558,7 +565,7 @@ export class AuthService {
       // 如果没有国家代码，则查询所有匹配的手机号
       conditions.push({ phone: target });
     }
-    
+
     return await this.prisma.user.findFirst({
       where: {
         OR: conditions,
@@ -664,16 +671,16 @@ export class AuthService {
       createdAt: user.createdAt,
       profile: user.profile
         ? {
-            name: user.profile.name,
-            avatar: user.profile.avatar,
-            bio: user.profile.bio,
-            firstName: user.profile.firstName,
-            lastName: user.profile.lastName,
-            dateOfBirth: user.profile.dateOfBirth,
-            gender: user.profile.gender,
-            city: user.profile.city,
-            country: user.profile.country,
-          }
+          name: user.profile.name,
+          avatar: user.profile.avatar,
+          bio: user.profile.bio,
+          firstName: user.profile.firstName,
+          lastName: user.profile.lastName,
+          dateOfBirth: user.profile.dateOfBirth,
+          gender: user.profile.gender,
+          city: user.profile.city,
+          country: user.profile.country,
+        }
         : undefined,
     };
   }

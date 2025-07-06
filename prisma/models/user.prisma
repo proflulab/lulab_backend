@@ -3,7 +3,7 @@ model User {
   username String? @unique @db.VarChar(50) // 用户名
   password String?
 
-  email           String    @unique @db.VarChar(255)
+  email           String?   @unique @db.VarChar(255)
   emailVerifiedAt DateTime?
 
   countryCode     String? // 国家代码 如 +86

@@ -100,15 +100,39 @@ export class LoginDto {
 
 // 发送验证码DTO
 export class SendCodeDto {
-  @ApiProperty({ description: '目标邮箱或手机号' })
+  @ApiProperty({ 
+    description: '目标邮箱或手机号',
+    example: 'user@example.com 或 13800138000',
+    type: 'string'
+  })
   @IsString()
   target: string;
 
-  @ApiProperty({ description: '验证码类型', enum: CodeType })
+  @ApiProperty({ 
+    description: '验证码类型',
+    enum: CodeType,
+    enumName: 'CodeType',
+    example: 'register',
+    examples: {
+      register: { summary: '注册验证码', value: 'register' },
+      login: { summary: '登录验证码', value: 'login' },
+      reset_password: { summary: '重置密码验证码', value: 'reset_password' }
+    }
+  })
   @IsEnum(CodeType)
   type: CodeType;
 
-  @ApiProperty({ description: '国家代码（手机号时需要）', required: false, example: '+86' })
+  @ApiProperty({ 
+    description: '国家代码（仅当target为手机号时需要提供）',
+    required: false,
+    example: '+86',
+    examples: {
+      china: { summary: '中国', value: '+86' },
+      usa: { summary: '美国', value: '+1' },
+      uk: { summary: '英国', value: '+44' },
+      japan: { summary: '日本', value: '+81' }
+    }
+  })
   @IsOptional()
   @IsString()
   countryCode?: string;
