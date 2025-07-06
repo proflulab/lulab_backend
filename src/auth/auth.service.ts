@@ -1,0 +1,704 @@
+import {
+  Injectable,
+  BadRequestException,
+  UnauthorizedException,
+  ConflictException,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { PrismaService } from '../prisma.service';
+import { VerificationService } from './verification.service';
+import { EmailService } from '../email/email.service';
+import {
+  RegisterDto,
+  LoginDto,
+  SendCodeDto,
+  VerifyCodeDto,
+  ResetPasswordDto,
+  UpdateProfileDto,
+  AuthResponseDto,
+  UserProfileResponseDto,
+  AuthType,
+  CodeType,
+} from '../dto/auth.dto';
+import * as bcrypt from 'bcryptjs';
+import { User } from '@prisma/client';
+
+// 定义登录日志类型枚举
+enum LoginLogType {
+  USERNAME_PASSWORD = 'USERNAME_PASSWORD',
+  EMAIL_PASSWORD = 'EMAIL_PASSWORD',
+  EMAIL_CODE = 'EMAIL_CODE',
+  PHONE_PASSWORD = 'PHONE_PASSWORD',
+  PHONE_CODE = 'PHONE_CODE',
+  PASSWORD_RESET = 'PASSWORD_RESET',
+}
+
+@Injectable()
+export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+  private readonly saltRounds = 12;
+  private readonly maxLoginAttempts = 5;
+  private readonly lockoutDuration = 15 * 60 * 1000; // 15分钟
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+    private readonly verificationService: VerificationService,
+    private readonly emailService: EmailService,
+  ) {}
+
+  // 用户注册
+  async register(
+    registerDto: RegisterDto,
+    ip: string,
+    userAgent?: string,
+  ): Promise<AuthResponseDto> {
+    const { type, username, email, phone, password, code, countryCode } = registerDto;
+
+    // 验证注册方式
+    await this.validateRegisterType(type, registerDto);
+
+    // 检查用户是否已存在
+    await this.checkUserExists(username, email, phone, countryCode);
+
+    // 验证验证码（如果需要）
+    if (type === AuthType.EMAIL_CODE || type === AuthType.PHONE_CODE) {
+      const target = type === AuthType.EMAIL_CODE ? email : phone;
+      const verifyResult = await this.verificationService.verifyCode(
+        target!,
+        code!,
+        CodeType.REGISTER,
+      );
+      if (!verifyResult.valid) {
+        throw new BadRequestException(verifyResult.message);
+      }
+    }
+
+    // 创建用户
+    const hashedPassword = password ? await this.hashPassword(password) : null;
+    const user = await this.prisma.user.create({
+      data: {
+        // username,
+        email: email!,
+        phone,
+        countryCode,
+        password: hashedPassword,
+        profile: {
+          create: {
+            name: username || email?.split('@')[0] || phone,
+          },
+        },
+      },
+      include: {
+        profile: true,
+      },
+    });
+
+    // 记录登录日志
+    await this.createLoginLog(
+      user.id,
+      email || phone || username!,
+      this.getLoginType(type),
+      true,
+      ip,
+      userAgent,
+    );
+
+    // 发送欢迎邮件
+    if (email) {
+      try {
+        await this.emailService.sendWelcomeEmail(
+          email,
+          username || 'User',
+        );
+      } catch (error) {
+        this.logger.warn(`发送欢迎邮件失败: ${error.message}`);
+      }
+    }
+
+    // 生成JWT令牌
+    const tokens = await this.generateTokens(user.id);
+
+    return {
+      user: this.formatUserResponse(user),
+      ...tokens,
+    };
+  }
+
+  // 用户登录
+  async login(
+    loginDto: LoginDto,
+    ip: string,
+    userAgent?: string,
+  ): Promise<AuthResponseDto> {
+    const { type, username, email, phone, countryCode, password, code } = loginDto;
+    const target = username || email || phone;
+
+    if (!target) {
+      throw new BadRequestException('请提供用户名、邮箱或手机号');
+    }
+
+    // 检查登录锁定
+    await this.checkLoginLockout(target, ip);
+
+    // 查找用户
+    const user = await this.findUserByTarget(target, countryCode);
+    if (!user) {
+      await this.createLoginLog(
+        null,
+        target,
+        this.getLoginType(type),
+        false,
+        ip,
+        userAgent,
+        '用户不存在',
+      );
+      throw new UnauthorizedException('用户名或密码错误');
+    }
+
+    // 验证登录凭据
+    let loginSuccess = false;
+    let failureReason = '';
+
+    try {
+      if (type === AuthType.EMAIL_CODE || type === AuthType.PHONE_CODE) {
+        // 验证码登录
+        const verifyResult = await this.verificationService.verifyCode(
+          target!,
+          code!,
+          CodeType.LOGIN,
+        );
+        if (!verifyResult.valid) {
+          failureReason = verifyResult.message;
+          throw new UnauthorizedException(verifyResult.message);
+        }
+        loginSuccess = true;
+      } else {
+        // 密码登录
+        if (!user.password) {
+          failureReason = '该账户未设置密码，请使用验证码登录';
+          throw new UnauthorizedException(failureReason);
+        }
+        const isPasswordValid = await bcrypt.compare(password!, user.password);
+        if (!isPasswordValid) {
+          failureReason = '密码错误';
+          throw new UnauthorizedException('用户名或密码错误');
+        }
+        loginSuccess = true;
+      }
+
+      // 更新最后登录时间
+      // await this.prisma.user.update({
+      //   where: { id: user.id },
+      //   data: { lastLoginAt: new Date() },
+      // });
+
+      // 记录成功登录日志
+      await this.createLoginLog(
+        user.id,
+        target!,
+        this.getLoginType(type),
+        true,
+        ip,
+        userAgent,
+      );
+
+      // 生成JWT令牌
+      const tokens = await this.generateTokens(user.id);
+
+      return {
+        user: this.formatUserResponse(user),
+        ...tokens,
+      };
+    } catch (error) {
+      // 记录失败登录日志
+      await this.createLoginLog(
+        user.id,
+        target!,
+        this.getLoginType(type),
+        false,
+        ip,
+        userAgent,
+        failureReason || error.message,
+      );
+      throw error;
+    }
+  }
+
+  // 发送验证码
+  async sendCode(
+    sendCodeDto: SendCodeDto,
+    ip: string,
+    userAgent?: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const { target, type } = sendCodeDto;
+
+    if (!target) {
+      throw new BadRequestException('目标邮箱或手机号不能为空');
+    }
+
+    // 根据验证码类型进行不同的验证
+    if (type === CodeType.REGISTER) {
+      // 注册验证码：检查用户是否已存在
+      const existingUser = await this.findUserByTarget(target);
+      if (existingUser) {
+        throw new ConflictException('该邮箱或手机号已被注册');
+      }
+    } else if (type === CodeType.LOGIN || type === CodeType.RESET_PASSWORD) {
+      // 登录或重置密码验证码：检查用户是否存在
+      const user = await this.findUserByTarget(target);
+      if (!user) {
+        throw new BadRequestException('用户不存在');
+      }
+    }
+
+    return await this.verificationService.sendCode(
+      target,
+      type,
+      ip,
+      userAgent,
+    );
+  }
+
+  // 验证验证码
+  async verifyCode(
+    verifyCodeDto: VerifyCodeDto,
+  ): Promise<{ valid: boolean; message: string }> {
+    const { target, code, type } = verifyCodeDto;
+    return await this.verificationService.verifyCode(target, code, type);
+  }
+
+  // 重置密码
+  async resetPassword(
+    resetPasswordDto: ResetPasswordDto,
+    ip: string,
+    userAgent?: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const { target, code, newPassword } = resetPasswordDto;
+
+    // 验证验证码
+    const verifyResult = await this.verificationService.verifyCode(
+      target!,
+        code,
+        CodeType.RESET_PASSWORD,
+    );
+    if (!verifyResult.valid) {
+      throw new BadRequestException(verifyResult.message);
+    }
+
+    // 查找用户
+    const user = await this.findUserByTarget(target!);
+    if (!user) {
+      throw new BadRequestException('用户不存在');
+    }
+
+    // 验证新密码强度
+    this.validatePassword(newPassword);
+
+    // 更新密码
+    const hashedPassword = await this.hashPassword(newPassword);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
+
+    // 记录登录日志
+    await this.createLoginLog(
+      user.id,
+      target!,
+      LoginLogType.PASSWORD_RESET,
+      true,
+      ip,
+      userAgent,
+    );
+
+    // 发送密码重置通知邮件
+    if (user.email) {
+      try {
+        // 暂时使用简单的邮件发送，后续可以添加专门的密码重置通知模板
+        await this.emailService.sendSimpleEmail({
+          to: user.email,
+          subject: 'LuLab 密码重置通知',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2>密码重置通知</h2>
+              <p>您好 ${user.profile?.name || 'User'}，</p>
+              <p>您的 LuLab 账户密码已成功重置。</p>
+              <p>重置时间：${new Date().toLocaleString('zh-CN')}</p>
+              <p>如果这不是您的操作，请立即联系我们。</p>
+            </div>
+          `,
+        });
+      } catch (error) {
+        this.logger.warn(`发送密码重置通知邮件失败: ${error.message}`);
+      }
+    }
+
+    return {
+      success: true,
+      message: '密码重置成功',
+    };
+  }
+
+  // 获取用户信息
+  async getProfile(userId: string): Promise<UserProfileResponseDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        profile: true,
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('用户不存在');
+    }
+
+    return this.formatUserResponse(user);
+  }
+
+  // 更新用户资料
+  async updateProfile(
+    userId: string,
+    updateProfileDto: UpdateProfileDto,
+    ip: string,
+    userAgent?: string,
+  ): Promise<UserProfileResponseDto> {
+    const { username, email, phone, countryCode, name, avatar, bio } = updateProfileDto;
+
+    // 检查用户是否存在
+    const existingUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { profile: true },
+    }) as any;
+
+    if (!existingUser) {
+      throw new BadRequestException('用户不存在');
+    }
+
+    // 检查用户名、邮箱、手机号的唯一性
+    if (username && username !== existingUser.username) {
+      const usernameExists = await this.prisma.user.findUnique({
+        where: { email: username },
+      });
+      if (usernameExists) {
+        throw new ConflictException('用户名已被使用');
+      }
+    }
+
+    if (email && email !== existingUser.email) {
+      const emailExists = await this.prisma.user.findUnique({
+        where: { email },
+      });
+      if (emailExists) {
+        throw new ConflictException('邮箱已被使用');
+      }
+    }
+
+    if (phone && (phone !== existingUser.phone || updateProfileDto.countryCode !== existingUser.countryCode)) {
+      const phoneExists = await this.prisma.user.findUnique({
+        where: { 
+          unique_phone_combination: {
+            countryCode: updateProfileDto.countryCode || existingUser.countryCode,
+            phone
+          }
+        },
+      });
+      if (phoneExists) {
+        throw new ConflictException('手机号已被使用');
+      }
+    }
+
+    // 更新用户信息
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        // username,
+        email,
+        phone,
+        countryCode,
+        profile: {
+          upsert: {
+            create: {
+              name: name || username || email?.split('@')[0] || phone,
+              avatar,
+              bio,
+            },
+            update: {
+              name,
+              avatar,
+              bio,
+            },
+          },
+        },
+      },
+      include: {
+        profile: true,
+      },
+    });
+
+    return this.formatUserResponse(updatedUser);
+  }
+
+  // 刷新令牌
+  async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
+    try {
+      const payload = this.jwtService.verify(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('用户不存在');
+      }
+
+      const accessToken = this.jwtService.sign(
+        { sub: user.id, username: user.username },
+        {
+          secret: process.env.JWT_SECRET,
+          expiresIn: '15m',
+        },
+      );
+
+      return { accessToken };
+    } catch (error) {
+      throw new UnauthorizedException('刷新令牌无效');
+    }
+  }
+
+  // 私有方法
+
+  private async validateRegisterType(
+    type: AuthType,
+    registerDto: RegisterDto,
+  ): Promise<void> {
+    const { username, email, phone, password, code } = registerDto;
+
+    switch (type) {
+      case AuthType.USERNAME_PASSWORD:
+        if (!username || !password) {
+          throw new BadRequestException('用户名和密码不能为空');
+        }
+        this.validatePassword(password);
+        break;
+      case AuthType.EMAIL_PASSWORD:
+        if (!email || !password) {
+          throw new BadRequestException('邮箱和密码不能为空');
+        }
+        this.validatePassword(password);
+        break;
+      case AuthType.EMAIL_CODE:
+        if (!email || !code) {
+          throw new BadRequestException('邮箱和验证码不能为空');
+        }
+        break;
+      case AuthType.PHONE_PASSWORD:
+        if (!phone || !password) {
+          throw new BadRequestException('手机号和密码不能为空');
+        }
+        this.validatePassword(password);
+        break;
+      case AuthType.PHONE_CODE:
+        if (!phone || !code) {
+          throw new BadRequestException('手机号和验证码不能为空');
+        }
+        break;
+      default:
+        throw new BadRequestException('不支持的注册方式');
+    }
+  }
+
+  private async checkUserExists(
+    username?: string,
+    email?: string,
+    phone?: string,
+    countryCode?: string,
+  ): Promise<void> {
+    const conditions: any[] = [];
+    if (username) conditions.push({ username });
+    if (email) conditions.push({ email });
+    if (phone && countryCode) conditions.push({ unique_phone_combination: { countryCode, phone } });
+
+    if (conditions.length === 0) return;
+
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: conditions,
+      },
+    });
+
+    if (existingUser) {
+      // if (existingUser.username === username) {
+      //   throw new ConflictException('用户名已被注册');
+      // }
+      if (existingUser.email === email) {
+        throw new ConflictException('邮箱已被注册');
+      }
+      if (existingUser.phone === phone && existingUser.countryCode === countryCode) {
+        throw new ConflictException('手机号已被注册');
+      }
+    }
+  }
+
+  private async findUserByTarget(target: string, countryCode?: string): Promise<(User & { profile: any }) | null> {
+    const conditions: any[] = [
+      { username: target },
+      { email: target },
+    ];
+    
+    // 如果提供了国家代码，则添加手机号查询条件
+    if (countryCode) {
+      conditions.push({ unique_phone_combination: { countryCode, phone: target } });
+    } else {
+      // 如果没有国家代码，则查询所有匹配的手机号
+      conditions.push({ phone: target });
+    }
+    
+    return await this.prisma.user.findFirst({
+      where: {
+        OR: conditions,
+      },
+      include: {
+        profile: true,
+      },
+    });
+  }
+
+  private async checkLoginLockout(target: string, ip: string): Promise<void> {
+    const fifteenMinutesAgo = new Date(Date.now() - this.lockoutDuration);
+
+    // 检查同一目标的失败次数
+    // const targetFailures = await this.prisma.loginLog.count({
+    //   where: {
+    //     target,
+    //     success: false,
+    //     createdAt: {
+    //       gte: fifteenMinutesAgo,
+    //     },
+    //   },
+    // });
+
+    // 检查同一IP的失败次数
+    // const ipFailures = await this.prisma.loginLog.count({
+    //   where: {
+    //     ip,
+    //     success: false,
+    //     createdAt: {
+    //       gte: fifteenMinutesAgo,
+    //     },
+    //   },
+    // });
+    const targetFailures = 0;
+    const ipFailures = 0;
+
+    if (targetFailures >= this.maxLoginAttempts) {
+      throw new HttpException(
+        `登录失败次数过多，请${this.lockoutDuration / 60000}分钟后再试`,
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
+    if (ipFailures >= this.maxLoginAttempts * 2) {
+      throw new HttpException(
+        `该IP登录失败次数过多，请${this.lockoutDuration / 60000}分钟后再试`,
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+  }
+
+  private async createLoginLog(
+    userId: string | null,
+    target: string,
+    type: LoginLogType,
+    success: boolean,
+    ip: string,
+    userAgent?: string,
+    failureReason?: string,
+  ): Promise<void> {
+    // await this.prisma.loginLog.create({
+    //   data: {
+    //     userId,
+    //     target,
+    //     loginType: type,
+    //     success,
+    //     ip,
+    //     userAgent,
+    //     failReason: failureReason,
+    //   },
+    // });
+  }
+
+  private async generateTokens(
+    userId: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const payload = { sub: userId };
+
+    const accessToken = this.jwtService.sign(payload, {
+      secret: process.env.JWT_SECRET,
+      expiresIn: '15m',
+    });
+
+    const refreshToken = this.jwtService.sign(payload, {
+      secret: process.env.JWT_REFRESH_SECRET,
+      expiresIn: '7d',
+    });
+
+    return { accessToken, refreshToken };
+  }
+
+  private formatUserResponse(user: any): UserProfileResponseDto {
+    return {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      countryCode: user.countryCode,
+      phone: user.phone,
+      emailVerified: !!user.emailVerifiedAt,
+      phoneVerified: !!user.phoneVerifiedAt,
+      // lastLoginAt: user.lastLoginAt,
+      createdAt: user.createdAt,
+      profile: user.profile
+        ? {
+            name: user.profile.name,
+            avatar: user.profile.avatar,
+            bio: user.profile.bio,
+            firstName: user.profile.firstName,
+            lastName: user.profile.lastName,
+            dateOfBirth: user.profile.dateOfBirth,
+            gender: user.profile.gender,
+            city: user.profile.city,
+            country: user.profile.country,
+          }
+        : undefined,
+    };
+  }
+
+  private async hashPassword(password: string): Promise<string> {
+    return await bcrypt.hash(password, this.saltRounds);
+  }
+
+  private validatePassword(password: string): void {
+    if (password.length < 8) {
+      throw new BadRequestException('密码长度至少为8位');
+    }
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+      throw new BadRequestException('密码必须包含大小写字母和数字');
+    }
+  }
+
+  private getLoginType(authType: AuthType): LoginLogType {
+    const typeMap = {
+      [AuthType.USERNAME_PASSWORD]: LoginLogType.USERNAME_PASSWORD,
+      [AuthType.EMAIL_PASSWORD]: LoginLogType.EMAIL_PASSWORD,
+      [AuthType.EMAIL_CODE]: LoginLogType.EMAIL_CODE,
+      [AuthType.PHONE_PASSWORD]: LoginLogType.PHONE_PASSWORD,
+      [AuthType.PHONE_CODE]: LoginLogType.PHONE_CODE,
+    };
+    return typeMap[authType] || LoginLogType.USERNAME_PASSWORD;
+  }
+}
