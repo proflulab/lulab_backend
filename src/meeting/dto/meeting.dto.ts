@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-06 05:57:48
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-07-06 06:33:22
+ * @LastEditTime: 2025-07-07 03:11:31
  * @FilePath: /lulab_backend/src/meeting/dto/meeting.dto.ts
  * @Description: 
  * 

@@ -40,10 +40,17 @@ export interface CreateMeetingFileData {
     fileName: string;
     fileType: FileType;
     storageType: StorageType;
-    downloadUrl: string;
+    downloadUrl?: string;
     content?: string;
     mimeType: string;
     processingStatus: ProcessingStatus;
+}
+
+export interface UpdateMeetingFileData {
+    fileName?: string;
+    content?: string;
+    processingStatus?: ProcessingStatus;
+    metadata?: any;
 }
 
 export interface GetMeetingRecordsParams {
@@ -109,6 +116,25 @@ export class MeetingRepository {
     async createMeetingFile(data: CreateMeetingFileData) {
         return this.prisma.meetingFile.create({
             data
+        });
+    }
+
+    /**
+     * 更新会议文件
+     */
+    async updateMeetingFile(id: string, data: UpdateMeetingFileData) {
+        return this.prisma.meetingFile.update({
+            where: { id },
+            data
+        });
+    }
+
+    /**
+     * 删除会议记录
+     */
+    async deleteMeetingRecord(id: string) {
+        return this.prisma.meetingRecord.delete({
+            where: { id }
         });
     }
 

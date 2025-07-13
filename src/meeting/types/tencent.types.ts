@@ -1,3 +1,23 @@
+// 腾讯会议相关类型定义
+export interface TencentMeetingConfig {
+    secretId: string;
+    secretKey: string;
+    appId: string;
+    sdkId: string;
+    token: string;
+    encodingAesKey: string;
+}
+
+export interface TencentWebhookEvent {
+    event: string;
+    payload: any;
+}
+
+export interface TencentRecordingFile {
+    record_file_id: string;
+    // 其他字段根据实际API响应添加
+}
+
 export interface MeetingSummary {
     download_address: string;
     file_type: string;

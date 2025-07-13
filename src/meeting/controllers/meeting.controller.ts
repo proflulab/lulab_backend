@@ -1,84 +1,424 @@
 import {
     Controller,
     Get,
-    Query,
+    Post,
+    Put,
+    Delete,
+    Body,
     Param,
-    HttpException,
+    Query,
+    HttpCode,
     HttpStatus,
-    Logger
+    Logger,
+    ParseUUIDPipe,
+    ValidationPipe
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam } from '@nestjs/swagger';
-import { MeetingService } from '../meeting.service';
-import { MeetingPlatform } from '@prisma/client';
+import {
+    ApiTags,
+    ApiOperation,
+    ApiResponse,
+    ApiParam,
+    ApiQuery,
+    ApiBearerAuth,
+    ApiBody
+} from '@nestjs/swagger';
+import { MeetingService } from '../services/meeting.service';
+import {
+    QueryMeetingRecordsDto,
+    MeetingRecordResponseDto,
+    MeetingRecordListResponseDto
+} from '../dto/common/meeting-record.dto';
+import { PaginationDto } from '../dto/common/pagination.dto';
+import { CreateMeetingRecordDto } from '../dto/common/create-meeting-record.dto';
+import { UpdateMeetingRecordDto } from '../dto/common/update-meeting-record.dto';
+import { MeetingPlatform, MeetingType, ProcessingStatus } from '@prisma/client';
 
-@ApiTags('会议管理')
-@Controller('meeting')
+/**
+ * 会议记录控制器
+ * 提供会议记录的CRUD操作API
+ */
+@ApiTags('Meeting Records')
+@Controller('meetings')
+@ApiBearerAuth()
 export class MeetingController {
     private readonly logger = new Logger(MeetingController.name);
 
-    constructor(
-        private meetingService: MeetingService
-    ) { }
+    constructor(private readonly meetingService: MeetingService) { }
 
     /**
      * 获取会议记录列表
      */
-    @ApiOperation({ summary: '获取会议记录列表', description: '根据条件查询会议记录列表' })
-    @ApiQuery({ name: 'platform', description: '会议平台', required: false, enum: ['TENCENT_MEETING', 'ZOOM', 'OTHER'] })
-    @ApiQuery({ name: 'startDate', description: '开始日期 (YYYY-MM-DD)', required: false })
-    @ApiQuery({ name: 'endDate', description: '结束日期 (YYYY-MM-DD)', required: false })
-    @ApiQuery({ name: 'page', description: '页码', required: false, type: 'number' })
-    @ApiQuery({ name: 'limit', description: '每页数量', required: false, type: 'number' })
-    @ApiResponse({ status: 200, description: '成功获取会议记录列表' })
-    @Get('records')
+    @Get()
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: '获取会议记录列表',
+        description: '根据查询条件获取会议记录列表，支持分页、筛选和排序'
+    })
+    @ApiQuery({
+        name: 'platform',
+        enum: MeetingPlatform,
+        required: false,
+        description: '会议平台'
+    })
+    @ApiQuery({
+        name: 'status',
+        enum: ProcessingStatus,
+        required: false,
+        description: '会议状态'
+    })
+    @ApiQuery({
+        name: 'type',
+        enum: MeetingType,
+        required: false,
+        description: '会议类型'
+    })
+    @ApiQuery({
+        name: 'startDate',
+        type: String,
+        required: false,
+        description: '开始日期 (YYYY-MM-DD)'
+    })
+    @ApiQuery({
+        name: 'endDate',
+        type: String,
+        required: false,
+        description: '结束日期 (YYYY-MM-DD)'
+    })
+    @ApiQuery({
+        name: 'page',
+        type: Number,
+        required: false,
+        description: '页码，从1开始'
+    })
+    @ApiQuery({
+        name: 'limit',
+        type: Number,
+        required: false,
+        description: '每页数量'
+    })
+    @ApiQuery({
+        name: 'search',
+        type: String,
+        required: false,
+        description: '搜索关键词（会议主题、主持人等）'
+    })
+    @ApiResponse({
+        status: 200,
+        description: '获取成功',
+        type: MeetingRecordListResponseDto
+    })
+    @ApiResponse({
+        status: 400,
+        description: '请求参数错误'
+    })
     async getMeetingRecords(
-        @Query('platform') platform?: string,
-        @Query('startDate') startDate?: string,
-        @Query('endDate') endDate?: string,
-        @Query('page') page?: string,
-        @Query('limit') limit?: string
-    ) {
-        const params: any = {};
+        @Query(new ValidationPipe({ transform: true })) query: QueryMeetingRecordsDto
+    ): Promise<MeetingRecordListResponseDto> {
+        this.logger.log('获取会议记录列表', { query });
 
-        if (platform) {
-            params.platform = platform as MeetingPlatform;
-        }
-        if (startDate) {
-            params.startDate = new Date(startDate);
-        }
-        if (endDate) {
-            params.endDate = new Date(endDate);
-        }
-        if (page) {
-            params.page = parseInt(page, 10);
-        }
-        if (limit) {
-            params.limit = parseInt(limit, 10);
-        }
+        try {
+            const queryParams = {
+                ...query,
+                startDate: query.startDate ? new Date(query.startDate) : undefined,
+                endDate: query.endDate ? new Date(query.endDate) : undefined
+            };
+            const result = await this.meetingService.getMeetingRecords(queryParams);
 
-        return this.meetingService.getMeetingRecords(params);
+            this.logger.log(`获取会议记录成功，共 ${result.total} 条记录`);
+            return {
+                data: result.records,
+                total: result.total,
+                page: result.page,
+                limit: result.limit,
+                totalPages: Math.ceil(result.total / result.limit)
+            };
+        } catch (error) {
+            this.logger.error('获取会议记录失败', error.stack);
+            throw error;
+        }
     }
 
     /**
-     * 获取会议记录详情
+     * 根据ID获取会议记录详情
      */
-    @ApiOperation({ summary: '获取会议记录详情', description: '根据ID获取特定会议记录的详细信息' })
-    @ApiParam({ name: 'id', description: '会议记录ID', required: true })
-    @ApiResponse({ status: 200, description: '成功获取会议记录详情' })
-    @ApiResponse({ status: 404, description: '会议记录不存在' })
-    @Get('records/:id')
-    async getMeetingRecordById(@Param('id') id: string) {
-        const record = await this.meetingService.getMeetingRecordById(id);
-        if (!record) {
-            throw new HttpException('Meeting record not found', HttpStatus.NOT_FOUND);
+    @Get(':id')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: '获取会议记录详情',
+        description: '根据会议记录ID获取详细信息，包括文件列表和参会者信息'
+    })
+    @ApiParam({
+        name: 'id',
+        description: '会议记录ID',
+        type: 'string',
+        format: 'uuid'
+    })
+    @ApiResponse({
+        status: 200,
+        description: '获取成功',
+        type: MeetingRecordResponseDto
+    })
+    @ApiResponse({
+        status: 404,
+        description: '会议记录不存在'
+    })
+    async getMeetingRecordById(
+        @Param('id', ParseUUIDPipe) id: string
+    ): Promise<MeetingRecordResponseDto> {
+        this.logger.log(`获取会议记录详情: ${id}`);
+
+        try {
+            const record = await this.meetingService.getMeetingRecordById(id);
+
+            this.logger.log(`获取会议记录详情成功: ${record.id}`);
+            return record;
+        } catch (error) {
+            this.logger.error(`获取会议记录详情失败: ${id}`, error.stack);
+            throw error;
         }
-        return record;
+    }
+
+    /**
+     * 创建会议记录
+     */
+    @Post()
+    @HttpCode(HttpStatus.CREATED)
+    @ApiOperation({
+        summary: '创建会议记录',
+        description: '手动创建会议记录'
+    })
+    @ApiBody({
+        description: '会议记录创建参数',
+        type: CreateMeetingRecordDto
+    })
+    @ApiResponse({
+        status: 201,
+        description: '创建成功',
+        type: MeetingRecordResponseDto
+    })
+    @ApiResponse({
+        status: 400,
+        description: '请求参数错误'
+    })
+    @ApiResponse({
+        status: 409,
+        description: '会议记录已存在'
+    })
+    async createMeetingRecord(
+        @Body(new ValidationPipe()) createParams: CreateMeetingRecordDto
+    ): Promise<MeetingRecordResponseDto> {
+        this.logger.log('创建会议记录', { meetingId: createParams.platformMeetingId });
+
+        try {
+            const record = await this.meetingService.createMeetingRecord(createParams);
+
+            this.logger.log(`创建会议记录成功: ${record.id}`);
+            return record;
+        } catch (error) {
+            this.logger.error('创建会议记录失败', error.stack);
+            throw error;
+        }
+    }
+
+    /**
+     * 更新会议记录
+     */
+    @Put(':id')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: '更新会议记录',
+        description: '更新会议记录信息'
+    })
+    @ApiParam({
+        name: 'id',
+        description: '会议记录ID',
+        type: 'string',
+        format: 'uuid'
+    })
+    @ApiBody({
+        description: '会议记录更新参数',
+        type: UpdateMeetingRecordDto
+    })
+    @ApiResponse({
+        status: 200,
+        description: '更新成功',
+        type: MeetingRecordResponseDto
+    })
+    @ApiResponse({
+        status: 404,
+        description: '会议记录不存在'
+    })
+    async updateMeetingRecord(
+        @Param('id', ParseUUIDPipe) id: string,
+        @Body(new ValidationPipe()) updateParams: UpdateMeetingRecordDto
+    ): Promise<MeetingRecordResponseDto> {
+        this.logger.log(`更新会议记录: ${id}`, updateParams);
+
+        try {
+            const record = await this.meetingService.updateMeetingRecord(id, updateParams);
+
+            this.logger.log(`更新会议记录成功: ${record.id}`);
+            return record;
+        } catch (error) {
+            this.logger.error(`更新会议记录失败: ${id}`, error.stack);
+            throw error;
+        }
+    }
+
+    /**
+     * 删除会议记录
+     */
+    @Delete(':id')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @ApiOperation({
+        summary: '删除会议记录',
+        description: '删除指定的会议记录及其关联的文件'
+    })
+    @ApiParam({
+        name: 'id',
+        description: '会议记录ID',
+        type: 'string',
+        format: 'uuid'
+    })
+    @ApiResponse({
+        status: 204,
+        description: '删除成功'
+    })
+    @ApiResponse({
+        status: 404,
+        description: '会议记录不存在'
+    })
+    async deleteMeetingRecord(
+        @Param('id', ParseUUIDPipe) id: string
+    ): Promise<void> {
+        this.logger.log(`删除会议记录: ${id}`);
+
+        try {
+            await this.meetingService.deleteMeetingRecord(id);
+
+            this.logger.log(`删除会议记录成功: ${id}`);
+        } catch (error) {
+            this.logger.error(`删除会议记录失败: ${id}`, error.stack);
+            throw error;
+        }
+    }
+
+    /**
+     * 获取会议统计信息
+     */
+    @Get('stats/summary')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: '获取会议统计信息',
+        description: '获取会议记录的统计信息，包括总数、各平台分布、状态分布等'
+    })
+    @ApiQuery({
+        name: 'startDate',
+        type: String,
+        required: false,
+        description: '统计开始日期 (YYYY-MM-DD)'
+    })
+    @ApiQuery({
+        name: 'endDate',
+        type: String,
+        required: false,
+        description: '统计结束日期 (YYYY-MM-DD)'
+    })
+    @ApiResponse({
+        status: 200,
+        description: '获取成功',
+        schema: {
+            type: 'object',
+            properties: {
+                total: { type: 'number', description: '总会议数' },
+                platformStats: {
+                    type: 'object',
+                    description: '各平台会议数统计'
+                },
+                statusStats: {
+                    type: 'object',
+                    description: '各状态会议数统计'
+                },
+                typeStats: {
+                    type: 'object',
+                    description: '各类型会议数统计'
+                },
+                recentMeetings: {
+                    type: 'array',
+                    description: '最近的会议记录'
+                }
+            }
+        }
+    })
+    async getMeetingStats(
+        @Query('startDate') startDate?: string,
+        @Query('endDate') endDate?: string
+    ): Promise<any> {
+        this.logger.log('获取会议统计信息', { startDate, endDate });
+
+        try {
+            const stats = await this.meetingService.getMeetingStats({
+                startDate: startDate ? new Date(startDate) : undefined,
+                endDate: endDate ? new Date(endDate) : undefined
+            });
+
+            this.logger.log('获取会议统计信息成功');
+            return stats;
+        } catch (error) {
+            this.logger.error('获取会议统计信息失败', error.stack);
+            throw error;
+        }
+    }
+
+    /**
+     * 重新处理会议录制文件
+     */
+    @Post(':id/reprocess')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: '重新处理会议录制文件',
+        description: '重新处理指定会议的录制文件，重新生成AI摘要和转录等'
+    })
+    @ApiParam({
+        name: 'id',
+        description: '会议记录ID',
+        type: 'string',
+        format: 'uuid'
+    })
+    @ApiResponse({
+        status: 200,
+        description: '重新处理成功',
+        type: MeetingRecordResponseDto
+    })
+    @ApiResponse({
+        status: 404,
+        description: '会议记录不存在'
+    })
+    async reprocessMeetingRecord(
+        @Param('id', ParseUUIDPipe) id: string
+    ): Promise<MeetingRecordResponseDto> {
+        this.logger.log(`重新处理会议录制文件: ${id}`);
+
+        try {
+            const record = await this.meetingService.reprocessMeetingRecord(id);
+
+            this.logger.log(`重新处理会议录制文件成功: ${record.id}`);
+            return record;
+        } catch (error) {
+            this.logger.error(`重新处理会议录制文件失败: ${id}`, error.stack);
+            throw error;
+        }
     }
 
     /**
      * 健康检查端点
      */
-    @ApiOperation({ summary: '健康检查', description: '检查会议服务的运行状态' })
+    @Get('health')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: '健康检查',
+        description: '检查会议服务的运行状态'
+    })
     @ApiResponse({
         status: 200,
         description: '服务正常运行',
@@ -91,7 +431,6 @@ export class MeetingController {
             }
         }
     })
-    @Get('health')
     async healthCheck() {
         return {
             status: 'ok',
