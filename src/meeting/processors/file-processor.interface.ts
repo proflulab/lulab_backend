@@ -98,8 +98,8 @@ export abstract class BaseFileProcessor implements IFileProcessor {
     abstract readonly supportedMimeTypes: string[];
 
     canProcess(fileType: FileType, mimeType: string): boolean {
-        return this.supportedFileTypes.includes(fileType) && 
-               this.supportedMimeTypes.includes(mimeType);
+        return this.supportedFileTypes.includes(fileType) &&
+            this.supportedMimeTypes.includes(mimeType);
     }
 
     abstract process(params: FileProcessingParams): Promise<FileProcessingResult>;
@@ -130,7 +130,7 @@ export abstract class BaseFileProcessor implements IFileProcessor {
      * 创建成功结果
      */
     protected createSuccessResult(
-        content?: string, 
+        content?: string,
         metadata?: any
     ): FileProcessingResult {
         return {
@@ -145,7 +145,7 @@ export abstract class BaseFileProcessor implements IFileProcessor {
      * 创建失败结果
      */
     protected createErrorResult(
-        error: string, 
+        error: string,
         processingStatus: ProcessingStatus = ProcessingStatus.FAILED
     ): FileProcessingResult {
         return {

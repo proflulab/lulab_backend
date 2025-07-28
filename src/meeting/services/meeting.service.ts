@@ -473,7 +473,7 @@ export class MeetingService {
         if (params.participantList !== undefined) updateData.participantList = params.participantList;
         if (params.transcript !== undefined) updateData.transcript = params.transcript;
         if (params.summary !== undefined) updateData.summary = params.summary;
-        
+
         // 处理其他字段
         if (params.title !== undefined) {
             updateData.title = params.title;

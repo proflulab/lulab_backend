@@ -63,7 +63,7 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
         return next.handle().pipe(
             tap((data) => {
                 const duration = Date.now() - startTime;
-                
+
                 this.logger.log(
                     `Webhook请求成功: ${method} ${url} - ${response.statusCode} - ${duration}ms`,
                     {
@@ -84,7 +84,7 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
             }),
             catchError((error) => {
                 const duration = Date.now() - startTime;
-                
+
                 this.logger.error(
                     `Webhook请求失败: ${method} ${url} - ${duration}ms`,
                     {
@@ -106,11 +106,11 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
      */
     private filterHeaders(headers: Record<string, any>): Record<string, any> {
         const importantHeaders: Record<string, any> = {};
-        
+
         // 需要记录的重要头部
         const headersToLog = [
             'wechatwork-signature',
-            'wechatwork-timestamp', 
+            'wechatwork-timestamp',
             'wechatwork-nonce',
             'x-zoom-webhook-signature',
             'x-zoom-webhook-timestamp',
@@ -151,7 +151,7 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
 
         // 不记录二进制内容
         const contentType = headers['content-type'] || '';
-        if (contentType.includes('multipart/form-data') || 
+        if (contentType.includes('multipart/form-data') ||
             contentType.includes('application/octet-stream')) {
             return false;
         }
@@ -164,7 +164,7 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
      */
     private shouldLogResponse(data: any): boolean {
         if (!data) return false;
-        
+
         const dataSize = JSON.stringify(data).length;
         return dataSize <= 5000; // 5KB限制
     }
@@ -178,7 +178,7 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
         }
 
         const sanitized = { ...body };
-        
+
         // 移除或遮蔽敏感字段
         const sensitiveFields = [
             'password',
@@ -214,7 +214,7 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
         }
 
         const sanitized = { ...data };
-        
+
         // 移除或遮蔽敏感字段
         const sensitiveFields = [
             'token',
@@ -240,7 +240,7 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
         if (!signature || signature.length < 10) {
             return '***MASKED***';
         }
-        
+
         const start = signature.substring(0, 4);
         const end = signature.substring(signature.length - 4);
         return `${start}***${end}`;
