@@ -9,10 +9,7 @@ import {
 } from '@prisma/client';
 import { MeetingRepository, UpdateMeetingFileData } from '../repositories/meeting.repository';
 import { TencentMeetingService } from './platforms/tencent/tencent-meeting.service';
-import { VideoProcessor } from '../processors/video-processor';
-import { AudioProcessor } from '../processors/audio-processor';
-import { TranscriptProcessor } from '../processors/transcript-processor';
-import { SummaryProcessor } from '../processors/summary-processor';
+import { FileProcessorFactory } from '../processors/file-processor.factory';
 import { IFileProcessor } from '../processors/file-processor.interface';
 import {
     CreateMeetingFileParams,
@@ -34,29 +31,15 @@ import {
 @Injectable()
 export class MeetingService {
     private readonly logger = new Logger(MeetingService.name);
-    private readonly fileProcessors: Map<FileType, IFileProcessor> = new Map();
 
     constructor(
         private readonly configService: ConfigService,
         private readonly meetingRepository: MeetingRepository,
         private readonly tencentMeetingService: TencentMeetingService,
-        private readonly videoProcessor: VideoProcessor,
-        private readonly audioProcessor: AudioProcessor,
-        private readonly transcriptProcessor: TranscriptProcessor,
-        private readonly summaryProcessor: SummaryProcessor
-    ) {
-        this.initializeFileProcessors();
-    }
+        private readonly fileProcessorFactory: FileProcessorFactory
+    ) {}
 
-    /**
-     * 初始化文件处理器
-     */
-    private initializeFileProcessors(): void {
-        this.fileProcessors.set(FileType.VIDEO, this.videoProcessor);
-        this.fileProcessors.set(FileType.AUDIO, this.audioProcessor);
-        this.fileProcessors.set(FileType.TRANSCRIPT, this.transcriptProcessor);
-        this.fileProcessors.set(FileType.SUMMARY, this.summaryProcessor);
-    }
+
 
     /**
      * 处理腾讯会议录制完成事件
@@ -299,9 +282,17 @@ export class MeetingService {
         fileId: string,
         fileParams: CreateMeetingFileParams
     ): Promise<void> {
-        const processor = this.fileProcessors.get(fileParams.fileType);
+        const processor = this.fileProcessorFactory.getProcessor(
+            fileParams.fileType,
+            fileParams.mimeType
+        );
         if (!processor) {
-            this.logger.warn(`没有找到文件类型 ${fileParams.fileType} 的处理器`);
+            this.logger.warn(
+                `没有找到文件类型 ${fileParams.fileType}/${fileParams.mimeType} 的处理器`
+            );
+            await this.meetingRepository.updateMeetingFile(fileId, {
+                processingStatus: ProcessingStatus.FAILED
+            });
             return;
         }
 

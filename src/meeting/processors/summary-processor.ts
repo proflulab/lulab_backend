@@ -1,15 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { FileType, ProcessingStatus } from '@prisma/client';
-import { BaseFileProcessor, FileProcessingParams, FileProcessingResult } from './file-processor.interface';
+import { FileType } from '@prisma/client';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+import { TextAnalysisUtil } from '../utils/text-analysis.util';
+import { TextFileProcessor } from './text-processor.base';
 
 /**
  * 摘要文件处理器
  */
 @Injectable()
-export class SummaryProcessor extends BaseFileProcessor {
-    private readonly logger = new Logger(SummaryProcessor.name);
+export class SummaryProcessor extends TextFileProcessor {
+    protected readonly logger = new Logger(SummaryProcessor.name);
 
     readonly supportedFileTypes: FileType[] = [FileType.SUMMARY];
     readonly supportedMimeTypes: string[] = [
@@ -21,144 +21,62 @@ export class SummaryProcessor extends BaseFileProcessor {
         'application/xml'
     ];
 
-    constructor(private readonly httpService: HttpService) {
-        super();
+    constructor(httpService: HttpService) {
+        super(httpService);
     }
 
-    async process(params: FileProcessingParams): Promise<FileProcessingResult> {
-        try {
-            this.logger.log(`开始处理摘要文件: ${params.fileName}`);
-
-            // 验证参数
-            if (!await this.validate(params)) {
-                return this.createErrorResult('摘要文件参数验证失败');
-            }
-
-            // 获取摘要内容
-            const summaryContent = await this.getSummaryContent(params);
-            if (!summaryContent) {
-                return this.createErrorResult('无法获取摘要文件内容');
-            }
-
-            // 处理摘要内容
-            const processedContent = await this.processSummaryContent(
-                summaryContent,
-                params.mimeType
-            );
-
-            // 提取摘要结构化信息
-            const structuredSummary = await this.extractStructuredInfo(processedContent);
-
-            // 生成元数据
-            const metadata = {
-                originalFormat: this.getFormatFromMimeType(params.mimeType),
-                wordCount: this.countWords(processedContent),
-                characterCount: processedContent.length,
-                keyPoints: structuredSummary.keyPoints,
-                actionItems: structuredSummary.actionItems,
-                participants: structuredSummary.participants,
-                topics: structuredSummary.topics,
-                language: await this.detectLanguage(processedContent),
-                processedAt: new Date().toISOString()
-            };
-
-            this.logger.log(`摘要文件处理完成: ${params.fileName}`);
-            return this.createSuccessResult(processedContent, metadata);
-
-        } catch (error) {
-            this.logger.error(`摘要文件处理失败: ${params.fileName}`, error.stack);
-            return this.createErrorResult(`摘要文件处理失败: ${error.message}`);
-        }
+    protected getTextType(): string {
+        return '摘要';
     }
 
-    async validate(params: FileProcessingParams): Promise<boolean> {
-        // 调用基类验证
-        if (!await super.validate(params)) {
-            return false;
-        }
-
-        // 摘要文件特定验证
-        if (params.fileType !== FileType.SUMMARY) {
-            return false;
-        }
-
-        // 检查MIME类型
-        if (!this.supportedMimeTypes.includes(params.mimeType)) {
-            this.logger.warn(`不支持的摘要文件MIME类型: ${params.mimeType}`);
-            return false;
-        }
-
-        return true;
+    protected async getSpecificMetadata(content: string): Promise<any> {
+        // 提取摘要结构化信息
+        const structuredSummary = await this.extractStructuredInfo(content);
+        
+        return {
+            keyPoints: structuredSummary.keyPoints,
+            actionItems: structuredSummary.actionItems,
+            participants: structuredSummary.participants,
+            topics: structuredSummary.topics
+        };
     }
 
     getName(): string {
         return 'SummaryProcessor';
     }
 
-    getVersion(): string {
-        return '1.0.0';
-    }
-
-    /**
-     * 获取摘要文件内容
-     */
-    private async getSummaryContent(params: FileProcessingParams): Promise<string | null> {
-        try {
-            // 如果已有内容，直接返回
-            if (params.content) {
-                return params.content;
-            }
-
-            // 从URL下载内容
-            if (params.downloadUrl) {
-                const response = await firstValueFrom(
-                    this.httpService.get(params.downloadUrl, {
-                        responseType: 'text',
-                        timeout: 30000
-                    })
-                );
-                return response.data;
-            }
-
-            return null;
-        } catch (error) {
-            this.logger.error('获取摘要文件内容失败', error.stack);
-            return null;
-        }
-    }
-
     /**
      * 处理摘要内容
      */
-    private async processSummaryContent(content: string, mimeType: string): Promise<string> {
+    protected async processTextContent(content: string, mimeType: string): Promise<string> {
         switch (mimeType) {
             case 'text/markdown':
                 return this.processMarkdownContent(content);
             case 'text/html':
                 return this.processHTMLContent(content);
             case 'application/json':
-                return this.processJSONContent(content);
+                return super.processJSONContent(content);
             case 'text/xml':
             case 'application/xml':
-                return this.processXMLContent(content);
+                return super.processXMLContent(content);
             case 'text/plain':
             default:
-                return this.processPlainTextContent(content);
+                return super.processPlainTextContent(content);
         }
     }
 
     /**
-     * 处理Markdown格式摘要
+     * 处理Markdown格式内容
      */
-    private processMarkdownContent(content: string): string {
+    protected processMarkdownContent(content: string): string {
         // 保留Markdown格式，只做基本清理
         return content.trim();
     }
 
     /**
-     * 处理HTML格式摘要
+     * 处理HTML格式内容
      */
-    private processHTMLContent(content: string): string {
+    protected processHTMLContent(content: string): string {
         // 移除HTML标签，保留文本内容
         return content
             .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
@@ -169,9 +87,9 @@ export class SummaryProcessor extends BaseFileProcessor {
     }
 
     /**
-     * 处理JSON格式摘要
+     * 处理JSON格式内容
      */
-    private processJSONContent(content: string): string {
+    protected processJSONContent(content: string): string {
         try {
             const data = JSON.parse(content);
 
@@ -213,17 +131,17 @@ export class SummaryProcessor extends BaseFileProcessor {
     }
 
     /**
-     * 处理XML格式摘要
+     * 处理XML格式内容
      */
-    private processXMLContent(content: string): string {
+    protected processXMLContent(content: string): string {
         // 简单的XML文本提取，移除所有标签
         return content.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
     }
 
     /**
-     * 处理纯文本摘要
+     * 处理纯文本内容
      */
-    private processPlainTextContent(content: string): string {
+    protected processPlainTextContent(content: string): string {
         // 清理多余的空白字符
         return content.replace(/\s+/g, ' ').trim();
     }
@@ -231,7 +149,7 @@ export class SummaryProcessor extends BaseFileProcessor {
     /**
      * 提取结构化信息
      */
-    private async extractStructuredInfo(content: string): Promise<{
+    protected async extractStructuredInfo(content: string): Promise<{
         keyPoints: string[];
         actionItems: string[];
         participants: string[];
@@ -343,63 +261,14 @@ export class SummaryProcessor extends BaseFileProcessor {
             topics.push(...titleMatches.map(match => match.replace(/^#+\s+/, '')));
         }
 
-        // 匹配关键词
-        const keywords = content.match(/\b[\u4e00-\u9fff]{2,8}\b/g);
-        if (keywords) {
-            // 简单的关键词频率分析
-            const frequency: Record<string, number> = {};
-            keywords.forEach(keyword => {
-                frequency[keyword] = (frequency[keyword] || 0) + 1;
-            });
-
-            const sortedKeywords = Object.entries(frequency)
-                .sort(([, a], [, b]) => b - a)
-                .slice(0, 5)
-                .map(([keyword]) => keyword);
-
-            topics.push(...sortedKeywords);
-        }
+        // 使用工具类提取关键词
+        const keywords = TextAnalysisUtil.extractKeywords(content, 5);
+        topics.push(...keywords);
 
         return [...new Set(topics)].slice(0, 10);
     }
 
-    /**
-     * 从MIME类型获取格式
-     */
-    private getFormatFromMimeType(mimeType: string): string {
-        const formatMap: Record<string, string> = {
-            'text/plain': 'TXT',
-            'text/markdown': 'MD',
-            'text/html': 'HTML',
-            'application/json': 'JSON',
-            'text/xml': 'XML',
-            'application/xml': 'XML'
-        };
 
-        return formatMap[mimeType] || 'UNKNOWN';
-    }
 
-    /**
-     * 统计单词数
-     */
-    private countWords(text: string): number {
-        return text.split(/\s+/).filter(word => word.length > 0).length;
-    }
 
-    /**
-     * 检测语言
-     */
-    private async detectLanguage(text: string): Promise<string> {
-        // 简单的语言检测逻辑
-        const chineseRegex = /[\u4e00-\u9fff]/;
-        const englishRegex = /[a-zA-Z]/;
-
-        if (chineseRegex.test(text)) {
-            return 'zh';
-        } else if (englishRegex.test(text)) {
-            return 'en';
-        }
-
-        return 'unknown';
-    }
 }

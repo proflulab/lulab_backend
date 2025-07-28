@@ -28,7 +28,6 @@ import {
     MeetingRecordResponseDto,
     MeetingRecordListResponseDto
 } from '../dto/common/meeting-record.dto';
-import { PaginationDto } from '../dto/common/pagination.dto';
 import { CreateMeetingRecordDto } from '../dto/common/create-meeting-record.dto';
 import { UpdateMeetingRecordDto } from '../dto/common/update-meeting-record.dto';
 import { MeetingPlatform, MeetingType, ProcessingStatus } from '@prisma/client';

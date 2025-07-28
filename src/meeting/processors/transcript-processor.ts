@@ -1,15 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { FileType, ProcessingStatus } from '@prisma/client';
-import { BaseFileProcessor, FileProcessingParams, FileProcessingResult } from './file-processor.interface';
+import { FileType } from '@prisma/client';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+import { TextAnalysisUtil } from '../utils/text-analysis.util';
+import { TextFileProcessor } from './text-processor.base';
 
 /**
  * 转录文件处理器
  */
 @Injectable()
-export class TranscriptProcessor extends BaseFileProcessor {
-    private readonly logger = new Logger(TranscriptProcessor.name);
+export class TranscriptProcessor extends TextFileProcessor {
+    protected readonly logger = new Logger(TranscriptProcessor.name);
 
     readonly supportedFileTypes: FileType[] = [FileType.TRANSCRIPT];
     readonly supportedMimeTypes: string[] = [
@@ -21,130 +21,48 @@ export class TranscriptProcessor extends BaseFileProcessor {
         'application/xml'
     ];
 
-    constructor(private readonly httpService: HttpService) {
-        super();
+    constructor(httpService: HttpService) {
+        super(httpService);
     }
 
-    async process(params: FileProcessingParams): Promise<FileProcessingResult> {
-        try {
-            this.logger.log(`开始处理转录文件: ${params.fileName}`);
-
-            // 验证参数
-            if (!await this.validate(params)) {
-                return this.createErrorResult('转录文件参数验证失败');
-            }
-
-            // 获取转录内容
-            const transcriptContent = await this.getTranscriptContent(params);
-            if (!transcriptContent) {
-                return this.createErrorResult('无法获取转录文件内容');
-            }
-
-            // 处理转录内容
-            const processedContent = await this.processTranscriptContent(
-                transcriptContent,
-                params.mimeType
-            );
-
-            // 生成元数据
-            const metadata = {
-                originalFormat: this.getFormatFromMimeType(params.mimeType),
-                wordCount: this.countWords(processedContent),
-                characterCount: processedContent.length,
-                estimatedDuration: this.estimateDuration(processedContent),
-                language: await this.detectLanguage(processedContent),
-                processedAt: new Date().toISOString()
-            };
-
-            this.logger.log(`转录文件处理完成: ${params.fileName}`);
-            return this.createSuccessResult(processedContent, metadata);
-
-        } catch (error) {
-            this.logger.error(`转录文件处理失败: ${params.fileName}`, error.stack);
-            return this.createErrorResult(`转录文件处理失败: ${error.message}`);
-        }
+    protected getTextType(): string {
+        return '转录';
     }
 
-    async validate(params: FileProcessingParams): Promise<boolean> {
-        // 调用基类验证
-        if (!await super.validate(params)) {
-            return false;
-        }
-
-        // 转录文件特定验证
-        if (params.fileType !== FileType.TRANSCRIPT) {
-            return false;
-        }
-
-        // 检查MIME类型
-        if (!this.supportedMimeTypes.includes(params.mimeType)) {
-            this.logger.warn(`不支持的转录文件MIME类型: ${params.mimeType}`);
-            return false;
-        }
-
-        return true;
+    protected async getSpecificMetadata(content: string): Promise<any> {
+        return {
+            estimatedDuration: TextAnalysisUtil.estimateSpeechDuration(content)
+        };
     }
 
     getName(): string {
         return 'TranscriptProcessor';
     }
 
-    getVersion(): string {
-        return '1.0.0';
-    }
-
-    /**
-     * 获取转录文件内容
-     */
-    private async getTranscriptContent(params: FileProcessingParams): Promise<string | null> {
-        try {
-            // 如果已有内容，直接返回
-            if (params.content) {
-                return params.content;
-            }
-
-            // 从URL下载内容
-            if (params.downloadUrl) {
-                const response = await firstValueFrom(
-                    this.httpService.get(params.downloadUrl, {
-                        responseType: 'text',
-                        timeout: 30000
-                    })
-                );
-                return response.data;
-            }
-
-            return null;
-        } catch (error) {
-            this.logger.error('获取转录文件内容失败', error.stack);
-            return null;
-        }
-    }
-
     /**
      * 处理转录内容
      */
-    private async processTranscriptContent(content: string, mimeType: string): Promise<string> {
+    protected async processTextContent(content: string, mimeType: string): Promise<string> {
         switch (mimeType) {
             case 'text/vtt':
                 return this.processVTTContent(content);
             case 'text/srt':
                 return this.processSRTContent(content);
             case 'application/json':
-                return this.processJSONContent(content);
+                return super.processJSONContent(content);
             case 'text/xml':
             case 'application/xml':
-                return this.processXMLContent(content);
+                return super.processXMLContent(content);
             case 'text/plain':
             default:
-                return this.processPlainTextContent(content);
+                return super.processPlainTextContent(content);
         }
     }
 
     /**
-     * 处理VTT格式转录
+     * 处理VTT格式内容
      */
-    private processVTTContent(content: string): string {
+    protected processVTTContent(content: string): string {
         // 移除VTT时间戳和格式标记，只保留文本内容
         const lines = content.split('\n');
         const textLines: string[] = [];
@@ -165,9 +83,9 @@ export class TranscriptProcessor extends BaseFileProcessor {
     }
 
     /**
-     * 处理SRT格式转录
+     * 处理SRT格式内容
      */
-    private processSRTContent(content: string): string {
+    protected processSRTContent(content: string): string {
         // 移除SRT序号和时间戳，只保留文本内容
         const lines = content.split('\n');
         const textLines: string[] = [];
@@ -184,9 +102,9 @@ export class TranscriptProcessor extends BaseFileProcessor {
     }
 
     /**
-     * 处理JSON格式转录
+     * 处理JSON格式内容
      */
-    private processJSONContent(content: string): string {
+    protected processJSONContent(content: string): string {
         try {
             const data = JSON.parse(content);
 
@@ -212,67 +130,21 @@ export class TranscriptProcessor extends BaseFileProcessor {
     }
 
     /**
-     * 处理XML格式转录
+     * 处理XML格式内容
      */
-    private processXMLContent(content: string): string {
+    protected processXMLContent(content: string): string {
         // 简单的XML文本提取，移除所有标签
         return content.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
     }
 
     /**
-     * 处理纯文本转录
+     * 处理纯文本内容
      */
-    private processPlainTextContent(content: string): string {
+    protected processPlainTextContent(content: string): string {
         // 清理多余的空白字符
         return content.replace(/\s+/g, ' ').trim();
     }
 
-    /**
-     * 从MIME类型获取格式
-     */
-    private getFormatFromMimeType(mimeType: string): string {
-        const formatMap: Record<string, string> = {
-            'text/plain': 'TXT',
-            'text/vtt': 'VTT',
-            'text/srt': 'SRT',
-            'application/json': 'JSON',
-            'text/xml': 'XML',
-            'application/xml': 'XML'
-        };
 
-        return formatMap[mimeType] || 'UNKNOWN';
-    }
 
-    /**
-     * 统计单词数
-     */
-    private countWords(text: string): number {
-        return text.split(/\s+/).filter(word => word.length > 0).length;
-    }
-
-    /**
-     * 估算时长（基于平均语速）
-     */
-    private estimateDuration(text: string): number {
-        const wordCount = this.countWords(text);
-        // 假设平均语速为每分钟150个单词
-        return Math.ceil(wordCount / 150);
-    }
-
-    /**
-     * 检测语言
-     */
-    private async detectLanguage(text: string): Promise<string> {
-        // 简单的语言检测逻辑
-        const chineseRegex = /[\u4e00-\u9fff]/;
-        const englishRegex = /[a-zA-Z]/;
-
-        if (chineseRegex.test(text)) {
-            return 'zh';
-        } else if (englishRegex.test(text)) {
-            return 'en';
-        }
-
-        return 'unknown';
-    }
 }

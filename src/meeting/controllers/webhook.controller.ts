@@ -19,6 +19,12 @@ import { WebhookLoggingInterceptor } from '../interceptors/webhook-logging.inter
 /**
  * 统一Webhook控制器
  * 处理各平台的Webhook请求
+ * 
+ * TODO: 添加Webhook请求频率限制
+ * TODO: 实现Webhook事件重试机制
+ * TODO: 添加Webhook事件持久化存储
+ * TODO: 实现Webhook事件监控和告警
+ * TODO: 添加更多平台支持（钉钉、企业微信等）
  */
 @ApiTags('Webhooks')
 @Controller('webhooks')
@@ -173,6 +179,10 @@ export class WebhookController {
                     throw new BadRequestException('缺少必要的签名头部信息');
                 }
 
+                // TODO: 添加请求时间戳验证，防止重放攻击
+                // TODO: 实现事件去重机制
+                // TODO: 添加事件处理状态跟踪
+                
                 // 处理加密的事件数据
                 const encryptedData = typeof body === 'string' ? body : JSON.stringify(body);
 
@@ -196,6 +206,10 @@ export class WebhookController {
 
     /**
      * Zoom Webhook接收端点（示例）
+     * TODO: 实现完整的Zoom Webhook处理逻辑
+     * TODO: 添加Zoom特定的签名验证
+     * TODO: 实现Zoom会议事件的具体处理
+     * TODO: 添加Zoom API集成和录制文件处理
      */
     @Post('zoom')
     @HttpCode(HttpStatus.OK)
@@ -214,6 +228,7 @@ export class WebhookController {
         this.logger.log('收到Zoom Webhook请求');
 
         try {
+            // TODO: 实现Zoom Webhook事件处理逻辑
             await this.webhookService.handleZoomWebhookEvent(body, headers);
         } catch (error) {
             this.logger.error('处理Zoom Webhook失败', error.stack);
@@ -223,6 +238,11 @@ export class WebhookController {
 
     /**
      * Microsoft Teams Webhook接收端点（示例）
+     * TODO: 实现完整的Microsoft Teams Webhook处理逻辑
+     * TODO: 添加Teams特定的身份验证和签名验证
+     * TODO: 实现Teams会议事件的具体处理
+     * TODO: 添加Microsoft Graph API集成
+     * TODO: 实现Teams录制文件和转录处理
      */
     @Post('teams')
     @HttpCode(HttpStatus.OK)
@@ -241,6 +261,7 @@ export class WebhookController {
         this.logger.log('收到Teams Webhook请求');
 
         try {
+            // TODO: 实现Teams Webhook事件处理逻辑
             await this.webhookService.handleTeamsWebhookEvent(body, headers);
         } catch (error) {
             this.logger.error('处理Teams Webhook失败', error.stack);
@@ -250,6 +271,11 @@ export class WebhookController {
 
     /**
      * 飞书Webhook接收端点（示例）
+     * TODO: 实现完整的飞书Webhook处理逻辑
+     * TODO: 添加飞书特定的签名验证机制
+     * TODO: 实现飞书会议事件的具体处理
+     * TODO: 添加飞书开放平台API集成
+     * TODO: 实现飞书录制文件和会议纪要处理
      */
     @Post('feishu')
     @HttpCode(HttpStatus.OK)
@@ -268,6 +294,7 @@ export class WebhookController {
         this.logger.log('收到飞书Webhook请求');
 
         try {
+            // TODO: 实现飞书Webhook事件处理逻辑
             await this.webhookService.handleFeishuWebhookEvent(body, headers);
         } catch (error) {
             this.logger.error('处理飞书Webhook失败', error.stack);

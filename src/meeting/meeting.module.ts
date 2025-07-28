@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-07 03:42:31
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-07-07 04:11:10
+ * @LastEditTime: 2025-07-28 17:04:59
  * @FilePath: /lulab_backend/src/meeting/meeting.module.ts
  * @Description: 
  * 
@@ -24,6 +24,7 @@ import { VideoProcessor } from './processors/video-processor';
 import { AudioProcessor } from './processors/audio-processor';
 import { TranscriptProcessor } from './processors/transcript-processor';
 import { SummaryProcessor } from './processors/summary-processor';
+import { FileProcessorFactory } from './processors/file-processor.factory';
 import { PrismaService } from '../prisma.service';
 
 @Module({
@@ -39,7 +40,6 @@ import { PrismaService } from '../prisma.service';
     MeetingRepository,
     TencentMeetingService,
     TencentApiService,
-
     TencentWebhookHandler,
     WebhookService,
     WebhookLoggingInterceptor,
@@ -47,6 +47,7 @@ import { PrismaService } from '../prisma.service';
     AudioProcessor,
     TranscriptProcessor,
     SummaryProcessor,
+    FileProcessorFactory,
     PrismaService,
   ],
   exports: [MeetingService],
