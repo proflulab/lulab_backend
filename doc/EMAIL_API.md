@@ -27,18 +27,21 @@ SMTP_FROM=your-email@gmail.com
 ### 常用邮件服务配置
 
 #### Gmail
+
 - 需要开启两步验证并生成应用专用密码
 - SMTP_HOST: smtp.gmail.com
 - SMTP_PORT: 587
 - SMTP_SECURE: false
 
 #### QQ邮箱
+
 - 需要开启SMTP服务并获取授权码
 - SMTP_HOST: smtp.qq.com
 - SMTP_PORT: 587
 - SMTP_SECURE: false
 
 #### 163邮箱
+
 - SMTP_HOST: smtp.163.com
 - SMTP_PORT: 465
 - SMTP_SECURE: true
@@ -63,6 +66,7 @@ SMTP_FROM=your-email@gmail.com
 ```
 
 **参数说明：**
+
 - `to` (必填): 收件人邮箱地址
 - `cc` (可选): 抄送邮箱地址数组
 - `bcc` (可选): 密送邮箱地址数组
@@ -73,6 +77,7 @@ SMTP_FROM=your-email@gmail.com
 **响应示例：**
 
 成功响应：
+
 ```json
 {
   "statusCode": 200,
@@ -84,6 +89,7 @@ SMTP_FROM=your-email@gmail.com
 ```
 
 失败响应：
+
 ```json
 {
   "statusCode": 400,
