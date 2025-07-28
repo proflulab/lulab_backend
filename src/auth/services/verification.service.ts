@@ -1,8 +1,8 @@
 import { Injectable, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
-import { PrismaService } from '../prisma.service';
-import { EmailService } from '../email/email.service';
+import { PrismaService } from '../../prisma.service';
+import { EmailService } from '../../email/email.service';
 import { AliyunSmsService } from './aliyun-sms.service';
-import { CodeType } from '../dto/auth.dto';
+import { CodeType } from '../../dto/auth.dto';
 import { VerificationCodeType } from '@prisma/client';
 
 @Injectable()

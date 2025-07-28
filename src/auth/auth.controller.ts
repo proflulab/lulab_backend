@@ -14,16 +14,14 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiBody,
-
   ApiHeader,
   ApiConsumes,
   ApiProduces,
 } from '@nestjs/swagger';
 import { Request } from 'express';
-import { AuthService } from './auth.service';
+import { AuthService } from './services/auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { Public } from './public.decorator';
-import { User, CurrentUser } from './user.decorator';
+import { Public } from './decorators/public.decorator';
 import {
   RegisterDto,
   LoginDto,
@@ -33,7 +31,7 @@ import {
   AuthResponseDto,
 } from '../dto/auth.dto';
 
-@ApiTags('认证')
+@ApiTags('Auth')
 @Controller({
   path: 'api/auth',
   version: '1'
@@ -48,7 +46,7 @@ export class AuthController {
   @ApiOperation({
     summary: '用户注册',
     description: '用户注册需要先通过邮箱或手机号验证码验证。支持的注册类型：email_code（邮箱验证码）、phone_code（手机验证码）。为了安全考虑，不再支持纯用户名密码注册。',
-    tags: ['认证']
+    tags: ['Auth']
   })
   @ApiConsumes('application/json')
   @ApiProduces('application/json')
@@ -142,15 +140,6 @@ export class AuthController {
       default: 'application/json'
     }
   })
-  @ApiHeader({
-    name: 'User-Agent',
-    description: '用户代理信息',
-    required: false,
-    schema: {
-      type: 'string',
-      example: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    }
-  })
   async register(
     @Body(ValidationPipe) registerDto: RegisterDto,
     @Req() req: Request,
@@ -166,7 +155,7 @@ export class AuthController {
   @ApiOperation({
     summary: '用户登录',
     description: '支持多种登录方式：用户名密码、邮箱密码、手机密码、邮箱验证码、手机验证码。根据不同的登录类型提供相应的参数。',
-    tags: ['认证']
+    tags: ['Auth']
   })
   @ApiConsumes('application/json')
   @ApiProduces('application/json')
@@ -308,7 +297,7 @@ export class AuthController {
   @ApiOperation({
     summary: '发送验证码',
     description: '向指定的邮箱或手机号发送验证码。支持注册、登录、重置密码等场景。发送频率限制：同一目标60秒内只能发送一次。验证码有效期为5分钟。',
-    tags: ['认证']
+    tags: ['Auth']
   })
   @ApiConsumes('application/json')
   @ApiProduces('application/json')
@@ -473,7 +462,7 @@ export class AuthController {
   @ApiOperation({
     summary: '验证验证码',
     description: '验证邮箱或手机号收到的验证码是否正确。用于注册、登录、重置密码等场景的验证码校验。',
-    tags: ['认证']
+    tags: ['Auth']
   })
   @ApiConsumes('application/json')
   @ApiProduces('application/json')
@@ -549,7 +538,7 @@ export class AuthController {
   @ApiOperation({
     summary: '重置密码',
     description: '通过验证码重置用户密码。需要先调用发送验证码接口获取验证码，然后提供验证码和新密码完成重置。',
-    tags: ['认证']
+    tags: ['Auth']
   })
   @ApiConsumes('application/json')
   @ApiProduces('application/json')
@@ -640,7 +629,7 @@ export class AuthController {
   @ApiOperation({
     summary: '刷新访问令牌',
     description: '使用刷新令牌获取新的访问令牌。当访问令牌过期时，可以使用此接口获取新的访问令牌而无需重新登录。',
-    tags: ['认证']
+    tags: ['Auth']
   })
   @ApiConsumes('application/json')
   @ApiProduces('application/json')
@@ -717,7 +706,7 @@ export class AuthController {
   @ApiOperation({
     summary: '退出登录',
     description: '用户退出登录。由于JWT是无状态的，客户端删除token即可完成退出。如果需要实现token黑名单，可以在服务端添加相应逻辑。',
-    tags: ['认证']
+    tags: ['Auth']
   })
   @ApiConsumes('application/json')
   @ApiProduces('application/json')
@@ -747,16 +736,7 @@ export class AuthController {
       }
     }
   })
-  @ApiBearerAuth('JWT-auth')
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'Bearer token',
-    required: true,
-    schema: {
-      type: 'string',
-      example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-    }
-  })
+  @ApiBearerAuth()
   async logout(): Promise<{ success: boolean; message: string }> {
     // JWT是无状态的，客户端删除token即可
     // 如果需要实现token黑名单，可以在这里添加逻辑
@@ -765,6 +745,7 @@ export class AuthController {
       message: '退出登录成功',
     };
   }
+
 
   private getClientIp(req: Request): string {
     return (

@@ -60,6 +60,7 @@ npx prisma migrate reset
 ## 文件结构
 
 ```text
+
 src/
 ├── prisma.service.ts     # Prisma 服务
 ├── user.service.ts       # 用户业务逻辑
@@ -106,6 +107,7 @@ generated/
    在 `.env` 文件中更新 `DATABASE_URL`：
 
    ```text
+
    DATABASE_URL="postgresql://postgres:password@localhost:5432/lulab_backend?schema=public"
    ```
 

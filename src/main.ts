@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-06-27 05:18:41
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-07-06 05:12:36
+ * @LastEditTime: 2025-07-28 04:13:47
  * @FilePath: /lulab_backend/src/main.ts
  * @Description: 
  * 
@@ -29,7 +29,7 @@ async function bootstrap() {
     .setTitle('LuLab Backend API')
     .setDescription('LuLab Backend API文档')
     .setVersion('1.0')
-    .addTag('api')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

@@ -8,9 +8,9 @@ import {
   Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../prisma.service';
+import { PrismaService } from '../../prisma.service';
 import { VerificationService } from './verification.service';
-import { EmailService } from '../email/email.service';
+import { EmailService } from '../../email/email.service';
 import {
   RegisterDto,
   LoginDto,
@@ -22,7 +22,7 @@ import {
   UserProfileResponseDto,
   AuthType,
   CodeType,
-} from '../dto/auth.dto';
+} from '../../dto/auth.dto';
 import * as bcrypt from 'bcryptjs';
 import { User } from '@prisma/client';
 
