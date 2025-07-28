@@ -1,8 +1,6 @@
 import {
   Controller,
   Post,
-  Get,
-  Put,
   Body,
   Req,
   UseGuards,
@@ -16,28 +14,24 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiBody,
-
   ApiHeader,
   ApiConsumes,
   ApiProduces,
 } from '@nestjs/swagger';
 import { Request } from 'express';
-import { AuthService } from './auth.service';
+import { AuthService } from './services/auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { Public } from './public.decorator';
-import { User, CurrentUser } from './user.decorator';
+import { Public } from './decorators/public.decorator';
 import {
   RegisterDto,
   LoginDto,
   SendCodeDto,
   VerifyCodeDto,
   ResetPasswordDto,
-  UpdateProfileDto,
   AuthResponseDto,
-  UserProfileResponseDto,
 } from '../dto/auth.dto';
 
-@ApiTags('认证')
+@ApiTags('Auth')
 @Controller({
   path: 'api/auth',
   version: '1'
@@ -52,7 +46,7 @@ export class AuthController {
   @ApiOperation({
     summary: '用户注册',
     description: '用户注册需要先通过邮箱或手机号验证码验证。支持的注册类型：email_code（邮箱验证码）、phone_code（手机验证码）。为了安全考虑，不再支持纯用户名密码注册。',
-    tags: ['认证']
+    tags: ['Auth']
   })
   @ApiConsumes('application/json')
   @ApiProduces('application/json')
@@ -75,8 +69,8 @@ export class AuthController {
       }
     }
   })
-  @ApiResponse({ 
-    status: 400, 
+  @ApiResponse({
+    status: 400,
     description: '请求参数错误或使用了不支持的注册方式',
     schema: {
       example: {
@@ -86,8 +80,8 @@ export class AuthController {
       }
     }
   })
-  @ApiResponse({ 
-    status: 409, 
+  @ApiResponse({
+    status: 409,
     description: '用户已存在',
     schema: {
       example: {
@@ -97,8 +91,8 @@ export class AuthController {
       }
     }
   })
-  @ApiResponse({ 
-    status: 422, 
+  @ApiResponse({
+    status: 422,
     description: '验证码错误或已过期',
     schema: {
       example: {
@@ -108,7 +102,7 @@ export class AuthController {
       }
     }
   })
-  @ApiBody({ 
+  @ApiBody({
     type: RegisterDto,
     description: '注册请求参数',
     examples: {
@@ -146,15 +140,6 @@ export class AuthController {
       default: 'application/json'
     }
   })
-  @ApiHeader({
-    name: 'User-Agent',
-    description: '用户代理信息',
-    required: false,
-    schema: {
-      type: 'string',
-      example: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    }
-  })
   async register(
     @Body(ValidationPipe) registerDto: RegisterDto,
     @Req() req: Request,
@@ -167,10 +152,10 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '用户登录',
     description: '支持多种登录方式：用户名密码、邮箱密码、手机密码、邮箱验证码、手机验证码。根据不同的登录类型提供相应的参数。',
-    tags: ['认证']
+    tags: ['Auth']
   })
   @ApiConsumes('application/json')
   @ApiProduces('application/json')
@@ -193,8 +178,8 @@ export class AuthController {
       }
     }
   })
-  @ApiResponse({ 
-    status: 401, 
+  @ApiResponse({
+    status: 401,
     description: '认证失败，用户名/密码错误或验证码无效',
     schema: {
       example: {
@@ -204,8 +189,8 @@ export class AuthController {
       }
     }
   })
-  @ApiResponse({ 
-    status: 429, 
+  @ApiResponse({
+    status: 429,
     description: '登录尝试过于频繁，请稍后再试',
     schema: {
       example: {
@@ -215,8 +200,8 @@ export class AuthController {
       }
     }
   })
-  @ApiResponse({ 
-    status: 404, 
+  @ApiResponse({
+    status: 404,
     description: '用户不存在',
     schema: {
       example: {
@@ -226,7 +211,7 @@ export class AuthController {
       }
     }
   })
-  @ApiBody({ 
+  @ApiBody({
     type: LoginDto,
     description: '登录请求参数',
     examples: {
@@ -312,7 +297,7 @@ export class AuthController {
   @ApiOperation({
     summary: '发送验证码',
     description: '向指定的邮箱或手机号发送验证码。支持注册、登录、重置密码等场景。发送频率限制：同一目标60秒内只能发送一次。验证码有效期为5分钟。',
-    tags: ['认证']
+    tags: ['Auth']
   })
   @ApiConsumes('application/json')
   @ApiProduces('application/json')
@@ -322,15 +307,15 @@ export class AuthController {
     schema: {
       type: 'object',
       properties: {
-        success: { 
-          type: 'boolean', 
+        success: {
+          type: 'boolean',
           description: '发送是否成功',
-          example: true 
+          example: true
         },
-        message: { 
-          type: 'string', 
+        message: {
+          type: 'string',
           description: '发送结果消息',
-          example: '验证码已发送，请查收' 
+          example: '验证码已发送，请查收'
         },
       },
       example: {
@@ -474,10 +459,10 @@ export class AuthController {
   @Public()
   @Post('verify-code')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '验证验证码',
     description: '验证邮箱或手机号收到的验证码是否正确。用于注册、登录、重置密码等场景的验证码校验。',
-    tags: ['认证']
+    tags: ['Auth']
   })
   @ApiConsumes('application/json')
   @ApiProduces('application/json')
@@ -496,8 +481,8 @@ export class AuthController {
       }
     },
   })
-  @ApiResponse({ 
-    status: 400, 
+  @ApiResponse({
+    status: 400,
     description: '请求参数错误',
     schema: {
       example: {
@@ -507,8 +492,8 @@ export class AuthController {
       }
     }
   })
-  @ApiResponse({ 
-    status: 422, 
+  @ApiResponse({
+    status: 422,
     description: '验证码错误或已过期',
     schema: {
       example: {
@@ -517,7 +502,7 @@ export class AuthController {
       }
     }
   })
-  @ApiBody({ 
+  @ApiBody({
     type: VerifyCodeDto,
     description: '验证码验证请求参数',
     examples: {
@@ -550,10 +535,10 @@ export class AuthController {
   @Public()
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '重置密码',
     description: '通过验证码重置用户密码。需要先调用发送验证码接口获取验证码，然后提供验证码和新密码完成重置。',
-    tags: ['认证']
+    tags: ['Auth']
   })
   @ApiConsumes('application/json')
   @ApiProduces('application/json')
@@ -572,8 +557,8 @@ export class AuthController {
       }
     },
   })
-  @ApiResponse({ 
-    status: 400, 
+  @ApiResponse({
+    status: 400,
     description: '请求参数错误',
     schema: {
       example: {
@@ -583,8 +568,8 @@ export class AuthController {
       }
     }
   })
-  @ApiResponse({ 
-    status: 404, 
+  @ApiResponse({
+    status: 404,
     description: '用户不存在',
     schema: {
       example: {
@@ -594,8 +579,8 @@ export class AuthController {
       }
     }
   })
-  @ApiResponse({ 
-    status: 422, 
+  @ApiResponse({
+    status: 422,
     description: '验证码错误或已过期',
     schema: {
       example: {
@@ -605,7 +590,7 @@ export class AuthController {
       }
     }
   })
-  @ApiBody({ 
+  @ApiBody({
     type: ResetPasswordDto,
     description: '重置密码请求参数',
     examples: {
@@ -641,10 +626,10 @@ export class AuthController {
   @Public()
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '刷新访问令牌',
     description: '使用刷新令牌获取新的访问令牌。当访问令牌过期时，可以使用此接口获取新的访问令牌而无需重新登录。',
-    tags: ['认证']
+    tags: ['Auth']
   })
   @ApiConsumes('application/json')
   @ApiProduces('application/json')
@@ -654,8 +639,8 @@ export class AuthController {
     schema: {
       type: 'object',
       properties: {
-        accessToken: { 
-          type: 'string', 
+        accessToken: {
+          type: 'string',
           description: '新的访问令牌',
           example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
         },
@@ -665,8 +650,8 @@ export class AuthController {
       }
     },
   })
-  @ApiResponse({ 
-    status: 401, 
+  @ApiResponse({
+    status: 401,
     description: '刷新令牌无效或已过期',
     schema: {
       example: {
@@ -676,8 +661,8 @@ export class AuthController {
       }
     }
   })
-  @ApiResponse({ 
-    status: 400, 
+  @ApiResponse({
+    status: 400,
     description: '请求参数错误',
     schema: {
       example: {
@@ -692,7 +677,7 @@ export class AuthController {
     schema: {
       type: 'object',
       properties: {
-        refreshToken: { 
+        refreshToken: {
           type: 'string',
           description: '刷新令牌',
           example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
@@ -718,15 +703,15 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '退出登录',
     description: '用户退出登录。由于JWT是无状态的，客户端删除token即可完成退出。如果需要实现token黑名单，可以在服务端添加相应逻辑。',
-    tags: ['认证']
+    tags: ['Auth']
   })
   @ApiConsumes('application/json')
   @ApiProduces('application/json')
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '退出登录成功',
     schema: {
       type: 'object',
@@ -740,8 +725,8 @@ export class AuthController {
       }
     }
   })
-  @ApiResponse({ 
-    status: 401, 
+  @ApiResponse({
+    status: 401,
     description: '未授权，访问令牌无效或已过期',
     schema: {
       example: {
@@ -751,16 +736,7 @@ export class AuthController {
       }
     }
   })
-  @ApiBearerAuth('JWT-auth')
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'Bearer token',
-    required: true,
-    schema: {
-      type: 'string',
-      example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-    }
-  })
+  @ApiBearerAuth()
   async logout(): Promise<{ success: boolean; message: string }> {
     // JWT是无状态的，客户端删除token即可
     // 如果需要实现token黑名单，可以在这里添加逻辑
@@ -770,195 +746,7 @@ export class AuthController {
     };
   }
 
-  @Get('profile')
-  @ApiOperation({ 
-    summary: '获取当前用户信息',
-    description: '获取当前登录用户的详细信息，包括基本信息、验证状态、用户档案等。需要提供有效的访问令牌。',
-    tags: ['用户']
-  })
-  @ApiProduces('application/json')
-  @ApiResponse({
-    status: 200,
-    description: '获取用户信息成功，返回用户详细信息',
-    type: UserProfileResponseDto,
-    schema: {
-      example: {
-        id: '123e4567-e89b-12d3-a456-426614174000',
-        username: 'testuser',
-        email: 'user@example.com',
-        countryCode: '+86',
-        phone: '13800138000',
-        emailVerified: true,
-        phoneVerified: true,
-        lastLoginAt: '2024-01-01T12:00:00.000Z',
-        createdAt: '2024-01-01T00:00:00.000Z',
-        profile: {
-          name: '张三',
-          avatar: 'https://example.com/avatar.jpg',
-          bio: '这是我的个人简介',
-          firstName: '三',
-          lastName: '张',
-          dateOfBirth: '1990-01-01T00:00:00.000Z',
-          gender: 'male',
-          city: '北京',
-          country: '中国'
-        }
-      }
-    }
-  })
-  @ApiResponse({ 
-    status: 401, 
-    description: '未授权，访问令牌无效或已过期',
-    schema: {
-      example: {
-        statusCode: 401,
-        message: 'Unauthorized',
-        error: 'Unauthorized'
-      }
-    }
-  })
-  @ApiBearerAuth('JWT-auth')
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'Bearer token',
-    required: true,
-    schema: {
-      type: 'string',
-      example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-    }
-  })
-  async getProfile(@User() user: CurrentUser): Promise<UserProfileResponseDto> {
-    return await this.authService.getProfile(user.id);
-  }
 
-  @Put('profile')
-  @ApiOperation({ 
-    summary: '更新用户资料',
-    description: '更新当前登录用户的资料信息，包括用户名、邮箱、手机号、头像、姓名、个人简介等。需要提供有效的访问令牌。',
-    tags: ['用户']
-  })
-  @ApiConsumes('application/json')
-  @ApiProduces('application/json')
-  @ApiResponse({
-    status: 200,
-    description: '更新成功，返回更新后的用户信息',
-    type: UserProfileResponseDto,
-    schema: {
-      example: {
-        id: '123e4567-e89b-12d3-a456-426614174000',
-        username: 'newusername',
-        email: 'newemail@example.com',
-        countryCode: '+86',
-        phone: '13800138001',
-        emailVerified: false,
-        phoneVerified: false,
-        lastLoginAt: '2024-01-01T12:00:00.000Z',
-        createdAt: '2024-01-01T00:00:00.000Z',
-        profile: {
-          name: '李四',
-          avatar: 'https://example.com/new-avatar.jpg',
-          bio: '这是我更新后的个人简介'
-        }
-      }
-    }
-  })
-  @ApiResponse({ 
-    status: 400, 
-    description: '请求参数错误',
-    schema: {
-      example: {
-        statusCode: 400,
-        message: ['邮箱格式不正确', '用户名只能包含字母、数字和下划线'],
-        error: 'Bad Request'
-      }
-    }
-  })
-  @ApiResponse({ 
-    status: 401, 
-    description: '未授权，访问令牌无效或已过期',
-    schema: {
-      example: {
-        statusCode: 401,
-        message: 'Unauthorized',
-        error: 'Unauthorized'
-      }
-    }
-  })
-  @ApiResponse({ 
-    status: 409, 
-    description: '用户名/邮箱/手机号已被其他用户使用',
-    schema: {
-      example: {
-        statusCode: 409,
-        message: '该邮箱已被其他用户使用',
-        error: 'Conflict'
-      }
-    }
-  })
-  @ApiBearerAuth('JWT-auth')
-  @ApiBody({ 
-    type: UpdateProfileDto,
-    description: '更新用户资料请求参数',
-    examples: {
-      basic_update: {
-        summary: '基本信息更新',
-        description: '更新用户名和邮箱',
-        value: {
-          username: 'newusername',
-          email: 'newemail@example.com'
-        }
-      },
-      profile_update: {
-        summary: '档案信息更新',
-        description: '更新用户档案信息',
-        value: {
-          name: '李四',
-          avatar: 'https://example.com/new-avatar.jpg',
-          bio: '这是我更新后的个人简介'
-        }
-      },
-      contact_update: {
-        summary: '联系方式更新',
-        description: '更新手机号码',
-        value: {
-          phone: '13800138001',
-          countryCode: '+86'
-        }
-      }
-    }
-  })
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'Bearer token',
-    required: true,
-    schema: {
-      type: 'string',
-      example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-    }
-  })
-  @ApiHeader({
-    name: 'Content-Type',
-    description: '请求内容类型',
-    required: true,
-    schema: {
-      type: 'string',
-      default: 'application/json'
-    }
-  })
-  async updateProfile(
-    @User() user: CurrentUser,
-    @Body(ValidationPipe) updateProfileDto: UpdateProfileDto,
-    @Req() req: Request,
-  ): Promise<UserProfileResponseDto> {
-    const ip = this.getClientIp(req);
-    const userAgent = req.get('User-Agent');
-    return await this.authService.updateProfile(
-      user.id,
-      updateProfileDto,
-      ip,
-      userAgent,
-    );
-  }
 
   private getClientIp(req: Request): string {
     return (
