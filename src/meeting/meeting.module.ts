@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-07 03:42:31
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-07-29 15:23:45
+ * @LastEditTime: 2025-07-29 19:16:22
  * @FilePath: /lulab_backend/src/meeting/meeting.module.ts
  * @Description: 
  * 
@@ -22,10 +22,9 @@ import { TencentEventHandlerFactory } from './services/platforms/tencent/handler
 import { RecordingCompletedHandler } from './services/platforms/tencent/handlers/recording-completed-handler';
 import { MeetingStartedHandler } from './services/platforms/tencent/handlers/meeting-started-handler';
 import { MeetingEndedHandler } from './services/platforms/tencent/handlers/meeting-ended-handler';
-import { ParticipantJoinedHandler } from './services/platforms/tencent/handlers/participant-joined-handler';
-import { ParticipantLeftHandler } from './services/platforms/tencent/handlers/participant-left-handler';
 import { WebhookController } from './controllers/webhook.controller';
 import { WebhookService } from './services/webhook.service';
+import { FeishuWebhookHandler } from './services/platforms/feishu/feishu-webhook.service';
 import { HttpModule } from '@nestjs/axios';
 import { WebhookLoggingInterceptor } from './interceptors/webhook-logging.interceptor';
 import { VideoProcessor } from './processors/video-processor';
@@ -55,9 +54,8 @@ import { PrismaService } from '../prisma.service';
     RecordingCompletedHandler,
     MeetingStartedHandler,
     MeetingEndedHandler,
-    ParticipantJoinedHandler,
-    ParticipantLeftHandler,
     WebhookService,
+    FeishuWebhookHandler,
     WebhookLoggingInterceptor,
     VideoProcessor,
     AudioProcessor,

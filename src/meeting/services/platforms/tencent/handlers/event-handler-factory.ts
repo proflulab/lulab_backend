@@ -3,8 +3,7 @@ import { BaseTencentEventHandler } from './base-event-handler';
 import { RecordingCompletedHandler } from './recording-completed-handler';
 import { MeetingStartedHandler } from './meeting-started-handler';
 import { MeetingEndedHandler } from './meeting-ended-handler';
-import { ParticipantJoinedHandler } from './participant-joined-handler';
-import { ParticipantLeftHandler } from './participant-left-handler';
+
 import { UnsupportedWebhookEventException } from '../../../../exceptions/webhook.exceptions';
 
 /**
@@ -21,8 +20,6 @@ export class TencentEventHandlerFactory {
         private readonly recordingCompletedHandler: RecordingCompletedHandler,
         private readonly meetingStartedHandler: MeetingStartedHandler,
         private readonly meetingEndedHandler: MeetingEndedHandler,
-        private readonly participantJoinedHandler: ParticipantJoinedHandler,
-        private readonly participantLeftHandler: ParticipantLeftHandler,
     ) {
         this.initializeHandlers();
     }
@@ -34,9 +31,7 @@ export class TencentEventHandlerFactory {
         const handlers = [
             this.recordingCompletedHandler,
             this.meetingStartedHandler,
-            this.meetingEndedHandler,
-            this.participantJoinedHandler,
-            this.participantLeftHandler
+            this.meetingEndedHandler
         ];
 
         for (const handler of handlers) {

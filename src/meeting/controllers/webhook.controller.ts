@@ -21,12 +21,7 @@ import { TencentWebhookDecorators, CommonWebhookDecorators, applyDecorators } fr
 /**
  * 统一Webhook控制器
  * 处理各平台的Webhook请求
- * 
- * TODO: 添加Webhook请求频率限制
- * TODO: 实现Webhook事件重试机制
- * TODO: 添加Webhook事件持久化存储
- * TODO: 实现Webhook事件监控和告警
- * TODO: 添加更多平台支持（钉钉、企业微信等）
+ *
  */
 @ApiTags('Webhooks')
 @Controller('webhooks')
@@ -109,10 +104,6 @@ export class WebhookController {
                     throw new BadRequestException('缺少必要的签名头部信息');
                 }
 
-                // TODO: 添加请求时间戳验证，防止重放攻击
-                // TODO: 实现事件去重机制
-                // TODO: 添加事件处理状态跟踪
-
                 // 处理加密的事件数据
                 const encryptedData = typeof body === 'string' ? body : JSON.stringify(body);
 
@@ -130,71 +121,6 @@ export class WebhookController {
 
         } catch (error) {
             this.logger.error('处理腾讯会议Webhook失败', error.stack);
-            throw error;
-        }
-    }
-
-    /**
-     * Zoom Webhook接收端点（示例）
-     * TODO: 实现完整的Zoom Webhook处理逻辑
-     * TODO: 添加Zoom特定的签名验证
-     * TODO: 实现Zoom会议事件的具体处理
-     * TODO: 添加Zoom API集成和录制文件处理
-     */
-    @Post('zoom')
-    @HttpCode(HttpStatus.OK)
-    @ApiOperation({
-        summary: 'Zoom Webhook',
-        description: '接收Zoom的Webhook事件'
-    })
-    @ApiResponse({
-        status: 200,
-        description: 'Webhook处理成功'
-    })
-    async handleZoomWebhook(
-        @Body() body: any,
-        @Headers() headers: Record<string, string>
-    ): Promise<void> {
-        this.logger.log('收到Zoom Webhook请求');
-
-        try {
-            // TODO: 实现Zoom Webhook事件处理逻辑
-            await this.webhookService.handleZoomWebhookEvent(body, headers);
-        } catch (error) {
-            this.logger.error('处理Zoom Webhook失败', error.stack);
-            throw error;
-        }
-    }
-
-    /**
-     * Microsoft Teams Webhook接收端点（示例）
-     * TODO: 实现完整的Microsoft Teams Webhook处理逻辑
-     * TODO: 添加Teams特定的身份验证和签名验证
-     * TODO: 实现Teams会议事件的具体处理
-     * TODO: 添加Microsoft Graph API集成
-     * TODO: 实现Teams录制文件和转录处理
-     */
-    @Post('teams')
-    @HttpCode(HttpStatus.OK)
-    @ApiOperation({
-        summary: 'Teams Webhook',
-        description: '接收Microsoft Teams的Webhook事件'
-    })
-    @ApiResponse({
-        status: 200,
-        description: 'Webhook处理成功'
-    })
-    async handleTeamsWebhook(
-        @Body() body: any,
-        @Headers() headers: Record<string, string>
-    ): Promise<void> {
-        this.logger.log('收到Teams Webhook请求');
-
-        try {
-            // TODO: 实现Teams Webhook事件处理逻辑
-            await this.webhookService.handleTeamsWebhookEvent(body, headers);
-        } catch (error) {
-            this.logger.error('处理Teams Webhook失败', error.stack);
             throw error;
         }
     }

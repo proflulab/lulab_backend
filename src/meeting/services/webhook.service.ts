@@ -5,6 +5,7 @@ import {
     UnsupportedWebhookEventException,
     WebhookProcessingTimeoutException
 } from '../exceptions/webhook.exceptions';
+import { FeishuWebhookHandler } from './platforms/feishu/feishu-webhook.service';
 
 /**
  * 统一Webhook处理服务
@@ -15,7 +16,9 @@ export class WebhookService {
     private readonly logger = new Logger(WebhookService.name);
     private readonly eventHandlers: Map<string, Function> = new Map();
 
-    constructor() {
+    constructor(
+        private readonly feishuWebhookHandler: FeishuWebhookHandler
+    ) {
         this.initializeEventHandlers();
     }
 
@@ -119,39 +122,15 @@ export class WebhookService {
 
     // 以下是其他平台的Webhook处理方法示例，可以根据需要实现
 
-    /**
-     * 处理Zoom Webhook事件（示例）
-     */
-    async handleZoomWebhookEvent(
-        payload: any,
-        headers: Record<string, string>
-    ): Promise<void> {
-        this.logger.log('处理Zoom Webhook事件');
-        // TODO: 实现Zoom Webhook处理逻辑
-        throw new Error('Zoom Webhook处理尚未实现');
-    }
+
 
     /**
-     * 处理Teams Webhook事件（示例）
-     */
-    async handleTeamsWebhookEvent(
-        payload: any,
-        headers: Record<string, string>
-    ): Promise<void> {
-        this.logger.log('处理Teams Webhook事件');
-        // TODO: 实现Teams Webhook处理逻辑
-        throw new Error('Teams Webhook处理尚未实现');
-    }
-
-    /**
-     * 处理飞书Webhook事件（示例）
+     * 处理飞书Webhook事件
      */
     async handleFeishuWebhookEvent(
         payload: any,
         headers: Record<string, string>
     ): Promise<void> {
-        this.logger.log('处理飞书Webhook事件');
-        // TODO: 实现飞书Webhook处理逻辑
-        throw new Error('飞书Webhook处理尚未实现');
+        return this.feishuWebhookHandler.handleWebhookEvent(payload, headers);
     }
 }
