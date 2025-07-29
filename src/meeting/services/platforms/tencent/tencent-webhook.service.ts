@@ -25,17 +25,20 @@ export class TencentWebhookHandler {
     ) { }
 
     /**
-     * 验证Webhook URL
-     * @param params 验证参数
+     * 验证腾讯会议Webhook URL
+     * @param checkStr 待验证的字符串
+     * @param timestamp 时间戳
+     * @param nonce 随机数
+     * @param signature 签名
      * @returns 解密后的明文
      */
-    async verifyUrl(params: {
-        checkStr: string;
-        timestamp: string;
-        nonce: string;
-        signature: string;
-    }): Promise<string> {
-        const { checkStr, timestamp, nonce, signature } = params;
+    async verifyWebhookUrl(
+        checkStr: string,
+        timestamp: string,
+        nonce: string,
+        signature: string
+    ): Promise<string> {
+        this.logger.log('处理腾讯会议Webhook URL验证');
 
         try {
             // 1. 参数校验
@@ -67,7 +70,7 @@ export class TencentWebhookHandler {
             // 3. 解密check_str
             this.logger.log('开始解密check_str');
             const decryptedStr = await aesDecrypt(decodeURIComponent(checkStr), encodingAesKey);
-            this.logger.log('URL验证解密成功');
+            this.logger.log('腾讯会议Webhook URL验证解密成功');
 
             return decryptedStr;
         } catch (error) {
@@ -91,7 +94,7 @@ export class TencentWebhookHandler {
      * @param data 数据
      * @returns 验证结果
      */
-    async verifySignature(
+    private async verifySignature(
         timestamp: string,
         nonce: string,
         signature: string,
@@ -113,7 +116,7 @@ export class TencentWebhookHandler {
      * @param encryptedData 加密数据
      * @returns 解密后的数据
      */
-    async decryptData(encryptedData: string): Promise<TencentMeetingEvent> {
+    private async decryptData(encryptedData: string): Promise<TencentMeetingEvent> {
         try {
             const encodingAesKey = this.configService.getEncodingAesKey();
 
@@ -141,30 +144,6 @@ export class TencentWebhookHandler {
     }
 
     /**
-     * 处理Webhook事件
-     * @param eventData 事件数据
-     */
-    async handleEvent(eventData: TencentMeetingEvent): Promise<void> {
-        this.logger.log(`处理腾讯会议事件: ${eventData.event}`);
-
-        try {
-            // 验证事件数据格式
-            this.eventValidator.validateEventData(eventData);
-
-            // 获取对应的事件处理器
-            const handler = this.eventHandlerFactory.getHandler(eventData.event);
-
-            // 使用处理器处理事件
-            await handler.handleEvent(eventData);
-
-            this.logger.log(`腾讯会议事件处理完成: ${eventData.event}`);
-        } catch (error) {
-            this.logger.error(`腾讯会议事件处理失败: ${eventData.event}`, error);
-            throw error;
-        }
-    }
-
-    /**
      * 获取支持的事件类型列表
      * @returns 支持的事件类型数组
      */
@@ -182,26 +161,8 @@ export class TencentWebhookHandler {
     }
 
     /**
-     * 验证腾讯会议Webhook URL（统一入口）
-     */
-    async verifyWebhookUrl(
-        checkStr: string,
-        timestamp: string,
-        nonce: string,
-        signature: string
-    ): Promise<string> {
-        this.logger.log('处理腾讯会议Webhook URL验证');
-
-        return this.verifyUrl({
-            checkStr,
-            timestamp,
-            nonce,
-            signature
-        });
-    }
-
-    /**
-     * 处理腾讯会议Webhook事件（统一入口）
+     * 处理腾讯会议Webhook事件
+     * 包含签名验证、数据解密和事件处理的完整流程
      */
     async handleWebhookEvent(
         encryptedData: string,
@@ -213,25 +174,54 @@ export class TencentWebhookHandler {
 
         try {
             // 验证签名
-            const isValid = await this.verifySignature(
-                timestamp,
-                nonce,
-                signature,
-                encryptedData
-            );
+            const token = this.configService.getToken();
+            const isValid = verifySignature(token, timestamp, nonce, encryptedData, signature);
 
             if (!isValid) {
-                throw new Error('Webhook签名验证失败');
+                throw new WebhookSignatureVerificationException('TENCENT_MEETING');
             }
 
             // 解密数据
-            const decryptedData = await this.decryptData(encryptedData);
+            const encodingAesKey = this.configService.getEncodingAesKey();
+            const decryptedData = await aesDecrypt(encryptedData, encodingAesKey);
 
-            // 处理事件
-            await this.handleEvent(decryptedData);
+            // 解析JSON
+            let eventData: TencentMeetingEvent;
+            try {
+                eventData = JSON.parse(decryptedData);
+            } catch (error) {
+                throw new WebhookDecryptionException(
+                    'TENCENT_MEETING',
+                    'Failed to parse decrypted data as JSON'
+                );
+            }
+
+            this.logger.log(`成功解密腾讯会议事件: ${eventData.event}`);
+
+            // 验证事件数据格式
+            this.eventValidator.validateEventData(eventData);
+
+            // 获取对应的事件处理器并处理事件
+            const handler = this.eventHandlerFactory.getHandler(eventData.event);
+            await handler.handleEvent(eventData);
+
+            this.logger.log(`腾讯会议事件处理完成: ${eventData.event}`);
 
         } catch (error) {
             this.logger.error('处理腾讯会议Webhook事件失败', error.stack);
+
+            if (error instanceof WebhookSignatureVerificationException ||
+                error instanceof WebhookDecryptionException) {
+                throw error;
+            }
+
+            if (error instanceof SyntaxError) {
+                throw new WebhookDecryptionException(
+                    'TENCENT_MEETING',
+                    'Failed to parse decrypted data as JSON'
+                );
+            }
+
             throw error;
         }
     }

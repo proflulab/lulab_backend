@@ -78,7 +78,6 @@ export class WebhookController {
         @Query('echostr') echostr?: string
     ): Promise<string | void> {
         this.logger.log('收到腾讯会议Webhook请求');
-
         try {
             // URL验证请求
             if (echostr && msgSignature && timestamp && nonce) {
