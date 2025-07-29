@@ -11,7 +11,7 @@ import {
     BadRequestException,
     UseInterceptors
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { WebhookService } from '../services/webhook.service';
 import { TencentWebhookEventDto, TencentWebhookHeadersDto } from '../dto/webhooks/tencent-webhook.dto';
 import { WebhookLoggingInterceptor } from '../interceptors/webhook-logging.interceptor';

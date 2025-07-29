@@ -63,13 +63,13 @@ export interface GetMeetingRecordsParams {
 
 @Injectable()
 export class MeetingRepository {
-    constructor(private prisma: PrismaService) {}
+    constructor(private prisma: PrismaService) { }
 
     /**
      * 根据平台和会议ID查找会议记录
      */
     async findMeetingByPlatformId(platform: MeetingPlatform, platformMeetingId: string) {
-        return this.prisma.meetingRecord.findUnique({
+        return this.prisma.meetings.findUnique({
             where: {
                 platform_platformMeetingId: {
                     platform,
@@ -83,7 +83,7 @@ export class MeetingRepository {
      * 根据ID查找会议记录
      */
     async findMeetingById(id: string) {
-        return this.prisma.meetingRecord.findUnique({
+        return this.prisma.meetings.findUnique({
             where: { id },
             include: {
                 files: true
@@ -95,7 +95,7 @@ export class MeetingRepository {
      * 创建会议记录
      */
     async createMeetingRecord(data: CreateMeetingRecordData) {
-        return this.prisma.meetingRecord.create({
+        return this.prisma.meetings.create({
             data
         });
     }
@@ -104,7 +104,7 @@ export class MeetingRepository {
      * 更新会议记录
      */
     async updateMeetingRecord(id: string, data: UpdateMeetingRecordData) {
-        return this.prisma.meetingRecord.update({
+        return this.prisma.meetings.update({
             where: { id },
             data
         });
@@ -133,7 +133,7 @@ export class MeetingRepository {
      * 删除会议记录
      */
     async deleteMeetingRecord(id: string) {
-        return this.prisma.meetingRecord.delete({
+        return this.prisma.meetings.delete({
             where: { id }
         });
     }
@@ -160,7 +160,7 @@ export class MeetingRepository {
         }
 
         const [records, total] = await Promise.all([
-            this.prisma.meetingRecord.findMany({
+            this.prisma.meetings.findMany({
                 where,
                 include: {
                     files: true
@@ -171,7 +171,7 @@ export class MeetingRepository {
                 skip,
                 take: limit
             }),
-            this.prisma.meetingRecord.count({ where })
+            this.prisma.meetings.count({ where })
         ]);
 
         return {
