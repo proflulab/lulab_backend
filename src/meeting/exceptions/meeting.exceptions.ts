@@ -14,7 +14,7 @@ export class MeetingException extends HttpException {
  */
 export class MeetingRecordNotFoundException extends MeetingException {
     constructor(meetingId?: string) {
-        const message = meetingId 
+        const message = meetingId
             ? `会议记录未找到: ${meetingId}`
             : '会议记录未找到';
         super(message, HttpStatus.NOT_FOUND);

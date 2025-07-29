@@ -15,6 +15,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiQuery } from '@nestjs
 import { WebhookService } from '../services/webhook.service';
 import { TencentWebhookEventDto, TencentWebhookHeadersDto } from '../dto/webhooks/tencent-webhook.dto';
 import { WebhookLoggingInterceptor } from '../interceptors/webhook-logging.interceptor';
+import { TencentWebhookDecorators, CommonWebhookDecorators, applyDecorators } from '../../common/decorators/api-decorators';
 
 /**
  * 统一Webhook控制器
@@ -40,42 +41,7 @@ export class WebhookController {
      */
     @Get('tencent')
     @HttpCode(HttpStatus.OK)
-    @ApiOperation({
-        summary: '腾讯会议Webhook URL验证',
-        description: '用于腾讯会议webhook URL有效性验证'
-    })
-    @ApiQuery({
-        name: 'check_str',
-        description: '验证字符串',
-        required: true
-    })
-    @ApiQuery({
-        name: 'timestamp',
-        description: '时间戳',
-        required: true
-    })
-    @ApiQuery({
-        name: 'nonce',
-        description: '随机数',
-        required: true
-    })
-    @ApiQuery({
-        name: 'signature',
-        description: '签名',
-        required: true
-    })
-    @ApiResponse({
-        status: 200,
-        description: '验证成功，返回解密后的明文'
-    })
-    @ApiResponse({
-        status: 400,
-        description: '缺少必要参数'
-    })
-    @ApiResponse({
-        status: 403,
-        description: '签名验证失败'
-    })
+    @applyDecorators(TencentWebhookDecorators.urlVerification)
     async verifyTencentWebhook(
         @Query('check_str') checkStr: string,
         @Query('timestamp') timestamp: string,
@@ -103,47 +69,7 @@ export class WebhookController {
      */
     @Post('tencent')
     @HttpCode(HttpStatus.OK)
-    @ApiOperation({
-        summary: '腾讯会议Webhook事件接收',
-        description: '接收腾讯会议的Webhook事件通知'
-    })
-    @ApiHeader({
-        name: 'Wechatwork-Signature',
-        description: '腾讯会议签名',
-        required: true
-    })
-    @ApiQuery({
-        name: 'msg_signature',
-        description: '消息签名（URL验证时使用）',
-        required: false
-    })
-    @ApiQuery({
-        name: 'timestamp',
-        description: '时间戳',
-        required: false
-    })
-    @ApiQuery({
-        name: 'nonce',
-        description: '随机数',
-        required: false
-    })
-    @ApiQuery({
-        name: 'echostr',
-        description: '验证字符串（URL验证时使用）',
-        required: false
-    })
-    @ApiResponse({
-        status: 200,
-        description: 'Webhook处理成功'
-    })
-    @ApiResponse({
-        status: 400,
-        description: '请求参数错误'
-    })
-    @ApiResponse({
-        status: 401,
-        description: '签名验证失败'
-    })
+    @applyDecorators(TencentWebhookDecorators.eventReceiver)
     async handleTencentWebhook(
         @Body() body: any,
         @Headers() headers: TencentWebhookHeadersDto,
@@ -307,37 +233,7 @@ export class WebhookController {
      */
     @Post('events/supported')
     @HttpCode(HttpStatus.OK)
-    @ApiOperation({
-        summary: '获取支持的事件',
-        description: '获取当前支持的所有Webhook事件类型'
-    })
-    @ApiResponse({
-        status: 200,
-        description: '支持的事件列表',
-        schema: {
-            type: 'object',
-            properties: {
-                events: {
-                    type: 'array',
-                    items: { type: 'string' }
-                },
-                stats: {
-                    type: 'object',
-                    properties: {
-                        totalHandlers: { type: 'number' },
-                        supportedPlatforms: {
-                            type: 'array',
-                            items: { type: 'string' }
-                        },
-                        supportedEvents: {
-                            type: 'array',
-                            items: { type: 'string' }
-                        }
-                    }
-                }
-            }
-        }
-    })
+    @applyDecorators(CommonWebhookDecorators.supportedEvents)
     getSupportedEvents(): {
         events: string[];
         stats: {
@@ -357,22 +253,7 @@ export class WebhookController {
      */
     @Post('health')
     @HttpCode(HttpStatus.OK)
-    @ApiOperation({
-        summary: 'Webhook健康检查',
-        description: '检查Webhook服务的健康状态'
-    })
-    @ApiResponse({
-        status: 200,
-        description: '服务健康',
-        schema: {
-            type: 'object',
-            properties: {
-                status: { type: 'string' },
-                timestamp: { type: 'string' },
-                supportedEvents: { type: 'number' }
-            }
-        }
-    })
+    @applyDecorators(CommonWebhookDecorators.healthCheck)
     healthCheck(): {
         status: string;
         timestamp: string;

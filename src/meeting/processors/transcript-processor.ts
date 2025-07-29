@@ -144,7 +144,4 @@ export class TranscriptProcessor extends TextFileProcessor {
         // 清理多余的空白字符
         return content.replace(/\s+/g, ' ').trim();
     }
-
-
-
 }
