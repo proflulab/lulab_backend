@@ -1,7 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { MeetingPlatform } from '@prisma/client';
-import { TencentWebhookHandler } from './platforms/tencent/tencent-webhook.service';
-import { MeetingService } from './meeting.service';
 import { PlatformEventData } from '../types/meeting.types';
 import {
     UnsupportedWebhookEventException,
@@ -17,9 +15,7 @@ export class WebhookService {
     private readonly logger = new Logger(WebhookService.name);
     private readonly eventHandlers: Map<string, Function> = new Map();
 
-    constructor(
-        private readonly tencentWebhookHandler: TencentWebhookHandler,
-    ) {
+    constructor() {
         this.initializeEventHandlers();
     }
 
@@ -27,69 +23,10 @@ export class WebhookService {
      * 初始化事件处理器映射
      */
     private initializeEventHandlers(): void {
-        // 腾讯会议事件处理器
-        this.eventHandlers.set('tencent.recording.completed',
-            this.tencentWebhookHandler.handleEvent.bind(this.tencentWebhookHandler)
-        );
-
-        // 可以在这里添加其他平台的事件处理器
+        // 可以在这里添加各平台的事件处理器
+        // this.eventHandlers.set('tencent.recording.completed', this.handleTencentRecordingCompleted.bind(this));
         // this.eventHandlers.set('zoom.recording.completed', this.handleZoomRecordingCompleted.bind(this));
         // this.eventHandlers.set('teams.recording.completed', this.handleTeamsRecordingCompleted.bind(this));
-    }
-
-    /**
-     * 验证腾讯会议Webhook URL
-     */
-    async verifyTencentWebhook(
-        checkStr: string,
-        timestamp: string,
-        nonce: string,
-        signature: string
-    ): Promise<string> {
-        this.logger.log('处理腾讯会议Webhook URL验证');
-
-        return this.tencentWebhookHandler.verifyUrl({
-            checkStr,
-            timestamp,
-            nonce,
-            signature
-        });
-    }
-
-    /**
-     * 处理腾讯会议Webhook事件
-     */
-    async handleTencentWebhookEvent(
-        encryptedData: string,
-        timestamp: string,
-        nonce: string,
-        signature: string
-    ): Promise<void> {
-        this.logger.log('处理腾讯会议Webhook事件');
-
-        try {
-            // 验证签名
-            const isValid = await this.tencentWebhookHandler.verifySignature(
-                timestamp,
-                nonce,
-                signature,
-                encryptedData
-            );
-
-            if (!isValid) {
-                throw new Error('Webhook签名验证失败');
-            }
-
-            // 解密数据
-            const decryptedData = await this.tencentWebhookHandler.decryptData(encryptedData);
-
-            // 处理事件
-            await this.tencentWebhookHandler.handleEvent(decryptedData);
-
-        } catch (error) {
-            this.logger.error('处理腾讯会议Webhook事件失败', error.stack);
-            throw error;
-        }
     }
 
     /**

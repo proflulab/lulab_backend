@@ -16,6 +16,14 @@ import { MeetingRepository } from './repositories/meeting.repository';
 import { TencentMeetingService } from './services/platforms/tencent/tencent-meeting.service';
 import { TencentApiService } from './services/platforms/tencent/tencent-api.service';
 import { TencentWebhookHandler } from './services/platforms/tencent/tencent-webhook.service';
+import { TencentConfigService } from './services/platforms/tencent/tencent-config.service';
+import { TencentEventValidator } from './services/platforms/tencent/tencent-event-validator.service';
+import { TencentEventHandlerFactory } from './services/platforms/tencent/handlers/event-handler-factory';
+import { RecordingCompletedHandler } from './services/platforms/tencent/handlers/recording-completed-handler';
+import { MeetingStartedHandler } from './services/platforms/tencent/handlers/meeting-started-handler';
+import { MeetingEndedHandler } from './services/platforms/tencent/handlers/meeting-ended-handler';
+import { ParticipantJoinedHandler } from './services/platforms/tencent/handlers/participant-joined-handler';
+import { ParticipantLeftHandler } from './services/platforms/tencent/handlers/participant-left-handler';
 import { WebhookController } from './controllers/webhook.controller';
 import { WebhookService } from './services/webhook.service';
 import { HttpModule } from '@nestjs/axios';
@@ -41,6 +49,14 @@ import { PrismaService } from '../prisma.service';
     TencentMeetingService,
     TencentApiService,
     TencentWebhookHandler,
+    TencentConfigService,
+    TencentEventValidator,
+    TencentEventHandlerFactory,
+    RecordingCompletedHandler,
+    MeetingStartedHandler,
+    MeetingEndedHandler,
+    ParticipantJoinedHandler,
+    ParticipantLeftHandler,
     WebhookService,
     WebhookLoggingInterceptor,
     VideoProcessor,

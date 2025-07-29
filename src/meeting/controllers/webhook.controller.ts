@@ -13,7 +13,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { WebhookService } from '../services/webhook.service';
-import { TencentWebhookEventDto, TencentWebhookHeadersDto } from '../dto/webhooks/tencent-webhook.dto';
+import { TencentWebhookHandler } from '../services/platforms/tencent/tencent-webhook.service';
+import { TencentWebhookHeadersDto } from '../dto/webhooks/tencent-webhook.dto';
 import { WebhookLoggingInterceptor } from '../interceptors/webhook-logging.interceptor';
 import { TencentWebhookDecorators, CommonWebhookDecorators, applyDecorators } from '../../common/decorators/api-decorators';
 
@@ -33,7 +34,10 @@ import { TencentWebhookDecorators, CommonWebhookDecorators, applyDecorators } fr
 export class WebhookController {
     private readonly logger = new Logger(WebhookController.name);
 
-    constructor(private readonly webhookService: WebhookService) { }
+    constructor(
+        private readonly webhookService: WebhookService,
+        private readonly tencentWebhookHandler: TencentWebhookHandler
+    ) { }
 
     /**
      * 腾讯会议Webhook URL验证端点 (GET)
@@ -51,7 +55,7 @@ export class WebhookController {
         this.logger.log('收到腾讯会议Webhook URL验证请求');
 
         try {
-            return await this.webhookService.verifyTencentWebhook(
+            return await this.tencentWebhookHandler.verifyWebhookUrl(
                 checkStr,
                 timestamp,
                 nonce,
@@ -84,7 +88,7 @@ export class WebhookController {
             // URL验证请求
             if (echostr && msgSignature && timestamp && nonce) {
                 this.logger.log('处理腾讯会议URL验证请求');
-                return await this.webhookService.verifyTencentWebhook(
+                return await this.tencentWebhookHandler.verifyWebhookUrl(
                     echostr,
                     timestamp,
                     nonce,
@@ -112,7 +116,7 @@ export class WebhookController {
                 // 处理加密的事件数据
                 const encryptedData = typeof body === 'string' ? body : JSON.stringify(body);
 
-                await this.webhookService.handleTencentWebhookEvent(
+                await this.tencentWebhookHandler.handleWebhookEvent(
                     encryptedData,
                     eventTimestamp,
                     eventNonce,
