@@ -120,10 +120,6 @@ export class WebhookService {
         };
     }
 
-    // 以下是其他平台的Webhook处理方法示例，可以根据需要实现
-
-
-
     /**
      * 处理飞书Webhook事件
      */

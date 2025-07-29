@@ -23,6 +23,8 @@ import { RecordingCompletedHandler } from './services/platforms/tencent/handlers
 import { MeetingStartedHandler } from './services/platforms/tencent/handlers/meeting-started-handler';
 import { MeetingEndedHandler } from './services/platforms/tencent/handlers/meeting-ended-handler';
 import { WebhookController } from './controllers/webhook.controller';
+import { TencentWebhookController } from './controllers/tencent-webhook.controller';
+import { FeishuWebhookController } from './controllers/feishu-webhook.controller';
 import { WebhookService } from './services/webhook.service';
 import { FeishuWebhookHandler } from './services/platforms/feishu/feishu-webhook.service';
 import { HttpModule } from '@nestjs/axios';
@@ -41,6 +43,8 @@ import { PrismaService } from '../prisma.service';
   controllers: [
     MeetingController,
     WebhookController,
+    TencentWebhookController,
+    FeishuWebhookController,
   ],
   providers: [
     MeetingService,

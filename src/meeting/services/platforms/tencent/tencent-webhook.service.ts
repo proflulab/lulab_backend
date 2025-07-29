@@ -163,6 +163,30 @@ export class TencentWebhookHandler {
     /**
      * 处理腾讯会议Webhook事件
      * 包含签名验证、数据解密和事件处理的完整流程
+     * 处理已解密的腾讯会议事件数据
+     * @param eventData 已解密的事件数据
+     */
+    async handleDecryptedEvent(eventData: TencentMeetingEvent): Promise<void> {
+        this.logger.log('处理腾讯会议Webhook事件');
+
+        try {
+            // 验证事件数据格式
+            this.eventValidator.validateEventData(eventData);
+
+            // 获取对应的事件处理器并处理事件
+            const handler = this.eventHandlerFactory.getHandler(eventData.event);
+            await handler.handleEvent(eventData);
+
+            this.logger.log(`腾讯会议事件处理完成: ${eventData.event}`);
+
+        } catch (error) {
+            this.logger.error('处理腾讯会议Webhook事件失败', error.stack);
+            throw error;
+        }
+    }
+
+    /**
+     * @deprecated 使用 handleDecryptedEvent 替代，签名验证和解密逻辑已移至 controller 层
      */
     async handleWebhookEvent(
         encryptedData: string,
@@ -198,14 +222,8 @@ export class TencentWebhookHandler {
 
             this.logger.log(`成功解密腾讯会议事件: ${eventData.event}`);
 
-            // 验证事件数据格式
-            this.eventValidator.validateEventData(eventData);
-
-            // 获取对应的事件处理器并处理事件
-            const handler = this.eventHandlerFactory.getHandler(eventData.event);
-            await handler.handleEvent(eventData);
-
-            this.logger.log(`腾讯会议事件处理完成: ${eventData.event}`);
+            // 调用新的处理方法
+            await this.handleDecryptedEvent(eventData);
 
         } catch (error) {
             this.logger.error('处理腾讯会议Webhook事件失败', error.stack);
