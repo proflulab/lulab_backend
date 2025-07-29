@@ -51,7 +51,7 @@ export class WebhookController {
         this.logger.log('收到腾讯会议Webhook URL验证请求');
 
         try {
-            return await this.webhookService.verifyTencentWebhookUrl(
+            return await this.webhookService.verifyTencentWebhook(
                 checkStr,
                 timestamp,
                 nonce,
@@ -84,7 +84,7 @@ export class WebhookController {
             // URL验证请求
             if (echostr && msgSignature && timestamp && nonce) {
                 this.logger.log('处理腾讯会议URL验证请求');
-                return await this.webhookService.verifyTencentWebhookUrl(
+                return await this.webhookService.verifyTencentWebhook(
                     echostr,
                     timestamp,
                     nonce,

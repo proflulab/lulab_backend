@@ -19,7 +19,6 @@ export class WebhookService {
 
     constructor(
         private readonly tencentWebhookHandler: TencentWebhookHandler,
-        private readonly meetingService: MeetingService
     ) {
         this.initializeEventHandlers();
     }
@@ -30,7 +29,7 @@ export class WebhookService {
     private initializeEventHandlers(): void {
         // 腾讯会议事件处理器
         this.eventHandlers.set('tencent.recording.completed',
-            this.meetingService.handleTencentRecordingCompleted.bind(this.meetingService)
+            this.tencentWebhookHandler.handleEvent.bind(this.tencentWebhookHandler)
         );
 
         // 可以在这里添加其他平台的事件处理器
@@ -41,7 +40,7 @@ export class WebhookService {
     /**
      * 验证腾讯会议Webhook URL
      */
-    async verifyTencentWebhookUrl(
+    async verifyTencentWebhook(
         checkStr: string,
         timestamp: string,
         nonce: string,

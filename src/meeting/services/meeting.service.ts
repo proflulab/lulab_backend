@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import {
     MeetingPlatform,
     MeetingType,
@@ -7,10 +6,9 @@ import {
     StorageType,
     ProcessingStatus
 } from '@prisma/client';
-import { MeetingRepository, UpdateMeetingFileData } from '../repositories/meeting.repository';
+import { MeetingRepository } from '../repositories/meeting.repository';
 import { TencentMeetingService } from './platforms/tencent/tencent-meeting.service';
 import { FileProcessorFactory } from '../processors/file-processor.factory';
-import { IFileProcessor } from '../processors/file-processor.interface';
 import {
     CreateMeetingFileParams,
     GetMeetingRecordsParams,
@@ -33,65 +31,15 @@ export class MeetingService {
     private readonly logger = new Logger(MeetingService.name);
 
     constructor(
-        private readonly configService: ConfigService,
         private readonly meetingRepository: MeetingRepository,
         private readonly tencentMeetingService: TencentMeetingService,
         private readonly fileProcessorFactory: FileProcessorFactory
-    ) {}
-
-
-
-    /**
-     * 处理腾讯会议录制完成事件
-     */
-    async handleTencentRecordingCompleted(eventData: any): Promise<void> {
-        this.logger.log('开始处理腾讯会议录制完成事件');
-
-        for (const payload of eventData.payload) {
-            const meetingInfo = payload.meeting_info;
-            const {
-                meeting_id,
-                meeting_code,
-                meeting_type,
-                sub_meeting_id,
-                creator: { userid, user_name },
-                start_time,
-                end_time,
-                subject
-            } = meetingInfo;
-
-            // 处理所有录制文件
-            for (const recordingFile of payload.recording_files) {
-                const { record_file_id } = recordingFile;
-                this.logger.log(`处理录制文件ID: ${record_file_id}`);
-
-                try {
-                    await this.processRecordingFile({
-                        recordFileId: record_file_id,
-                        meetingId: meeting_id.toString(),
-                        meetingCode: meeting_code,
-                        meetingType: meeting_type,
-                        subMeetingId: sub_meeting_id,
-                        hostUserId: userid,
-                        hostUserName: user_name,
-                        startTime: start_time,
-                        endTime: end_time,
-                        title: subject
-                    });
-                } catch (error) {
-                    this.logger.error(`处理录制文件失败: ${record_file_id}`, error);
-                    // 继续处理其他文件，不中断整个流程
-                }
-            }
-        }
-
-        this.logger.log('腾讯会议录制完成事件处理完毕');
-    }
+    ) { }
 
     /**
      * 处理单个录制文件
      */
-    private async processRecordingFile(params: ProcessRecordingFileParams): Promise<void> {
+    async processRecordingFile(params: ProcessRecordingFileParams): Promise<void> {
         const {
             recordFileId,
             meetingId,

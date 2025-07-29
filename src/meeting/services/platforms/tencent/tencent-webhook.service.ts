@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, forwardRef, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { verifySignature, aesDecrypt } from './tencent-crypto.service';
 import { TencentMeetingEvent } from '../../../types/tencent.types';
@@ -7,6 +7,8 @@ import {
     WebhookDecryptionException,
     WebhookUrlVerificationException
 } from '../../../exceptions/webhook.exceptions';
+import { ProcessRecordingFileParams } from '../../../types/meeting.types';
+import { MeetingService } from '../../meeting.service';
 
 /**
  * 腾讯会议Webhook处理器
@@ -16,7 +18,11 @@ import {
 export class TencentWebhookHandler {
     private readonly logger = new Logger(TencentWebhookHandler.name);
 
-    constructor(private readonly configService: ConfigService) { }
+    constructor(
+        private readonly configService: ConfigService,
+        @Inject(forwardRef(() => MeetingService))
+        private readonly meetingService: MeetingService
+    ) { }
 
     /**
      * 验证Webhook URL
@@ -163,14 +169,21 @@ export class TencentWebhookHandler {
         this.logger.log(`处理腾讯会议事件: ${eventData.event}`);
 
         try {
-            // 这里可以添加事件预处理逻辑
-            // 例如：验证事件格式、记录事件日志等
-
             // 验证事件数据格式
             this.validateEventData(eventData);
 
             // 记录事件接收
             this.logEventReceived(eventData);
+
+            // 根据事件类型进行具体处理
+            switch (eventData.event) {
+                case 'recording.completed':
+                    await this.handleRecordingCompleted(eventData);
+                    break;
+                default:
+                    this.logger.warn(`未处理的事件类型: ${eventData.event}`);
+                    break;
+            }
 
             this.logger.log(`腾讯会议事件处理完成: ${eventData.event}`);
         } catch (error) {
@@ -279,5 +292,53 @@ export class TencentWebhookHandler {
      */
     isEventSupported(eventType: string): boolean {
         return this.getSupportedEvents().includes(eventType);
+    }
+
+    /**
+     * 处理腾讯会议录制完成事件
+     * @param eventData 事件数据
+     */
+    private async handleRecordingCompleted(eventData: TencentMeetingEvent): Promise<void> {
+        this.logger.log('开始处理腾讯会议录制完成事件');
+
+        for (const payload of eventData.payload) {
+            const meetingInfo = payload.meeting_info;
+            const {
+                meeting_id,
+                meeting_code,
+                meeting_type,
+                sub_meeting_id,
+                creator: { userid, user_name },
+                start_time,
+                end_time,
+                subject
+            } = meetingInfo;
+
+            // 处理所有录制文件
+            for (const recordingFile of payload.recording_files) {
+                const { record_file_id } = recordingFile;
+                this.logger.log(`处理录制文件ID: ${record_file_id}`);
+
+                try {
+                    await this.meetingService.processRecordingFile({
+                        recordFileId: record_file_id,
+                        meetingId: meeting_id.toString(),
+                        meetingCode: meeting_code,
+                        meetingType: meeting_type,
+                        subMeetingId: sub_meeting_id,
+                        hostUserId: userid,
+                        hostUserName: user_name,
+                        startTime: start_time,
+                        endTime: end_time,
+                        title: subject
+                    });
+                } catch (error) {
+                    this.logger.error(`处理录制文件失败: ${record_file_id}`, error);
+                    // 继续处理其他文件，不中断整个流程
+                }
+            }
+        }
+
+        this.logger.log('腾讯会议录制完成事件处理完毕');
     }
 }
