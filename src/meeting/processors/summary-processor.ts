@@ -32,7 +32,7 @@ export class SummaryProcessor extends TextFileProcessor {
     protected async getSpecificMetadata(content: string): Promise<any> {
         // 提取摘要结构化信息
         const structuredSummary = await this.extractStructuredInfo(content);
-        
+
         return {
             keyPoints: structuredSummary.keyPoints,
             actionItems: structuredSummary.actionItems,
@@ -267,8 +267,4 @@ export class SummaryProcessor extends TextFileProcessor {
 
         return [...new Set(topics)].slice(0, 10);
     }
-
-
-
-
 }

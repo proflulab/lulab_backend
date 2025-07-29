@@ -1,6 +1,5 @@
 import { Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
 import { BaseFileProcessor, FileProcessingParams, FileProcessingResult } from './file-processor.interface';
 import { TextAnalysisUtil } from '../utils/text-analysis.util';
 import { HttpFileUtil } from '../utils/http-file.util';

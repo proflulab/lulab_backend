@@ -36,7 +36,7 @@ import { MeetingPlatform, MeetingType, ProcessingStatus } from '@prisma/client';
  * 会议记录控制器
  * 提供会议记录的CRUD操作API
  */
-@ApiTags('Meeting Records')
+@ApiTags('Meet')
 @Controller('meetings')
 @ApiBearerAuth()
 export class MeetingController {

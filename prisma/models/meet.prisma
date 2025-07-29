@@ -52,7 +52,7 @@ enum ProcessingStatus {
 }
 
 // 通用会议记录模型
-model MeetingRecord {
+model Meetings {
     id String @id @default(cuid())
 
     // 平台和来源信息
@@ -81,6 +81,7 @@ model MeetingRecord {
     actualStartAt    DateTime? // 实际开始时间
     endedAt          DateTime? // 结束时间
     duration         Int? // 持续时长(分钟)
+    timezone         String?   @db.VarChar(50) // 时区
 
     // 录制和处理状态
     hasRecording     Boolean          @default(false)
@@ -97,13 +98,17 @@ model MeetingRecord {
     // 元数据
     metadata Json? // 平台特定的元数据
     tags     String[] // 标签
+    language String?  @db.VarChar(10) // 会议语言
 
     // 关联关系
-    files MeetingFile[] // 关联的文件
+    participants MeetingParticipant[] // 参与者
+    files        MeetingFile[] // 关联的文件
+    transcripts  MeetingTranscript[] // 转录记录
 
-    // 系统字段
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    // 系统字段及时间
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime? // 软删除时间戳
 
     @@unique([platform, platformMeetingId])
     @@index([platform])
@@ -112,7 +117,33 @@ model MeetingRecord {
     @@index([recordingStatus])
     @@index([processingStatus])
     @@index([tags])
+    @@index([deletedAt]) // 软删除查询索引
+    @@index([createdAt]) // 创建时间查询优化
     @@map("meeting_records")
+}
+
+model MeetingParticipant {
+    id        String   @id @default(cuid())
+    meetingId String
+    meeting   Meetings @relation(fields: [meetingId], references: [id])
+
+    userId String? // 可能是本地user表的id（如果能关联上）
+    user   User?   @relation(fields: [userId], references: [id])
+
+    uuid       String?
+    userName   String?
+    phoneHash  String? // 腾讯会议加密手机号
+    joinTime   DateTime?
+    leftTime   DateTime?
+    instanceId Int?
+    userRole   Int?
+    msOpenId   String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([meetingId])
+    @@index([phoneHash])
 }
 
 // 会议文件模型
@@ -121,7 +152,7 @@ model MeetingFile {
 
     // 关联会议
     meetingRecordId String
-    meetingRecord   MeetingRecord @relation(fields: [meetingRecordId], references: [id], onDelete: Cascade)
+    meetingRecord   Meetings @relation(fields: [meetingRecordId], references: [id], onDelete: Cascade)
 
     // 文件基本信息
     fileName         String // 文件名
@@ -148,6 +179,10 @@ model MeetingFile {
 
     // 元数据
     metadata Json? // 文件元数据
+    tags     String[] // 文件标签
+
+    // 软删除
+    deletedAt DateTime? // 软删除时间戳
 
     // 系统字段
     createdAt DateTime @default(now())
@@ -158,4 +193,26 @@ model MeetingFile {
     @@index([storageType])
     @@index([processingStatus])
     @@map("meeting_files")
+}
+
+model MeetingTranscript {
+    id        String   @id @default(cuid())
+    meetingId String
+    meeting   Meetings @relation(fields: [meetingId], references: [id])
+
+    paragraphId String // 对应 minutes.paragraphs[].pid
+    speakerId   String? // 腾讯会议的userid
+    speakerName String?
+    startTime   Int // 毫秒或秒
+    endTime     Int
+    text        String
+
+    userId String? // 你自己系统User的id（可选，匹配上就关联，没有就为空）
+    user   User?   @relation(fields: [userId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([meetingId])
+    @@index([speakerId])
 }

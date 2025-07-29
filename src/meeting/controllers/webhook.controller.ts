@@ -85,7 +85,7 @@ export class WebhookController {
         this.logger.log('收到腾讯会议Webhook URL验证请求');
 
         try {
-            return await this.webhookService.handleTencentWebhookVerification(
+            return await this.webhookService.verifyTencentWebhookUrl(
                 checkStr,
                 timestamp,
                 nonce,
@@ -158,7 +158,7 @@ export class WebhookController {
             // URL验证请求
             if (echostr && msgSignature && timestamp && nonce) {
                 this.logger.log('处理腾讯会议URL验证请求');
-                return await this.webhookService.handleTencentWebhookVerification(
+                return await this.webhookService.verifyTencentWebhookUrl(
                     echostr,
                     timestamp,
                     nonce,
@@ -182,7 +182,7 @@ export class WebhookController {
                 // TODO: 添加请求时间戳验证，防止重放攻击
                 // TODO: 实现事件去重机制
                 // TODO: 添加事件处理状态跟踪
-                
+
                 // 处理加密的事件数据
                 const encryptedData = typeof body === 'string' ? body : JSON.stringify(body);
 

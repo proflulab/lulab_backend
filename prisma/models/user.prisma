@@ -41,13 +41,16 @@ model User {
   dataPermissions UserDataPermission[] // 用户数据权限
 
   // 会议相关关联
-  hostedMeetings MeetingRecord[] @relation("HostedMeetings") // 主持的会议
+  hostedMeetings Meetings[] @relation("HostedMeetings") // 主持的会议
 
   // 登录日志关联
   loginLogs LoginLog[] // 登录日志
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  MeetingParticipant MeetingParticipant[]
+  MeetingTranscript  MeetingTranscript[]
 
   @@unique([countryCode, phone], name: "unique_phone_combination")
   @@index([username]) // 用户名登录优化

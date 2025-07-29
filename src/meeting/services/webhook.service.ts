@@ -39,9 +39,9 @@ export class WebhookService {
     }
 
     /**
-     * 处理腾讯会议Webhook验证
+     * 验证腾讯会议Webhook URL
      */
-    async handleTencentWebhookVerification(
+    async verifyTencentWebhookUrl(
         checkStr: string,
         timestamp: string,
         nonce: string,
