@@ -35,12 +35,6 @@ export interface IPlatformService {
      * @param userId 用户ID
      */
     getMeetingParticipants(meetingId: string, userId: string): Promise<any>;
-
-    /**
-     * 从URL获取文本内容
-     * @param url 文件URL
-     */
-    fetchTextFromUrl(url: string): Promise<string>;
 }
 
 /**

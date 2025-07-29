@@ -1,3 +1,14 @@
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-07-28 14:01:40
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-07-29 18:30:00
+ * @FilePath: /lulab_backend/src/meeting/services/platforms/base/base-platform.service.ts
+ * @Description: 
+ * 
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MeetingPlatform } from '@prisma/client';
@@ -10,7 +21,7 @@ import { IPlatformService } from './platform.interface';
 export abstract class BasePlatformService implements IPlatformService {
     protected readonly logger = new Logger(this.constructor.name);
 
-    constructor(protected readonly configService: ConfigService) {}
+    constructor(protected readonly configService: ConfigService) { }
 
     /**
      * 平台类型
@@ -42,29 +53,7 @@ export abstract class BasePlatformService implements IPlatformService {
      */
     abstract getMeetingParticipants(meetingId: string, userId: string): Promise<any>;
 
-    /**
-     * 从URL获取文本内容
-     */
-    async fetchTextFromUrl(url: string): Promise<string> {
-        if (!url) {
-            return '';
-        }
 
-        try {
-            const headers: Record<string, string> = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            };
-
-            const response = await fetch(url, { headers });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return await response.text();
-        } catch (error) {
-            this.logger.error('获取文件内容失败:', error);
-            return '';
-        }
-    }
 
     /**
      * 处理API错误

@@ -7,7 +7,6 @@ import {
     WebhookDecryptionException,
     WebhookUrlVerificationException
 } from '../../../exceptions/webhook.exceptions';
-import { ProcessRecordingFileParams } from '../../../types/meeting.types';
 import { MeetingService } from '../../meeting.service';
 
 /**

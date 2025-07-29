@@ -11,6 +11,7 @@ import {
     PlatformApiException,
     PlatformConfigException
 } from '../../../exceptions/meeting.exceptions';
+import { HttpFileUtil } from '../../../utils/http-file.util';
 
 /**
  * 腾讯会议平台服务
@@ -176,7 +177,7 @@ export class TencentMeetingService {
     async fetchTextFromUrl(url: string): Promise<string> {
         try {
             this.logger.log(`从URL获取文本内容: ${url}`);
-            const result = await this.tencentApiService.fetchTextFromUrl(url);
+            const result = await HttpFileUtil.fetchTextFromUrl(url);
             this.logger.log(`成功从URL获取文本内容，长度: ${result.length}`);
             return result;
         } catch (error) {

@@ -347,31 +347,5 @@ export class TencentApiService {
         }
     }
 
-    /**
-     * 从URL获取文本内容
-     * @param url 文件URL
-     * @returns 文本内容
-     */
-    async fetchTextFromUrl(url: string): Promise<string> {
-        if (!url) {
-            return '';
-        }
 
-        try {
-            const headers: Record<string, string> = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            };
-
-            const response = await fetch(url, {
-                headers
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return await response.text();
-        } catch (error) {
-            console.error('获取文件内容失败:', error);
-            return '';
-        }
-    }
 }

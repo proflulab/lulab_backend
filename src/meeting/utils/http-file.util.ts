@@ -101,4 +101,49 @@ export class HttpFileUtil {
             return null;
         }
     }
+
+    /**
+     * 从URL获取文本内容（使用原生fetch）
+     * @param url 文件URL
+     * @param options 请求选项
+     * @returns 文本内容
+     */
+    static async fetchTextFromUrl(
+        url: string,
+        options: {
+            userAgent?: string;
+            timeout?: number;
+        } = {}
+    ): Promise<string> {
+        if (!url) {
+            return '';
+        }
+
+        try {
+            const headers: Record<string, string> = {
+                'User-Agent': options.userAgent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            };
+
+            const controller = new AbortController();
+            const timeoutId = options.timeout ? setTimeout(() => controller.abort(), options.timeout) : null;
+
+            const response = await fetch(url, {
+                headers,
+                signal: controller.signal
+            });
+
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.text();
+        } catch (error) {
+            this.logger.error('获取文件内容失败:', error);
+            return '';
+        }
+    }
 }
