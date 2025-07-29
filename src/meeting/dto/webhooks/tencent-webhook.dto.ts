@@ -13,41 +13,6 @@ import { IsString, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 /**
- * 腾讯会议Webhook验证DTO
- */
-export class TencentWebhookVerificationDto {
-    @ApiProperty({ description: '验证字符串', required: true })
-    @IsString()
-    @IsNotEmpty()
-    check_str: string;
-
-    @ApiProperty({ description: '时间戳', required: true })
-    @IsString()
-    @IsNotEmpty()
-    timestamp: string;
-
-    @ApiProperty({ description: '随机数', required: true })
-    @IsString()
-    @IsNotEmpty()
-    nonce: string;
-
-    @ApiProperty({ description: '签名', required: true })
-    @IsString()
-    @IsNotEmpty()
-    signature: string;
-}
-
-/**
- * 腾讯会议Webhook事件DTO
- */
-export class TencentWebhookEventDto {
-    @ApiProperty({ description: '加密的事件数据', required: true })
-    @IsString()
-    @IsNotEmpty()
-    data: string;
-}
-
-/**
  * 腾讯会议Webhook头部DTO
  */
 export class TencentWebhookHeadersDto {

@@ -1,11 +1,21 @@
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-07-29 19:04:19
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-07-30 04:39:46
+ * @FilePath: /lulab_backend/src/meeting/services/platforms/feishu/feishu-webhook.service.ts
+ * @Description: 
+ * 
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
-import { IWebhookHandler } from '../base/platform.interface';
 
 /**
  * 飞书 Webhook处理服务
  */
 @Injectable()
-export class FeishuWebhookHandler implements IWebhookHandler {
+export class FeishuWebhookHandler {
     private readonly logger = new Logger(FeishuWebhookHandler.name);
 
     /**
