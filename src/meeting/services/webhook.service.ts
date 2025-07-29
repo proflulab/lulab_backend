@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { MeetingPlatform } from '@prisma/client';
-import { TencentWebhookHandler } from './platforms/tencent/tencent-webhook.handler';
+import { TencentWebhookHandler } from './platforms/tencent/tencent-webhook.service';
 import { MeetingService } from './meeting.service';
 import { PlatformEventData } from '../types/meeting.types';
 import {

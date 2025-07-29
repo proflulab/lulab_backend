@@ -15,7 +15,7 @@ import { MeetingService } from './services/meeting.service';
 import { MeetingRepository } from './repositories/meeting.repository';
 import { TencentMeetingService } from './services/platforms/tencent/tencent-meeting.service';
 import { TencentApiService } from './services/platforms/tencent/tencent-api.service';
-import { TencentWebhookHandler } from './services/platforms/tencent/tencent-webhook.handler';
+import { TencentWebhookHandler } from './services/platforms/tencent/tencent-webhook.service';
 import { WebhookController } from './controllers/webhook.controller';
 import { WebhookService } from './services/webhook.service';
 import { HttpModule } from '@nestjs/axios';

@@ -198,9 +198,9 @@ export class TencentMeetingService {
             // 使用一个简单的API调用来测试连接
             const endTime = Math.floor(Date.now() / 1000);
             const startTime = endTime - 24 * 60 * 60; // 24小时前
-            
+
             await this.getCorpRecords(startTime, endTime, 1, 1);
-            
+
             return {
                 success: true,
                 message: 'Tencent Meeting API connection successful'
@@ -235,7 +235,7 @@ export class TencentMeetingService {
         const availableConfigs = requiredConfigs.filter(
             config => !!this.configService.get<string>(config)
         );
-        
+
         const missingConfigs = requiredConfigs.filter(
             config => !this.configService.get<string>(config)
         );
