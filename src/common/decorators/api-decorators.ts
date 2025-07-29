@@ -1,5 +1,7 @@
 import { ApiOperation, ApiResponse, ApiQuery, ApiHeader } from '@nestjs/swagger';
 import { HttpStatus } from '@nestjs/common';
+import { MeetingPlatform, MeetingType, ProcessingStatus } from '@prisma/client';
+import { MeetingRecordListResponseDto } from '../../meeting/dto/common/meeting-record.dto';
 
 /**
  * 腾讯会议Webhook相关装饰器
@@ -112,7 +114,7 @@ export const CommonWebhookDecorators = {
         }),
         responses: [
             ApiResponse({
-                status: 200,
+                status: HttpStatus.OK,
                 description: '服务健康',
                 schema: {
                     type: 'object',
@@ -133,7 +135,7 @@ export const CommonWebhookDecorators = {
         }),
         responses: [
             ApiResponse({
-                status: 200,
+                status: HttpStatus.OK,
                 description: '支持的事件列表',
                 schema: {
                     type: 'object',
@@ -158,6 +160,81 @@ export const CommonWebhookDecorators = {
                         }
                     }
                 }
+            })
+        ]
+    }
+};
+
+
+/**
+ * 会议记录相关装饰器
+ */
+export const MeetingRecordDecorators = {
+    // 获取会议记录列表装饰器
+    getMeetingRecords: {
+        operation: ApiOperation({
+            summary: '获取会议记录列表',
+            description: '根据查询条件获取会议记录列表，支持分页、筛选和排序'
+        }),
+        queries: [
+            ApiQuery({
+                name: 'platform',
+                enum: MeetingPlatform,
+                required: false,
+                description: '会议平台'
+            }),
+            ApiQuery({
+                name: 'status',
+                enum: ProcessingStatus,
+                required: false,
+                description: '会议状态'
+            }),
+            ApiQuery({
+                name: 'type',
+                enum: MeetingType,
+                required: false,
+                description: '会议类型'
+            }),
+            ApiQuery({
+                name: 'startDate',
+                type: String,
+                required: false,
+                description: '开始日期 (YYYY-MM-DD)'
+            }),
+            ApiQuery({
+                name: 'endDate',
+                type: String,
+                required: false,
+                description: '结束日期 (YYYY-MM-DD)'
+            }),
+            ApiQuery({
+                name: 'page',
+                type: Number,
+                required: false,
+                description: '页码，从1开始'
+            }),
+            ApiQuery({
+                name: 'limit',
+                type: Number,
+                required: false,
+                description: '每页数量'
+            }),
+            ApiQuery({
+                name: 'search',
+                type: String,
+                required: false,
+                description: '搜索关键词（会议主题、主持人等）'
+            })
+        ],
+        responses: [
+            ApiResponse({
+                status: 200,
+                description: '获取成功',
+                type: MeetingRecordListResponseDto
+            }),
+            ApiResponse({
+                status: 400,
+                description: '请求参数错误'
             })
         ]
     }

@@ -39,7 +39,7 @@ export class FeishuWebhookHandler implements IWebhookHandler {
     }
 
     /**
-     * 处理飞书 Webhook事件（从原webhook.service.ts迁移）
+     * 处理飞书 Webhook事件
      */
     async handleWebhookEvent(
         payload: any,

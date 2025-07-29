@@ -22,6 +22,7 @@ import {
     ApiBearerAuth,
     ApiBody
 } from '@nestjs/swagger';
+import { MeetingRecordDecorators, applyDecorators } from '../../common/decorators/api-decorators';
 import { MeetingService } from '../services/meeting.service';
 import {
     QueryMeetingRecordsDto,
@@ -30,7 +31,6 @@ import {
 } from '../dto/common/meeting-record.dto';
 import { CreateMeetingRecordDto } from '../dto/common/create-meeting-record.dto';
 import { UpdateMeetingRecordDto } from '../dto/common/update-meeting-record.dto';
-import { MeetingPlatform, MeetingType, ProcessingStatus } from '@prisma/client';
 
 /**
  * 会议记录控制器
@@ -49,67 +49,7 @@ export class MeetingController {
      */
     @Get()
     @HttpCode(HttpStatus.OK)
-    @ApiOperation({
-        summary: '获取会议记录列表',
-        description: '根据查询条件获取会议记录列表，支持分页、筛选和排序'
-    })
-    @ApiQuery({
-        name: 'platform',
-        enum: MeetingPlatform,
-        required: false,
-        description: '会议平台'
-    })
-    @ApiQuery({
-        name: 'status',
-        enum: ProcessingStatus,
-        required: false,
-        description: '会议状态'
-    })
-    @ApiQuery({
-        name: 'type',
-        enum: MeetingType,
-        required: false,
-        description: '会议类型'
-    })
-    @ApiQuery({
-        name: 'startDate',
-        type: String,
-        required: false,
-        description: '开始日期 (YYYY-MM-DD)'
-    })
-    @ApiQuery({
-        name: 'endDate',
-        type: String,
-        required: false,
-        description: '结束日期 (YYYY-MM-DD)'
-    })
-    @ApiQuery({
-        name: 'page',
-        type: Number,
-        required: false,
-        description: '页码，从1开始'
-    })
-    @ApiQuery({
-        name: 'limit',
-        type: Number,
-        required: false,
-        description: '每页数量'
-    })
-    @ApiQuery({
-        name: 'search',
-        type: String,
-        required: false,
-        description: '搜索关键词（会议主题、主持人等）'
-    })
-    @ApiResponse({
-        status: 200,
-        description: '获取成功',
-        type: MeetingRecordListResponseDto
-    })
-    @ApiResponse({
-        status: 400,
-        description: '请求参数错误'
-    })
+    @applyDecorators(MeetingRecordDecorators.getMeetingRecords)
     async getMeetingRecords(
         @Query(new ValidationPipe({ transform: true })) query: QueryMeetingRecordsDto
     ): Promise<MeetingRecordListResponseDto> {

@@ -72,6 +72,7 @@ export interface ProcessRecordingFileParams {
     startTime: number;
     endTime: number;
     title: string;
+    platform: MeetingPlatform;
 }
 
 /**

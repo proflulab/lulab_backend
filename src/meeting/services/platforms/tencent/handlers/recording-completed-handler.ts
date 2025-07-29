@@ -2,6 +2,7 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { BaseTencentEventHandler } from './base-event-handler';
 import { TencentMeetingEvent } from '../../../../types/tencent.types';
 import { MeetingService } from '../../../meeting.service';
+import { MeetingPlatform } from '@prisma/client';
 
 /**
  * 录制完成事件处理器
@@ -109,7 +110,8 @@ export class RecordingCompletedHandler extends BaseTencentEventHandler {
                 hostUserName: meetingInfo.creator.user_name,
                 startTime: meetingInfo.start_time,
                 endTime: meetingInfo.end_time,
-                title: meetingInfo.subject
+                title: meetingInfo.subject,
+                platform: MeetingPlatform.TENCENT_MEETING
             });
 
             this.logger.log(`录制文件处理成功: ${record_file_id}`);

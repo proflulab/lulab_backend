@@ -11,7 +11,7 @@ import {
     BadRequestException,
     UseInterceptors
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { TencentWebhookHandler } from '../services/platforms/tencent/tencent-webhook.service';
 import { TencentConfigService } from '../services/platforms/tencent/tencent-config.service';
 import { TencentWebhookHeadersDto } from '../dto/webhooks/tencent-webhook.dto';
@@ -37,7 +37,7 @@ export class TencentWebhookController {
     constructor(
         private readonly tencentWebhookHandler: TencentWebhookHandler,
         private readonly configService: TencentConfigService
-    ) {}
+    ) { }
 
     /**
      * 腾讯会议Webhook URL验证端点 (GET)

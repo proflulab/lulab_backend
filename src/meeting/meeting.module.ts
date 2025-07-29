@@ -22,10 +22,8 @@ import { TencentEventHandlerFactory } from './services/platforms/tencent/handler
 import { RecordingCompletedHandler } from './services/platforms/tencent/handlers/recording-completed-handler';
 import { MeetingStartedHandler } from './services/platforms/tencent/handlers/meeting-started-handler';
 import { MeetingEndedHandler } from './services/platforms/tencent/handlers/meeting-ended-handler';
-import { WebhookController } from './controllers/webhook.controller';
 import { TencentWebhookController } from './controllers/tencent-webhook.controller';
 import { FeishuWebhookController } from './controllers/feishu-webhook.controller';
-import { WebhookService } from './services/webhook.service';
 import { FeishuWebhookHandler } from './services/platforms/feishu/feishu-webhook.service';
 import { HttpModule } from '@nestjs/axios';
 import { WebhookLoggingInterceptor } from './interceptors/webhook-logging.interceptor';
@@ -42,7 +40,6 @@ import { PrismaService } from '../prisma.service';
   ],
   controllers: [
     MeetingController,
-    WebhookController,
     TencentWebhookController,
     FeishuWebhookController,
   ],
@@ -58,7 +55,6 @@ import { PrismaService } from '../prisma.service';
     RecordingCompletedHandler,
     MeetingStartedHandler,
     MeetingEndedHandler,
-    WebhookService,
     FeishuWebhookHandler,
     WebhookLoggingInterceptor,
     VideoProcessor,

@@ -22,7 +22,7 @@ import {
     Get
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { WebhookService } from '../services/webhook.service';
+import { FeishuWebhookHandler } from '../services/platforms/feishu/feishu-webhook.service';
 import { WebhookLoggingInterceptor } from '../interceptors/webhook-logging.interceptor';
 
 /**
@@ -36,7 +36,7 @@ export class FeishuWebhookController {
     private readonly logger = new Logger(FeishuWebhookController.name);
 
     constructor(
-        private readonly webhookService: WebhookService
+        private readonly feishuWebhookHandler: FeishuWebhookHandler
     ) { }
 
     /**
@@ -65,7 +65,7 @@ export class FeishuWebhookController {
 
         try {
             // TODO: 实现飞书Webhook事件处理逻辑
-            await this.webhookService.handleFeishuWebhookEvent(body, headers);
+            await this.feishuWebhookHandler.handleWebhookEvent(body, headers);
         } catch (error) {
             this.logger.error('处理飞书Webhook失败', error.stack);
             throw error;
