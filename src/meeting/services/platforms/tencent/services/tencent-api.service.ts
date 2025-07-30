@@ -1,16 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { generateSignature } from './tencent-crypto.service';
+
 import {
     RecordingDetail,
     RecordMeetingsResponse,
     MeetingParticipantsResponse,
     MeetingDetailResponse
-} from '../../../types/tencent.types';
+} from '../types/tencent.types';
 
 @Injectable()
 export class TencentApiService {
-    constructor(private configService: ConfigService) { }
+    constructor(
+        private configService: ConfigService,
+    ) { }
 
     private getConfig() {
         return {

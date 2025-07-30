@@ -20,7 +20,7 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { FeishuWebhookHandler } from '../services/platforms/feishu/feishu-webhook.service';
+import { FeishuWebhookHandler } from '../services/platforms/feishu/services/feishu-webhook.service';
 import { WebhookLoggingInterceptor } from '../interceptors/webhook-logging.interceptor';
 
 /**

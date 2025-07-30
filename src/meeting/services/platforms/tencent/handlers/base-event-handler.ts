@@ -2,15 +2,15 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-29 18:38:05
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-07-30 15:43:08
+ * @LastEditTime: 2025-07-30 16:17:15
  * @FilePath: /lulab_backend/src/meeting/services/platforms/tencent/handlers/base-event-handler.ts
  * @Description: 
  * 
- * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ * Copyright (c) 2025 by 杨仕明, All Rights Reserved. 
  */
 
 import { Logger } from '@nestjs/common';
-import { TencentMeetingEvent } from '../../../../types/tencent.types';
+import { TencentMeetingEvent } from '../types/tencent.types';
 
 /**
  * 腾讯会议事件处理器基类

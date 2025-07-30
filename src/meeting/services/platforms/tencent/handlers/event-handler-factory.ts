@@ -3,10 +3,11 @@ import { BaseTencentEventHandler } from './base-event-handler';
 import { RecordingCompletedHandler } from './recording-completed-handler';
 import { MeetingStartedHandler } from './meeting-started-handler';
 import { UnsupportedWebhookEventException } from '../../../../exceptions/webhook.exceptions';
+import { TencentMeetingEvent } from '../types/tencent.types';
 
 /**
  * 腾讯会议事件处理器工厂
- * 负责管理和分发不同类型的事件处理器
+ * 负责管理和分发不同类型的事件处理器，以及处理腾讯会议事件
  */
 @Injectable()
 export class TencentEventHandlerFactory {
@@ -110,5 +111,26 @@ export class TencentEventHandlerFactory {
             totalHandlers: this.handlers.size,
             supportedEvents: this.getSupportedEventTypes()
         };
+    }
+
+    /**
+     * 处理已解密的腾讯会议事件数据
+     * @param eventData 已解密的事件数据
+     */
+    async handleDecryptedEvent(eventData: TencentMeetingEvent): Promise<void> {
+        this.logger.log('处理腾讯会议Webhook事件');
+
+        try {
+            // 验证事件数据格式
+            // 获取对应的事件处理器并处理事件
+            const handler = this.getHandler(eventData.event);
+            await handler.handleEvent(eventData);
+
+            this.logger.log(`腾讯会议事件处理完成: ${eventData.event}`);
+
+        } catch (error) {
+            this.logger.error('处理腾讯会议Webhook事件失败', error.stack);
+            throw error;
+        }
     }
 }

@@ -12,13 +12,13 @@ import {
     UseInterceptors
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { TencentEventValidator } from '../services/platforms/tencent/tencent-event-validator.service';
-import { TencentConfigService } from '../services/platforms/tencent/tencent-config.service';
+import { TencentEventHandlerFactory } from '../services/platforms/tencent/handlers/event-handler-factory';
+import { ConfigService } from '@nestjs/config';
 import { TencentWebhookHeadersDto } from '../dto/webhooks/tencent-webhook.dto';
 import { WebhookLoggingInterceptor } from '../interceptors/webhook-logging.interceptor';
 import { TencentWebhookDecorators, applyDecorators } from '../../common/decorators/api-decorators';
-import { verifySignature, aesDecrypt, verifyWebhookUrl } from '../services/platforms/tencent/tencent-crypto.service';
-import { TencentMeetingEvent } from '../types/tencent.types';
+import { verifySignature, aesDecrypt, verifyWebhookUrl } from '../services/platforms/tencent/services/tencent-crypto.service';
+import { TencentMeetingEvent } from '../services/platforms/tencent/types/tencent.types';
 import {
     WebhookSignatureVerificationException,
     WebhookDecryptionException
@@ -35,8 +35,8 @@ export class TencentWebhookController {
     private readonly logger = new Logger(TencentWebhookController.name);
 
     constructor(
-        private readonly tencentEventValidator: TencentEventValidator,
-        private readonly configService: TencentConfigService
+        private readonly tencentEventHandlerFactory: TencentEventHandlerFactory,
+        private readonly configService: ConfigService
     ) { }
 
     /**
@@ -55,8 +55,8 @@ export class TencentWebhookController {
         this.logger.log('Received Tencent Meeting Webhook URL verification request');
 
         try {
-            const token = this.configService.getToken();
-            const encodingAesKey = this.configService.getEncodingAesKey();
+            const token = this.configService.get<string>('TENCENT_MEETING_TOKEN') || '';
+            const encodingAesKey = this.configService.get<string>('TENCENT_MEETING_ENCODING_AES_KEY') || '';
             return await verifyWebhookUrl(
                 checkStr,
                 timestamp,
@@ -91,8 +91,8 @@ export class TencentWebhookController {
             // URL verification request
             if (echostr && msgSignature && timestamp && nonce) {
                 this.logger.log('Handling Tencent Meeting URL verification request');
-                const token = this.configService.getToken();
-                const encodingAesKey = this.configService.getEncodingAesKey();
+                const token = this.configService.get<string>('TENCENT_MEETING_TOKEN') || '';
+                const encodingAesKey = this.configService.get<string>('TENCENT_MEETING_ENCODING_AES_KEY') || '';
                 return await verifyWebhookUrl(
                     echostr,
                     timestamp,
@@ -120,7 +120,7 @@ export class TencentWebhookController {
                 const encryptedData = typeof body === 'string' ? body : JSON.stringify(body);
 
                 // Verify signature
-                const token = this.configService.getToken();
+                const token = this.configService.get<string>('TENCENT_MEETING_TOKEN') || '';
                 const isValid = verifySignature(token, eventTimestamp, eventNonce, encryptedData, signature);
 
                 if (!isValid) {
@@ -128,7 +128,7 @@ export class TencentWebhookController {
                 }
 
                 // Decrypt data
-                const encodingAesKey = this.configService.getEncodingAesKey();
+                const encodingAesKey = this.configService.get<string>('TENCENT_MEETING_ENCODING_AES_KEY') || '';
                 const decryptedData = await aesDecrypt(encryptedData, encodingAesKey);
 
                 // Parse JSON
@@ -145,7 +145,7 @@ export class TencentWebhookController {
                 this.logger.log(`Successfully decrypted Tencent Meeting event: ${eventData.event}`);
 
                 // Handle decrypted event data
-                await this.tencentEventValidator.handleDecryptedEvent(eventData);
+                await this.tencentEventHandlerFactory.handleDecryptedEvent(eventData);
 
                 return;
             }

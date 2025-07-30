@@ -11,7 +11,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { BaseTencentEventHandler } from './base-event-handler';
-import { TencentMeetingEvent } from '../../../../types/tencent.types';
+import { TencentMeetingEvent } from '../types/tencent.types';
 
 /**
  * 腾讯会议开始事件处理器

@@ -2,7 +2,7 @@ import { createHash, createHmac } from 'crypto';
 import {
     WebhookSignatureVerificationException,
     WebhookUrlVerificationException
-} from '../../../exceptions/webhook.exceptions';
+} from '../../../../exceptions/webhook.exceptions';
 
 /**
  * 对参数进行签名验证

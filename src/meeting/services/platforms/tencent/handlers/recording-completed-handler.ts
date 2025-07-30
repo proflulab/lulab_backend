@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-29 18:38:27
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-07-30 15:46:02
+ * @LastEditTime: 2025-07-30 15:56:10
  * @FilePath: /lulab_backend/src/meeting/services/platforms/tencent/handlers/recording-completed-handler.ts
  * @Description: 
  * 
@@ -10,10 +10,9 @@
  */
 
 
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BaseTencentEventHandler } from './base-event-handler';
-import { TencentMeetingEvent } from '../../../../types/tencent.types';
-import { MeetingService } from '../../../meeting.service';
+import { TencentMeetingEvent } from '../types/tencent.types';
 
 /**
  * 录制完成事件处理器
@@ -21,10 +20,7 @@ import { MeetingService } from '../../../meeting.service';
  */
 @Injectable()
 export class RecordingCompletedHandler extends BaseTencentEventHandler {
-    constructor(
-        @Inject(forwardRef(() => MeetingService))
-        private readonly meetingService: MeetingService
-    ) {
+    constructor() {
         super();
     }
 
@@ -63,16 +59,6 @@ export class RecordingCompletedHandler extends BaseTencentEventHandler {
      */
     protected async handlePayload(payload: any, index: number): Promise<void> {
         const meetingInfo = payload.meeting_info;
-        const {
-            meeting_id,
-            meeting_code,
-            meeting_type,
-            sub_meeting_id,
-            creator: { userid, user_name },
-            start_time,
-            end_time,
-            subject
-        } = meetingInfo;
 
         // 记录会议详情
         this.logMeetingDetails(meetingInfo, payload.recording_files.length);
@@ -80,9 +66,6 @@ export class RecordingCompletedHandler extends BaseTencentEventHandler {
         // 录制文件处理功能已被移除
         this.logger.log(`会议 ${meetingInfo.meeting_id} 的录制完成事件已接收，但录制文件处理功能已被移除`);
     }
-
-
-
     /**
      * 记录会议详情
      * @param meetingInfo 会议信息

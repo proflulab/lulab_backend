@@ -6,13 +6,13 @@ import {
     RecordMeetingsResponse,
     MeetingParticipantsResponse,
     MeetingDetailResponse
-} from '../../../types/tencent.types';
+} from '../types/tencent.types';
 import {
     PlatformApiException,
     PlatformConfigException
-} from '../../../exceptions/meeting.exceptions';
-import { HttpFileUtil } from '../../../utils/http-file.util';
-import { MeetingRepository } from '../../../repositories/meeting.repository';
+} from '../../../../exceptions/meeting.exceptions';
+import { HttpFileUtil } from '../../../../utils/http-file.util';
+import { MeetingRepository } from '../../../../repositories/meeting.repository';
 
 /**
  * 腾讯会议平台服务
@@ -25,7 +25,6 @@ export class TencentMeetingService {
     constructor(
         private readonly configService: ConfigService,
         private readonly tencentApiService: TencentApiService,
-        private readonly meetingRepository: MeetingRepository
     ) {
         this.validateConfig();
     }
