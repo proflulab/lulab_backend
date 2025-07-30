@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-06-19 21:41:26
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-06-27 18:18:56
+ * @LastEditTime: 2025-07-04 10:22:09
  * @FilePath: /lulab_backend/prisma/seeds/users.ts
  * @Description: 用户数据种子模块
  * 

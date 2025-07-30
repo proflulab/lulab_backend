@@ -747,7 +747,6 @@ export class AuthController {
   }
 
 
-
   private getClientIp(req: Request): string {
     return (
       (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||

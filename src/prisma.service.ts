@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-06-27 05:27:02
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-06-27 05:28:28
+ * @LastEditTime: 2025-06-27 19:00:57
  * @FilePath: /lulab_backend/src/prisma.service.ts
  * @Description: 
  * 

@@ -19,6 +19,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { PrismaService } from './prisma.service';
+import { MeetingModule } from './meeting/meeting.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { PrismaService } from './prisma.service';
     EmailModule,
     AuthModule,
     UserModule,
+    MeetingModule,
   ],
   controllers: [AppController],
   providers: [

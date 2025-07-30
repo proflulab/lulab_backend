@@ -2,8 +2,8 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-06-19 21:41:26
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-06-24 13:14:58
- * @FilePath: /lulab_dashboard/prisma/seeds/organization.ts
+ * @LastEditTime: 2025-07-04 10:17:31
+ * @FilePath: /lulab_backend/prisma/seeds/organization.ts
  * @Description: 组织种子模块
  * 
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
