@@ -2,12 +2,13 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-29 18:40:57
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-07-29 18:42:27
+ * @LastEditTime: 2025-07-30 15:40:27
  * @FilePath: /lulab_backend/src/meeting/services/platforms/tencent/handlers/meeting-started-handler.ts
  * @Description: 
  * 
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
  */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { BaseTencentEventHandler } from './base-event-handler';
 import { TencentMeetingEvent } from '../../../../types/tencent.types';
@@ -34,19 +35,10 @@ export class MeetingStartedHandler extends BaseTencentEventHandler {
         this.logger.log(`开始处理会议开始事件: ${eventData.event}`);
 
         for (let i = 0; i < eventData.payload.length; i++) {
-            await this.processPayload(eventData.payload[i], i);
+            await this.handlePayload(eventData.payload[i], i);
         }
 
         this.logger.log('会议开始事件处理完成');
-    }
-
-    /**
-     * 处理单个载荷
-     * @param payload 载荷数据
-     * @param index 载荷索引
-     */
-    async handlePayload(payload: any, index: number): Promise<void> {
-        await this.processPayload(payload, index);
     }
 
     /**
@@ -54,7 +46,7 @@ export class MeetingStartedHandler extends BaseTencentEventHandler {
      * @param payload 载荷数据
      * @param index 载荷索引
      */
-    protected async processPayload(payload: any, index: number): Promise<void> {
+    protected async handlePayload(payload: any, index: number): Promise<void> {
         try {
             const meetingInfo = payload.meeting_info;
 

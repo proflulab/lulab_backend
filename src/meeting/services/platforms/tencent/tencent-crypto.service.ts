@@ -1,4 +1,8 @@
 import { createHash, createHmac } from 'crypto';
+import {
+    WebhookSignatureVerificationException,
+    WebhookUrlVerificationException
+} from '../../../exceptions/webhook.exceptions';
 
 /**
  * 对参数进行签名验证
@@ -101,6 +105,64 @@ export async function aesDecrypt(encryptedText: string, key: string): Promise<st
     } catch (error) {
         console.error('UTF-8 decoding failed:', error);
         throw error;
+    }
+}
+
+/**
+ * 验证腾讯会议Webhook URL
+ * @param checkStr 待验证的字符串
+ * @param timestamp 时间戳
+ * @param nonce 随机数
+ * @param signature 签名
+ * @param token 配置的Token
+ * @param encodingAesKey 编码AES密钥
+ * @returns 解密后的明文
+ */
+export async function verifyWebhookUrl(
+    checkStr: string,
+    timestamp: string,
+    nonce: string,
+    signature: string,
+    token: string,
+    encodingAesKey: string
+): Promise<string> {
+    try {
+        // 1. 参数校验
+        if (!checkStr || !timestamp || !nonce || !signature) {
+            throw new WebhookUrlVerificationException(
+                'TENCENT_MEETING',
+                'Missing required parameters for URL verification'
+            );
+        }
+
+        // 2. 签名验证
+        const isValid = verifySignature(
+            token,
+            timestamp,
+            nonce,
+            decodeURIComponent(checkStr),
+            signature
+        );
+
+        if (!isValid) {
+            throw new WebhookSignatureVerificationException(
+                'TENCENT_MEETING'
+            );
+        }
+
+        // 3. 解密check_str
+        const decryptedStr = await aesDecrypt(decodeURIComponent(checkStr), encodingAesKey);
+
+        return decryptedStr;
+    } catch (error) {
+        if (error instanceof WebhookSignatureVerificationException ||
+            error instanceof WebhookUrlVerificationException) {
+            throw error;
+        }
+        throw new WebhookUrlVerificationException(
+            'TENCENT_MEETING',
+            `URL verification failed: ${error.message}`
+        );
     }
 }
 

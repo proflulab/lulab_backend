@@ -2,13 +2,12 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-29 19:45:09
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-07-29 19:51:18
+ * @LastEditTime: 2025-07-30 15:37:29
  * @FilePath: /lulab_backend/src/meeting/controllers/feishu-webhook.controller.ts
  * @Description: 
  * 
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
  */
-
 
 import {
     Controller,
@@ -19,7 +18,6 @@ import {
     HttpStatus,
     Logger,
     UseInterceptors,
-    Get
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { FeishuWebhookHandler } from '../services/platforms/feishu/feishu-webhook.service';

@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-07 03:42:31
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-07-29 19:16:22
+ * @LastEditTime: 2025-07-30 15:36:00
  * @FilePath: /lulab_backend/src/meeting/meeting.module.ts
  * @Description: 
  * 
@@ -15,7 +15,6 @@ import { MeetingService } from './services/meeting.service';
 import { MeetingRepository } from './repositories/meeting.repository';
 import { TencentMeetingService } from './services/platforms/tencent/tencent-meeting.service';
 import { TencentApiService } from './services/platforms/tencent/tencent-api.service';
-import { TencentWebhookHandler } from './services/platforms/tencent/tencent-webhook.service';
 import { TencentConfigService } from './services/platforms/tencent/tencent-config.service';
 import { TencentEventValidator } from './services/platforms/tencent/tencent-event-validator.service';
 import { TencentEventHandlerFactory } from './services/platforms/tencent/handlers/event-handler-factory';
@@ -27,11 +26,6 @@ import { FeishuWebhookController } from './controllers/feishu-webhook.controller
 import { FeishuWebhookHandler } from './services/platforms/feishu/feishu-webhook.service';
 import { HttpModule } from '@nestjs/axios';
 import { WebhookLoggingInterceptor } from './interceptors/webhook-logging.interceptor';
-import { VideoProcessor } from './processors/video-processor';
-import { AudioProcessor } from './processors/audio-processor';
-import { TranscriptProcessor } from './processors/transcript-processor';
-import { SummaryProcessor } from './processors/summary-processor';
-import { FileProcessorFactory } from './processors/file-processor.factory';
 import { PrismaService } from '../prisma.service';
 
 @Module({
@@ -48,7 +42,6 @@ import { PrismaService } from '../prisma.service';
     MeetingRepository,
     TencentMeetingService,
     TencentApiService,
-    TencentWebhookHandler,
     TencentConfigService,
     TencentEventValidator,
     TencentEventHandlerFactory,
@@ -57,11 +50,7 @@ import { PrismaService } from '../prisma.service';
     MeetingEndedHandler,
     FeishuWebhookHandler,
     WebhookLoggingInterceptor,
-    VideoProcessor,
-    AudioProcessor,
-    TranscriptProcessor,
-    SummaryProcessor,
-    FileProcessorFactory,
+
     PrismaService,
   ],
   exports: [MeetingService],

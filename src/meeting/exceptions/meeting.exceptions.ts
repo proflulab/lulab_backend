@@ -45,17 +45,7 @@ export class PlatformApiException extends MeetingException {
     }
 }
 
-/**
- * 录制文件处理异常
- */
-export class RecordingFileProcessingException extends MeetingException {
-    constructor(fileId: string, error: string) {
-        super(
-            `录制文件处理失败 [${fileId}]: ${error}`,
-            HttpStatus.INTERNAL_SERVER_ERROR
-        );
-    }
-}
+
 
 /**
  * 文件下载异常

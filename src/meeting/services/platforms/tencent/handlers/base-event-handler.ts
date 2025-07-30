@@ -1,3 +1,14 @@
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-07-29 18:38:05
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-07-30 15:43:08
+ * @FilePath: /lulab_backend/src/meeting/services/platforms/tencent/handlers/base-event-handler.ts
+ * @Description: 
+ * 
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ */
+
 import { Logger } from '@nestjs/common';
 import { TencentMeetingEvent } from '../../../../types/tencent.types';
 
@@ -64,22 +75,6 @@ export abstract class BaseTencentEventHandler {
         };
 
         this.logger.log('事件接收详情:', eventSummary);
-    }
-
-    /**
-     * 处理单个payload的通用逻辑
-     * @param payload 单个事件载荷
-     * @param index 载荷索引
-     */
-    protected async processPayload(payload: any, index: number): Promise<void> {
-        try {
-            this.logger.log(`处理第 ${index + 1} 个载荷`);
-            await this.handlePayload(payload, index);
-            this.logger.log(`第 ${index + 1} 个载荷处理完成`);
-        } catch (error) {
-            this.logger.error(`第 ${index + 1} 个载荷处理失败`, error);
-            // 继续处理其他载荷，不中断整个流程
-        }
     }
 
     /**

@@ -139,7 +139,7 @@ export class HttpFileUtil {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return await response.text();
         } catch (error) {
             this.logger.error('获取文件内容失败:', error);

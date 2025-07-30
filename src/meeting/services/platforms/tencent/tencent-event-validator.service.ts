@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { TencentMeetingEvent } from '../../../types/tencent.types';
 import { WebhookDataFormatException } from '../../../exceptions/webhook.exceptions';
+import { TencentEventHandlerFactory } from './handlers/event-handler-factory';
 
 /**
  * 腾讯会议事件验证器
@@ -10,6 +11,33 @@ import { WebhookDataFormatException } from '../../../exceptions/webhook.exceptio
 export class TencentEventValidator {
     private readonly logger = new Logger(TencentEventValidator.name);
     private readonly PLATFORM_NAME = 'TENCENT_MEETING';
+
+    constructor(
+        private readonly eventHandlerFactory: TencentEventHandlerFactory
+    ) { }
+
+    /**
+     * 处理已解密的腾讯会议事件数据
+     * @param eventData 已解密的事件数据
+     */
+    async handleDecryptedEvent(eventData: TencentMeetingEvent): Promise<void> {
+        this.logger.log('处理腾讯会议Webhook事件');
+
+        try {
+            // 验证事件数据格式
+            this.validateEventData(eventData);
+
+            // 获取对应的事件处理器并处理事件
+            const handler = this.eventHandlerFactory.getHandler(eventData.event);
+            await handler.handleEvent(eventData);
+
+            this.logger.log(`腾讯会议事件处理完成: ${eventData.event}`);
+
+        } catch (error) {
+            this.logger.error('处理腾讯会议Webhook事件失败', error.stack);
+            throw error;
+        }
+    }
 
     /**
      * 验证事件数据格式
@@ -63,7 +91,7 @@ export class TencentEventValidator {
                 this.validateMeetingStartedEvent(eventData);
                 break;
             case 'meeting.ended':
-                this.validateMeetingEndedEvent(eventData);
+                this.validateMeetingStartedEvent(eventData);
                 break;
             case 'participant.joined':
                 this.validateParticipantEvent(eventData);
@@ -124,28 +152,10 @@ export class TencentEventValidator {
      * @param eventData 事件数据
      */
     private validateMeetingStartedEvent(eventData: TencentMeetingEvent): void {
-        for (const [index, payload] of eventData.payload.entries()) {
-            const context = `payload[${index}]`;
-
-            if (!payload.meeting_info) {
-                throw new WebhookDataFormatException(
-                    this.PLATFORM_NAME,
-                    `${context}.meeting_info`,
-                    'object'
-                );
-            }
-
-            this.validateMeetingInfo(payload.meeting_info, context);
-        }
+        this.validateBasicMeetingEvent(eventData);
     }
 
-    /**
-     * 验证会议结束事件数据
-     * @param eventData 事件数据
-     */
-    private validateMeetingEndedEvent(eventData: TencentMeetingEvent): void {
-        this.validateMeetingStartedEvent(eventData); // 结构相同
-    }
+
 
     /**
      * 验证参与者事件数据
@@ -155,22 +165,41 @@ export class TencentEventValidator {
         for (const [index, payload] of eventData.payload.entries()) {
             const context = `payload[${index}]`;
 
-            if (!payload.meeting_info) {
-                throw new WebhookDataFormatException(
-                    this.PLATFORM_NAME,
-                    `${context}.meeting_info`,
-                    'object'
-                );
-            }
-
-            // 参与者事件可能有不同的payload结构，这里只验证meeting_info
-            this.validateMeetingInfo(payload.meeting_info, context);
+            this.validateBasicMeetingPayload(payload, context);
 
             // 如果payload中有participant_info字段，则验证它
             if ((payload as any).participant_info) {
                 this.validateParticipantInfo((payload as any).participant_info, context);
             }
         }
+    }
+
+    /**
+     * 验证基本会议事件（只包含meeting_info）
+     * @param eventData 事件数据
+     */
+    private validateBasicMeetingEvent(eventData: TencentMeetingEvent): void {
+        for (const [index, payload] of eventData.payload.entries()) {
+            const context = `payload[${index}]`;
+            this.validateBasicMeetingPayload(payload, context);
+        }
+    }
+
+    /**
+     * 验证基本会议payload（meeting_info存在性和内容）
+     * @param payload payload数据
+     * @param context 上下文
+     */
+    private validateBasicMeetingPayload(payload: any, context: string): void {
+        if (!payload.meeting_info) {
+            throw new WebhookDataFormatException(
+                this.PLATFORM_NAME,
+                `${context}.meeting_info`,
+                'object'
+            );
+        }
+
+        this.validateMeetingInfo(payload.meeting_info, context);
     }
 
     /**
@@ -245,26 +274,5 @@ export class TencentEventValidator {
         }
     }
 
-    /**
-     * 获取支持的事件类型列表
-     * @returns 支持的事件类型
-     */
-    getSupportedEvents(): string[] {
-        return [
-            'recording.completed',
-            'meeting.started',
-            'meeting.ended',
-            'participant.joined',
-            'participant.left'
-        ];
-    }
 
-    /**
-     * 检查事件是否支持
-     * @param eventType 事件类型
-     * @returns 是否支持
-     */
-    isEventSupported(eventType: string): boolean {
-        return this.getSupportedEvents().includes(eventType);
-    }
 }

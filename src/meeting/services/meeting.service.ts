@@ -1,13 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import {
-    MeetingPlatform,
     ProcessingStatus
 } from '@prisma/client';
 import { MeetingRepository } from '../repositories/meeting.repository';
-import { TencentMeetingService } from './platforms/tencent/tencent-meeting.service';
 import {
-    GetMeetingRecordsParams,
-    ProcessRecordingFileParams
+    GetMeetingRecordsParams
 } from '../types/meeting.types';
 import { CreateMeetingRecordDto } from '../dto/common/create-meeting-record.dto';
 import { UpdateMeetingRecordDto } from '../dto/common/update-meeting-record.dto';
@@ -25,22 +22,7 @@ export class MeetingService {
 
     constructor(
         private readonly meetingRepository: MeetingRepository,
-        private readonly tencentMeetingService: TencentMeetingService
     ) { }
-
-    /**
-     * 处理单个录制文件
-     */
-    async processRecordingFile(params: ProcessRecordingFileParams): Promise<void> {
-        // 根据平台类型委托给对应的平台服务处理
-        if (params.platform === MeetingPlatform.TENCENT_MEETING || !params.platform) {
-            // 默认使用腾讯会议服务处理
-            await this.tencentMeetingService.processRecordingFile(params);
-        } else {
-            // 未来可以添加其他平台的处理逻辑
-            throw new Error(`不支持的会议平台: ${params.platform}`);
-        }
-    }
 
     /**
      * 获取会议记录列表

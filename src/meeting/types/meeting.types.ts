@@ -58,22 +58,7 @@ export interface GetMeetingRecordsParams {
     limit?: number;
 }
 
-/**
- * 录制文件处理参数
- */
-export interface ProcessRecordingFileParams {
-    recordFileId: string;
-    meetingId: string;
-    meetingCode: string;
-    meetingType: number;
-    subMeetingId?: string;
-    hostUserId: string;
-    hostUserName: string;
-    startTime: number;
-    endTime: number;
-    title: string;
-    platform: MeetingPlatform;
-}
+
 
 /**
  * 平台事件数据接口

@@ -346,6 +346,4 @@ export class TencentApiService {
             throw error;
         }
     }
-
-
 }

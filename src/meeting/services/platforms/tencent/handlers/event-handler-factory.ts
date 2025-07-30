@@ -2,8 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { BaseTencentEventHandler } from './base-event-handler';
 import { RecordingCompletedHandler } from './recording-completed-handler';
 import { MeetingStartedHandler } from './meeting-started-handler';
-import { MeetingEndedHandler } from './meeting-ended-handler';
-
 import { UnsupportedWebhookEventException } from '../../../../exceptions/webhook.exceptions';
 
 /**
@@ -19,7 +17,6 @@ export class TencentEventHandlerFactory {
     constructor(
         private readonly recordingCompletedHandler: RecordingCompletedHandler,
         private readonly meetingStartedHandler: MeetingStartedHandler,
-        private readonly meetingEndedHandler: MeetingEndedHandler,
     ) {
         this.initializeHandlers();
     }
@@ -31,7 +28,6 @@ export class TencentEventHandlerFactory {
         const handlers = [
             this.recordingCompletedHandler,
             this.meetingStartedHandler,
-            this.meetingEndedHandler
         ];
 
         for (const handler of handlers) {
