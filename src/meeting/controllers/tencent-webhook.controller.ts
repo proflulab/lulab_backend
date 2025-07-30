@@ -23,6 +23,7 @@ import {
     WebhookSignatureVerificationException,
     WebhookDecryptionException
 } from '../exceptions/webhook.exceptions';
+import { Public } from '../../auth/decorators/public.decorator';
 
 /**
  * Tencent Meeting Webhook Controller
@@ -30,6 +31,7 @@ import {
  */
 @ApiTags('Webhooks')
 @Controller('webhooks/tencent')
+@Public()
 @UseInterceptors(WebhookLoggingInterceptor)
 export class TencentWebhookController {
     private readonly logger = new Logger(TencentWebhookController.name);
