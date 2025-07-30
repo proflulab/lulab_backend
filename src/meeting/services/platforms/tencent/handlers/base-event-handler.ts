@@ -31,14 +31,6 @@ export abstract class BaseTencentEventHandler {
     abstract handleEvent(eventData: TencentMeetingEvent): Promise<void>;
 
     /**
-     * 检查是否可以处理指定事件类型
-     * @param eventType 事件类型
-     */
-    canHandle(eventType: string): boolean {
-        return this.getSupportedEventType() === eventType;
-    }
-
-    /**
      * 记录事件处理开始
      * @param eventData 事件数据
      */

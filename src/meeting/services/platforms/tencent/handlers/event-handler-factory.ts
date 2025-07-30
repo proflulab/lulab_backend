@@ -1,3 +1,14 @@
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-07-29 18:38:47
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-07-30 19:36:19
+ * @FilePath: /lulab_backend/src/meeting/services/platforms/tencent/handlers/event-handler-factory.ts
+ * @Description: 
+ * 
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { BaseTencentEventHandler } from './base-event-handler';
 import { RecordingCompletedHandler } from './recording-completed-handler';
@@ -41,79 +52,6 @@ export class TencentEventHandlerFactory {
     }
 
     /**
-     * 获取事件处理器
-     * @param eventType 事件类型
-     * @returns 事件处理器
-     */
-    getHandler(eventType: string): BaseTencentEventHandler {
-        const handler = this.handlers.get(eventType);
-
-        if (!handler) {
-            throw new UnsupportedWebhookEventException(this.PLATFORM_NAME, eventType);
-        }
-
-        return handler;
-    }
-
-    /**
-     * 检查事件类型是否支持
-     * @param eventType 事件类型
-     * @returns 是否支持
-     */
-    isEventSupported(eventType: string): boolean {
-        return this.handlers.has(eventType);
-    }
-
-    /**
-     * 获取所有支持的事件类型
-     * @returns 支持的事件类型列表
-     */
-    getSupportedEventTypes(): string[] {
-        return Array.from(this.handlers.keys());
-    }
-
-    /**
-     * 注册新的事件处理器
-     * @param handler 事件处理器
-     */
-    registerHandler(handler: BaseTencentEventHandler): void {
-        const eventType = handler.getSupportedEventType();
-
-        if (this.handlers.has(eventType)) {
-            this.logger.warn(`事件处理器已存在，将被覆盖: ${eventType}`);
-        }
-
-        this.handlers.set(eventType, handler);
-        this.logger.log(`注册事件处理器: ${eventType}`);
-    }
-
-    /**
-     * 注销事件处理器
-     * @param eventType 事件类型
-     */
-    unregisterHandler(eventType: string): void {
-        if (this.handlers.delete(eventType)) {
-            this.logger.log(`注销事件处理器: ${eventType}`);
-        } else {
-            this.logger.warn(`尝试注销不存在的事件处理器: ${eventType}`);
-        }
-    }
-
-    /**
-     * 获取处理器统计信息
-     * @returns 统计信息
-     */
-    getHandlerStats(): {
-        totalHandlers: number;
-        supportedEvents: string[];
-    } {
-        return {
-            totalHandlers: this.handlers.size,
-            supportedEvents: this.getSupportedEventTypes()
-        };
-    }
-
-    /**
      * 处理已解密的腾讯会议事件数据
      * @param eventData 已解密的事件数据
      */
@@ -121,9 +59,14 @@ export class TencentEventHandlerFactory {
         this.logger.log('处理腾讯会议Webhook事件');
 
         try {
-            // 验证事件数据格式
-            // 获取对应的事件处理器并处理事件
-            const handler = this.getHandler(eventData.event);
+            // 获取对应的事件处理器
+            const handler = this.handlers.get(eventData.event);
+
+            if (!handler) {
+                throw new UnsupportedWebhookEventException(this.PLATFORM_NAME, eventData.event);
+            }
+
+            // 处理事件
             await handler.handleEvent(eventData);
 
             this.logger.log(`腾讯会议事件处理完成: ${eventData.event}`);

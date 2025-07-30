@@ -79,6 +79,7 @@ export class TencentWebhookController {
      */
     @Post()
     @HttpCode(HttpStatus.OK)
+    @Public()
     @applyDecorators(TencentWebhookDecorators.eventReceiver)
     async handleTencentWebhook(
         @Body() body: any,
