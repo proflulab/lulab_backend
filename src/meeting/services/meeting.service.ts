@@ -55,7 +55,7 @@ export class MeetingService {
         if (existing) {
             throw new MeetingRecordAlreadyExistsException(
                 params.platformMeetingId,
-                params.platformRecordingId || ''
+                ''
             );
         }
 
@@ -63,15 +63,14 @@ export class MeetingService {
         const createData = {
             platform: params.platform,
             platformMeetingId: params.platformMeetingId,
-            platformRecordingId: params.platformRecordingId || '',
             title: params.title,
             meetingCode: params.meetingCode || '',
             type: params.type,
             hostUserId: params.hostUserId || '',
             hostUserName: params.hostUserName,
-            actualStartAt: params.actualStartAt ? new Date(params.actualStartAt) : new Date(),
-            endedAt: params.endedAt ? new Date(params.endedAt) : new Date(),
-            duration: params.duration || 0,
+            startTime: params.actualStartAt ? new Date(params.actualStartAt) : new Date(),
+            endTime: params.endedAt ? new Date(params.endedAt) : new Date(),
+            durationSeconds: params.duration || 0,
             hasRecording: params.hasRecording || false,
             recordingStatus: params.recordingStatus || ProcessingStatus.PENDING,
             processingStatus: params.processingStatus || ProcessingStatus.PENDING,

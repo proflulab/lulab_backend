@@ -11,15 +11,14 @@ import {
 export interface CreateMeetingRecordData {
     platform: MeetingPlatform;
     platformMeetingId: string;
-    platformRecordingId: string;
     title: string;
     meetingCode: string;
     type: MeetingType;
     hostUserId: string;
     hostUserName: string;
-    actualStartAt: Date;
-    endedAt: Date;
-    duration: number;
+    startTime: Date;
+    endTime: Date;
+    durationSeconds: number;
     hasRecording: boolean;
     recordingStatus: ProcessingStatus;
     processingStatus: ProcessingStatus;
@@ -150,12 +149,12 @@ export class MeetingRepository {
             where.platform = platform;
         }
         if (startDate || endDate) {
-            where.actualStartAt = {};
+            where.startTime = {};
             if (startDate) {
-                where.actualStartAt.gte = startDate;
+                where.startTime.gte = startDate;
             }
             if (endDate) {
-                where.actualStartAt.lte = endDate;
+                where.startTime.lte = endDate;
             }
         }
 
@@ -166,7 +165,7 @@ export class MeetingRepository {
                     files: true
                 },
                 orderBy: {
-                    actualStartAt: 'desc'
+                    createdAt: 'desc'
                 },
                 skip,
                 take: limit
