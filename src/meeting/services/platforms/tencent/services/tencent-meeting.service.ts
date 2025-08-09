@@ -12,7 +12,6 @@ import {
     PlatformConfigException
 } from '../../../../exceptions/meeting.exceptions';
 import { HttpFileUtil } from '../../../../utils/http-file.util';
-import { MeetingRepository } from '../../../../repositories/meeting.repository';
 
 /**
  * 腾讯会议平台服务
@@ -47,6 +46,20 @@ export class TencentMeetingService {
         );
 
         if (missingConfigs.length > 0) {
+            this.logger.warn(
+                `腾讯会议配置缺失，相关功能将不可用: ${missingConfigs.join(', ')}`
+            );
+        } else {
+            this.logger.log('腾讯会议配置验证通过');
+        }
+    }
+
+    /**
+ * 检查配置是否完整
+ */
+    private checkConfigBeforeApiCall(): void {
+        const { configured, missingConfigs } = this.getConfigStatus();
+        if (!configured) {
             throw new PlatformConfigException(
                 'TENCENT_MEETING',
                 missingConfigs.join(', ')
@@ -61,6 +74,9 @@ export class TencentMeetingService {
      * @returns 录制详情信息
      */
     async getRecordingFileDetail(fileId: string, userId: string): Promise<RecordingDetail> {
+
+        this.checkConfigBeforeApiCall();
+
         try {
             this.logger.log(`获取录制文件详情: ${fileId}`);
             const result = await this.tencentApiService.getRecordingFileDetail(fileId, userId);

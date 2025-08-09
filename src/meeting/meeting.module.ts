@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-07 03:42:31
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-07-30 16:10:01
+ * @LastEditTime: 2025-08-03 20:03:49
  * @FilePath: /lulab_backend/src/meeting/meeting.module.ts
  * @Description: 
  * 
@@ -15,7 +15,6 @@ import { MeetingService } from './services/meeting.service';
 import { MeetingRepository } from './repositories/meeting.repository';
 import { TencentMeetingService } from './services/platforms/tencent/services/tencent-meeting.service';
 import { TencentApiService } from './services/platforms/tencent/services/tencent-api.service';
-
 import { TencentEventHandlerFactory } from './services/platforms/tencent/handlers/event-handler-factory';
 import { RecordingCompletedHandler } from './services/platforms/tencent/handlers/recording-completed-handler';
 import { MeetingStartedHandler } from './services/platforms/tencent/handlers/meeting-started-handler';
@@ -40,7 +39,6 @@ import { PrismaService } from '../prisma.service';
     MeetingRepository,
     TencentMeetingService,
     TencentApiService,
-
     TencentEventHandlerFactory,
     RecordingCompletedHandler,
     MeetingStartedHandler,
