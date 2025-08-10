@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "LoginLogType" AS ENUM ('USERNAME_PASSWORD', 'EMAIL_PASSWORD', 'EMAIL_CODE', 'PHONE_PASSWORD', 'PHONE_CODE', 'PASSWORD_RESET');
+
+-- CreateEnum
 CREATE TYPE "MeetingPlatform" AS ENUM ('TENCENT_MEETING', 'ZOOM', 'TEAMS', 'DINGTALK', 'FEISHU', 'WEBEX', 'VOOV', 'OTHER');
 
 -- CreateEnum
@@ -12,6 +15,12 @@ CREATE TYPE "StorageType" AS ENUM ('LOCAL', 'OSS', 'COS', 'S3', 'MINIO', 'URL');
 
 -- CreateEnum
 CREATE TYPE "ProcessingStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'SKIPPED');
+
+-- CreateEnum
+CREATE TYPE "SummarySourceType" AS ENUM ('RECORDING', 'TRANSCRIPT', 'MANUAL', 'HYBRID');
+
+-- CreateEnum
+CREATE TYPE "GenerationMethod" AS ENUM ('AI', 'MANUAL', 'HYBRID');
 
 -- CreateEnum
 CREATE TYPE "Currency" AS ENUM ('CNY', 'USD', 'EUR', 'GBP', 'JPY', 'HKD', 'TWD', 'SGD', 'AUD', 'CAD');
@@ -30,6 +39,9 @@ CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY');
 
 -- CreateEnum
 CREATE TYPE "RoleType" AS ENUM ('SYSTEM', 'CUSTOM');
+
+-- CreateEnum
+CREATE TYPE "VerificationCodeType" AS ENUM ('REGISTER', 'LOGIN', 'RESET_PASSWORD');
 
 -- CreateTable
 CREATE TABLE "Account" (
@@ -124,65 +136,183 @@ CREATE TABLE "Department" (
 );
 
 -- CreateTable
-CREATE TABLE "meeting_records" (
+CREATE TABLE "LoginLog" (
     "id" TEXT NOT NULL,
-    "platform" "MeetingPlatform" NOT NULL,
-    "platformMeetingId" TEXT NOT NULL,
-    "platformRecordingId" TEXT,
-    "externalId" TEXT,
-    "title" TEXT NOT NULL,
-    "description" TEXT,
-    "meetingCode" TEXT,
-    "type" "MeetingType" NOT NULL DEFAULT 'SCHEDULED',
-    "hostUserId" TEXT,
-    "hostUserName" TEXT,
-    "hostEmail" TEXT,
-    "participantCount" INTEGER,
-    "participantList" JSONB,
-    "scheduledStartAt" TIMESTAMP(3),
-    "actualStartAt" TIMESTAMP(3),
-    "endedAt" TIMESTAMP(3),
-    "duration" INTEGER,
-    "hasRecording" BOOLEAN NOT NULL DEFAULT false,
-    "recordingStatus" "ProcessingStatus" NOT NULL DEFAULT 'PENDING',
-    "processingStatus" "ProcessingStatus" NOT NULL DEFAULT 'PENDING',
-    "transcript" TEXT,
-    "summary" TEXT,
-    "keyPoints" JSONB,
-    "actionItems" JSONB,
-    "decisions" JSONB,
-    "metadata" JSONB,
-    "tags" TEXT[],
+    "userId" TEXT,
+    "target" TEXT NOT NULL,
+    "loginType" TEXT NOT NULL,
+    "success" BOOLEAN NOT NULL,
+    "ip" TEXT NOT NULL,
+    "userAgent" TEXT,
+    "failReason" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "LoginLog_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "CodeSendLimit" (
+    "id" TEXT NOT NULL,
+    "target" TEXT NOT NULL,
+    "ip" TEXT NOT NULL,
+    "sendCount" INTEGER NOT NULL DEFAULT 1,
+    "lastSentAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
+    CONSTRAINT "CodeSendLimit_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "meeting_records" (
+    "id" TEXT NOT NULL,
+    "platform" "MeetingPlatform" NOT NULL,
+    "platformMeetingId" VARCHAR(100) NOT NULL,
+    "subMeetingId" VARCHAR(100),
+    "externalId" VARCHAR(100),
+    "title" VARCHAR(500) NOT NULL,
+    "description" TEXT,
+    "meetingCode" VARCHAR(50),
+    "type" "MeetingType" NOT NULL DEFAULT 'SCHEDULED',
+    "hostPlatformUserId" TEXT,
+    "hostUserId" TEXT,
+    "hostUserName" TEXT,
+    "participantCount" INTEGER,
+    "scheduledStartTime" TIMESTAMP(3),
+    "startTime" TIMESTAMP(3),
+    "endTime" TIMESTAMP(3),
+    "scheduledEndTime" TIMESTAMP(3),
+    "durationSeconds" INTEGER,
+    "timezone" VARCHAR(50),
+    "hasRecording" BOOLEAN NOT NULL DEFAULT false,
+    "recordingStatus" "ProcessingStatus" NOT NULL DEFAULT 'PENDING',
+    "processingStatus" "ProcessingStatus" NOT NULL DEFAULT 'PENDING',
+    "metadata" JSONB,
+    "tags" TEXT[],
+    "language" VARCHAR(10),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "deletedAt" TIMESTAMP(3),
+    "userId" TEXT,
+
     CONSTRAINT "meeting_records_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "MeetingParticipation" (
+    "id" TEXT NOT NULL,
+    "meetingId" TEXT NOT NULL,
+    "platformUserId" TEXT NOT NULL,
+    "joinTime" TIMESTAMP(3),
+    "leftTime" TIMESTAMP(3),
+    "durationSeconds" INTEGER,
+    "instanceId" INTEGER,
+    "userRole" INTEGER,
+    "sessionData" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "userId" TEXT,
+
+    CONSTRAINT "MeetingParticipation_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "meeting_files" (
     "id" TEXT NOT NULL,
     "meetingRecordId" TEXT NOT NULL,
-    "fileName" TEXT NOT NULL,
-    "originalFileName" TEXT,
+    "fileName" VARCHAR(255) NOT NULL,
+    "originalFileName" VARCHAR(255),
     "fileType" "FileType" NOT NULL,
-    "mimeType" TEXT,
+    "mimeType" VARCHAR(100),
     "fileSize" BIGINT,
     "duration" INTEGER,
     "storageType" "StorageType" NOT NULL,
-    "storagePath" TEXT,
-    "storageUrl" TEXT,
-    "downloadUrl" TEXT,
+    "storagePath" VARCHAR(1000),
+    "storageUrl" VARCHAR(2000),
+    "downloadUrl" VARCHAR(2000),
     "expiresAt" TIMESTAMP(3),
     "content" TEXT,
-    "contentHash" TEXT,
+    "contentHash" VARCHAR(64),
     "processingStatus" "ProcessingStatus" NOT NULL DEFAULT 'PENDING',
     "errorMessage" TEXT,
     "metadata" JSONB,
+    "tags" TEXT[],
+    "deletedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "meeting_files_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PlatformUser" (
+    "id" TEXT NOT NULL,
+    "platform" "MeetingPlatform" NOT NULL,
+    "platformUserId" TEXT NOT NULL,
+    "userName" TEXT,
+    "userEmail" TEXT,
+    "userPhone" TEXT,
+    "userAvatar" TEXT,
+    "userId" TEXT,
+    "platformData" JSONB,
+    "phoneHash" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "lastSeenAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "PlatformUser_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "MeetingTranscript" (
+    "id" TEXT NOT NULL,
+    "meetingId" TEXT NOT NULL,
+    "platformUserId" VARCHAR(100),
+    "paragraphId" VARCHAR(100) NOT NULL,
+    "speakerName" VARCHAR(100),
+    "startTime" BIGINT NOT NULL,
+    "endTime" BIGINT NOT NULL,
+    "text" TEXT NOT NULL,
+    "userId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "MeetingTranscript_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "meeting_summaries" (
+    "id" TEXT NOT NULL,
+    "meetingId" TEXT NOT NULL,
+    "sourceType" "SummarySourceType" NOT NULL,
+    "sourceFileId" TEXT,
+    "title" VARCHAR(500),
+    "content" TEXT NOT NULL,
+    "keyPoints" JSONB,
+    "actionItems" JSONB,
+    "decisions" JSONB,
+    "participants" JSONB,
+    "generatedBy" "GenerationMethod",
+    "aiModel" TEXT,
+    "confidence" DOUBLE PRECISION,
+    "language" TEXT,
+    "version" INTEGER NOT NULL DEFAULT 1,
+    "isLatest" BOOLEAN NOT NULL DEFAULT true,
+    "parentSummaryId" TEXT,
+    "status" "ProcessingStatus" NOT NULL DEFAULT 'PENDING',
+    "processingTime" INTEGER,
+    "errorMessage" TEXT,
+    "createdBy" TEXT,
+    "reviewedBy" TEXT,
+    "reviewedAt" TIMESTAMP(3),
+    "metadata" JSONB,
+    "tags" TEXT[],
+    "deletedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "meeting_summaries_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -471,18 +601,36 @@ CREATE TABLE "Role" (
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
+    "username" VARCHAR(50),
     "password" TEXT,
-    "email" VARCHAR(255) NOT NULL,
+    "email" VARCHAR(255),
     "emailVerifiedAt" TIMESTAMP(3),
     "countryCode" TEXT,
     "phone" TEXT,
     "phoneVerifiedAt" TIMESTAMP(3),
+    "lastLoginAt" TIMESTAMP(3),
     "active" BOOLEAN NOT NULL DEFAULT true,
     "deletedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "VerificationCode" (
+    "id" TEXT NOT NULL,
+    "target" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "type" "VerificationCodeType" NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "used" BOOLEAN NOT NULL DEFAULT false,
+    "ip" TEXT,
+    "userAgent" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "VerificationCode_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -510,13 +658,31 @@ CREATE INDEX "Department_parentId_idx" ON "Department"("parentId");
 CREATE INDEX "Department_code_idx" ON "Department"("code");
 
 -- CreateIndex
+CREATE INDEX "LoginLog_userId_idx" ON "LoginLog"("userId");
+
+-- CreateIndex
+CREATE INDEX "LoginLog_ip_createdAt_idx" ON "LoginLog"("ip", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "LoginLog_target_createdAt_idx" ON "LoginLog"("target", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "LoginLog_success_createdAt_idx" ON "LoginLog"("success", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "CodeSendLimit_ip_lastSentAt_idx" ON "CodeSendLimit"("ip", "lastSentAt");
+
+-- CreateIndex
+CREATE INDEX "CodeSendLimit_target_lastSentAt_idx" ON "CodeSendLimit"("target", "lastSentAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "CodeSendLimit_target_ip_key" ON "CodeSendLimit"("target", "ip");
+
+-- CreateIndex
 CREATE INDEX "meeting_records_platform_idx" ON "meeting_records"("platform");
 
 -- CreateIndex
-CREATE INDEX "meeting_records_hostUserId_idx" ON "meeting_records"("hostUserId");
-
--- CreateIndex
-CREATE INDEX "meeting_records_actualStartAt_idx" ON "meeting_records"("actualStartAt");
+CREATE INDEX "meeting_records_startTime_idx" ON "meeting_records"("startTime");
 
 -- CreateIndex
 CREATE INDEX "meeting_records_recordingStatus_idx" ON "meeting_records"("recordingStatus");
@@ -528,7 +694,16 @@ CREATE INDEX "meeting_records_processingStatus_idx" ON "meeting_records"("proces
 CREATE INDEX "meeting_records_tags_idx" ON "meeting_records"("tags");
 
 -- CreateIndex
+CREATE INDEX "meeting_records_deletedAt_idx" ON "meeting_records"("deletedAt");
+
+-- CreateIndex
+CREATE INDEX "meeting_records_createdAt_idx" ON "meeting_records"("createdAt");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "meeting_records_platform_platformMeetingId_key" ON "meeting_records"("platform", "platformMeetingId");
+
+-- CreateIndex
+CREATE INDEX "MeetingParticipation_meetingId_idx" ON "MeetingParticipation"("meetingId");
 
 -- CreateIndex
 CREATE INDEX "meeting_files_meetingRecordId_idx" ON "meeting_files"("meetingRecordId");
@@ -541,6 +716,57 @@ CREATE INDEX "meeting_files_storageType_idx" ON "meeting_files"("storageType");
 
 -- CreateIndex
 CREATE INDEX "meeting_files_processingStatus_idx" ON "meeting_files"("processingStatus");
+
+-- CreateIndex
+CREATE INDEX "meeting_files_deletedAt_idx" ON "meeting_files"("deletedAt");
+
+-- CreateIndex
+CREATE INDEX "meeting_files_createdAt_idx" ON "meeting_files"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "meeting_files_contentHash_idx" ON "meeting_files"("contentHash");
+
+-- CreateIndex
+CREATE INDEX "PlatformUser_userEmail_idx" ON "PlatformUser"("userEmail");
+
+-- CreateIndex
+CREATE INDEX "PlatformUser_userId_idx" ON "PlatformUser"("userId");
+
+-- CreateIndex
+CREATE INDEX "PlatformUser_phoneHash_idx" ON "PlatformUser"("phoneHash");
+
+-- CreateIndex
+CREATE INDEX "PlatformUser_platform_idx" ON "PlatformUser"("platform");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PlatformUser_platform_platformUserId_key" ON "PlatformUser"("platform", "platformUserId");
+
+-- CreateIndex
+CREATE INDEX "MeetingTranscript_meetingId_idx" ON "MeetingTranscript"("meetingId");
+
+-- CreateIndex
+CREATE INDEX "MeetingTranscript_startTime_idx" ON "MeetingTranscript"("startTime");
+
+-- CreateIndex
+CREATE INDEX "MeetingTranscript_paragraphId_idx" ON "MeetingTranscript"("paragraphId");
+
+-- CreateIndex
+CREATE INDEX "meeting_summaries_meetingId_idx" ON "meeting_summaries"("meetingId");
+
+-- CreateIndex
+CREATE INDEX "meeting_summaries_sourceType_idx" ON "meeting_summaries"("sourceType");
+
+-- CreateIndex
+CREATE INDEX "meeting_summaries_isLatest_idx" ON "meeting_summaries"("isLatest");
+
+-- CreateIndex
+CREATE INDEX "meeting_summaries_status_idx" ON "meeting_summaries"("status");
+
+-- CreateIndex
+CREATE INDEX "meeting_summaries_createdBy_idx" ON "meeting_summaries"("createdBy");
+
+-- CreateIndex
+CREATE INDEX "meeting_summaries_version_idx" ON "meeting_summaries"("version");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Order_orderCode_key" ON "Order"("orderCode");
@@ -720,7 +946,13 @@ CREATE INDEX "Role_code_idx" ON "Role"("code");
 CREATE INDEX "Role_type_idx" ON "Role"("type");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE INDEX "User_username_idx" ON "User"("username");
 
 -- CreateIndex
 CREATE INDEX "User_email_idx" ON "User"("email");
@@ -735,7 +967,19 @@ CREATE INDEX "User_active_idx" ON "User"("active");
 CREATE INDEX "User_deletedAt_idx" ON "User"("deletedAt");
 
 -- CreateIndex
+CREATE INDEX "User_lastLoginAt_idx" ON "User"("lastLoginAt");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_countryCode_phone_key" ON "User"("countryCode", "phone");
+
+-- CreateIndex
+CREATE INDEX "VerificationCode_target_type_idx" ON "VerificationCode"("target", "type");
+
+-- CreateIndex
+CREATE INDEX "VerificationCode_expiresAt_idx" ON "VerificationCode"("expiresAt");
+
+-- CreateIndex
+CREATE INDEX "VerificationCode_code_idx" ON "VerificationCode"("code");
 
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -756,7 +1000,52 @@ ALTER TABLE "Department" ADD CONSTRAINT "Department_organizationId_fkey" FOREIGN
 ALTER TABLE "Department" ADD CONSTRAINT "Department_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "Department"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "LoginLog" ADD CONSTRAINT "LoginLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "meeting_records" ADD CONSTRAINT "meeting_records_hostPlatformUserId_fkey" FOREIGN KEY ("hostPlatformUserId") REFERENCES "PlatformUser"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "meeting_records" ADD CONSTRAINT "meeting_records_hostUserId_fkey" FOREIGN KEY ("hostUserId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "meeting_records" ADD CONSTRAINT "meeting_records_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MeetingParticipation" ADD CONSTRAINT "MeetingParticipation_meetingId_fkey" FOREIGN KEY ("meetingId") REFERENCES "meeting_records"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MeetingParticipation" ADD CONSTRAINT "MeetingParticipation_platformUserId_fkey" FOREIGN KEY ("platformUserId") REFERENCES "PlatformUser"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MeetingParticipation" ADD CONSTRAINT "MeetingParticipation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "meeting_files" ADD CONSTRAINT "meeting_files_meetingRecordId_fkey" FOREIGN KEY ("meetingRecordId") REFERENCES "meeting_records"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PlatformUser" ADD CONSTRAINT "PlatformUser_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MeetingTranscript" ADD CONSTRAINT "MeetingTranscript_meetingId_fkey" FOREIGN KEY ("meetingId") REFERENCES "meeting_records"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MeetingTranscript" ADD CONSTRAINT "MeetingTranscript_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "meeting_summaries" ADD CONSTRAINT "meeting_summaries_meetingId_fkey" FOREIGN KEY ("meetingId") REFERENCES "meeting_records"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "meeting_summaries" ADD CONSTRAINT "meeting_summaries_sourceFileId_fkey" FOREIGN KEY ("sourceFileId") REFERENCES "meeting_files"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "meeting_summaries" ADD CONSTRAINT "meeting_summaries_parentSummaryId_fkey" FOREIGN KEY ("parentSummaryId") REFERENCES "meeting_summaries"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "meeting_summaries" ADD CONSTRAINT "meeting_summaries_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "meeting_summaries" ADD CONSTRAINT "meeting_summaries_reviewedBy_fkey" FOREIGN KEY ("reviewedBy") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Order" ADD CONSTRAINT "Order_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
