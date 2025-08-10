@@ -238,7 +238,5 @@ export async function createOrders(prisma: PrismaClient, params: CreateOrdersPar
     })
   ])
 
-
-
   return orders
 }
