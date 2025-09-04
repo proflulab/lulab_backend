@@ -20,6 +20,8 @@ import { UserModule } from './user/user.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { PrismaService } from './prisma.service';
 import { MeetingModule } from './meeting/meeting.module';
+import { TencentMeetingModule } from './tencent-meeting/tencent-meeting.module';
+import { FeishuMeetingModule } from './feishu-meeting/feishu-meeting.module';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { MeetingModule } from './meeting/meeting.module';
     AuthModule,
     UserModule,
     MeetingModule,
+    TencentMeetingModule,
+    FeishuMeetingModule,
   ],
   controllers: [AppController],
   providers: [

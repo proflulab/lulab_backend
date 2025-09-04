@@ -1,7 +1,7 @@
 import { ApiOperation, ApiResponse, ApiQuery, ApiHeader } from '@nestjs/swagger';
 import { HttpStatus } from '@nestjs/common';
 import { MeetingPlatform, MeetingType, ProcessingStatus } from '@prisma/client';
-import { MeetingRecordListResponseDto } from '../../meeting/dto/common/meeting-record.dto';
+import { MeetingRecordListResponseDto } from '../../meeting/dto/meeting-record.dto';
 
 /**
  * 腾讯会议Webhook相关装饰器

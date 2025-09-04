@@ -71,7 +71,6 @@ model Meetings {
     hostPlatformUserId String? // Host's platform user ID
     hostPlatformUser   PlatformUser? @relation("HostedMeetings", fields: [hostPlatformUserId], references: [id])
     hostUserId         String? // 本地用户ID
-    hostUser           User?         @relation("HostedMeetings", fields: [hostUserId], references: [id])
     hostUserName       String? // 主持人姓名
     participantCount   Int? // 参与人数
 
@@ -103,7 +102,6 @@ model Meetings {
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
     deletedAt DateTime? // 软删除时间戳
-    User      User?     @relation(fields: [userId], references: [id])
     userId    String?
 
     @@unique([platform, platformMeetingId])
@@ -252,7 +250,6 @@ model MeetingTranscript {
     text        String  @db.Text // The actual transcript text content
 
     userId String? // Optional reference to local system User ID (if matched)
-    user   User?   @relation(fields: [userId], references: [id])
 
     createdAt DateTime @default(now()) // Timestamp when the record was created
     updatedAt DateTime @updatedAt // Timestamp when the record was last updated
