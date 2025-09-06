@@ -1,4 +1,5 @@
 // 腾讯会议相关类型定义
+// 注意：事件相关类型已移动到 tencent-events.types.ts 文件中
 export interface TencentMeetingConfig {
     secretId: string;
     secretKey: string;
@@ -149,67 +150,4 @@ export interface MeetingDetailResponse {
         new_error_code?: number;
         message: string;
     };
-}
-
-// 腾讯会议事件操作者信息
-export interface TencentEventOperator {
-    userid: string; // 事件操作者 id（同企业用户才返回用户 id，OAuth 用户返回 openId,rooms 返回 roomsId）
-    open_id?: string;
-    uuid: string; // 用户身份 ID
-    user_name: string; // 事件操作者名称
-    ms_open_id?: string;
-    instance_id: string; // 用户的终端设备类型
-}
-
-// 腾讯会议创建者信息
-export interface TencentMeetingCreator {
-    userid: string; // 创建人 id（OAuth 用户返回 openId）
-    open_id?: string;
-    uuid: string; // 用户身份 ID
-    user_name: string; // 创建人名称
-    ms_open_id?: string;
-    instance_id?: string; // 用户的终端设备类型
-}
-
-// 腾讯会议主持人信息
-export interface TencentMeetingHost {
-    userid: string; // 用户 id（OAuth 用户返回 openId）
-    open_id?: string;
-    uuid: string; // 用户身份 ID
-    user_name: string; // 用户名称
-    ms_open_id?: string;
-}
-
-// 腾讯会议信息
-export interface TencentEventMeetingInfo {
-    meeting_id: string; // 会议 ID
-    meeting_code: string; // 会议 code
-    subject: string; // 会议主题
-    creator: TencentMeetingCreator;
-    hosts?: TencentMeetingHost[]; // 主持人（某些事件类型包含）
-    meeting_type: number; // 会议类型(0:一次性会议，1:周期性会议，2:微信专属会议，4:rooms 投屏会议，5:个人会议号会议)
-    start_time: number; // 秒级别的会议开始时间戳
-    end_time: number; // 秒级别的会议结束时间戳
-    meeting_create_mode?: number; // 会议创建类型 0:普通会议；1:快速会议
-    meeting_create_from?: number; // 会议创建来源 0:空来源，1:客户端，2:web，3:企微，4:微信，5:outlook，6:restapi，7:腾讯文档，8:Rooms 智能录制
-    meeting_id_type?: number; // 会议 ID 类型 0:主会议 ID；1:分组会议 ID
-    sub_meeting_id?: string;
-}
-
-// 腾讯会议事件载荷
-export interface TencentEventPayload {
-    operate_time: number; // 毫秒级别事件操作时间戳
-    operator: TencentEventOperator; // 事件操作者
-    meeting_info: TencentEventMeetingInfo; // 会议信息
-    meeting_end_type?: number; // 结束类型（仅 meeting.end 事件）（0:主动结束会议，1:最后一个参会用户离开会议且超过了预定会议结束时间，2:会议中无人且超过了预定会议结束时间，3:会议中无人且未到会议预定结束时间）
-    recording_files?: Array<{
-        record_file_id: string;
-    }>; // 录制文件（某些事件类型包含）
-}
-
-// 腾讯会议事件
-export interface TencentMeetingEvent {
-    event: string; // 事件名
-    trace_id: string; // 事件的唯一序列值
-    payload: TencentEventPayload[];
 }
