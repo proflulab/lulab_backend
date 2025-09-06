@@ -35,8 +35,12 @@ export function verifySignature(
 
 /**
  * AES解密
+ * 根据腾讯会议文档要求：
+ * - data字段先经过加密密钥加密后，再base64编码
+ * - 需要先base64解码，再用加密密钥解密
+ * 
  * @param encryptedText base64编码的加密文本
- * @param key base64编码的密钥
+ * @param key base64编码的密钥（43位base64字符串）
  */
 export async function aesDecrypt(encryptedText: string, key: string): Promise<string> {
     // 1. 导入Web Crypto API
@@ -45,80 +49,87 @@ export async function aesDecrypt(encryptedText: string, key: string): Promise<st
         throw new Error('Web Crypto API is not available');
     }
 
-    // 2. Base64解码密钥
-    console.log('Original key:', key);
-    const decodedKey = Buffer.from(key, 'base64');
-    console.log('Decoded key length:', decodedKey.length);
-    console.log('Decoded key:', decodedKey.toString('hex'));
-
-    // 3. 生成32字节的AES密钥
-    const aesKey = Buffer.alloc(32);
-    decodedKey.copy(aesKey);
-    console.log('AES key:', aesKey.toString('hex'));
-
-    // 4. 从密钥前16字节生成IV
-    const iv = aesKey.subarray(0, 16);
-    console.log('IV:', iv.toString('hex'));
-
-    // 5. Base64解码加密文本
-    console.log('Encrypted text:', encryptedText);
-    const decodedText = Buffer.from(encryptedText, 'base64');
-    console.log('Decoded text length:', decodedText.length);
-    console.log('Decoded text:', decodedText.toString('hex'));
-
-    // 6. 导入AES密钥
-    const cryptoKey = await crypto.subtle.importKey(
-        'raw',
-        aesKey,
-        { name: 'AES-CBC' },
-        false,
-        ['decrypt']
-    );
-
-    // 7. 解密
-    let decrypted;
     try {
-        decrypted = await crypto.subtle.decrypt(
+        // 2. Base64解码密钥（43位base64字符串 -> 32字节AES密钥）
+        const decodedKey = Buffer.from(key, 'base64');
+        if (decodedKey.length !== 32) {
+            throw new Error(`Invalid key length: expected 32 bytes, got ${decodedKey.length}`);
+        }
+
+        // 3. Base64解码加密文本
+        const decodedText = Buffer.from(encryptedText, 'base64');
+        if (decodedText.length === 0) {
+            throw new Error('Decoded encrypted text is empty');
+        }
+
+        // 4. 从密钥前16字节生成IV（初始化向量）
+        const iv = decodedKey.subarray(0, 16);
+
+        // 5. 导入AES密钥
+        const cryptoKey = await crypto.subtle.importKey(
+            'raw',
+            decodedKey,
+            { name: 'AES-CBC' },
+            false,
+            ['decrypt']
+        );
+
+        // 6. 执行AES-CBC解密
+        const decrypted = await crypto.subtle.decrypt(
             { name: 'AES-CBC', iv },
             cryptoKey,
             decodedText
         );
-        console.log('Decryption successful');
 
         if (decrypted.byteLength === 0) {
             throw new Error('Decrypted data is empty');
         }
-    } catch (error) {
-        console.error('Decryption failed:', error);
-        throw error;
-    }
 
-    // 8. 直接尝试解码为UTF-8字符串
-    const result = new Uint8Array(decrypted);
-    console.log('Decrypted raw bytes:', Array.from(result).map(b => b.toString(16).padStart(2, '0')).join(''));
+        // 7. 解码为UTF-8字符串
+        const result = new Uint8Array(decrypted);
+        
+        // 8. 移除PKCS7填充（如果存在）
+        // 腾讯会议使用标准的AES-CBC + PKCS7填充
+        let unpaddedResult = result;
+        const paddingLength = result[result.length - 1];
+        if (paddingLength > 0 && paddingLength <= 16) {
+            // 验证填充是否有效
+            let isValidPadding = true;
+            for (let i = 0; i < paddingLength; i++) {
+                if (result[result.length - 1 - i] !== paddingLength) {
+                    isValidPadding = false;
+                    break;
+                }
+            }
+            if (isValidPadding) {
+                unpaddedResult = result.subarray(0, result.length - paddingLength);
+            }
+        }
 
-    // 9. 尝试直接解码，如果是有效的UTF-8字符串则不需要移除填充
-    try {
-        const decoded = new TextDecoder().decode(result);
-        console.log('Decoded result:', decoded);
+        // 9. 转换为UTF-8字符串
+        const decoded = new TextDecoder('utf-8').decode(unpaddedResult);
+        
         return decoded;
+        
     } catch (error) {
-        console.error('UTF-8 decoding failed:', error);
-        throw error;
+        // 提供更详细的错误信息
+        if (error.name === 'OperationError') {
+            throw new Error(`Decryption failed: ${error.message}. Please check if the encodingAesKey is correct.`);
+        }
+        throw new Error(`AES decryption failed: ${error.message}`);
     }
 }
 
 /**
  * 验证腾讯会议Webhook URL
- * @param checkStr 待验证的字符串
- * @param timestamp 时间戳
- * @param nonce 随机数
- * @param signature 签名
+ * @param checkStr 待验证的字符串（已URL解码）
+ * @param timestamp 时间戳（已URL解码）
+ * @param nonce 随机数（已URL解码）
+ * @param signature 签名（已URL解码）
  * @param token 配置的Token
  * @param encodingAesKey 编码AES密钥
  * @returns 解密后的明文
  */
-
 export async function verifyWebhookUrl(
     checkStr: string,
     timestamp: string,
@@ -136,12 +147,12 @@ export async function verifyWebhookUrl(
             );
         }
 
-        // 2. 签名验证
+        // 2. 签名验证（使用已解码的参数）
         const isValid = verifySignature(
             token,
             timestamp,
             nonce,
-            decodeURIComponent(checkStr),
+            checkStr, // 使用已解码的checkStr
             signature
         );
 
@@ -152,7 +163,7 @@ export async function verifyWebhookUrl(
         }
 
         // 3. 解密check_str
-        const decryptedStr = await aesDecrypt(decodeURIComponent(checkStr), encodingAesKey);
+        const decryptedStr = await aesDecrypt(checkStr, encodingAesKey);
 
         return decryptedStr;
     } catch (error) {

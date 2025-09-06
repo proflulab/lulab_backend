@@ -14,21 +14,28 @@ import { HttpModule } from '@nestjs/axios';
 import { TencentWebhookController } from './controllers/tencent-webhook.controller';
 import { TencentMeetingService } from './services/tencent-meeting.service';
 import { TencentApiService } from './services/tencent-api.service';
-import { TencentEventHandlerFactory } from './services/handlers/event-handler-factory';
-import { RecordingCompletedHandler } from './services/handlers/recording-completed-handler';
-import { MeetingStartedHandler } from './services/handlers/meeting-started-handler';
+import { TencentEventHandlerService } from './services/tencent-event-handler.service';
 import { MeetingRepository } from '../meeting/repositories/meeting.repository';
 import { PrismaService } from '../prisma.service';
+import { LarkModule } from '../../libs/integrations-lark/lark.module';
+import { EventHandlerFactory } from './services/event-handlers/event-handler.factory';
+import { MeetingStartedHandler } from './services/event-handlers/meeting-started.handler';
+import { MeetingEndedHandler } from './services/event-handlers/meeting-ended.handler';
+import { RecordingCompletedHandler } from './services/event-handlers/recording-completed.handler';
 
 @Module({
-  imports: [HttpModule],
+  imports: [HttpModule, LarkModule],
   controllers: [TencentWebhookController],
   providers: [
     TencentMeetingService,
     TencentApiService,
-    TencentEventHandlerFactory,
-    RecordingCompletedHandler,
+    TencentEventHandlerService,
+  
+    EventHandlerFactory,
     MeetingStartedHandler,
+    MeetingEndedHandler,
+    RecordingCompletedHandler,
+    
     MeetingRepository,
     PrismaService,
   ],
