@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BaseEventHandler } from './base-event.handler';
+import { TencentEventPayload } from '../../types/tencent-webhook-events.types';
 
 /**
  * 录制完成事件处理器
@@ -12,19 +13,13 @@ export class RecordingCompletedHandler extends BaseEventHandler {
     return event === this.SUPPORTED_EVENT;
   }
 
-  async handle(payload: any, index: number): Promise<void> {
+  async handle(payload: TencentEventPayload, index: number): Promise<void> {
     const { meeting_info, recording_files = [] } = payload;
 
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
 
     // 记录会议信息
-    this.logger.log(`录制完成 [${index}]: ${meeting_info.subject}`, {
-      meetingId: meeting_info.meeting_id,
-      meetingCode: meeting_info.meeting_code,
-      subject: meeting_info.subject,
-      recordingFilesCount: recording_files.length,
-      creator: meeting_info.creator?.user_name
-    });
+    this.logger.log(`录制完成 [${index}]: ${meeting_info.subject} (${meeting_info.meeting_code})`);
 
     try {
       await this.processRecordingFiles(meeting_info.meeting_id, recording_files);

@@ -11,7 +11,8 @@ import {
     SearchRecordResponse,
     SearchRecordIteratorOptions,
     ListRecordRequest,
-    ListRecordResponse
+    ListRecordResponse,
+    LarkRecord
 } from './lark.types';
 
 @Injectable()
@@ -138,7 +139,7 @@ export class LarkClient {
     /**
      * Search records in Bitable with iterator for convenient pagination
      */
-    async *searchBitableRecordsIterator(options: SearchRecordIteratorOptions): AsyncGenerator<any, void, unknown> {
+    async *searchBitableRecordsIterator(options: SearchRecordIteratorOptions): AsyncGenerator<LarkRecord, void, unknown> {
         try {
             this.logger.debug(`Searching Bitable records with iterator in app: ${options.app_token}, table: ${options.table_id}`);
 
@@ -161,7 +162,7 @@ export class LarkClient {
 
             const iterator = await iteratorPromise;
             for await (const item of iterator) {
-                yield item;
+                yield item as LarkRecord;
             }
         } catch (error) {
             this.logger.error('Failed to search Bitable records with iterator', error);
@@ -207,7 +208,7 @@ export class LarkClient {
     /**
      * List records in Bitable with iterator for convenient pagination
      */
-    async *listBitableRecordsIterator(request: ListRecordRequest): AsyncGenerator<any, void, unknown> {
+    async *listBitableRecordsIterator(request: ListRecordRequest): AsyncGenerator<LarkRecord, void, unknown> {
         try {
             this.logger.debug(`Listing Bitable records with iterator in app: ${request.app_token}, table: ${request.table_id}`);
 
@@ -231,7 +232,7 @@ export class LarkClient {
 
             const iterator = await iteratorPromise;
             for await (const item of iterator) {
-                yield item;
+                yield item as LarkRecord;
             }
         } catch (error) {
             this.logger.error('Failed to list Bitable records with iterator', error);

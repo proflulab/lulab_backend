@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { TencentEventHandlerService } from '../../src/tencent-meeting/services/tencent-event-handler.service';
 import { MeetingBitableRepository } from '../../libs/integrations-lark/repositories/meeting-bitable.repository';
-import { TencentMeetingEvent } from '../../src/tencent-meeting/types/tencent-events.types';
+import { TencentMeetingEvent } from '../../src/tencent-meeting/types/tencent-webhook-events.types';
 
 // Mock services
 const mockConfigService = {

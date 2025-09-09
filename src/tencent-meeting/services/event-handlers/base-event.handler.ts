@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { TencentEventPayload } from '../../types/tencent-events.types';
+import { TencentEventPayload } from '../../types/tencent-webhook-events.types';
 
 /**
  * 事件处理器接口

@@ -1,19 +1,3 @@
-// 腾讯会议相关类型定义
-// 注意：事件相关类型已移动到 tencent-events.types.ts 文件中
-export interface TencentMeetingConfig {
-    secretId: string;
-    secretKey: string;
-    appId: string;
-    sdkId: string;
-    token: string;
-    encodingAesKey: string;
-}
-
-export interface TencentWebhookEvent {
-    event: string;
-    payload: any;
-}
-
 export interface TencentRecordingFile {
     record_file_id: string;
     // 其他字段根据实际API响应添加
@@ -145,6 +129,89 @@ export interface MeetingDetailResponse {
     };
     meeting_type: number;
     sub_meeting_id?: string;
+    error_info?: {
+        error_code: number;
+        new_error_code?: number;
+        message: string;
+    };
+}
+
+// 录制转写相关类型定义
+export interface TranscriptWord {
+    wid: string;
+    start_time: number;
+    end_time: number;
+    text: string;
+}
+
+export interface TranscriptSentence {
+    sid: string;
+    start_time: number;
+    end_time: number;
+    words: TranscriptWord[];
+}
+
+export interface TranscriptParagraph {
+    pid: string;
+    start_time: number;
+    end_time: number;
+    sentences: TranscriptSentence[];
+}
+
+export interface TranscriptMinutes {
+    paragraphs: TranscriptParagraph[];
+}
+
+export interface RecordingTranscriptDetail {
+    minutes: TranscriptMinutes;
+    more: boolean;
+    error_info?: {
+        error_code: number;
+        new_error_code?: number;
+        message: string;
+    };
+}
+
+// 智能纪要相关类型定义
+export interface MeetingMinute {
+    minute: string;  // 会议摘要
+    todo: string;    // 会议待办
+}
+
+export interface SmartMinutesResponse {
+    meeting_minute: MeetingMinute;
+    error_info?: {
+        error_code: number;
+        new_error_code?: number;
+        message: string;
+    };
+}
+
+// 智能总结相关类型定义
+export interface SmartSummaryResponse {
+    ai_summary: string;  // 智能总结内容，base64编码
+    error_info?: {
+        error_code: number;
+        new_error_code?: number;
+        message: string;
+    };
+}
+
+// 智能话题相关类型定义
+export interface TopicTime {
+    pid: string;      // 段落ID
+    start_time: string;  // 话题开始时间，单位毫秒
+    end_time: string;    // 话题结束时间，单位毫秒
+}
+
+export interface AiTopic {
+    topic_id: string;    // 话题唯一ID
+    topic_name: string;  // 话题主题，base64编码后的结果
+    topic_time: TopicTime[];  // 话题的发言段落及时间段
+}
+
+export interface SmartTopicsResponse {
+    ai_topic_list: AiTopic[];  // 录制文件的智能话题列表
     error_info?: {
         error_code: number;
         new_error_code?: number;

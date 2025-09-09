@@ -12,7 +12,8 @@ import {
     ListRecordResponse,
     BitableField,
     SearchFilter,
-    SearchSort
+    SearchSort,
+    LarkRecord
 } from './lark.types';
 
 @Injectable()
@@ -102,7 +103,7 @@ export class BitableService {
             pageSize?: number;
             userIdType?: 'user_id' | 'union_id' | 'open_id';
         }
-    ): AsyncGenerator<any, void, unknown> {
+    ): AsyncGenerator<LarkRecord, void, unknown> {
         const iteratorOptions: SearchRecordIteratorOptions = {
             app_token: appToken,
             table_id: tableId,
@@ -171,7 +172,7 @@ export class BitableService {
             displayFormulaRef?: boolean;
             automaticFields?: boolean;
         }
-    ): AsyncGenerator<any, void, unknown> {
+    ): AsyncGenerator<LarkRecord, void, unknown> {
         const request: ListRecordRequest = {
             app_token: appToken,
             table_id: tableId,
@@ -202,8 +203,8 @@ export class BitableService {
             sort?: string;
             pageSize?: number;
         }
-    ): Promise<any[]> {
-        const records: any[] = [];
+    ): Promise<LarkRecord[]> {
+        const records: LarkRecord[] = [];
 
         for await (const record of this.listRecordsIterator(appToken, tableId, options)) {
             records.push(record);

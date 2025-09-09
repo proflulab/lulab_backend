@@ -6,7 +6,7 @@ import {
     RecordMeetingsResponse,
     MeetingParticipantsResponse,
     MeetingDetailResponse
-} from '../types/tencent.types';
+} from '../types/tencent-meeting-api.types';
 import {
     PlatformApiException,
     PlatformConfigException

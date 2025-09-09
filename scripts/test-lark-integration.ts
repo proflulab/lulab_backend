@@ -15,7 +15,7 @@ import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { TencentEventHandlerService } from '../src/tencent-meeting/services/tencent-event-handler.service';
 import { TencentMeetingModule } from '../src/tencent-meeting/tencent-meeting.module';
-import { TencentMeetingEvent } from '../src/tencent-meeting/types/tencent-events.types';
+import { TencentMeetingEvent } from '../src/tencent-meeting/types/tencent-webhook-events.types';
 
 async function testLarkIntegration() {
   console.log('🚀 开始测试飞书多维表格集成...\n');

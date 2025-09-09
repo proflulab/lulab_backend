@@ -21,7 +21,7 @@ import {
 import { WebhookLoggingInterceptor } from '../interceptors/webhook-logging.interceptor';
 import { ApiTencentUrlVerificationDocs, ApiTencentEventReceiverDocs } from '../decorators/tencent-webhook.decorators';
 import { verifySignature, aesDecrypt, verifyWebhookUrl } from '../services/tencent-crypto.service';
-import { TencentMeetingEvent } from '../types/tencent-events.types';
+import { TencentMeetingEvent } from '../types/tencent-webhook-events.types';
 import {
     WebhookSignatureVerificationException,
     WebhookDecryptionException,

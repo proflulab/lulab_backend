@@ -5,3 +5,4 @@
 
 export * from './meeting-bitable.repository';
 export * from './meetinguser-bitable.repository';
+export * from './recording-file-bitable.repository';

@@ -5,11 +5,17 @@ import {
     RecordingDetail,
     RecordMeetingsResponse,
     MeetingParticipantsResponse,
-    MeetingDetailResponse
-} from '../types/tencent.types';
+    MeetingDetailResponse,
+    RecordingTranscriptDetail,
+    SmartMinutesResponse,
+    SmartSummaryResponse,
+    SmartTopicsResponse
+} from '../types/tencent-meeting-api.types';
 
 @Injectable()
 export class TencentApiService {
+    private readonly BASE_URL = 'https://api.meeting.qq.com';
+    
     constructor(
         private configService: ConfigService,
     ) { }
@@ -25,33 +31,40 @@ export class TencentApiService {
     }
 
     /**
-     * 获取录制文件详情
-     * @param fileId 录制文件ID
-     * @param userId 用户ID
-     * @returns 录制详情信息
+     * 发送腾讯会议API请求的基础方法
+     * @param method HTTP方法
+     * @param requestUri 请求URI
+     * @param queryParams 查询参数
+     * @returns API响应数据
      */
-    async getRecordingFileDetail(fileId: string, userId: string): Promise<RecordingDetail> {
+    private async sendRequest<T>(
+        method: string,
+        requestUri: string,
+        queryParams: Record<string, any> = {}
+    ): Promise<T> {
         try {
-            const requestUri = `/v1/addresses/${fileId}?userid=${userId}`;
-            const apiUrl = `https://api.meeting.qq.com${requestUri}`;
+            // 构建完整的请求URI
+            const queryString = new URLSearchParams(queryParams).toString();
+            const fullRequestUri = queryString ? `${requestUri}?${queryString}` : requestUri;
+            const apiUrl = `${this.BASE_URL}${fullRequestUri}`;
 
-            // 1. 准备请求头参数
+            // 准备请求头参数
             const timestamp = Math.floor(Date.now() / 1000).toString();
             const nonce = Math.floor(Math.random() * 100000).toString();
             const config = this.getConfig();
 
-            // 2. 生成签名
+            // 生成签名
             const signature = generateSignature(
                 config.secretKey,
-                'GET',
+                method,
                 config.secretId,
                 nonce,
                 timestamp,
-                requestUri,
+                fullRequestUri,
                 ''
             );
 
-            // 3. 发送请求
+            // 构建请求头
             const headers: Record<string, string> = {
                 'Content-Type': 'application/json',
                 'X-TC-Key': config.secretId || '',
@@ -64,40 +77,59 @@ export class TencentApiService {
             };
 
             const response = await fetch(apiUrl, {
-                method: 'GET',
+                method,
                 headers
             });
 
             const responseData = await response.json();
 
-            // 4. 检查错误信息
+            // 统一错误处理
             if (responseData.error_info) {
-                const errorInfo = responseData.error_info;
-                console.error('API请求失败:', {
-                    错误码: errorInfo.error_code,
-                    新错误码: errorInfo.new_error_code,
-                    错误信息: errorInfo.message,
-                    请求URI: requestUri,
-                    时间戳: timestamp
-                });
-
-                // 特殊处理IP白名单错误
-                if (errorInfo.error_code === 500125) {
-                    throw new Error(`IP白名单错误: ${errorInfo.message}\n请确保已在腾讯会议应用配置中添加当前服务器IP到白名单。`);
-                }
-
-                if (errorInfo.error_code === 108004051) {
-                    throw new Error(`录制文件已经被删除: ${errorInfo.message}\n`);
-                }
-
-                throw new Error(`API请求失败: ${errorInfo.message} (错误码: ${errorInfo.error_code})`);
+                this.handleApiError(responseData.error_info, fullRequestUri, timestamp);
             }
 
-            return responseData as RecordingDetail;
+            return responseData as T;
         } catch (error) {
-            console.error('获取录制文件详情失败:', error);
+            console.error('API请求失败:', error);
             throw error;
         }
+    }
+
+    /**
+     * 统一处理API错误
+     * @param errorInfo 错误信息
+     * @param requestUri 请求URI
+     * @param timestamp 时间戳
+     */
+    private handleApiError(errorInfo: any, requestUri: string, timestamp: string): void {
+        console.error('API请求失败:', {
+            错误码: errorInfo.error_code,
+            新错误码: errorInfo.new_error_code,
+            错误信息: errorInfo.message,
+            请求URI: requestUri,
+            时间戳: timestamp
+        });
+
+        // 特殊处理IP白名单错误
+        if (errorInfo.error_code === 500125) {
+            throw new Error(`IP白名单错误: ${errorInfo.message}\n请确保已在腾讯会议应用配置中添加当前服务器IP到白名单。`);
+        }
+
+        if (errorInfo.error_code === 108004051) {
+            throw new Error(`录制文件已经被删除: ${errorInfo.message}\n`);
+        }
+
+        throw new Error(`API请求失败: ${errorInfo.message} (错误码: ${errorInfo.error_code})`);
+    }
+
+    /**
+     * 获取录制文件详情
+     * @param fileId 录制文件ID
+     * @param userId 用户ID
+     * @returns 录制详情信息
+     */
+    async getRecordingFileDetail(fileId: string, userId: string): Promise<RecordingDetail> {
+        return this.sendRequest<RecordingDetail>('GET', `/v1/addresses/${fileId}`, { userid: userId });
     }
 
     /**
@@ -116,81 +148,24 @@ export class TencentApiService {
         operatorId?: string,
         operatorIdType: number = 1
     ): Promise<RecordMeetingsResponse> {
-        try {
-            // 验证时间区间不超过31天
-            if (endTime - startTime > 31 * 24 * 60 * 60) {
-                throw new Error('时间区间不允许超过31天');
-            }
-
-            // 验证分页参数
-            if (pageSize > 20) {
-                pageSize = 20; // 限制最大分页大小为20
-            }
-
-            const config = this.getConfig();
-            const finalOperatorId = operatorId || config.userId;
-
-            const requestUri = `/v1/corp/records?start_time=${startTime}&end_time=${endTime}&page_size=${pageSize}&page=${page}&operator_id=${finalOperatorId}&operator_id_type=${operatorIdType}`;
-            const apiUrl = `https://api.meeting.qq.com${requestUri}`;
-
-            // 1. 准备请求头参数
-            const timestamp = Math.floor(Date.now() / 1000).toString();
-            const nonce = Math.floor(Math.random() * 100000).toString();
-
-            // 2. 生成签名
-            const signature = generateSignature(
-                config.secretKey,
-                'GET',
-                config.secretId,
-                nonce,
-                timestamp,
-                requestUri,
-                ''
-            );
-
-            // 3. 发送请求
-            const headers: Record<string, string> = {
-                'Content-Type': 'application/json',
-                'X-TC-Key': config.secretId || '',
-                'X-TC-Timestamp': timestamp,
-                'X-TC-Nonce': nonce,
-                'X-TC-Signature': signature,
-                'AppId': config.appId || '',
-                'SdkId': config.sdkId || '',
-                'X-TC-Registered': '1'
-            };
-
-            const response = await fetch(apiUrl, {
-                method: 'GET',
-                headers
-            });
-
-            const responseData = await response.json();
-
-            // 4. 检查错误信息
-            if (responseData.error_info) {
-                const errorInfo = responseData.error_info;
-                console.error('获取会议录制列表失败:', {
-                    错误码: errorInfo.error_code,
-                    新错误码: errorInfo.new_error_code,
-                    错误信息: errorInfo.message,
-                    请求URI: requestUri,
-                    时间戳: timestamp
-                });
-
-                // 特殊处理IP白名单错误
-                if (errorInfo.error_code === 500125) {
-                    throw new Error(`IP白名单错误: ${errorInfo.message}\n请确保已在腾讯会议应用配置中添加当前服务器IP到白名单。`);
-                }
-
-                throw new Error(`API请求失败: ${errorInfo.message} (错误码: ${errorInfo.error_code})`);
-            }
-
-            return responseData as RecordMeetingsResponse;
-        } catch (error) {
-            console.error('获取会议录制列表失败:', error);
-            throw error;
+        // 验证时间区间不超过31天
+        if (endTime - startTime > 31 * 24 * 60 * 60) {
+            throw new Error('时间区间不允许超过31天');
         }
+
+        // 验证分页参数
+        const validatedPageSize = Math.min(pageSize, 20); // 限制最大分页大小为20
+        const config = this.getConfig();
+        const finalOperatorId = operatorId || config.userId;
+
+        return this.sendRequest<RecordMeetingsResponse>('GET', '/v1/corp/records', {
+            start_time: startTime,
+            end_time: endTime,
+            page_size: validatedPageSize,
+            page,
+            operator_id: finalOperatorId,
+            operator_id_type: operatorIdType
+        });
     }
 
     /**
@@ -205,69 +180,10 @@ export class TencentApiService {
         userId: string,
         instanceId: string = "1"
     ): Promise<MeetingDetailResponse> {
-        try {
-            const requestUri = `/v1/meetings/${meetingId}?userid=${userId}&instanceid=${instanceId}`;
-            const apiUrl = `https://api.meeting.qq.com${requestUri}`;
-
-            // 1. 准备请求头参数
-            const timestamp = Math.floor(Date.now() / 1000).toString();
-            const nonce = Math.floor(Math.random() * 100000).toString();
-            const config = this.getConfig();
-
-            // 2. 生成签名
-            const signature = generateSignature(
-                config.secretKey,
-                'GET',
-                config.secretId,
-                nonce,
-                timestamp,
-                requestUri,
-                ''
-            );
-
-            // 3. 发送请求
-            const headers: Record<string, string> = {
-                'Content-Type': 'application/json',
-                'X-TC-Key': config.secretId || '',
-                'X-TC-Timestamp': timestamp,
-                'X-TC-Nonce': nonce,
-                'X-TC-Signature': signature,
-                'AppId': config.appId || '',
-                'SdkId': config.sdkId || '',
-                'X-TC-Registered': '1'
-            };
-
-            const response = await fetch(apiUrl, {
-                method: 'GET',
-                headers
-            });
-
-            const responseData = await response.json();
-
-            // 4. 检查错误信息
-            if (responseData.error_info) {
-                const errorInfo = responseData.error_info;
-                console.error('获取会议详情失败:', {
-                    错误码: errorInfo.error_code,
-                    新错误码: errorInfo.new_error_code,
-                    错误信息: errorInfo.message,
-                    请求URI: requestUri,
-                    时间戳: timestamp
-                });
-
-                // 特殊处理IP白名单错误
-                if (errorInfo.error_code === 500125) {
-                    throw new Error(`IP白名单错误: ${errorInfo.message}\n请确保已在腾讯会议应用配置中添加当前服务器IP到白名单。`);
-                }
-
-                throw new Error(`API请求失败: ${errorInfo.message} (错误码: ${errorInfo.error_code})`);
-            }
-
-            return responseData as MeetingDetailResponse;
-        } catch (error) {
-            console.error('获取会议详情失败:', error);
-            throw error;
-        }
+        return this.sendRequest<MeetingDetailResponse>('GET', `/v1/meetings/${meetingId}`, {
+            userid: userId,
+            instanceid: instanceId
+        });
     }
 
     /**
@@ -282,70 +198,134 @@ export class TencentApiService {
         userId: string,
         subMeetingId?: string | null
     ): Promise<MeetingParticipantsResponse> {
-        try {
-            // 构建 requestUri
-            const requestUri = `/v1/meetings/${meetingId}/participants?userid=${userId}`
-                + (subMeetingId ? `&sub_meeting_id=${subMeetingId}` : '');
-            const apiUrl = `https://api.meeting.qq.com${requestUri}`;
-
-            // 1. 准备请求头参数
-            const timestamp = Math.floor(Date.now() / 1000).toString();
-            const nonce = Math.floor(Math.random() * 100000).toString();
-            const config = this.getConfig();
-
-            // 2. 生成签名
-            const signature = generateSignature(
-                config.secretKey,
-                'GET',
-                config.secretId,
-                nonce,
-                timestamp,
-                requestUri,
-                ''
-            );
-
-            // 3. 发送请求
-            const headers: Record<string, string> = {
-                'Content-Type': 'application/json',
-                'X-TC-Key': config.secretId || '',
-                'X-TC-Timestamp': timestamp,
-                'X-TC-Nonce': nonce,
-                'X-TC-Signature': signature,
-                'AppId': config.appId || '',
-                'SdkId': config.sdkId || '',
-                'X-TC-Registered': '1'
-            };
-
-            const response = await fetch(apiUrl, {
-                method: 'GET',
-                headers
-            });
-
-            const responseData = await response.json();
-
-            // 4. 检查错误信息
-            if (responseData.error_info) {
-                const errorInfo = responseData.error_info;
-                console.error('获取会议参会成员列表失败:', {
-                    错误码: errorInfo.error_code,
-                    新错误码: errorInfo.new_error_code,
-                    错误信息: errorInfo.message,
-                    请求URI: requestUri,
-                    时间戳: timestamp
-                });
-
-                // 特殊处理IP白名单错误
-                if (errorInfo.error_code === 500125) {
-                    throw new Error(`IP白名单错误: ${errorInfo.message}\n请确保已在腾讯会议应用配置中添加当前服务器IP到白名单。`);
-                }
-
-                throw new Error(`API请求失败: ${errorInfo.message} (错误码: ${errorInfo.error_code})`);
-            }
-
-            return responseData as MeetingParticipantsResponse;
-        } catch (error) {
-            console.error('获取会议参会成员列表失败:', error);
-            throw error;
+        const params: Record<string, any> = { userid: userId };
+        if (subMeetingId) {
+            params.sub_meeting_id = subMeetingId;
         }
+
+        return this.sendRequest<MeetingParticipantsResponse>('GET', `/v1/meetings/${meetingId}/participants`, params);
+    }
+
+    /**
+     * 获取录制转写详情
+     * @param meetingId 会议ID
+     * @param recordFileId 录制文件ID
+     * @param userId 用户ID
+     * @param pid 查询的起始段落ID，可选，默认从0开始
+     * @param limit 查询的段落数，可选，默认查询全量数据
+     * @returns 录制转写详情信息
+     */
+    async getRecordingTranscriptDetail(
+        meetingId: string,
+        recordFileId: string,
+        userId: string,
+        pid?: string,
+        limit?: number
+    ): Promise<RecordingTranscriptDetail> {
+        const params: Record<string, any> = {
+            meeting_id: meetingId,
+            record_file_id: recordFileId,
+            operator_id: userId,
+            operator_id_type: 1
+        };
+
+        if (pid !== undefined) {
+            params.pid = pid;
+        }
+        if (limit !== undefined) {
+            params.limit = limit;
+        }
+
+        return this.sendRequest<RecordingTranscriptDetail>('GET', '/v1/records/transcripts/details', params);
+    }
+
+    /**
+     * 获取智能纪要详情
+     * @param recordFileId 录制文件ID
+     * @param userId 用户ID
+     * @param minuteType 纪要类型：1-按章节，2-按主题，3-按发言人，默认1
+     * @param textType 文本类型：1-纯文本，2-markdown，默认1
+     * @param lang 翻译类型：default-原文，zh-简体中文，en-英文，ja-日语，默认default
+     * @param pwd 录制文件访问密码，可选
+     * @returns 智能纪要详情信息
+     */
+    async getSmartMinutesDetail(
+        recordFileId: string,
+        userId: string,
+        minuteType: number = 1,
+        textType: number = 1,
+        lang: string = 'default',
+        pwd?: string
+    ): Promise<SmartMinutesResponse> {
+        const params: Record<string, any> = {
+            operator_id: userId,
+            operator_id_type: 1,
+            minute_type: minuteType,
+            text_type: textType,
+            lang
+        };
+
+        if (pwd !== undefined) {
+            params.pwd = pwd;
+        }
+
+        return this.sendRequest<SmartMinutesResponse>('GET', `/v1/smart/minutes/${recordFileId}`, params);
+    }
+
+
+    /**
+     * 获取智能总结详情
+     * @param recordFileId 录制文件ID
+     * @param userId 用户ID
+     * @param lang 翻译类型：default-原文，zh-简体中文，en-英文，ja-日语，默认default
+     * @param pwd 录制文件访问密码，可选
+     * @returns 智能总结详情信息
+     */
+    async getSmartSummaryDetail(
+        recordFileId: string,
+        userId: string,
+        lang: string = 'default',
+        pwd?: string
+    ): Promise<SmartSummaryResponse> {
+        const params: Record<string, any> = {
+            record_file_id: recordFileId,
+            operator_id: userId,
+            operator_id_type: 1,
+            lang
+        };
+
+        if (pwd !== undefined) {
+            params.pwd = pwd;
+        }
+
+        return this.sendRequest<SmartSummaryResponse>('GET', '/v1/smart/fullsummary', params);
+    }
+
+    /**
+     * 获取智能话题详情
+     * @param recordFileId 录制文件ID
+     * @param userId 用户ID
+     * @param lang 翻译类型：default-原文，zh-简体中文，en-英文，ja-日语，默认default
+     * @param pwd 录制文件访问密码，可选
+     * @returns 智能话题详情信息
+     */
+    async getSmartTopicsDetail(
+        recordFileId: string,
+        userId: string,
+        lang: string = 'default',
+        pwd?: string
+    ): Promise<SmartTopicsResponse> {
+        const params: Record<string, any> = {
+            record_file_id: recordFileId,
+            operator_id: userId,
+            operator_id_type: 1,
+            lang
+        };
+
+        if (pwd !== undefined) {
+            params.pwd = pwd;
+        }
+
+        return this.sendRequest<SmartTopicsResponse>('GET', '/v1/smart/topics', params);
     }
 }

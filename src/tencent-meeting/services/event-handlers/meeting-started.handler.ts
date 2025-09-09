@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BaseEventHandler } from './base-event.handler';
-import { TencentEventPayload } from '../../types/tencent-events.types';
+import { TencentEventPayload } from '../../types/tencent-webhook-events.types';
 import { MeetingBitableRepository, MeetingUserBitableRepository } from '../../../../libs/integrations-lark/repositories';
 
 /**

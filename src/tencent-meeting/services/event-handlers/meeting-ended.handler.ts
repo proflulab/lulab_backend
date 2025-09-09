@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BaseEventHandler } from './base-event.handler';
-import { TencentEventPayload } from '../../types/tencent-events.types';
+import { TencentEventPayload } from '../../types/tencent-webhook-events.types';
 import { MeetingBitableRepository, MeetingUserBitableRepository } from '../../../../libs/integrations-lark/repositories';
 
 /**
@@ -26,7 +26,7 @@ export class MeetingEndedHandler extends BaseEventHandler {
     const { creator } = meeting_info;
 
     // 记录会议信息
-    this.logger.log(`会议开始 [${index}]: ${meeting_info.subject} (${meeting_info.meeting_code})`);
+    this.logger.log(`会议结束 [${index}]: ${meeting_info.subject} (${meeting_info.meeting_code})`);
 
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
 

@@ -1,5 +1,4 @@
 // 腾讯会议事件相关类型定义
-// 从 tencent.types.ts 中提取的事件相关类型
 
 // 腾讯会议事件操作者信息
 export interface TencentEventOperator {
