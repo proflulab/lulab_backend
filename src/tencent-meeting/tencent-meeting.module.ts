@@ -30,12 +30,10 @@ import { RecordingCompletedHandler } from './services/event-handlers/recording-c
     TencentMeetingService,
     TencentApiService,
     TencentEventHandlerService,
-  
     EventHandlerFactory,
     MeetingStartedHandler,
     MeetingEndedHandler,
     RecordingCompletedHandler,
-    
     MeetingRepository,
     PrismaService,
   ],

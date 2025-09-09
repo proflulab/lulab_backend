@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { BaseEventHandler } from './base-event.handler';
 import { TencentEventPayload } from '../../types/tencent-webhook-events.types';
-import { MeetingBitableRepository, MeetingUserBitableRepository } from '../../../../libs/integrations-lark/repositories';
+import { MeetingBitableRepository, MeetingUserBitableRepository } from '@libs/integrations-lark/repositories';
 
 /**
  * 会议开始事件处理器
