@@ -12,7 +12,17 @@ import {
     SearchRecordIteratorOptions,
     ListRecordRequest,
     ListRecordResponse,
-    LarkRecord
+    LarkRecord,
+    DeleteRecordRequest,
+    DeleteRecordResponse,
+    BatchCreateRecordRequest,
+    BatchCreateRecordResponse,
+    BatchUpdateRecordRequest,
+    BatchUpdateRecordResponse,
+    BatchGetRecordRequest,
+    BatchGetRecordResponse,
+    BatchDeleteRecordRequest,
+    BatchDeleteRecordResponse
 } from './lark.types';
 
 @Injectable()
@@ -263,6 +273,146 @@ export class LarkClient {
         });
 
         return formattedFields;
+    }
+
+    /**
+     * Delete a record in Bitable (Multi-dimensional table)
+     */
+    async deleteBitableRecord(request: DeleteRecordRequest): Promise<DeleteRecordResponse> {
+        try {
+            this.logger.debug(`Deleting Bitable record ${request.record_id} in app: ${request.app_token}, table: ${request.table_id}`);
+
+            const response = await this.client.bitable.v1.appTableRecord.delete({
+                path: {
+                    app_token: request.app_token,
+                    table_id: request.table_id,
+                    record_id: request.record_id,
+                },
+            });
+
+            this.logger.debug('Bitable record deleted successfully', { recordId: request.record_id });
+            return response as DeleteRecordResponse;
+        } catch (error) {
+            this.logger.error('Failed to delete Bitable record', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Batch create records in Bitable (Multi-dimensional table)
+     */
+    async batchCreateBitableRecords(request: BatchCreateRecordRequest): Promise<BatchCreateRecordResponse> {
+        try {
+            this.logger.debug(`Batch creating Bitable records in app: ${request.app_token}, table: ${request.table_id}`);
+
+            // Convert fields for each record
+            const recordsData = request.records.map(record => ({
+                fields: this.formatFields(record.fields)
+            }));
+
+            const response = await this.client.bitable.v1.appTableRecord.batchCreate({
+                path: {
+                    app_token: request.app_token,
+                    table_id: request.table_id,
+                },
+                data: {
+                    records: recordsData,
+                },
+            });
+
+            this.logger.debug(`Batch created ${response.data?.records?.length || 0} records`);
+            return response as BatchCreateRecordResponse;
+        } catch (error) {
+            this.logger.error('Failed to batch create Bitable records', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Batch update records in Bitable (Multi-dimensional table)
+     */
+    async batchUpdateBitableRecords(request: BatchUpdateRecordRequest): Promise<BatchUpdateRecordResponse> {
+        try {
+            this.logger.debug(`Batch updating Bitable records in app: ${request.app_token}, table: ${request.table_id}`);
+
+            // Convert fields for each record
+            const recordsData = request.records.map(record => ({
+                record_id: record.record_id,
+                fields: this.formatFields(record.fields)
+            }));
+
+            const response = await this.client.bitable.v1.appTableRecord.batchUpdate({
+                path: {
+                    app_token: request.app_token,
+                    table_id: request.table_id,
+                },
+                params: {
+                    ...(request.user_id_type && { user_id_type: request.user_id_type }),
+                },
+                data: {
+                    records: recordsData,
+                },
+            });
+
+            this.logger.debug(`Batch updated ${response.data?.records?.length || 0} records`);
+            return response as BatchUpdateRecordResponse;
+        } catch (error) {
+            this.logger.error('Failed to batch update Bitable records', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Batch get records in Bitable (Multi-dimensional table)
+     */
+    async batchGetBitableRecords(request: BatchGetRecordRequest): Promise<BatchGetRecordResponse> {
+        try {
+            this.logger.debug(`Batch getting Bitable records in app: ${request.app_token}, table: ${request.table_id}`);
+
+            const response = await this.client.bitable.v1.appTableRecord.batchGet({
+                path: {
+                    app_token: request.app_token,
+                    table_id: request.table_id,
+                },
+                data: {
+                    record_ids: request.record_ids,
+                    ...(request.user_id_type && { user_id_type: request.user_id_type }),
+                    ...(request.with_shared_url !== undefined && { with_shared_url: request.with_shared_url }),
+                    ...(request.automatic_fields !== undefined && { automatic_fields: request.automatic_fields }),
+                },
+            });
+
+            this.logger.debug(`Batch got ${response.data?.records?.length || 0} records`);
+            return response as BatchGetRecordResponse;
+        } catch (error) {
+            this.logger.error('Failed to batch get Bitable records', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Batch delete records in Bitable (Multi-dimensional table)
+     */
+    async batchDeleteBitableRecords(request: BatchDeleteRecordRequest): Promise<BatchDeleteRecordResponse> {
+        try {
+            this.logger.debug(`Batch deleting Bitable records in app: ${request.app_token}, table: ${request.table_id}`);
+
+            const response = await this.client.bitable.v1.appTableRecord.batchDelete({
+                path: {
+                    app_token: request.app_token,
+                    table_id: request.table_id,
+                },
+                data: {
+                    records: request.records,
+                },
+            });
+
+            this.logger.debug(`Batch deleted ${request.records.length} records`);
+            return response as BatchDeleteRecordResponse;
+        } catch (error) {
+            this.logger.error('Failed to batch delete Bitable records', error);
+            throw error;
+        }
     }
 
     /**

@@ -188,6 +188,90 @@ export interface ListRecordResponse {
     };
 }
 
+// 删除记录请求/响应
+export interface DeleteRecordRequest {
+    app_token: string;
+    table_id: string;
+    record_id: string;
+}
+
+export interface DeleteRecordResponse {
+    code: number;
+    msg: string;
+}
+
+// 批量创建记录请求/响应
+export interface BatchCreateRecordRequest {
+    app_token: string;
+    table_id: string;
+    records: Array<{
+        fields: BitableField;
+    }>;
+}
+
+export interface BatchCreateRecordResponse {
+    code: number;
+    msg: string;
+    data?: {
+        records: LarkRecord[];
+    };
+}
+
+// 批量更新记录请求/响应
+export interface BatchUpdateRecordRequest {
+    app_token: string;
+    table_id: string;
+    records: Array<{
+        record_id: string;
+        fields: BitableField;
+    }>;
+    user_id_type?: 'user_id' | 'union_id' | 'open_id';
+}
+
+export interface BatchUpdateRecordResponse {
+    code: number;
+    msg: string;
+    data?: {
+        records: LarkRecord[];
+    };
+}
+
+// 批量获取记录请求/响应
+export interface BatchGetRecordRequest {
+    app_token: string;
+    table_id: string;
+    record_ids: string[];
+    user_id_type?: 'user_id' | 'union_id' | 'open_id';
+    with_shared_url?: boolean;
+    automatic_fields?: boolean;
+}
+
+export interface BatchGetRecordResponse {
+    code: number;
+    msg: string;
+    data?: {
+        records: LarkRecord[];
+    };
+}
+
+// 批量删除记录请求/响应
+export interface BatchDeleteRecordRequest {
+    app_token: string;
+    table_id: string;
+    records: string[]; // record_id 数组
+}
+
+export interface BatchDeleteRecordResponse {
+    code: number;
+    msg: string;
+    data: {
+        records: Array<{
+            deleted: boolean;
+            record_id: string;
+        }>;
+    };
+}
+
 // Error response
 export interface LarkErrorResponse {
     code: number;

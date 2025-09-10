@@ -26,7 +26,6 @@ jest.mock('./tencent-crypto.service', () => ({
 
 describe('TencentApiService', () => {
   let service: TencentApiService;
-  let configService: ConfigService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -40,7 +39,6 @@ describe('TencentApiService', () => {
     }).compile();
 
     service = module.get<TencentApiService>(TencentApiService);
-    configService = module.get<ConfigService>(ConfigService);
     jest.clearAllMocks();
   });
 

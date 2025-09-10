@@ -71,53 +71,37 @@ export class MeetingUserBitableRepository {
             ...(userData.is_enterprise_user !== undefined && { is_enterprise_user: userData.is_enterprise_user }),
         };
 
-        // 构建查询条件：查找具有相同 uuid 的记录
-        const searchConditions: Array<{
-            field_name: string;
-            operator: 'is';
-            value: string[];
-        }> = [
-            {
-                field_name: 'uuid',
-                operator: 'is',
-                value: [String(userData.uuid)]
-            }
-        ];
-
-        const filter: SearchFilter = {
-            conjunction: 'and',
-            conditions: searchConditions
-        };
-
         try {
-            // 搜索是否存在相同记录
-            const searchResult = await this.bitableService.searchRecords(this.appToken, this.tableId, { filter });
-            
-            if (searchResult.data?.items && searchResult.data.items.length > 0) {
-                // 找到现有记录，进行更新
-                const existingRecord = searchResult.data.items[0];
-                this.logger.log(`Updating existing user record: ${userData.uuid}`);
-                
-                const updateResult = await this.bitableService.updateRecord(
-                    this.appToken,
-                    this.tableId,
-                    existingRecord.record_id,
-                    fields
-                );
-                
-                // 将更新响应转换为与创建响应兼容的格式
-                return {
-                    code: updateResult.code,
-                    msg: updateResult.msg,
-                    data: updateResult.data
-                };
-            } else {
-                // 没有现有记录，创建新记录
-                this.logger.log(`Creating new user record: ${userData.uuid}`);
-                return this.bitableService.createRecord(this.appToken, this.tableId, fields);
-            }
+            // 使用通用的 upsertRecord 方法
+            const result = await this.bitableService.upsertRecord(
+                this.appToken,
+                this.tableId,
+                fields,
+                {
+                    matchFields: ['uuid'],
+                    matchMode: 'exact',
+                    caseSensitive: false
+                },
+                {
+                    mergeFields: false,
+                    returnFullRecord: true
+                }
+            );
+
+            this.logger.log(`${result.action === 'created' ? 'Creating' : 'Updating'} user record: ${userData.uuid}`);
+
+            // 构建与原有接口兼容的响应
+            const response: CreateRecordResponse | UpdateRecordResponse = {
+                code: 0,
+                msg: 'success',
+                data: {
+                    record: result.record
+                }
+            };
+
+            return response;
         } catch (error) {
-            this.logger.error(`Error in upsertUserRecord: ${error.message}`);
+            this.logger.error(`Error in upsertMeetingUserRecord: ${error.message}`);
             throw error;
         }
     }

@@ -76,70 +76,42 @@ export class MeetingBitableRepository {
             ...(meetingData.creator && { creator: meetingData.creator }),
         };
 
-        // 构建查询条件：查找具有相同 meeting_id 和 sub_meeting_id 的记录
-        const searchConditions: Array<{
-            field_name: string;
-            operator: 'is' | 'isEmpty' | 'isNotEmpty';
-            value?: string[];
-        }> = [
-            {
-                field_name: 'meeting_id',
-                operator: 'is',
-                value: [String(meetingData.meeting_id)]
-            }
-        ];
-
-        // 如果有 sub_meeting_id，添加到查询条件
-        if (meetingData.sub_meeting_id) {
-            searchConditions.push({
-                field_name: 'sub_meeting_id',
-                operator: 'is',
-                value: [String(meetingData.sub_meeting_id)]
-            });
-        } else {
-            // 如果没有 sub_meeting_id，确保查询的记录也没有 sub_meeting_id
-            // 注意：isEmpty操作符不需要value参数
-            searchConditions.push({
-                field_name: 'sub_meeting_id',
-                operator: 'isEmpty',
-                value: []
-            });
-        }
-
-        const filter: SearchFilter = {
-            conjunction: 'and',
-            conditions: searchConditions
-        };
+        // 构建匹配字段数组 - 根据是否有 sub_meeting_id 决定匹配字段
+        const matchFields = meetingData.sub_meeting_id 
+            ? ['meeting_id', 'sub_meeting_id'] 
+            : ['meeting_id'];
 
         try {
-            // 搜索是否存在相同记录
-            const searchResult = await this.bitableService.searchRecords(this.appToken, this.tableId, { filter });
-            
-            if (searchResult.data?.items && searchResult.data.items.length > 0) {
-                // 找到现有记录，进行更新
-                const existingRecord = searchResult.data.items[0];
-                this.logger.log(`Updating existing meeting record: ${meetingData.meeting_id} (sub_meeting_id: ${meetingData.sub_meeting_id || 'none'})`);
-                
-                const updateResult = await this.bitableService.updateRecord(
-                    this.appToken,
-                    this.tableId,
-                    existingRecord.record_id,
-                    fields
-                );
-                
-                // 将更新响应转换为与创建响应兼容的格式
-                return {
-                    code: updateResult.code,
-                    msg: updateResult.msg,
-                    data: updateResult.data
-                };
-            } else {
-                // 没有现有记录，创建新记录
-                this.logger.log(`Creating new meeting record: ${meetingData.meeting_id} (sub_meeting_id: ${meetingData.sub_meeting_id || 'none'})`);
-                return this.bitableService.createRecord(this.appToken, this.tableId, fields);
-            }
+            // 使用通用的 upsertRecord 方法
+            const result = await this.bitableService.upsertRecord(
+                this.appToken,
+                this.tableId,
+                fields,
+                {
+                    matchFields,
+                    matchMode: 'exact',
+                    caseSensitive: false
+                },
+                {
+                    mergeFields: false,
+                    returnFullRecord: true
+                }
+            );
+
+            this.logger.log(`${result.action === 'created' ? 'Creating' : 'Updating'} meeting record: ${meetingData.meeting_id} (sub_meeting_id: ${meetingData.sub_meeting_id || 'none'})`);
+
+            // 构建与原有接口兼容的响应
+            const response: CreateRecordResponse | UpdateRecordResponse = {
+                code: 0,
+                msg: 'success',
+                data: {
+                    record: result.record
+                }
+            };
+
+            return response;
         } catch (error) {
-            this.logger.error(`Error in createMeetingRecord: ${error.message}`);
+            this.logger.error(`Error in upsertMeetingRecord: ${error.message}`);
             throw error;
         }
     }
