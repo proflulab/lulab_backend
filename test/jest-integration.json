@@ -24,5 +24,9 @@
   "testTimeout": 60000,
   "setupFiles": [
     "<rootDir>/test/setup-integration.ts"
-  ]
+  ],
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^@libs/(.*)$": "<rootDir>/libs/$1"
+  }
 }
