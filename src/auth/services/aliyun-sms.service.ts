@@ -47,7 +47,9 @@ export class AliyunSmsService {
       const signName = this.getSignName();
 
       // 构建完整的手机号（包含国家代码）
-      const fullPhoneNumber = countryCode ? `${countryCode}${phoneNumber}` : phoneNumber;
+      const fullPhoneNumber = countryCode
+        ? `${countryCode}${phoneNumber}`
+        : phoneNumber;
 
       const sendSmsRequest = new $Dysmsapi20170525.SendSmsRequest({
         phoneNumbers: fullPhoneNumber,
@@ -58,7 +60,10 @@ export class AliyunSmsService {
 
       const runtime = new $Util.RuntimeOptions({});
 
-      const response = await this.client.sendSmsWithOptions(sendSmsRequest, runtime);
+      const response = await this.client.sendSmsWithOptions(
+        sendSmsRequest,
+        runtime,
+      );
 
       this.logger.log(`短信发送成功: ${fullPhoneNumber}, 验证码: ${code}`);
 
@@ -66,7 +71,6 @@ export class AliyunSmsService {
       if (response.body?.code !== 'OK') {
         throw new Error(`短信发送失败: ${response.body?.message}`);
       }
-
     } catch (error) {
       this.logger.error(`短信发送失败: ${error.message}`);
       if (error.data && error.data['Recommend']) {
@@ -82,9 +86,12 @@ export class AliyunSmsService {
    */
   private getTemplateCode(type: CodeType): string {
     const templateMap = {
-      [CodeType.REGISTER]: process.env.ALIYUN_SMS_TEMPLATE_REGISTER || 'SMS_271525576',
-      [CodeType.LOGIN]: process.env.ALIYUN_SMS_TEMPLATE_LOGIN || 'SMS_271525576',
-      [CodeType.RESET_PASSWORD]: process.env.ALIYUN_SMS_TEMPLATE_RESET || 'SMS_271525576',
+      [CodeType.REGISTER]:
+        process.env.ALIYUN_SMS_TEMPLATE_REGISTER || 'SMS_271525576',
+      [CodeType.LOGIN]:
+        process.env.ALIYUN_SMS_TEMPLATE_LOGIN || 'SMS_271525576',
+      [CodeType.RESET_PASSWORD]:
+        process.env.ALIYUN_SMS_TEMPLATE_RESET || 'SMS_271525576',
     };
 
     return templateMap[type];

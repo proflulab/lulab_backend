@@ -16,7 +16,7 @@ model Project {
   // 关联关系
   curriculums Curriculum[] // 项目的课程
 
-  @@map("projects")
   @@index([category])
   @@index([slug])
+  @@map("projects")
 }

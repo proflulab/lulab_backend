@@ -12,25 +12,20 @@ export class TencentEventHandlerService {
   private readonly logger = new Logger(TencentEventHandlerService.name);
   private readonly PLATFORM_NAME = 'TENCENT_MEETING';
 
-  constructor(
-    private readonly eventHandlerFactory: EventHandlerFactory,
-  ) {}
+  constructor(private readonly eventHandlerFactory: EventHandlerFactory) {}
 
   /**
    * 处理腾讯会议事件
    */
   async handleEvent(eventData: TencentMeetingEvent): Promise<void> {
     const { event, payload } = eventData;
-    
+
     this.logger.log(`开始处理腾讯会议事件: ${event}`);
     this.logEventDetails(eventData);
 
     const handler = this.eventHandlerFactory.getHandler(event);
     if (!handler) {
-      throw new UnsupportedWebhookEventException(
-        this.PLATFORM_NAME, 
-        event
-      );
+      throw new UnsupportedWebhookEventException(this.PLATFORM_NAME, event);
     }
 
     try {
@@ -38,7 +33,7 @@ export class TencentEventHandlerService {
       for (let i = 0; i < payload.length; i++) {
         await handler.handle(payload[i], i);
       }
-      
+
       this.logger.log(`腾讯会议事件处理完成: ${event}`);
     } catch (error) {
       this.logger.error(`腾讯会议事件处理失败: ${event}`, error);
@@ -54,7 +49,7 @@ export class TencentEventHandlerService {
       event: eventData.event,
       traceId: eventData.trace_id,
       payloadCount: eventData.payload.length,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 

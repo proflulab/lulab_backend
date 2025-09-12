@@ -25,17 +25,13 @@ export class EventHandlerFactory {
       this.recordingCompletedHandler,
     ];
 
-    return handlers.find(handler => handler.supports(event)) || null;
+    return handlers.find((handler) => handler.supports(event)) || null;
   }
 
   /**
    * 获取支持的事件类型列表
    */
   getSupportedEvents(): string[] {
-    return [
-      'meeting.started',
-      'meeting.end',
-      'recording.completed',
-    ];
+    return ['meeting.started', 'meeting.end', 'recording.completed'];
   }
 }

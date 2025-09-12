@@ -4,9 +4,9 @@
  * @LastEditors: 杨仕明 shiming.y@qq.com
  * @LastEditTime: 2025-08-03 20:28:15
  * @FilePath: /lulab_backend/src/email/email.service.ts
- * @Description: 
- * 
- * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ * @Description:
+ *
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
 
 import { Injectable, Logger } from '@nestjs/common';
@@ -37,7 +37,9 @@ export class EmailService {
     const smtpPass = this.configService.get<string>('SMTP_PASS');
 
     if (!smtpUser || !smtpPass) {
-      this.logger.warn('邮件服务配置缺失（SMTP_USER 或 SMTP_PASS），邮件功能将不可用');
+      this.logger.warn(
+        '邮件服务配置缺失（SMTP_USER 或 SMTP_PASS），邮件功能将不可用',
+      );
       return;
     }
 
@@ -64,7 +66,9 @@ export class EmailService {
     });
   }
 
-  async sendEmail(sendEmailDto: SendEmailDto): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  async sendEmail(
+    sendEmailDto: SendEmailDto,
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
       if (!this.transporter) {
         const errorMsg = '邮件服务未配置，无法发送邮件';
@@ -78,7 +82,9 @@ export class EmailService {
       const { to, cc, bcc, subject, text, html } = sendEmailDto;
 
       const mailOptions = {
-        from: this.configService.get<string>('SMTP_FROM') || this.configService.get<string>('SMTP_USER'),
+        from:
+          this.configService.get<string>('SMTP_FROM') ||
+          this.configService.get<string>('SMTP_USER'),
         to,
         cc,
         bcc,
@@ -129,7 +135,10 @@ export class EmailService {
       }
 
       const mailOptions = {
-        from: options.from || this.configService.get<string>('SMTP_FROM') || this.configService.get<string>('SMTP_USER'),
+        from:
+          options.from ||
+          this.configService.get<string>('SMTP_FROM') ||
+          this.configService.get<string>('SMTP_USER'),
         to: options.to,
         subject: options.subject,
         text: options.text,
@@ -137,7 +146,9 @@ export class EmailService {
       };
 
       const result = await this.transporter.sendMail(mailOptions);
-      this.logger.log(`邮件发送成功: ${options.to}, MessageId: ${result.messageId}`);
+      this.logger.log(
+        `邮件发送成功: ${options.to}, MessageId: ${result.messageId}`,
+      );
     } catch (error) {
       this.logger.error(`邮件发送失败: ${options.to}`, error);
       throw error;
@@ -147,7 +158,7 @@ export class EmailService {
   async sendVerificationCode(
     email: string,
     code: string,
-    type: 'register' | 'login' | 'reset_password'
+    type: 'register' | 'login' | 'reset_password',
   ): Promise<void> {
     const typeMap = {
       register: '注册',

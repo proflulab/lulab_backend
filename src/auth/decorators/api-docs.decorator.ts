@@ -7,18 +7,15 @@ import {
   ApiConsumes,
   ApiProduces,
 } from '@nestjs/swagger';
-import {
-  RegisterDto,
-  LoginDto,
-  AuthResponseDto,
-} from '../../dto/auth.dto';
+import { RegisterDto, LoginDto, AuthResponseDto } from '../../dto/auth.dto';
 
 // 注册接口文档装饰器
 export function ApiRegisterDocs() {
   return applyDecorators(
     ApiOperation({
       summary: '用户注册',
-      description: '用户注册需要先通过邮箱或手机号验证码验证。支持的注册类型：email_code（邮箱验证码）、phone_code（手机验证码）。为了安全考虑，不再支持纯用户名密码注册。',
+      description:
+        '用户注册需要先通过邮箱或手机号验证码验证。支持的注册类型：email_code（邮箱验证码）、phone_code（手机验证码）。为了安全考虑，不再支持纯用户名密码注册。',
       tags: ['Auth'],
     }),
     ApiConsumes('application/json'),
@@ -121,7 +118,8 @@ export function ApiLoginDocs() {
   return applyDecorators(
     ApiOperation({
       summary: '用户登录',
-      description: '支持多种登录方式：用户名密码、邮箱密码、手机密码、邮箱验证码、手机验证码。根据不同的登录类型提供相应的参数。',
+      description:
+        '支持多种登录方式：用户名密码、邮箱密码、手机密码、邮箱验证码、手机验证码。根据不同的登录类型提供相应的参数。',
       tags: ['Auth'],
     }),
     ApiConsumes('application/json'),
@@ -257,7 +255,8 @@ export function ApiSendCodeDocs() {
   return applyDecorators(
     ApiOperation({
       summary: '发送验证码',
-      description: '向指定的邮箱或手机号发送验证码。支持注册、登录、重置密码等场景。发送频率限制：同一目标60秒内只能发送一次。验证码有效期为5分钟。',
+      description:
+        '向指定的邮箱或手机号发送验证码。支持注册、登录、重置密码等场景。发送频率限制：同一目标60秒内只能发送一次。验证码有效期为5分钟。',
       tags: ['Auth'],
     }),
     ApiConsumes('application/json'),
@@ -368,7 +367,8 @@ export function ApiVerifyCodeDocs() {
   return applyDecorators(
     ApiOperation({
       summary: '验证验证码',
-      description: '验证邮箱或手机号收到的验证码是否正确。用于注册、登录、重置密码等场景的验证码校验。',
+      description:
+        '验证邮箱或手机号收到的验证码是否正确。用于注册、登录、重置密码等场景的验证码校验。',
       tags: ['Auth'],
     }),
     ApiConsumes('application/json'),
@@ -426,7 +426,8 @@ export function ApiResetPasswordDocs() {
   return applyDecorators(
     ApiOperation({
       summary: '重置密码',
-      description: '通过验证码重置用户密码。需要先调用发送验证码接口获取验证码，然后提供验证码和新密码完成重置。',
+      description:
+        '通过验证码重置用户密码。需要先调用发送验证码接口获取验证码，然后提供验证码和新密码完成重置。',
       tags: ['Auth'],
     }),
     ApiConsumes('application/json'),
@@ -505,7 +506,8 @@ export function ApiRefreshTokenDocs() {
   return applyDecorators(
     ApiOperation({
       summary: '刷新访问令牌',
-      description: '使用刷新令牌获取新的访问令牌。当访问令牌过期时，可以使用此接口获取新的访问令牌而无需重新登录。',
+      description:
+        '使用刷新令牌获取新的访问令牌。当访问令牌过期时，可以使用此接口获取新的访问令牌而无需重新登录。',
       tags: ['Auth'],
     }),
     ApiConsumes('application/json'),
@@ -566,7 +568,8 @@ export function ApiLogoutDocs() {
   return applyDecorators(
     ApiOperation({
       summary: '退出登录',
-      description: '用户退出登录。由于JWT是无状态的，客户端删除token即可完成退出。如果需要实现token黑名单，可以在服务端添加相应逻辑。',
+      description:
+        '用户退出登录。由于JWT是无状态的，客户端删除token即可完成退出。如果需要实现token黑名单，可以在服务端添加相应逻辑。',
       tags: ['Auth'],
     }),
     ApiConsumes('application/json'),

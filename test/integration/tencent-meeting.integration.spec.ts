@@ -6,7 +6,8 @@ import { TencentApiService } from '../../src/tencent-meeting/services/tencent-ap
 const isIntegrationTest = process.env.RUN_INTEGRATION_TESTS === 'true';
 
 // 跳过集成测试的包装器
-const describeIf = (condition: boolean) => condition ? describe : describe.skip;
+const describeIf = (condition: boolean) =>
+  condition ? describe : describe.skip;
 
 describeIf(isIntegrationTest)('TencentApiService Integration Tests', () => {
   let service: TencentApiService;
@@ -17,10 +18,7 @@ describeIf(isIntegrationTest)('TencentApiService Integration Tests', () => {
     require('dotenv').config({ path: '.env.test' });
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        TencentApiService,
-        ConfigService,
-      ],
+      providers: [TencentApiService, ConfigService],
     }).compile();
 
     service = module.get<TencentApiService>(TencentApiService);
@@ -32,23 +30,31 @@ describeIf(isIntegrationTest)('TencentApiService Integration Tests', () => {
       'TENCENT_MEETING_SECRET_KEY',
       'TENCENT_MEETING_APP_ID',
       'TENCENT_MEETING_SDK_ID',
-      'USER_ID'
+      'USER_ID',
     ];
 
-    const missingVars = requiredEnvVars.filter(varName => !configService.get(varName));
+    const missingVars = requiredEnvVars.filter(
+      (varName) => !configService.get(varName),
+    );
     if (missingVars.length > 0) {
-      throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+      throw new Error(
+        `Missing required environment variables: ${missingVars.join(', ')}`,
+      );
     }
   });
 
   describe('getRecordingFileDetail', () => {
     it('should return valid recording details from real API', async () => {
       // 使用真实的测试文件ID
-      const testFileId = process.env.TEST_RECORDING_FILE_ID || 'test-recording-file-id';
+      const testFileId =
+        process.env.TEST_RECORDING_FILE_ID || 'test-recording-file-id';
       const testUserId = configService.get<string>('USER_ID') || '';
 
       try {
-        const result = await service.getRecordingFileDetail(testFileId, testUserId);
+        const result = await service.getRecordingFileDetail(
+          testFileId,
+          testUserId,
+        );
 
         // 验证响应结构符合预期
         expect(result).toBeDefined();
@@ -81,16 +87,19 @@ describeIf(isIntegrationTest)('TencentApiService Integration Tests', () => {
           hasMeetingId: !!result.meeting_id,
           hasMeetingCode: !!result.meeting_code,
           hasDownloadAddress: !!result.download_address,
-          responseKeys: Object.keys(result)
+          responseKeys: Object.keys(result),
         });
-
       } catch (error) {
         // 处理预期的错误情况
         if (error.message.includes('录制文件已经被删除')) {
-          console.warn('⚠️ Test recording file not found - this is expected in test environment');
+          console.warn(
+            '⚠️ Test recording file not found - this is expected in test environment',
+          );
           expect(error.message).toContain('录制文件已经被删除');
         } else if (error.message.includes('IP白名单错误')) {
-          console.error('❌ IP whitelist error - please add your IP to Tencent Meeting whitelist');
+          console.error(
+            '❌ IP whitelist error - please add your IP to Tencent Meeting whitelist',
+          );
           throw error;
         } else {
           console.error('❌ Unexpected API error:', error.message);
@@ -104,7 +113,7 @@ describeIf(isIntegrationTest)('TencentApiService Integration Tests', () => {
       const testUserId = configService.get<string>('USER_ID') || '';
 
       await expect(
-        service.getRecordingFileDetail(nonExistentFileId, testUserId)
+        service.getRecordingFileDetail(nonExistentFileId, testUserId),
       ).rejects.toThrow(/录制文件已经被删除|API请求失败/);
     });
   });
@@ -148,9 +157,8 @@ describeIf(isIntegrationTest)('TencentApiService Integration Tests', () => {
           totalCount: result.total_count,
           currentPage: result.current_page,
           totalPage: result.total_page,
-          meetingsCount: result.record_meetings?.length || 0
+          meetingsCount: result.record_meetings?.length || 0,
         });
-
       } catch (error) {
         if (error.message.includes('IP白名单错误')) {
           console.error('❌ IP whitelist error');
@@ -164,11 +172,11 @@ describeIf(isIntegrationTest)('TencentApiService Integration Tests', () => {
 
     it('should validate time range constraints', async () => {
       const now = Math.floor(Date.now() / 1000);
-      const tooFarBack = now - (32 * 24 * 60 * 60); // 32天前
+      const tooFarBack = now - 32 * 24 * 60 * 60; // 32天前
 
-      await expect(
-        service.getCorpRecords(tooFarBack, now)
-      ).rejects.toThrow('时间区间不允许超过31天');
+      await expect(service.getCorpRecords(tooFarBack, now)).rejects.toThrow(
+        '时间区间不允许超过31天',
+      );
     });
   });
 
@@ -176,7 +184,10 @@ describeIf(isIntegrationTest)('TencentApiService Integration Tests', () => {
     it('should have consistent response structure across endpoints', async () => {
       // 验证所有API端点的响应结构一致性
       const endpoints = [
-        { name: 'getCorpRecords', fn: () => service.getCorpRecords(Date.now() - 3600, Date.now()) },
+        {
+          name: 'getCorpRecords',
+          fn: () => service.getCorpRecords(Date.now() - 3600, Date.now()),
+        },
       ];
 
       for (const endpoint of endpoints) {
@@ -198,7 +209,10 @@ describeIf(isIntegrationTest)('TencentApiService Integration Tests', () => {
           console.log(`✅ ${endpoint.name} structure validated`);
         } catch (error) {
           if (!error.message.includes('IP白名单错误')) {
-            console.warn(`⚠️ ${endpoint.name} validation failed:`, error.message);
+            console.warn(
+              `⚠️ ${endpoint.name} validation failed:`,
+              error.message,
+            );
           }
         }
       }

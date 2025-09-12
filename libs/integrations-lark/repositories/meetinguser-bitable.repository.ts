@@ -1,21 +1,26 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BitableService } from '../bitable.service';
-import { CreateRecordResponse, UpdateRecordResponse, BitableField, SearchFilter } from '../lark.types';
+import {
+  CreateRecordResponse,
+  UpdateRecordResponse,
+  BitableField,
+  SearchFilter,
+} from '../lark.types';
 
 interface MeetingUserData {
-    uuid: string;
-    userid?: string;
-    user_name?: string;
-    phone_hase?: string;
-    is_enterprise_user?: boolean;
+  uuid: string;
+  userid?: string;
+  user_name?: string;
+  phone_hase?: string;
+  is_enterprise_user?: boolean;
 }
 
 interface UpdateMeetingUserData {
-    userid?: string;
-    user_name?: string;
-    phone_hase?: string;
-    is_enterprise_user?: boolean;
+  userid?: string;
+  user_name?: string;
+  phone_hase?: string;
+  is_enterprise_user?: boolean;
 }
 
 /**
@@ -24,234 +29,279 @@ interface UpdateMeetingUserData {
  */
 @Injectable()
 export class MeetingUserBitableRepository {
-    private readonly logger = new Logger(MeetingUserBitableRepository.name);
-    private readonly appToken: string;
-    private readonly tableId: string;
+  private readonly logger = new Logger(MeetingUserBitableRepository.name);
+  private readonly appToken: string;
+  private readonly tableId: string;
 
-    constructor(
-        private readonly bitableService: BitableService,
-        private readonly configService: ConfigService
-    ) {
-        this.appToken = this.configService.get<string>('LARK_BITABLE_APP_TOKEN')!;
-        this.tableId = this.configService.get<string>('LARK_BITABLE_MEETING_USER_TABLE_ID')!;
-        
-        if (!this.appToken || !this.tableId) {
-            throw new Error('LARK_BITABLE_APP_TOKEN and LARK_BITABLE_MEETING_USER_TABLE_ID must be configured in environment variables');
-        }
+  constructor(
+    private readonly bitableService: BitableService,
+    private readonly configService: ConfigService,
+  ) {
+    this.appToken = this.configService.get<string>('LARK_BITABLE_APP_TOKEN')!;
+    this.tableId = this.configService.get<string>(
+      'LARK_BITABLE_MEETING_USER_TABLE_ID',
+    )!;
+
+    if (!this.appToken || !this.tableId) {
+      throw new Error(
+        'LARK_BITABLE_APP_TOKEN and LARK_BITABLE_MEETING_USER_TABLE_ID must be configured in environment variables',
+      );
     }
+  }
 
-    /**
-     * Create a user record in Bitable (without checking for duplicates)
-     * This method will always create a new record
-     */
-    async createMeetingUserRecord(userData: MeetingUserData): Promise<CreateRecordResponse> {
-        const fields: BitableField = {
-            uuid: userData.uuid,
-            ...(userData.userid && { userid: userData.userid }),
-            ...(userData.user_name && { user_name: userData.user_name }),
-            ...(userData.phone_hase && { phone_hase: userData.phone_hase }),
-            ...(userData.is_enterprise_user !== undefined && { is_enterprise_user: userData.is_enterprise_user }),
-        };
+  /**
+   * Create a user record in Bitable (without checking for duplicates)
+   * This method will always create a new record
+   */
+  async createMeetingUserRecord(
+    userData: MeetingUserData,
+  ): Promise<CreateRecordResponse> {
+    const fields: BitableField = {
+      uuid: userData.uuid,
+      ...(userData.userid && { userid: userData.userid }),
+      ...(userData.user_name && { user_name: userData.user_name }),
+      ...(userData.phone_hase && { phone_hase: userData.phone_hase }),
+      ...(userData.is_enterprise_user !== undefined && {
+        is_enterprise_user: userData.is_enterprise_user,
+      }),
+    };
 
-        this.logger.log(`Creating new user record: ${userData.uuid}`);
-        return this.bitableService.createRecord(this.appToken, this.tableId, fields);
+    this.logger.log(`Creating new user record: ${userData.uuid}`);
+    return this.bitableService.createRecord(
+      this.appToken,
+      this.tableId,
+      fields,
+    );
+  }
+
+  /**
+   * Create or update a user record in Bitable
+   * If a record with the same uuid exists, update it
+   * Otherwise, create a new record
+   */
+  async upsertMeetingUserRecord(
+    userData: MeetingUserData,
+  ): Promise<CreateRecordResponse | UpdateRecordResponse> {
+    const fields: BitableField = {
+      uuid: userData.uuid,
+      ...(userData.userid && { userid: userData.userid }),
+      ...(userData.user_name && { user_name: userData.user_name }),
+      ...(userData.phone_hase && { phone_hase: userData.phone_hase }),
+      ...(userData.is_enterprise_user !== undefined && {
+        is_enterprise_user: userData.is_enterprise_user,
+      }),
+    };
+
+    try {
+      // 使用通用的 upsertRecord 方法
+      const result = await this.bitableService.upsertRecord(
+        this.appToken,
+        this.tableId,
+        fields,
+        {
+          matchFields: ['uuid'],
+          matchMode: 'exact',
+          caseSensitive: false,
+        },
+        {
+          mergeFields: false,
+          returnFullRecord: true,
+        },
+      );
+
+      this.logger.log(
+        `${result.action === 'created' ? 'Creating' : 'Updating'} user record: ${userData.uuid}`,
+      );
+
+      // 构建与原有接口兼容的响应
+      const response: CreateRecordResponse | UpdateRecordResponse = {
+        code: 0,
+        msg: 'success',
+        data: {
+          record: result.record,
+        },
+      };
+
+      return response;
+    } catch (error) {
+      this.logger.error(`Error in upsertMeetingUserRecord: ${error.message}`);
+      throw error;
     }
+  }
 
-    /**
-     * Create or update a user record in Bitable
-     * If a record with the same uuid exists, update it
-     * Otherwise, create a new record
-     */
-    async upsertMeetingUserRecord(userData: MeetingUserData): Promise<CreateRecordResponse | UpdateRecordResponse> {
-        const fields: BitableField = {
-            uuid: userData.uuid,
-            ...(userData.userid && { userid: userData.userid }),
-            ...(userData.user_name && { user_name: userData.user_name }),
-            ...(userData.phone_hase && { phone_hase: userData.phone_hase }),
-            ...(userData.is_enterprise_user !== undefined && { is_enterprise_user: userData.is_enterprise_user }),
-        };
+  /**
+   * Search user records by uuid
+   */
+  async searchMeetingUserByUuid(uuid: string): Promise<any> {
+    const searchConditions: Array<{
+      field_name: string;
+      operator: 'is';
+      value: string[];
+    }> = [
+      {
+        field_name: 'uuid',
+        operator: 'is',
+        value: [String(uuid)],
+      },
+    ];
 
-        try {
-            // 使用通用的 upsertRecord 方法
-            const result = await this.bitableService.upsertRecord(
-                this.appToken,
-                this.tableId,
-                fields,
-                {
-                    matchFields: ['uuid'],
-                    matchMode: 'exact',
-                    caseSensitive: false
-                },
-                {
-                    mergeFields: false,
-                    returnFullRecord: true
-                }
-            );
+    const filter: SearchFilter = {
+      conjunction: 'and',
+      conditions: searchConditions,
+    };
 
-            this.logger.log(`${result.action === 'created' ? 'Creating' : 'Updating'} user record: ${userData.uuid}`);
-
-            // 构建与原有接口兼容的响应
-            const response: CreateRecordResponse | UpdateRecordResponse = {
-                code: 0,
-                msg: 'success',
-                data: {
-                    record: result.record
-                }
-            };
-
-            return response;
-        } catch (error) {
-            this.logger.error(`Error in upsertMeetingUserRecord: ${error.message}`);
-            throw error;
-        }
+    try {
+      this.logger.log(`Searching user by uuid: ${uuid}`);
+      return await this.bitableService.searchRecords(
+        this.appToken,
+        this.tableId,
+        { filter },
+      );
+    } catch (error) {
+      this.logger.error(`Error in searchUserByUuid: ${error.message}`);
+      throw error;
     }
+  }
 
-    /**
-     * Search user records by uuid
-     */
-    async searchMeetingUserByUuid(uuid: string): Promise<any> {
-        const searchConditions: Array<{
-            field_name: string;
-            operator: 'is';
-            value: string[];
-        }> = [
-            {
-                field_name: 'uuid',
-                operator: 'is',
-                value: [String(uuid)]
-            }
-        ];
+  /**
+   * Search user records by userid
+   */
+  async searchMeetingUserByUserid(userid: string): Promise<any> {
+    const searchConditions: Array<{
+      field_name: string;
+      operator: 'is';
+      value: string[];
+    }> = [
+      {
+        field_name: 'userid',
+        operator: 'is',
+        value: [String(userid)],
+      },
+    ];
 
-        const filter: SearchFilter = {
-            conjunction: 'and',
-            conditions: searchConditions
-        };
+    const filter: SearchFilter = {
+      conjunction: 'and',
+      conditions: searchConditions,
+    };
 
-        try {
-            this.logger.log(`Searching user by uuid: ${uuid}`);
-            return await this.bitableService.searchRecords(this.appToken, this.tableId, { filter });
-        } catch (error) {
-            this.logger.error(`Error in searchUserByUuid: ${error.message}`);
-            throw error;
-        }
+    try {
+      this.logger.log(`Searching user by userid: ${userid}`);
+      return await this.bitableService.searchRecords(
+        this.appToken,
+        this.tableId,
+        { filter },
+      );
+    } catch (error) {
+      this.logger.error(`Error in searchUserByUserid: ${error.message}`);
+      throw error;
     }
+  }
 
-    /**
-     * Search user records by userid
-     */
-    async searchMeetingUserByUserid(userid: string): Promise<any> {
-        const searchConditions: Array<{
-            field_name: string;
-            operator: 'is';
-            value: string[];
-        }> = [
-            {
-                field_name: 'userid',
-                operator: 'is',
-                value: [String(userid)]
-            }
-        ];
+  /**
+   * Search user records by user_name
+   */
+  async searchMeetingUserByuser_name(user_name: string): Promise<any> {
+    const searchConditions: Array<{
+      field_name: string;
+      operator: 'is';
+      value: string[];
+    }> = [
+      {
+        field_name: 'user_name',
+        operator: 'is',
+        value: [String(user_name)],
+      },
+    ];
 
-        const filter: SearchFilter = {
-            conjunction: 'and',
-            conditions: searchConditions
-        };
+    const filter: SearchFilter = {
+      conjunction: 'and',
+      conditions: searchConditions,
+    };
 
-        try {
-            this.logger.log(`Searching user by userid: ${userid}`);
-            return await this.bitableService.searchRecords(this.appToken, this.tableId, { filter });
-        } catch (error) {
-            this.logger.error(`Error in searchUserByUserid: ${error.message}`);
-            throw error;
-        }
+    try {
+      this.logger.log(`Searching user by user_name: ${user_name}`);
+      return await this.bitableService.searchRecords(
+        this.appToken,
+        this.tableId,
+        { filter },
+      );
+    } catch (error) {
+      this.logger.error(`Error in searchUserByuser_name: ${error.message}`);
+      throw error;
     }
+  }
 
-    /**
-     * Search user records by user_name
-     */
-    async searchMeetingUserByuser_name(user_name: string): Promise<any> {
-        const searchConditions: Array<{
-            field_name: string;
-            operator: 'is';
-            value: string[];
-        }> = [
-            {
-                field_name: 'user_name',
-                operator: 'is',
-                value: [String(user_name)]
-            }
-        ];
+  /**
+   * Update user record by uuid
+   */
+  async updateMeetingUserByUuid(
+    uuid: string,
+    updateData: UpdateMeetingUserData,
+  ): Promise<UpdateRecordResponse> {
+    const fields: BitableField = {
+      ...(updateData.userid && { userid: updateData.userid }),
+      ...(updateData.user_name && { user_name: updateData.user_name }),
+      ...(updateData.phone_hase && { phone_hase: updateData.phone_hase }),
+      ...(updateData.is_enterprise_user !== undefined && {
+        is_enterprise_user: updateData.is_enterprise_user,
+      }),
+    };
 
-        const filter: SearchFilter = {
-            conjunction: 'and',
-            conditions: searchConditions
-        };
+    // 首先查找用户记录
+    const searchResult = await this.searchMeetingUserByUuid(uuid);
 
-        try {
-            this.logger.log(`Searching user by user_name: ${user_name}`);
-            return await this.bitableService.searchRecords(this.appToken, this.tableId, { filter });
-        } catch (error) {
-            this.logger.error(`Error in searchUserByuser_name: ${error.message}`);
-            throw error;
-        }
+    if (searchResult.data?.items && searchResult.data.items.length > 0) {
+      const existingRecord = searchResult.data.items[0];
+      this.logger.log(`Updating user record: ${uuid}`);
+
+      return await this.bitableService.updateRecord(
+        this.appToken,
+        this.tableId,
+        existingRecord.record_id,
+        fields,
+      );
+    } else {
+      throw new Error(`User with UUID ${uuid} not found`);
     }
+  }
 
-    /**
-     * Update user record by uuid
-     */
-    async updateMeetingUserByUuid(uuid: string, updateData: UpdateMeetingUserData): Promise<UpdateRecordResponse> {
-        const fields: BitableField = {
-            ...(updateData.userid && { userid: updateData.userid }),
-            ...(updateData.user_name && { user_name: updateData.user_name }),
-            ...(updateData.phone_hase && { phone_hase: updateData.phone_hase }),
-            ...(updateData.is_enterprise_user !== undefined && { is_enterprise_user: updateData.is_enterprise_user }),
-        };
+  /**
+   * Search user records by is_enterprise_user
+   */
+  async searchMeetingUsersByEnterpriseStatus(
+    isEnterpriseUser: boolean,
+  ): Promise<any> {
+    const searchConditions: Array<{
+      field_name: string;
+      operator: 'is';
+      value: string[];
+    }> = [
+      {
+        field_name: 'is_enterprise_user',
+        operator: 'is',
+        value: [String(isEnterpriseUser)],
+      },
+    ];
 
-        // 首先查找用户记录
-        const searchResult = await this.searchMeetingUserByUuid(uuid);
-        
-        if (searchResult.data?.items && searchResult.data.items.length > 0) {
-            const existingRecord = searchResult.data.items[0];
-            this.logger.log(`Updating user record: ${uuid}`);
-            
-            return await this.bitableService.updateRecord(
-                this.appToken,
-                this.tableId,
-                existingRecord.record_id,
-                fields
-            );
-        } else {
-            throw new Error(`User with UUID ${uuid} not found`);
-        }
+    const filter: SearchFilter = {
+      conjunction: 'and',
+      conditions: searchConditions,
+    };
+
+    try {
+      this.logger.log(
+        `Searching users by enterprise status: ${isEnterpriseUser}`,
+      );
+      return await this.bitableService.searchRecords(
+        this.appToken,
+        this.tableId,
+        { filter },
+      );
+    } catch (error) {
+      this.logger.error(
+        `Error in searchUsersByEnterpriseStatus: ${error.message}`,
+      );
+      throw error;
     }
-
-    /**
-     * Search user records by is_enterprise_user
-     */
-    async searchMeetingUsersByEnterpriseStatus(isEnterpriseUser: boolean): Promise<any> {
-        const searchConditions: Array<{
-            field_name: string;
-            operator: 'is';
-            value: string[];
-        }> = [
-            {
-                field_name: 'is_enterprise_user',
-                operator: 'is',
-                value: [String(isEnterpriseUser)]
-            }
-        ];
-
-        const filter: SearchFilter = {
-            conjunction: 'and',
-            conditions: searchConditions
-        };
-
-        try {
-            this.logger.log(`Searching users by enterprise status: ${isEnterpriseUser}`);
-            return await this.bitableService.searchRecords(this.appToken, this.tableId, { filter });
-        } catch (error) {
-            this.logger.error(`Error in searchUsersByEnterpriseStatus: ${error.message}`);
-            throw error;
-        }
-    }
+  }
 }

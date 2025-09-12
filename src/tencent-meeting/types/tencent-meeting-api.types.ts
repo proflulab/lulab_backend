@@ -1,220 +1,220 @@
 export interface TencentRecordingFile {
-    record_file_id: string;
-    // 其他字段根据实际API响应添加
+  record_file_id: string;
+  // 其他字段根据实际API响应添加
 }
 
 export interface MeetingSummary {
-    download_address: string;
-    file_type: string;
+  download_address: string;
+  file_type: string;
 }
 
 export interface RecordingDetail {
-    meeting_id: string;
-    meeting_code: string;
-    record_file_id: string;
-    view_address?: string;
-    download_address?: string;
-    download_address_file_type?: string;
-    audio_address?: string;
-    audio_address_file_type?: string;
-    meeting_summary?: MeetingSummary[];
-    // AI会议转写记录
-    ai_meeting_transcripts?: MeetingSummary[];
-    // AI会议纪要
-    ai_minutes?: MeetingSummary[];
-    // 录制文件名称
-    record_name?: string;
-    // 录制开始时间戳
-    start_time?: string;
-    // 录制结束时间戳
-    end_time?: string;
-    // 会议名称
-    meeting_record_name?: string;
+  meeting_id: string;
+  meeting_code: string;
+  record_file_id: string;
+  view_address?: string;
+  download_address?: string;
+  download_address_file_type?: string;
+  audio_address?: string;
+  audio_address_file_type?: string;
+  meeting_summary?: MeetingSummary[];
+  // AI会议转写记录
+  ai_meeting_transcripts?: MeetingSummary[];
+  // AI会议纪要
+  ai_minutes?: MeetingSummary[];
+  // 录制文件名称
+  record_name?: string;
+  // 录制开始时间戳
+  start_time?: string;
+  // 录制结束时间戳
+  end_time?: string;
+  // 会议名称
+  meeting_record_name?: string;
 }
 
 export interface RecordFile {
-    record_file_id: string;
-    record_start_time: number;
-    record_end_time: number;
-    record_size: number;
-    sharing_state: number;
-    sharing_url?: string;
-    required_same_corp?: boolean;
-    required_participant?: boolean;
-    password?: string;
-    sharing_expire?: number;
-    view_address?: string;
-    allow_download?: boolean;
-    download_address?: string;
+  record_file_id: string;
+  record_start_time: number;
+  record_end_time: number;
+  record_size: number;
+  sharing_state: number;
+  sharing_url?: string;
+  required_same_corp?: boolean;
+  required_participant?: boolean;
+  password?: string;
+  sharing_expire?: number;
+  view_address?: string;
+  allow_download?: boolean;
+  download_address?: string;
 }
 
 export interface RecordMeeting {
-    meeting_record_id: string;
-    meeting_id: string;
-    meeting_code: string;
-    userid: string;
-    media_start_time: number;
-    subject: string;
-    state: number;
-    record_files?: RecordFile[];
+  meeting_record_id: string;
+  meeting_id: string;
+  meeting_code: string;
+  userid: string;
+  media_start_time: number;
+  subject: string;
+  state: number;
+  record_files?: RecordFile[];
 }
 
 export interface RecordMeetingsResponse {
-    total_count: number;
-    current_size: number;
-    current_page: number;
-    total_page: number;
-    record_meetings?: RecordMeeting[];
-    error_info?: {
-        error_code: number;
-        new_error_code?: number;
-        message: string;
-    };
+  total_count: number;
+  current_size: number;
+  current_page: number;
+  total_page: number;
+  record_meetings?: RecordMeeting[];
+  error_info?: {
+    error_code: number;
+    new_error_code?: number;
+    message: string;
+  };
 }
 
 export interface MeetingParticipantDetail {
-    userid: string;
-    uuid: string;
-    user_name: string;
-    phone: string;
-    join_time: string;
-    left_time: string;
-    instanceid: number;
-    user_role: number;
-    ip: string;
-    location: string;
-    link_type: string;
-    join_type: number;
-    net: string;
-    app_version: string;
-    audio_state: boolean;
-    video_state: boolean;
-    screen_shared_state: boolean;
-    webinar_member_role: number;
-    ms_open_id: string;
-    open_id: string;
-    customer_data: string;
-    is_enterprise_user: boolean;
-    tm_corpid: string;
-    avatar_url: string;
+  userid: string;
+  uuid: string;
+  user_name: string;
+  phone: string;
+  join_time: string;
+  left_time: string;
+  instanceid: number;
+  user_role: number;
+  ip: string;
+  location: string;
+  link_type: string;
+  join_type: number;
+  net: string;
+  app_version: string;
+  audio_state: boolean;
+  video_state: boolean;
+  screen_shared_state: boolean;
+  webinar_member_role: number;
+  ms_open_id: string;
+  open_id: string;
+  customer_data: string;
+  is_enterprise_user: boolean;
+  tm_corpid: string;
+  avatar_url: string;
 }
 
 export interface MeetingParticipantsResponse {
-    meeting_id: string;
-    meeting_code: string;
-    subject: string;
-    schedule_start_time: string;
-    schedule_end_time: string;
-    participants: MeetingParticipantDetail[];
-    has_remaining: boolean;
-    next_pos: number;
-    total_count: number;
-    error_info?: {
-        error_code: number;
-        new_error_code?: number;
-        message: string;
-    };
+  meeting_id: string;
+  meeting_code: string;
+  subject: string;
+  schedule_start_time: string;
+  schedule_end_time: string;
+  participants: MeetingParticipantDetail[];
+  has_remaining: boolean;
+  next_pos: number;
+  total_count: number;
+  error_info?: {
+    error_code: number;
+    new_error_code?: number;
+    message: string;
+  };
 }
 
 export interface MeetingDetailResponse {
-    meeting_id: string;
-    meeting_code: string;
-    subject: string;
-    description?: string;
-    start_time: string;
-    end_time: string;
-    creator: {
-        userid: string;
-        user_name: string;
-    };
-    meeting_type: number;
-    sub_meeting_id?: string;
-    error_info?: {
-        error_code: number;
-        new_error_code?: number;
-        message: string;
-    };
+  meeting_id: string;
+  meeting_code: string;
+  subject: string;
+  description?: string;
+  start_time: string;
+  end_time: string;
+  creator: {
+    userid: string;
+    user_name: string;
+  };
+  meeting_type: number;
+  sub_meeting_id?: string;
+  error_info?: {
+    error_code: number;
+    new_error_code?: number;
+    message: string;
+  };
 }
 
 // 录制转写相关类型定义
 export interface TranscriptWord {
-    wid: string;
-    start_time: number;
-    end_time: number;
-    text: string;
+  wid: string;
+  start_time: number;
+  end_time: number;
+  text: string;
 }
 
 export interface TranscriptSentence {
-    sid: string;
-    start_time: number;
-    end_time: number;
-    words: TranscriptWord[];
+  sid: string;
+  start_time: number;
+  end_time: number;
+  words: TranscriptWord[];
 }
 
 export interface TranscriptParagraph {
-    pid: string;
-    start_time: number;
-    end_time: number;
-    sentences: TranscriptSentence[];
+  pid: string;
+  start_time: number;
+  end_time: number;
+  sentences: TranscriptSentence[];
 }
 
 export interface TranscriptMinutes {
-    paragraphs: TranscriptParagraph[];
+  paragraphs: TranscriptParagraph[];
 }
 
 export interface RecordingTranscriptDetail {
-    minutes: TranscriptMinutes;
-    more: boolean;
-    error_info?: {
-        error_code: number;
-        new_error_code?: number;
-        message: string;
-    };
+  minutes: TranscriptMinutes;
+  more: boolean;
+  error_info?: {
+    error_code: number;
+    new_error_code?: number;
+    message: string;
+  };
 }
 
 // 智能纪要相关类型定义
 export interface MeetingMinute {
-    minute: string;  // 会议摘要
-    todo: string;    // 会议待办
+  minute: string; // 会议摘要
+  todo: string; // 会议待办
 }
 
 export interface SmartMinutesResponse {
-    meeting_minute: MeetingMinute;
-    error_info?: {
-        error_code: number;
-        new_error_code?: number;
-        message: string;
-    };
+  meeting_minute: MeetingMinute;
+  error_info?: {
+    error_code: number;
+    new_error_code?: number;
+    message: string;
+  };
 }
 
 // 智能总结相关类型定义
 export interface SmartSummaryResponse {
-    ai_summary: string;  // 智能总结内容，base64编码
-    error_info?: {
-        error_code: number;
-        new_error_code?: number;
-        message: string;
-    };
+  ai_summary: string; // 智能总结内容，base64编码
+  error_info?: {
+    error_code: number;
+    new_error_code?: number;
+    message: string;
+  };
 }
 
 // 智能话题相关类型定义
 export interface TopicTime {
-    pid: string;      // 段落ID
-    start_time: string;  // 话题开始时间，单位毫秒
-    end_time: string;    // 话题结束时间，单位毫秒
+  pid: string; // 段落ID
+  start_time: string; // 话题开始时间，单位毫秒
+  end_time: string; // 话题结束时间，单位毫秒
 }
 
 export interface AiTopic {
-    topic_id: string;    // 话题唯一ID
-    topic_name: string;  // 话题主题，base64编码后的结果
-    topic_time: TopicTime[];  // 话题的发言段落及时间段
+  topic_id: string; // 话题唯一ID
+  topic_name: string; // 话题主题，base64编码后的结果
+  topic_time: TopicTime[]; // 话题的发言段落及时间段
 }
 
 export interface SmartTopicsResponse {
-    ai_topic_list: AiTopic[];  // 录制文件的智能话题列表
-    error_info?: {
-        error_code: number;
-        new_error_code?: number;
-        message: string;
-    };
+  ai_topic_list: AiTopic[]; // 录制文件的智能话题列表
+  error_info?: {
+    error_code: number;
+    new_error_code?: number;
+    message: string;
+  };
 }

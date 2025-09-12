@@ -10,10 +10,10 @@ const mockConfigService = {
       TENCENT_MEETING_SECRET_KEY: 'mock-secret-key',
       TENCENT_MEETING_APP_ID: 'mock-app-id',
       TENCENT_MEETING_SDK_ID: 'mock-sdk-id',
-      USER_ID: 'mock-user-id'
+      USER_ID: 'mock-user-id',
     };
     return config[key];
-  })
+  }),
 };
 
 // 模拟 fetch
@@ -21,7 +21,7 @@ global.fetch = jest.fn();
 
 // 模拟 tencent-crypto.service
 jest.mock('./tencent-crypto.service', () => ({
-  generateSignature: jest.fn(() => 'mock-signature')
+  generateSignature: jest.fn(() => 'mock-signature'),
 }));
 
 describe('TencentApiService', () => {
@@ -33,8 +33,8 @@ describe('TencentApiService', () => {
         TencentApiService,
         {
           provide: ConfigService,
-          useValue: mockConfigService
-        }
+          useValue: mockConfigService,
+        },
       ],
     }).compile();
 
@@ -54,7 +54,7 @@ describe('TencentApiService', () => {
         secretKey: 'mock-secret-key',
         appId: 'mock-app-id',
         sdkId: 'mock-sdk-id',
-        userId: 'mock-user-id'
+        userId: 'mock-user-id',
       });
     });
   });
@@ -88,10 +88,13 @@ describe('TencentApiService', () => {
       };
 
       (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockResponse)
+        json: jest.fn().mockResolvedValueOnce(mockResponse),
       });
 
-      const result = await service.getRecordingFileDetail('test-file-id', 'test-user-id');
+      const result = await service.getRecordingFileDetail(
+        'test-file-id',
+        'test-user-id',
+      );
 
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/v1/addresses/test-file-id'),
@@ -100,9 +103,9 @@ describe('TencentApiService', () => {
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
             'X-TC-Key': 'mock-secret-id',
-            'X-TC-Signature': 'mock-signature'
-          })
-        })
+            'X-TC-Signature': 'mock-signature',
+          }),
+        }),
       );
       expect(result).toEqual(mockResponse);
     });
@@ -111,32 +114,34 @@ describe('TencentApiService', () => {
       const mockError = {
         error_info: {
           error_code: 108004051,
-          message: '录制文件已经被删除'
-        }
+          message: '录制文件已经被删除',
+        },
       };
 
       (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockError)
+        json: jest.fn().mockResolvedValueOnce(mockError),
       });
 
-      await expect(service.getRecordingFileDetail('deleted-file-id', 'test-user-id'))
-        .rejects.toThrow('录制文件已经被删除');
+      await expect(
+        service.getRecordingFileDetail('deleted-file-id', 'test-user-id'),
+      ).rejects.toThrow('录制文件已经被删除');
     });
 
     it('should handle IP whitelist error', async () => {
       const mockError = {
         error_info: {
           error_code: 500125,
-          message: 'IP未在白名单'
-        }
+          message: 'IP未在白名单',
+        },
       };
 
       (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockError)
+        json: jest.fn().mockResolvedValueOnce(mockError),
       });
 
-      await expect(service.getRecordingFileDetail('test-file-id', 'test-user-id'))
-        .rejects.toThrow('IP白名单错误');
+      await expect(
+        service.getRecordingFileDetail('test-file-id', 'test-user-id'),
+      ).rejects.toThrow('IP白名单错误');
     });
   });
 
@@ -151,19 +156,19 @@ describe('TencentApiService', () => {
             meeting_id: 'meeting-1',
             subject: 'Test Meeting 1',
             start_time: '2024-01-01T10:00:00Z',
-            end_time: '2024-01-01T11:00:00Z'
+            end_time: '2024-01-01T11:00:00Z',
           },
           {
             meeting_id: 'meeting-2',
             subject: 'Test Meeting 2',
             start_time: '2024-01-02T10:00:00Z',
-            end_time: '2024-01-02T11:00:00Z'
-          }
-        ]
+            end_time: '2024-01-02T11:00:00Z',
+          },
+        ],
       };
 
       (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockResponse)
+        json: jest.fn().mockResolvedValueOnce(mockResponse),
       });
 
       const startTime = Math.floor(new Date('2024-01-01').getTime() / 1000);
@@ -177,9 +182,9 @@ describe('TencentApiService', () => {
           method: 'GET',
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
-            'X-TC-Key': 'mock-secret-id'
-          })
-        })
+            'X-TC-Key': 'mock-secret-id',
+          }),
+        }),
       );
       expect(result).toEqual(mockResponse);
     });
@@ -188,14 +193,15 @@ describe('TencentApiService', () => {
       const startTime = Math.floor(new Date('2024-01-01').getTime() / 1000);
       const endTime = Math.floor(new Date('2024-02-15').getTime() / 1000); // 超过31天
 
-      await expect(service.getCorpRecords(startTime, endTime))
-        .rejects.toThrow('时间区间不允许超过31天');
+      await expect(service.getCorpRecords(startTime, endTime)).rejects.toThrow(
+        '时间区间不允许超过31天',
+      );
     });
 
     it('should limit page size to maximum 20', async () => {
       const mockResponse = { total_count: 0, record_meetings: [] };
       (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockResponse)
+        json: jest.fn().mockResolvedValueOnce(mockResponse),
       });
 
       const startTime = Math.floor(new Date('2024-01-01').getTime() / 1000);
@@ -216,14 +222,17 @@ describe('TencentApiService', () => {
         start_time: '2024-01-01T10:00:00Z',
         end_time: '2024-01-01T11:00:00Z',
         duration: 3600,
-        participants: ['user1', 'user2']
+        participants: ['user1', 'user2'],
       };
 
       (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockResponse)
+        json: jest.fn().mockResolvedValueOnce(mockResponse),
       });
 
-      const result = await service.getMeetingDetail('test-meeting-id', 'test-user-id');
+      const result = await service.getMeetingDetail(
+        'test-meeting-id',
+        'test-user-id',
+      );
 
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/v1/meetings/test-meeting-id'),
@@ -231,9 +240,9 @@ describe('TencentApiService', () => {
           method: 'GET',
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
-            'X-TC-Key': 'mock-secret-id'
-          })
-        })
+            'X-TC-Key': 'mock-secret-id',
+          }),
+        }),
       );
       expect(result).toEqual(mockResponse);
     });
@@ -241,7 +250,7 @@ describe('TencentApiService', () => {
     it('should include instanceId parameter when provided', async () => {
       const mockResponse = { meeting_id: 'test-meeting-id' };
       (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockResponse)
+        json: jest.fn().mockResolvedValueOnce(mockResponse),
       });
 
       await service.getMeetingDetail('test-meeting-id', 'test-user-id', '2');
@@ -259,22 +268,25 @@ describe('TencentApiService', () => {
             userid: 'user1',
             username: 'User One',
             join_time: '2024-01-01T10:05:00Z',
-            leave_time: '2024-01-01T10:55:00Z'
+            leave_time: '2024-01-01T10:55:00Z',
           },
           {
             userid: 'user2',
             username: 'User Two',
             join_time: '2024-01-01T10:10:00Z',
-            leave_time: '2024-01-01T10:50:00Z'
-          }
-        ]
+            leave_time: '2024-01-01T10:50:00Z',
+          },
+        ],
       };
 
       (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockResponse)
+        json: jest.fn().mockResolvedValueOnce(mockResponse),
       });
 
-      const result = await service.getMeetingParticipants('test-meeting-id', 'test-user-id');
+      const result = await service.getMeetingParticipants(
+        'test-meeting-id',
+        'test-user-id',
+      );
 
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/v1/meetings/test-meeting-id/participants'),
@@ -282,9 +294,9 @@ describe('TencentApiService', () => {
           method: 'GET',
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
-            'X-TC-Key': 'mock-secret-id'
-          })
-        })
+            'X-TC-Key': 'mock-secret-id',
+          }),
+        }),
       );
       expect(result).toEqual(mockResponse);
     });
@@ -292,10 +304,14 @@ describe('TencentApiService', () => {
     it('should include subMeetingId parameter when provided', async () => {
       const mockResponse = { participants: [] };
       (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockResponse)
+        json: jest.fn().mockResolvedValueOnce(mockResponse),
       });
 
-      await service.getMeetingParticipants('test-meeting-id', 'test-user-id', 'sub-123');
+      await service.getMeetingParticipants(
+        'test-meeting-id',
+        'test-user-id',
+        'sub-123',
+      );
 
       const fetchCall = (global.fetch as jest.Mock).mock.calls[0][0];
       expect(fetchCall).toContain('sub_meeting_id=sub-123');
@@ -304,10 +320,14 @@ describe('TencentApiService', () => {
     it('should handle null subMeetingId parameter', async () => {
       const mockResponse = { participants: [] };
       (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockResponse)
+        json: jest.fn().mockResolvedValueOnce(mockResponse),
       });
 
-      await service.getMeetingParticipants('test-meeting-id', 'test-user-id', null);
+      await service.getMeetingParticipants(
+        'test-meeting-id',
+        'test-user-id',
+        null,
+      );
 
       const fetchCall = (global.fetch as jest.Mock).mock.calls[0][0];
       expect(fetchCall).not.toContain('sub_meeting_id');
@@ -316,18 +336,26 @@ describe('TencentApiService', () => {
 
   describe('error handling', () => {
     it('should handle network errors', async () => {
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+      (global.fetch as jest.Mock).mockRejectedValueOnce(
+        new Error('Network error'),
+      );
 
-      await expect(service.getRecordingFileDetail('test-file-id', 'test-user-id'))
-        .rejects.toThrow('Network error');
+      await expect(
+        service.getRecordingFileDetail('test-file-id', 'test-user-id'),
+      ).rejects.toThrow('Network error');
     });
 
     it('should handle unexpected response format', async () => {
       (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce({ some_unexpected_field: 'value' })
+        json: jest
+          .fn()
+          .mockResolvedValueOnce({ some_unexpected_field: 'value' }),
       });
 
-      const result = await service.getRecordingFileDetail('test-file-id', 'test-user-id');
+      const result = await service.getRecordingFileDetail(
+        'test-file-id',
+        'test-user-id',
+      );
       expect(result).toEqual({ some_unexpected_field: 'value' });
     });
   });

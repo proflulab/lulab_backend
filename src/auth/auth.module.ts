@@ -37,4 +37,4 @@ import { EmailService } from '../email/email.service';
   ],
   exports: [AuthService, JwtAuthGuard, JwtStrategy],
 })
-export class AuthModule { }
+export class AuthModule {}

@@ -31,7 +31,8 @@ describe('TencentWebhookController (e2e)', () => {
         get: jest.fn((key: string) => {
           const config = {
             TENCENT_MEETING_TOKEN: 'test_webhook_token',
-            TENCENT_MEETING_ENCODING_AES_KEY: 'test_encoding_aes_key_32bytes12345678',
+            TENCENT_MEETING_ENCODING_AES_KEY:
+              'test_encoding_aes_key_32bytes12345678',
             TENCENT_MEETING_SECRET_ID: 'test_secret_id',
             TENCENT_MEETING_SECRET_KEY: 'test_secret_key',
             TENCENT_MEETING_APP_ID: 'test_app_id',
@@ -83,7 +84,9 @@ describe('TencentWebhookController (e2e)', () => {
     });
 
     it('should handle missing check_str parameter by passing undefined to verifyWebhookUrl', async () => {
-      (verifyWebhookUrl as jest.Mock).mockRejectedValue(new Error('check_str is required'));
+      (verifyWebhookUrl as jest.Mock).mockRejectedValue(
+        new Error('check_str is required'),
+      );
 
       const queryParams = {
         timestamp: '1234567890',
@@ -108,7 +111,9 @@ describe('TencentWebhookController (e2e)', () => {
     });
 
     it('should handle missing timestamp parameter by passing undefined to verifyWebhookUrl', async () => {
-      (verifyWebhookUrl as jest.Mock).mockRejectedValue(new Error('timestamp is required'));
+      (verifyWebhookUrl as jest.Mock).mockRejectedValue(
+        new Error('timestamp is required'),
+      );
 
       const queryParams = {
         check_str: 'test_check_string',
@@ -133,7 +138,9 @@ describe('TencentWebhookController (e2e)', () => {
     });
 
     it('should handle missing nonce parameter by passing undefined to verifyWebhookUrl', async () => {
-      (verifyWebhookUrl as jest.Mock).mockRejectedValue(new Error('nonce is required'));
+      (verifyWebhookUrl as jest.Mock).mockRejectedValue(
+        new Error('nonce is required'),
+      );
 
       const queryParams = {
         check_str: 'test_check_string',
@@ -158,7 +165,9 @@ describe('TencentWebhookController (e2e)', () => {
     });
 
     it('should handle missing signature parameter by passing undefined to verifyWebhookUrl', async () => {
-      (verifyWebhookUrl as jest.Mock).mockRejectedValue(new Error('signature is required'));
+      (verifyWebhookUrl as jest.Mock).mockRejectedValue(
+        new Error('signature is required'),
+      );
 
       const queryParams = {
         check_str: 'test_check_string',
@@ -183,7 +192,9 @@ describe('TencentWebhookController (e2e)', () => {
     });
 
     it('should handle verification failure from crypto service', async () => {
-      (verifyWebhookUrl as jest.Mock).mockRejectedValue(new Error('Verification failed'));
+      (verifyWebhookUrl as jest.Mock).mockRejectedValue(
+        new Error('Verification failed'),
+      );
 
       const queryParams = {
         check_str: 'test_check_string',
@@ -302,7 +313,9 @@ describe('TencentWebhookController (e2e)', () => {
         .query(queryParams)
         .expect(500);
 
-      expect(response.body.message).toContain('TENCENT_MEETING_ENCODING_AES_KEY');
+      expect(response.body.message).toContain(
+        'TENCENT_MEETING_ENCODING_AES_KEY',
+      );
 
       await tempApp.close();
     });

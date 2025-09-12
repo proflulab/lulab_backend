@@ -5,8 +5,8 @@
  * @LastEditTime: 2025-09-03 02:41:47
  * @FilePath: /lulab_backend/src/tencent_meeting/tencent-meeting.module.ts
  * @Description: 腾讯会议模块
- * 
- * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ *
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
 
 import { Module } from '@nestjs/common';
@@ -37,9 +37,6 @@ import { RecordingCompletedHandler } from './services/event-handlers/recording-c
     MeetingRepository,
     PrismaService,
   ],
-  exports: [
-    TencentMeetingService,
-    TencentApiService,
-  ],
+  exports: [TencentMeetingService, TencentApiService],
 })
-export class TencentMeetingModule { }
+export class TencentMeetingModule {}

@@ -12,12 +12,13 @@ import { ApiProperty } from '@nestjs/swagger';
  * 对应腾讯会议POST请求的body格式
  */
 export class TencentWebhookEventBodyDto {
-    @ApiProperty({
-        description: 'Base64编码的加密事件数据',
-        example: 'eyJldmVudCI6Im1lZXRpbmcuY3JlYXRlZCIsInVuaXF1ZV9zZXF1ZW5jZSI6Ii4uLiJ9',
-        required: true
-    })
-    @IsString()
-    @IsNotEmpty()
-    data: string;
+  @ApiProperty({
+    description: 'Base64编码的加密事件数据',
+    example:
+      'eyJldmVudCI6Im1lZXRpbmcuY3JlYXRlZCIsInVuaXF1ZV9zZXF1ZW5jZSI6Ii4uLiJ9',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  data: string;
 }

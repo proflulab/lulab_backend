@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, IsOptional, IsEnum, MinLength, Matches, IsPhoneNumber } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  IsOptional,
+  IsEnum,
+  MinLength,
+  Matches,
+  IsPhoneNumber,
+} from 'class-validator';
 
 // 注册/登录类型枚举
 export enum AuthType {
@@ -26,8 +34,8 @@ export class RegisterDto {
     example: 'email_code',
     examples: {
       email_code: { summary: '邮箱验证码注册', value: 'email_code' },
-      phone_code: { summary: '手机验证码注册', value: 'phone_code' }
-    }
+      phone_code: { summary: '手机验证码注册', value: 'phone_code' },
+    },
   })
   @IsEnum(AuthType)
   type: AuthType;
@@ -42,8 +50,8 @@ export class RegisterDto {
     examples: {
       simple: { summary: '简单用户名', value: 'testuser' },
       with_numbers: { summary: '包含数字', value: 'user123' },
-      with_underscore: { summary: '包含下划线', value: 'test_user' }
-    }
+      with_underscore: { summary: '包含下划线', value: 'test_user' },
+    },
   })
   @IsOptional()
   @IsString()
@@ -59,8 +67,8 @@ export class RegisterDto {
     examples: {
       gmail: { summary: 'Gmail邮箱', value: 'user@gmail.com' },
       company: { summary: '企业邮箱', value: 'user@company.com' },
-      qq: { summary: 'QQ邮箱', value: 'user@qq.com' }
-    }
+      qq: { summary: 'QQ邮箱', value: 'user@qq.com' },
+    },
   })
   @IsOptional()
   @IsEmail({}, { message: '邮箱格式不正确' })
@@ -75,8 +83,8 @@ export class RegisterDto {
       usa: { summary: '美国', value: '+1' },
       uk: { summary: '英国', value: '+44' },
       japan: { summary: '日本', value: '+81' },
-      korea: { summary: '韩国', value: '+82' }
-    }
+      korea: { summary: '韩国', value: '+82' },
+    },
   })
   @IsOptional()
   @IsString()
@@ -89,8 +97,8 @@ export class RegisterDto {
     examples: {
       china_mobile: { summary: '中国移动', value: '13800138000' },
       china_unicom: { summary: '中国联通', value: '15500155000' },
-      china_telecom: { summary: '中国电信', value: '18900189000' }
-    }
+      china_telecom: { summary: '中国电信', value: '18900189000' },
+    },
   })
   @IsOptional()
   @IsString()
@@ -106,8 +114,8 @@ export class RegisterDto {
     examples: {
       simple: { summary: '简单密码', value: 'password123' },
       complex: { summary: '复杂密码', value: 'MyP@ssw0rd!' },
-      medium: { summary: '中等复杂度', value: 'user123456' }
-    }
+      medium: { summary: '中等复杂度', value: 'user123456' },
+    },
   })
   @IsOptional()
   @IsString()
@@ -126,8 +134,8 @@ export class RegisterDto {
     example: '123456',
     examples: {
       four_digit: { summary: '4位验证码', value: '1234' },
-      six_digit: { summary: '6位验证码', value: '123456' }
-    }
+      six_digit: { summary: '6位验证码', value: '123456' },
+    },
   })
   @IsOptional()
   @IsString()
@@ -138,17 +146,21 @@ export class RegisterDto {
 // 登录DTO
 export class LoginDto {
   @ApiProperty({
-    description: '登录类型，支持用户名密码、邮箱密码、手机密码、邮箱验证码、手机验证码登录',
+    description:
+      '登录类型，支持用户名密码、邮箱密码、手机密码、邮箱验证码、手机验证码登录',
     enum: AuthType,
     enumName: 'AuthType',
     example: 'email_password',
     examples: {
-      username_password: { summary: '用户名密码登录', value: 'username_password' },
+      username_password: {
+        summary: '用户名密码登录',
+        value: 'username_password',
+      },
       email_password: { summary: '邮箱密码登录', value: 'email_password' },
       phone_password: { summary: '手机密码登录', value: 'phone_password' },
       email_code: { summary: '邮箱验证码登录', value: 'email_code' },
-      phone_code: { summary: '手机验证码登录', value: 'phone_code' }
-    }
+      phone_code: { summary: '手机验证码登录', value: 'phone_code' },
+    },
   })
   @IsEnum(AuthType)
   type: AuthType;
@@ -159,8 +171,8 @@ export class LoginDto {
     example: 'testuser123',
     examples: {
       simple: { summary: '简单用户名', value: 'testuser' },
-      with_numbers: { summary: '包含数字', value: 'user123' }
-    }
+      with_numbers: { summary: '包含数字', value: 'user123' },
+    },
   })
   @IsOptional()
   @IsString()
@@ -173,8 +185,8 @@ export class LoginDto {
     example: 'user@example.com',
     examples: {
       gmail: { summary: 'Gmail邮箱', value: 'user@gmail.com' },
-      company: { summary: '企业邮箱', value: 'user@company.com' }
-    }
+      company: { summary: '企业邮箱', value: 'user@company.com' },
+    },
   })
   @IsOptional()
   @IsEmail({}, { message: '邮箱格式不正确' })
@@ -186,8 +198,8 @@ export class LoginDto {
     example: '+86',
     examples: {
       china: { summary: '中国', value: '+86' },
-      usa: { summary: '美国', value: '+1' }
-    }
+      usa: { summary: '美国', value: '+1' },
+    },
   })
   @IsOptional()
   @IsString()
@@ -199,8 +211,8 @@ export class LoginDto {
     example: '13800138000',
     examples: {
       china_mobile: { summary: '中国移动', value: '13800138000' },
-      china_unicom: { summary: '中国联通', value: '15500155000' }
-    }
+      china_unicom: { summary: '中国联通', value: '15500155000' },
+    },
   })
   @IsOptional()
   @IsString()
@@ -212,8 +224,8 @@ export class LoginDto {
     example: 'password123',
     examples: {
       simple: { summary: '简单密码', value: 'password123' },
-      complex: { summary: '复杂密码', value: 'MyP@ssw0rd!' }
-    }
+      complex: { summary: '复杂密码', value: 'MyP@ssw0rd!' },
+    },
   })
   @IsOptional()
   @IsString()
@@ -225,8 +237,8 @@ export class LoginDto {
     example: '123456',
     examples: {
       four_digit: { summary: '4位验证码', value: '1234' },
-      six_digit: { summary: '6位验证码', value: '123456' }
-    }
+      six_digit: { summary: '6位验证码', value: '123456' },
+    },
   })
   @IsOptional()
   @IsString()
@@ -242,19 +254,19 @@ export class SendCodeDto {
       email: {
         summary: '邮箱地址',
         value: 'user@example.com',
-        description: '发送验证码到邮箱'
+        description: '发送验证码到邮箱',
       },
       phone: {
         summary: '手机号码',
         value: '13800138000',
-        description: '发送验证码到手机（需要先设置国家代码）'
+        description: '发送验证码到手机（需要先设置国家代码）',
       },
       international_phone: {
         summary: '国际手机号',
         value: '+1234567890',
-        description: '包含国家代码的完整手机号'
-      }
-    }
+        description: '包含国家代码的完整手机号',
+      },
+    },
   })
   @IsString()
   target: string;
@@ -268,54 +280,55 @@ export class SendCodeDto {
       register: {
         summary: '注册验证码',
         value: 'register',
-        description: '用于新用户注册时验证邮箱或手机号'
+        description: '用于新用户注册时验证邮箱或手机号',
       },
       login: {
         summary: '登录验证码',
         value: 'login',
-        description: '用于免密登录或二次验证'
+        description: '用于免密登录或二次验证',
       },
       reset_password: {
         summary: '重置密码验证码',
         value: 'reset_password',
-        description: '用于忘记密码时重置密码'
-      }
-    }
+        description: '用于忘记密码时重置密码',
+      },
+    },
   })
   @IsEnum(CodeType)
   type: CodeType;
 
   @ApiProperty({
-    description: '国家代码（仅当target为手机号时需要提供），用于标识手机号所属的国家或地区',
+    description:
+      '国家代码（仅当target为手机号时需要提供），用于标识手机号所属的国家或地区',
     required: false,
     example: '+86',
     examples: {
       china: {
         summary: '中国',
         value: '+86',
-        description: '中国大陆地区'
+        description: '中国大陆地区',
       },
       usa: {
         summary: '美国',
         value: '+1',
-        description: '美国和加拿大'
+        description: '美国和加拿大',
       },
       uk: {
         summary: '英国',
         value: '+44',
-        description: '英国'
+        description: '英国',
       },
       japan: {
         summary: '日本',
         value: '+81',
-        description: '日本'
+        description: '日本',
       },
       korea: {
         summary: '韩国',
         value: '+82',
-        description: '韩国'
-      }
-    }
+        description: '韩国',
+      },
+    },
   })
   @IsOptional()
   @IsString()
@@ -329,8 +342,8 @@ export class VerifyCodeDto {
     example: 'user@example.com',
     examples: {
       email: { summary: '邮箱地址', value: 'user@example.com' },
-      phone: { summary: '手机号码', value: '13800138000' }
-    }
+      phone: { summary: '手机号码', value: '13800138000' },
+    },
   })
   @IsString()
   target: string;
@@ -343,8 +356,8 @@ export class VerifyCodeDto {
     example: '123456',
     examples: {
       four_digit: { summary: '4位验证码', value: '1234' },
-      six_digit: { summary: '6位验证码', value: '123456' }
-    }
+      six_digit: { summary: '6位验证码', value: '123456' },
+    },
   })
   @IsString()
   @MinLength(4, { message: '验证码至少4位' })
@@ -358,8 +371,8 @@ export class VerifyCodeDto {
     examples: {
       register: { summary: '注册验证码', value: 'register' },
       login: { summary: '登录验证码', value: 'login' },
-      reset_password: { summary: '重置密码验证码', value: 'reset_password' }
-    }
+      reset_password: { summary: '重置密码验证码', value: 'reset_password' },
+    },
   })
   @IsEnum(CodeType)
   type: CodeType;
@@ -372,8 +385,8 @@ export class ResetPasswordDto {
     example: 'user@example.com',
     examples: {
       email: { summary: '邮箱地址', value: 'user@example.com' },
-      phone: { summary: '手机号码', value: '13800138000' }
-    }
+      phone: { summary: '手机号码', value: '13800138000' },
+    },
   })
   @IsString()
   target: string;
@@ -386,8 +399,8 @@ export class ResetPasswordDto {
     example: '123456',
     examples: {
       four_digit: { summary: '4位验证码', value: '1234' },
-      six_digit: { summary: '6位验证码', value: '123456' }
-    }
+      six_digit: { summary: '6位验证码', value: '123456' },
+    },
   })
   @IsString()
   @MinLength(4, { message: '验证码至少4位' })
@@ -402,8 +415,8 @@ export class ResetPasswordDto {
     examples: {
       simple: { summary: '简单密码', value: 'newPassword123' },
       complex: { summary: '复杂密码', value: 'MyNewP@ssw0rd!' },
-      medium: { summary: '中等复杂度', value: 'newPass456' }
-    }
+      medium: { summary: '中等复杂度', value: 'newPass456' },
+    },
   })
   @IsString()
   @MinLength(6, { message: '密码至少6个字符' })
@@ -416,7 +429,8 @@ export class ResetPasswordDto {
 // 更新用户资料DTO
 export class UpdateProfileDto {
   @ApiProperty({
-    description: '用户名，3-20个字符，只能包含字母、数字和下划线，不能与其他用户重复',
+    description:
+      '用户名，3-20个字符，只能包含字母、数字和下划线，不能与其他用户重复',
     required: false,
     minLength: 3,
     maxLength: 20,
@@ -425,8 +439,8 @@ export class UpdateProfileDto {
     examples: {
       simple: { summary: '简单用户名', value: 'newuser' },
       with_numbers: { summary: '包含数字', value: 'user2024' },
-      with_underscore: { summary: '包含下划线', value: 'new_user' }
-    }
+      with_underscore: { summary: '包含下划线', value: 'new_user' },
+    },
   })
   @IsOptional()
   @IsString()
@@ -442,8 +456,8 @@ export class UpdateProfileDto {
     examples: {
       gmail: { summary: 'Gmail邮箱', value: 'newuser@gmail.com' },
       company: { summary: '企业邮箱', value: 'newuser@company.com' },
-      qq: { summary: 'QQ邮箱', value: 'newuser@qq.com' }
-    }
+      qq: { summary: 'QQ邮箱', value: 'newuser@qq.com' },
+    },
   })
   @IsOptional()
   @IsEmail({}, { message: '邮箱格式不正确' })
@@ -457,8 +471,8 @@ export class UpdateProfileDto {
       china: { summary: '中国', value: '+86' },
       usa: { summary: '美国', value: '+1' },
       uk: { summary: '英国', value: '+44' },
-      japan: { summary: '日本', value: '+81' }
-    }
+      japan: { summary: '日本', value: '+81' },
+    },
   })
   @IsOptional()
   @IsString()
@@ -471,8 +485,8 @@ export class UpdateProfileDto {
     examples: {
       china_mobile: { summary: '中国移动', value: '13800138001' },
       china_unicom: { summary: '中国联通', value: '15500155001' },
-      china_telecom: { summary: '中国电信', value: '18900189001' }
-    }
+      china_telecom: { summary: '中国电信', value: '18900189001' },
+    },
   })
   @IsOptional()
   @IsString()
@@ -486,8 +500,8 @@ export class UpdateProfileDto {
     examples: {
       jpg: { summary: 'JPG格式', value: 'https://example.com/avatar.jpg' },
       png: { summary: 'PNG格式', value: 'https://example.com/avatar.png' },
-      webp: { summary: 'WebP格式', value: 'https://example.com/avatar.webp' }
-    }
+      webp: { summary: 'WebP格式', value: 'https://example.com/avatar.webp' },
+    },
   })
   @IsOptional()
   @IsString()
@@ -501,8 +515,8 @@ export class UpdateProfileDto {
     examples: {
       chinese: { summary: '中文姓名', value: '张三' },
       english: { summary: '英文姓名', value: 'John Doe' },
-      nickname: { summary: '昵称', value: '小明' }
-    }
+      nickname: { summary: '昵称', value: '小明' },
+    },
   })
   @IsOptional()
   @IsString()
@@ -515,9 +529,12 @@ export class UpdateProfileDto {
     example: '这是我的个人简介',
     examples: {
       simple: { summary: '简单介绍', value: '热爱编程的开发者' },
-      detailed: { summary: '详细介绍', value: '我是一名全栈开发工程师，专注于Web开发和移动应用开发。' },
-      creative: { summary: '创意介绍', value: '代码改变世界，创新驱动未来！' }
-    }
+      detailed: {
+        summary: '详细介绍',
+        value: '我是一名全栈开发工程师，专注于Web开发和移动应用开发。',
+      },
+      creative: { summary: '创意介绍', value: '代码改变世界，创新驱动未来！' },
+    },
   })
   @IsOptional()
   @IsString()
@@ -532,9 +549,10 @@ export class AuthResponseDto {
     examples: {
       jwt_token: {
         summary: 'JWT令牌示例',
-        value: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
-      }
-    }
+        value:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+      },
+    },
   })
   accessToken: string;
 
@@ -544,9 +562,10 @@ export class AuthResponseDto {
     examples: {
       refresh_token: {
         summary: '刷新令牌示例',
-        value: 'refresh_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE1MTYyMzkwMjJ9.abc123def456ghi789'
-      }
-    }
+        value:
+          'refresh_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE1MTYyMzkwMjJ9.abc123def456ghi789',
+      },
+    },
   })
   refreshToken: string;
 
@@ -558,8 +577,8 @@ export class AuthResponseDto {
       email: 'john@example.com',
       phone: '13800138000',
       countryCode: '+86',
-      createdAt: '2024-01-01T00:00:00.000Z'
-    }
+      createdAt: '2024-01-01T00:00:00.000Z',
+    },
   })
   user: {
     id: string;
@@ -577,9 +596,12 @@ export class UserProfileResponseDto {
     description: '用户唯一标识符，系统自动生成',
     example: 'user_123456789',
     examples: {
-      uuid: { summary: 'UUID格式', value: 'user_123e4567-e89b-12d3-a456-426614174000' },
-      short_id: { summary: '短ID格式', value: 'user_123456789' }
-    }
+      uuid: {
+        summary: 'UUID格式',
+        value: 'user_123e4567-e89b-12d3-a456-426614174000',
+      },
+      short_id: { summary: '短ID格式', value: 'user_123456789' },
+    },
   })
   id: string;
 
@@ -590,9 +612,9 @@ export class UserProfileResponseDto {
     examples: {
       simple: { summary: '简单用户名', value: 'johndoe' },
       with_numbers: { summary: '包含数字', value: 'user2024' },
-      with_underscore: { summary: '包含下划线', value: 'john_doe' }
+      with_underscore: { summary: '包含下划线', value: 'john_doe' },
     },
-    nullable: true
+    nullable: true,
   })
   username?: string;
 
@@ -603,8 +625,8 @@ export class UserProfileResponseDto {
     examples: {
       gmail: { summary: 'Gmail邮箱', value: 'john@gmail.com' },
       company: { summary: '企业邮箱', value: 'john@company.com' },
-      qq: { summary: 'QQ邮箱', value: 'john@qq.com' }
-    }
+      qq: { summary: 'QQ邮箱', value: 'john@qq.com' },
+    },
   })
   email: string;
 
@@ -616,9 +638,9 @@ export class UserProfileResponseDto {
       china: { summary: '中国', value: '+86' },
       usa: { summary: '美国', value: '+1' },
       uk: { summary: '英国', value: '+44' },
-      japan: { summary: '日本', value: '+81' }
+      japan: { summary: '日本', value: '+81' },
     },
-    nullable: true
+    nullable: true,
   })
   countryCode?: string;
 
@@ -629,9 +651,9 @@ export class UserProfileResponseDto {
     examples: {
       china_mobile: { summary: '中国移动', value: '13800138000' },
       china_unicom: { summary: '中国联通', value: '15500155000' },
-      china_telecom: { summary: '中国电信', value: '18900189000' }
+      china_telecom: { summary: '中国电信', value: '18900189000' },
     },
-    nullable: true
+    nullable: true,
   })
   phone?: string;
 
@@ -640,8 +662,8 @@ export class UserProfileResponseDto {
     example: true,
     examples: {
       verified: { summary: '已验证', value: true },
-      unverified: { summary: '未验证', value: false }
-    }
+      unverified: { summary: '未验证', value: false },
+    },
   })
   emailVerified: boolean;
 
@@ -650,8 +672,8 @@ export class UserProfileResponseDto {
     example: false,
     examples: {
       verified: { summary: '已验证', value: true },
-      unverified: { summary: '未验证', value: false }
-    }
+      unverified: { summary: '未验证', value: false },
+    },
   })
   phoneVerified: boolean;
 
@@ -662,9 +684,9 @@ export class UserProfileResponseDto {
     example: '2024-12-01T10:30:00.000Z',
     examples: {
       recent: { summary: '最近登录', value: '2024-12-01T10:30:00.000Z' },
-      old: { summary: '较早登录', value: '2024-11-15T08:20:00.000Z' }
+      old: { summary: '较早登录', value: '2024-11-15T08:20:00.000Z' },
     },
-    nullable: true
+    nullable: true,
   })
   lastLoginAt?: Date;
 
@@ -674,8 +696,8 @@ export class UserProfileResponseDto {
     example: '2024-01-01T00:00:00.000Z',
     examples: {
       recent: { summary: '最近创建', value: '2024-12-01T10:30:00.000Z' },
-      old: { summary: '较早创建', value: '2023-06-15T08:20:00.000Z' }
-    }
+      old: { summary: '较早创建', value: '2023-06-15T08:20:00.000Z' },
+    },
   })
   createdAt: Date;
 
@@ -692,8 +714,8 @@ export class UserProfileResponseDto {
       dateOfBirth: '1990-01-01T00:00:00.000Z',
       gender: 'male',
       city: '北京',
-      country: '中国'
-    }
+      country: '中国',
+    },
   })
   profile?: {
     name?: string;

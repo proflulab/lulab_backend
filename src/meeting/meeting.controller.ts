@@ -1,34 +1,34 @@
 import {
-    Controller,
-    Get,
-    Post,
-    Put,
-    Delete,
-    Body,
-    Param,
-    Query,
-    HttpCode,
-    HttpStatus,
-    Logger,
-    ParseUUIDPipe,
-    ValidationPipe
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  HttpCode,
+  HttpStatus,
+  Logger,
+  ParseUUIDPipe,
+  ValidationPipe,
 } from '@nestjs/common';
-import {ApiTags,ApiBearerAuth,} from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
-    ApiGetMeetingRecordsDocs,
-    ApiGetMeetingRecordByIdDocs,
-    ApiCreateMeetingRecordDocs,
-    ApiUpdateMeetingRecordDocs,
-    ApiDeleteMeetingRecordDocs,
-    ApiGetMeetingStatsDocs,
-    ApiReprocessMeetingRecordDocs,
-    ApiHealthCheckDocs
+  ApiGetMeetingRecordsDocs,
+  ApiGetMeetingRecordByIdDocs,
+  ApiCreateMeetingRecordDocs,
+  ApiUpdateMeetingRecordDocs,
+  ApiDeleteMeetingRecordDocs,
+  ApiGetMeetingStatsDocs,
+  ApiReprocessMeetingRecordDocs,
+  ApiHealthCheckDocs,
 } from './decorators/meeting-record.decorators';
 import { MeetingService } from './meeting.service';
 import {
-    QueryMeetingRecordsDto,
-    MeetingRecordResponseDto,
-    MeetingRecordListResponseDto
+  QueryMeetingRecordsDto,
+  MeetingRecordResponseDto,
+  MeetingRecordListResponseDto,
 } from './dto/meeting-record.dto';
 import { CreateMeetingRecordDto } from './dto/create-meeting-record.dto';
 import { UpdateMeetingRecordDto } from './dto/update-meeting-record.dto';
@@ -41,190 +41,197 @@ import { UpdateMeetingRecordDto } from './dto/update-meeting-record.dto';
 @Controller('meetings')
 @ApiBearerAuth()
 export class MeetingController {
-    private readonly logger = new Logger(MeetingController.name);
+  private readonly logger = new Logger(MeetingController.name);
 
-    constructor(private readonly meetingService: MeetingService) { }
+  constructor(private readonly meetingService: MeetingService) {}
 
-    /**
-     * 获取会议记录列表
-     */
-    @Get()
-    @HttpCode(HttpStatus.OK)
-    @ApiGetMeetingRecordsDocs()
-    async getMeetingRecords(
-        @Query(new ValidationPipe({ transform: true })) query: QueryMeetingRecordsDto
-    ): Promise<MeetingRecordListResponseDto> {
-        this.logger.log('获取会议记录列表', { query });
+  /**
+   * 获取会议记录列表
+   */
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @ApiGetMeetingRecordsDocs()
+  async getMeetingRecords(
+    @Query(new ValidationPipe({ transform: true }))
+    query: QueryMeetingRecordsDto,
+  ): Promise<MeetingRecordListResponseDto> {
+    this.logger.log('获取会议记录列表', { query });
 
-        try {
-            const queryParams = {
-                ...query,
-                startDate: query.startDate ? new Date(query.startDate) : undefined,
-                endDate: query.endDate ? new Date(query.endDate) : undefined
-            };
-            const result = await this.meetingService.getMeetingRecords(queryParams);
+    try {
+      const queryParams = {
+        ...query,
+        startDate: query.startDate ? new Date(query.startDate) : undefined,
+        endDate: query.endDate ? new Date(query.endDate) : undefined,
+      };
+      const result = await this.meetingService.getMeetingRecords(queryParams);
 
-            this.logger.log(`获取会议记录成功，共 ${result.total} 条记录`);
-            return {
-                data: result.records,
-                total: result.total,
-                page: result.page,
-                limit: result.limit,
-                totalPages: Math.ceil(result.total / result.limit)
-            };
-        } catch (error) {
-            this.logger.error('获取会议记录失败', error.stack);
-            throw error;
-        }
+      this.logger.log(`获取会议记录成功，共 ${result.total} 条记录`);
+      return {
+        data: result.records,
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: Math.ceil(result.total / result.limit),
+      };
+    } catch (error) {
+      this.logger.error('获取会议记录失败', error.stack);
+      throw error;
     }
+  }
 
-    /**
-     * 根据ID获取会议记录详情
-     */
-    @Get(':id')
-    @HttpCode(HttpStatus.OK)
-    @ApiGetMeetingRecordByIdDocs()
-    async getMeetingRecordById(
-        @Param('id', ParseUUIDPipe) id: string
-    ): Promise<MeetingRecordResponseDto> {
-        this.logger.log(`获取会议记录详情: ${id}`);
+  /**
+   * 根据ID获取会议记录详情
+   */
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiGetMeetingRecordByIdDocs()
+  async getMeetingRecordById(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<MeetingRecordResponseDto> {
+    this.logger.log(`获取会议记录详情: ${id}`);
 
-        try {
-            const record = await this.meetingService.getMeetingRecordById(id);
+    try {
+      const record = await this.meetingService.getMeetingRecordById(id);
 
-            this.logger.log(`获取会议记录详情成功: ${record.id}`);
-            return record;
-        } catch (error) {
-            this.logger.error(`获取会议记录详情失败: ${id}`, error.stack);
-            throw error;
-        }
+      this.logger.log(`获取会议记录详情成功: ${record.id}`);
+      return record;
+    } catch (error) {
+      this.logger.error(`获取会议记录详情失败: ${id}`, error.stack);
+      throw error;
     }
+  }
 
-    /**
-     * 创建会议记录
-     */
-    @Post()
-    @HttpCode(HttpStatus.CREATED)
-    @ApiCreateMeetingRecordDocs()
-    async createMeetingRecord(
-        @Body(new ValidationPipe()) createParams: CreateMeetingRecordDto
-    ): Promise<MeetingRecordResponseDto> {
-        this.logger.log('创建会议记录', { meetingId: createParams.platformMeetingId });
+  /**
+   * 创建会议记录
+   */
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @ApiCreateMeetingRecordDocs()
+  async createMeetingRecord(
+    @Body(new ValidationPipe()) createParams: CreateMeetingRecordDto,
+  ): Promise<MeetingRecordResponseDto> {
+    this.logger.log('创建会议记录', {
+      meetingId: createParams.platformMeetingId,
+    });
 
-        try {
-            const record = await this.meetingService.createMeetingRecord(createParams);
+    try {
+      const record =
+        await this.meetingService.createMeetingRecord(createParams);
 
-            this.logger.log(`创建会议记录成功: ${record.id}`);
-            return record;
-        } catch (error) {
-            this.logger.error('创建会议记录失败', error.stack);
-            throw error;
-        }
+      this.logger.log(`创建会议记录成功: ${record.id}`);
+      return record;
+    } catch (error) {
+      this.logger.error('创建会议记录失败', error.stack);
+      throw error;
     }
+  }
 
-    /**
-     * 更新会议记录
-     */
-    @Put(':id')
-    @HttpCode(HttpStatus.OK)
-    @ApiUpdateMeetingRecordDocs()
-    async updateMeetingRecord(
-        @Param('id', ParseUUIDPipe) id: string,
-        @Body(new ValidationPipe()) updateParams: UpdateMeetingRecordDto
-    ): Promise<MeetingRecordResponseDto> {
-        this.logger.log(`更新会议记录: ${id}`, updateParams);
+  /**
+   * 更新会议记录
+   */
+  @Put(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiUpdateMeetingRecordDocs()
+  async updateMeetingRecord(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ValidationPipe()) updateParams: UpdateMeetingRecordDto,
+  ): Promise<MeetingRecordResponseDto> {
+    this.logger.log(`更新会议记录: ${id}`, updateParams);
 
-        try {
-            const record = await this.meetingService.updateMeetingRecord(id, updateParams);
+    try {
+      const record = await this.meetingService.updateMeetingRecord(
+        id,
+        updateParams,
+      );
 
-            this.logger.log(`更新会议记录成功: ${record.id}`);
-            return record;
-        } catch (error) {
-            this.logger.error(`更新会议记录失败: ${id}`, error.stack);
-            throw error;
-        }
+      this.logger.log(`更新会议记录成功: ${record.id}`);
+      return record;
+    } catch (error) {
+      this.logger.error(`更新会议记录失败: ${id}`, error.stack);
+      throw error;
     }
+  }
 
-    /**
-     * 删除会议记录
-     */
-    @Delete(':id')
-    @HttpCode(HttpStatus.NO_CONTENT)
-    @ApiDeleteMeetingRecordDocs()
-    async deleteMeetingRecord(
-        @Param('id', ParseUUIDPipe) id: string
-    ): Promise<void> {
-        this.logger.log(`删除会议记录: ${id}`);
+  /**
+   * 删除会议记录
+   */
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiDeleteMeetingRecordDocs()
+  async deleteMeetingRecord(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    this.logger.log(`删除会议记录: ${id}`);
 
-        try {
-            await this.meetingService.deleteMeetingRecord(id);
+    try {
+      await this.meetingService.deleteMeetingRecord(id);
 
-            this.logger.log(`删除会议记录成功: ${id}`);
-        } catch (error) {
-            this.logger.error(`删除会议记录失败: ${id}`, error.stack);
-            throw error;
-        }
+      this.logger.log(`删除会议记录成功: ${id}`);
+    } catch (error) {
+      this.logger.error(`删除会议记录失败: ${id}`, error.stack);
+      throw error;
     }
+  }
 
-    /**
-     * 获取会议统计信息
-     */
-    @Get('stats/summary')
-    @HttpCode(HttpStatus.OK)
-    @ApiGetMeetingStatsDocs()
-    async getMeetingStats(
-        @Query('startDate') startDate?: string,
-        @Query('endDate') endDate?: string
-    ): Promise<any> {
-        this.logger.log('获取会议统计信息', { startDate, endDate });
+  /**
+   * 获取会议统计信息
+   */
+  @Get('stats/summary')
+  @HttpCode(HttpStatus.OK)
+  @ApiGetMeetingStatsDocs()
+  async getMeetingStats(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ): Promise<any> {
+    this.logger.log('获取会议统计信息', { startDate, endDate });
 
-        try {
-            const stats = await this.meetingService.getMeetingStats({
-                startDate: startDate ? new Date(startDate) : undefined,
-                endDate: endDate ? new Date(endDate) : undefined
-            });
+    try {
+      const stats = await this.meetingService.getMeetingStats({
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
+      });
 
-            this.logger.log('获取会议统计信息成功');
-            return stats;
-        } catch (error) {
-            this.logger.error('获取会议统计信息失败', error.stack);
-            throw error;
-        }
+      this.logger.log('获取会议统计信息成功');
+      return stats;
+    } catch (error) {
+      this.logger.error('获取会议统计信息失败', error.stack);
+      throw error;
     }
+  }
 
-    /**
-     * 重新处理会议录制文件
-     */
-    @Post(':id/reprocess')
-    @HttpCode(HttpStatus.OK)
-    @ApiReprocessMeetingRecordDocs()
-    async reprocessMeetingRecord(
-        @Param('id', ParseUUIDPipe) id: string
-    ): Promise<MeetingRecordResponseDto> {
-        this.logger.log(`重新处理会议录制文件: ${id}`);
+  /**
+   * 重新处理会议录制文件
+   */
+  @Post(':id/reprocess')
+  @HttpCode(HttpStatus.OK)
+  @ApiReprocessMeetingRecordDocs()
+  async reprocessMeetingRecord(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<MeetingRecordResponseDto> {
+    this.logger.log(`重新处理会议录制文件: ${id}`);
 
-        try {
-            const record = await this.meetingService.reprocessMeetingRecord(id);
+    try {
+      const record = await this.meetingService.reprocessMeetingRecord(id);
 
-            this.logger.log(`重新处理会议录制文件成功: ${record.id}`);
-            return record;
-        } catch (error) {
-            this.logger.error(`重新处理会议录制文件失败: ${id}`, error.stack);
-            throw error;
-        }
+      this.logger.log(`重新处理会议录制文件成功: ${record.id}`);
+      return record;
+    } catch (error) {
+      this.logger.error(`重新处理会议录制文件失败: ${id}`, error.stack);
+      throw error;
     }
+  }
 
-    /**
-     * 健康检查端点
-     */
-    @Get('health')
-    @HttpCode(HttpStatus.OK)
-    @ApiHealthCheckDocs()
-    async healthCheck() {
-        return {
-            status: 'ok',
-            timestamp: new Date().toISOString(),
-            service: 'meeting-service'
-        };
-    }
+  /**
+   * 健康检查端点
+   */
+  @Get('health')
+  @HttpCode(HttpStatus.OK)
+  @ApiHealthCheckDocs()
+  async healthCheck() {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      service: 'meeting-service',
+    };
+  }
 }

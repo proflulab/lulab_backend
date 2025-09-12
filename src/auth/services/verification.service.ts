@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { EmailService } from '../../email/email.service';
 import { AliyunSmsService } from './aliyun-sms.service';
@@ -11,7 +16,7 @@ export class VerificationService {
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
     private readonly aliyunSmsService: AliyunSmsService,
-  ) { }
+  ) {}
 
   // 发送验证码
   async sendCode(
@@ -145,7 +150,10 @@ export class VerificationService {
     });
 
     if (targetCount >= 5) {
-      throw new HttpException('发送过于频繁，请1小时后再试', HttpStatus.TOO_MANY_REQUESTS);
+      throw new HttpException(
+        '发送过于频繁，请1小时后再试',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
 
     // 检查同一IP1天内发送次数（最多20次）
@@ -159,7 +167,10 @@ export class VerificationService {
     });
 
     if (ipCount >= 20) {
-      throw new HttpException('发送过于频繁，请明天再试', HttpStatus.TOO_MANY_REQUESTS);
+      throw new HttpException(
+        '发送过于频繁，请明天再试',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
   }
 

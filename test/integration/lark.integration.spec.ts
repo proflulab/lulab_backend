@@ -33,9 +33,13 @@ describe('Lark Integration', () => {
       ],
     }).compile();
 
-    service = module.get<TencentEventHandlerService>(TencentEventHandlerService);
+    service = module.get<TencentEventHandlerService>(
+      TencentEventHandlerService,
+    );
     configService = module.get<ConfigService>(ConfigService);
-    meetingBitableRepository = module.get<MeetingBitableRepository>(MeetingBitableRepository);
+    meetingBitableRepository = module.get<MeetingBitableRepository>(
+      MeetingBitableRepository,
+    );
 
     jest.clearAllMocks();
   });
@@ -85,7 +89,9 @@ describe('Lark Integration', () => {
 
       await service.handleEvent(mockEvent);
 
-      expect(mockMeetingBitableRepository.createMeetingRecord).toHaveBeenCalledWith(
+      expect(
+        mockMeetingBitableRepository.createMeetingRecord,
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
           platform: 'tencent',
           subject: '测试会议',
@@ -93,8 +99,8 @@ describe('Lark Integration', () => {
           start_time: expect.any(Number),
           end_time: expect.any(Number),
           creator: ['会议创建者'],
-          operator: ['会议创建者']
-        })
+          operator: ['会议创建者'],
+        }),
       );
     });
 
@@ -133,7 +139,9 @@ describe('Lark Integration', () => {
 
       await service.handleEvent(mockEvent);
 
-      expect(mockMeetingBitableRepository.createMeetingRecord).not.toHaveBeenCalled();
+      expect(
+        mockMeetingBitableRepository.createMeetingRecord,
+      ).not.toHaveBeenCalled();
     });
 
     it('应该在创建记录失败时不影响主流程', async () => {
@@ -145,7 +153,9 @@ describe('Lark Integration', () => {
       });
 
       // 模拟创建记录失败
-      mockMeetingBitableRepository.createMeetingRecord.mockRejectedValue(new Error('API错误'));
+      mockMeetingBitableRepository.createMeetingRecord.mockRejectedValue(
+        new Error('API错误'),
+      );
 
       const mockEvent: TencentMeetingEvent = {
         event: 'meeting.started',
@@ -178,7 +188,9 @@ describe('Lark Integration', () => {
 
       // 不应该抛出错误
       await expect(service.handleEvent(mockEvent)).resolves.not.toThrow();
-      expect(mockMeetingBitableRepository.createMeetingRecord).toHaveBeenCalled();
+      expect(
+        mockMeetingBitableRepository.createMeetingRecord,
+      ).toHaveBeenCalled();
     });
   });
 });

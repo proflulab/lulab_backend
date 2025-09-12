@@ -4,12 +4,19 @@
  * @LastEditors: 杨仕明 shiming.y@qq.com
  * @LastEditTime: 2025-07-28 04:11:15
  * @FilePath: /lulab_backend/src/email/email.controller.ts
- * @Description: 
- * 
- * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ * @Description:
+ *
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
 
-import { Controller, Post, Body, Get, HttpStatus, HttpException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  HttpStatus,
+  HttpException,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { EmailService } from './email.service';
 import { SendEmailDto } from '../dto/send-email.dto';
@@ -18,7 +25,7 @@ import { Public } from '../auth/decorators/public.decorator';
 @ApiTags('Email')
 @Controller('email')
 export class EmailController {
-  constructor(private readonly emailService: EmailService) { }
+  constructor(private readonly emailService: EmailService) {}
 
   @Post('send')
   @Public()
@@ -63,7 +70,10 @@ export class EmailController {
 
   @Get('verify')
   @Public()
-  @ApiOperation({ summary: '验证SMTP连接', description: '验证邮件服务器连接状态' })
+  @ApiOperation({
+    summary: '验证SMTP连接',
+    description: '验证邮件服务器连接状态',
+  })
   @ApiResponse({ status: 200, description: 'SMTP连接验证结果' })
   @ApiResponse({ status: 500, description: '验证连接时发生错误' })
   async verifyConnection() {

@@ -49,7 +49,7 @@ export function ApiTencentUrlVerificationDocs() {
     ApiResponse({
       status: 403,
       description: '签名验证失败',
-    })
+    }),
   );
 }
 
@@ -100,6 +100,6 @@ export function ApiTencentEventReceiverDocs() {
     ApiResponse({
       status: 401,
       description: '签名验证失败',
-    })
+    }),
   );
 }

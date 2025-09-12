@@ -8,10 +8,7 @@ import {
   HttpStatus,
   ValidationPipe,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   ApiRegisterDocs,
   ApiLoginDocs,
@@ -37,11 +34,11 @@ import {
 @ApiTags('Auth')
 @Controller({
   path: 'api/auth',
-  version: '1'
+  version: '1',
 })
 @UseGuards(JwtAuthGuard)
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Public()
   @Post('register')
@@ -102,7 +99,11 @@ export class AuthController {
   ): Promise<{ success: boolean; message: string }> {
     const ip = this.getClientIp(req);
     const userAgent = req.get('User-Agent');
-    return await this.authService.resetPassword(resetPasswordDto, ip, userAgent);
+    return await this.authService.resetPassword(
+      resetPasswordDto,
+      ip,
+      userAgent,
+    );
   }
 
   @Public()
@@ -127,7 +128,6 @@ export class AuthController {
       message: '退出登录成功',
     };
   }
-
 
   private getClientIp(req: Request): string {
     return (
