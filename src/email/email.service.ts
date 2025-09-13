@@ -11,10 +11,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { SendEmailDto } from './dto/send-email.dto';
-import {
-  MailerService,
-  MailerSendOptions,
-} from '@libs/integrations/email';
+import { MailerService, MailerSendOptions } from '@libs/integrations/email';
 import {
   buildVerificationEmail,
   buildWelcomeEmail,

@@ -17,4 +17,3 @@ export class AuthResponseDto {
     createdAt: Date;
   };
 }
-

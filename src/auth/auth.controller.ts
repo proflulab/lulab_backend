@@ -12,8 +12,6 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   ApiRegisterDocs,
   ApiLoginDocs,
-  ApiSendCodeDocs,
-  ApiVerifyCodeDocs,
   ApiResetPasswordDocs,
   ApiRefreshTokenDocs,
   ApiLogoutDocs,
@@ -23,8 +21,6 @@ import { AuthService } from './services/auth.service';
 import { JwtAuthGuard, Public } from '@libs/security';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { SendCodeDto } from './dto/send-code.dto';
-import { VerifyCodeDto } from './dto/verify-code.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 
@@ -63,28 +59,7 @@ export class AuthController {
     return await this.authService.login(loginDto, ip, userAgent);
   }
 
-  @Public()
-  @Post('send-code')
-  @HttpCode(HttpStatus.OK)
-  @ApiSendCodeDocs()
-  async sendCode(
-    @Body(ValidationPipe) sendCodeDto: SendCodeDto,
-    @Req() req: Request,
-  ): Promise<{ success: boolean; message: string }> {
-    const ip = this.getClientIp(req);
-    const userAgent = req.get('User-Agent');
-    return await this.authService.sendCode(sendCodeDto, ip, userAgent);
-  }
-
-  @Public()
-  @Post('verify-code')
-  @HttpCode(HttpStatus.OK)
-  @ApiVerifyCodeDocs()
-  async verifyCode(
-    @Body(ValidationPipe) verifyCodeDto: VerifyCodeDto,
-  ): Promise<{ valid: boolean; message: string }> {
-    return await this.authService.verifyCode(verifyCodeDto);
-  }
+  // 验证码相关接口已迁移至 VerificationController
 
   @Public()
   @Post('reset-password')

@@ -5,4 +5,3 @@ export enum AuthType {
   PHONE_PASSWORD = 'phone_password',
   PHONE_CODE = 'phone_code',
 }
-

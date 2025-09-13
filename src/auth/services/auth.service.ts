@@ -9,18 +9,16 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AuthRepository } from '../repositories/auth.repository';
-import { VerificationService } from './verification.service';
+import { VerificationService } from '@/verification/verification.service';
 import { EmailService } from '@/email/email.service';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
-import { SendCodeDto } from '../dto/send-code.dto';
-import { VerifyCodeDto } from '../dto/verify-code.dto';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { UpdateProfileDto } from '../dto/update-profile.dto';
 import { AuthResponseDto } from '../dto/auth-response.dto';
 import { UserProfileResponseDto } from '../dto/user-profile-response.dto';
 import { AuthType } from '../enums/auth-type.enum';
-import { CodeType } from '../enums/code-type.enum';
+import { CodeType } from '@/verification/enums/code-type.enum';
 import * as bcrypt from 'bcryptjs';
 import { isStrongPassword } from '@libs/common/utils';
 import { User, UserProfile } from '@prisma/client';
@@ -213,43 +211,7 @@ export class AuthService {
     }
   }
 
-  // 发送验证码
-  async sendCode(
-    sendCodeDto: SendCodeDto,
-    ip: string,
-    userAgent?: string,
-  ): Promise<{ success: boolean; message: string }> {
-    const { target, type } = sendCodeDto;
-
-    if (!target) {
-      throw new BadRequestException('目标邮箱或手机号不能为空');
-    }
-
-    // 根据验证码类型进行不同的验证
-    if (type === CodeType.REGISTER) {
-      // 注册验证码：检查用户是否已存在
-      const existingUser = await this.findUserByTarget(target);
-      if (existingUser) {
-        throw new ConflictException('该邮箱或手机号已被注册');
-      }
-    } else if (type === CodeType.LOGIN || type === CodeType.RESET_PASSWORD) {
-      // 登录或重置密码验证码：检查用户是否存在
-      const user = await this.findUserByTarget(target);
-      if (!user) {
-        throw new BadRequestException('用户不存在');
-      }
-    }
-
-    return await this.verificationService.sendCode(target, type, ip, userAgent);
-  }
-
-  // 验证验证码
-  async verifyCode(
-    verifyCodeDto: VerifyCodeDto,
-  ): Promise<{ valid: boolean; message: string }> {
-    const { target, code, type } = verifyCodeDto;
-    return await this.verificationService.verifyCode(target, code, type);
-  }
+  // 验证码发送与校验接口已拆分到 VerificationModule
 
   // 重置密码
   async resetPassword(

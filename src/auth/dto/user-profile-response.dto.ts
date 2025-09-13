@@ -22,7 +22,12 @@ export class UserProfileResponseDto {
   @ApiProperty()
   phoneVerified: boolean;
 
-  @ApiProperty({ required: false, nullable: true, type: String, format: 'date-time' })
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    type: String,
+    format: 'date-time',
+  })
   lastLoginAt?: Date;
 
   @ApiProperty({ type: String, format: 'date-time' })
@@ -41,4 +46,3 @@ export class UserProfileResponseDto {
     country?: string;
   };
 }
-

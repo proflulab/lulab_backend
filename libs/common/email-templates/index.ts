@@ -79,4 +79,3 @@ export function buildWelcomeEmail(username: string) {
 
   return { subject, html };
 }
-

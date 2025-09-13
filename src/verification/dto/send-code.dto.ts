@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { CodeType } from '@/auth/enums/code-type.enum';
+import { CodeType } from '@/verification/enums/code-type.enum';
 
 export class SendCodeDto {
   @ApiProperty({ description: '目标邮箱或手机号' })
@@ -11,9 +11,11 @@ export class SendCodeDto {
   @IsEnum(CodeType)
   type: CodeType;
 
-  @ApiProperty({ required: false, description: '国家代码，如 +86（手机号时可选）' })
+  @ApiProperty({
+    required: false,
+    description: '国家代码，如 +86（手机号时可选）',
+  })
   @IsOptional()
   @IsString()
   countryCode?: string;
 }
-

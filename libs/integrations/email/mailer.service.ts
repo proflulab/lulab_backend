@@ -56,7 +56,9 @@ export class MailerService {
     });
   }
 
-  async send(options: MailerSendOptions): Promise<{ messageId: string } | null> {
+  async send(
+    options: MailerSendOptions,
+  ): Promise<{ messageId: string } | null> {
     if (!this.transporter) {
       this.logger.warn('邮件服务未配置，无法发送邮件');
       return null;
@@ -98,4 +100,3 @@ export class MailerService {
     }
   }
 }
-

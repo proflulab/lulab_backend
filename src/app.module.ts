@@ -22,6 +22,7 @@ import { PrismaService } from './prisma.service';
 import { MeetingModule } from './meeting/meeting.module';
 import { TencentMeetingModule } from './tencent-meeting/tencent-meeting.module';
 import { FeishuMeetingModule } from './feishu-meeting/feishu-meeting.module';
+import { VerificationModule } from '@/verification/verification.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { FeishuMeetingModule } from './feishu-meeting/feishu-meeting.module';
     MeetingModule,
     TencentMeetingModule,
     FeishuMeetingModule,
+    VerificationModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsOptional, IsString, MinLength, Matches } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsString,
+  MinLength,
+  Matches,
+} from 'class-validator';
 import { AuthType } from '@/auth/enums/auth-type.enum';
 
 export class RegisterDto {
@@ -29,7 +36,10 @@ export class RegisterDto {
   @IsString()
   phone?: string;
 
-  @ApiProperty({ required: false, description: '密码，至少6位且包含字母和数字' })
+  @ApiProperty({
+    required: false,
+    description: '密码，至少6位且包含字母和数字',
+  })
   @IsOptional()
   @IsString()
   @MinLength(6, { message: '密码至少6个字符' })
@@ -44,4 +54,3 @@ export class RegisterDto {
   @MinLength(4, { message: '验证码至少4位' })
   code?: string;
 }
-

@@ -2,9 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { TencentMeetingService } from '@/tencent-meeting/services/tencent-meeting.service';
 import { TencentApiService } from '@/tencent-meeting/services/tencent-api.service';
-import {
-  PlatformApiException,
-} from '@/tencent-meeting/exceptions/platform.exceptions';
+import { PlatformApiException } from '@/tencent-meeting/exceptions/platform.exceptions';
 import {
   RecordMeetingsResponse,
   MeetingDetailResponse,
@@ -22,7 +20,10 @@ describe('Tencent Meeting Integration (mocked API)', () => {
   const mockTencentApi: jest.Mocked<
     Pick<
       TencentApiService,
-      'getCorpRecords' | 'getMeetingDetail' | 'getRecordingFileDetail' | 'getMeetingParticipants'
+      | 'getCorpRecords'
+      | 'getMeetingDetail'
+      | 'getRecordingFileDetail'
+      | 'getMeetingParticipants'
     >
   > = {
     getCorpRecords: jest.fn(),
@@ -103,9 +104,9 @@ describe('Tencent Meeting Integration (mocked API)', () => {
       meetingService.getCorpRecords(now - 60, now),
     ).rejects.toBeInstanceOf(PlatformApiException);
 
-    await expect(
-      meetingService.getCorpRecords(now - 60, now),
-    ).rejects.toThrow(/TENCENT_MEETING API调用失败 \[getCorpRecords\]/);
+    await expect(meetingService.getCorpRecords(now - 60, now)).rejects.toThrow(
+      /TENCENT_MEETING API调用失败 \[getCorpRecords\]/,
+    );
   });
 
   it('getMeetingDetail passes through data', async () => {
@@ -121,7 +122,11 @@ describe('Tencent Meeting Integration (mocked API)', () => {
     mockTencentApi.getMeetingDetail.mockResolvedValueOnce(detail);
 
     const res = await meetingService.getMeetingDetail('m-1', 'u1', '1');
-    expect(mockTencentApi.getMeetingDetail).toHaveBeenCalledWith('m-1', 'u1', '1');
+    expect(mockTencentApi.getMeetingDetail).toHaveBeenCalledWith(
+      'm-1',
+      'u1',
+      '1',
+    );
     expect(res).toEqual(detail);
   });
 
@@ -170,4 +175,3 @@ describe('TencentApiService parameter validation', () => {
     );
   });
 });
-
