@@ -3,12 +3,15 @@ import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
 import { TencentWebhookController } from './tencent-webhook.controller';
 import { TencentEventHandlerService } from '../services/tencent-event-handler.service';
-import { WebhookConfigException } from '../exceptions/webhook.exceptions';
-import * as tencentCryptoService from '../utils/crypto.util';
+import { WebhookConfigException } from '@libs/integrations/tencent-meeting';
+import * as tencentCryptoService from '@libs/integrations/tencent-meeting';
 import { TencentMeetingConfigService } from '../services/tencent-config.service';
 
 // Mock the crypto util
-jest.mock('../utils/crypto.util');
+jest.mock('@libs/integrations/tencent-meeting', () => ({
+  ...jest.requireActual('@libs/integrations/tencent-meeting'),
+  verifyWebhookUrl: jest.fn(),
+}));
 
 describe('TencentWebhookController', () => {
   let controller: TencentWebhookController;

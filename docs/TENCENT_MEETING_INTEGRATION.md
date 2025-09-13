@@ -16,43 +16,47 @@
 
 ```text
 src/
-└── tencent-meeting/                        # 腾讯会议模块
-    ├── controllers/                        # 控制器
-    │   ├── tencent-webhook.controller.ts   # Webhook控制器
-    │   └── tencent-webhook.controller.spec.ts # 控制器测试
-    ├── decorators/                         # 装饰器
-    │   └── tencent-webhook.decorators.ts   # Webhook装饰器
-    ├── dto/                                # 数据传输对象
-    │   └── tencent-webhook-body.dto.ts     # Webhook请求体DTO
-    ├── exceptions/                         # 异常处理
-    │   ├── meeting.exceptions.ts           # 会议相关异常
-    │   └── webhook.exceptions.ts           # Webhook相关异常
-    ├── interceptors/                       # 拦截器
-    │   └── webhook-logging.interceptor.ts  # Webhook日志拦截器
-    ├── services/                           # 服务层
+└── tencent-meeting/                        # 腾讯会议模块（业务侧）
+    ├── controllers/
+    │   ├── tencent-webhook.controller.ts   # Webhook 控制器（路由：/webhooks/tencent）
+    │   └── tencent-webhook.controller.spec.ts
+    ├── decorators/
+    │   └── tencent-webhook.decorators.ts
+    ├── dto/
+    │   └── tencent-webhook-body.dto.ts
+    ├── interceptors/
+    │   └── webhook-logging.interceptor.ts
+    ├── services/
     │   ├── event-handlers/                 # 事件处理器
-    │   │   ├── base-event.handler.ts       # 基础事件处理器
-    │   │   ├── event-handler.factory.ts    # 事件处理器工厂
-    │   │   ├── meeting-ended.handler.ts    # 会议结束事件处理器
-    │   │   ├── meeting-started.handler.ts  # 会议开始事件处理器
-    │   │   └── recording-completed.handler.ts # 录制完成事件处理器
-    │   ├── tencent-api.service.ts          # 腾讯会议API服务
-    │   ├── tencent-api.service.spec.ts     # API服务测试
-    │   ├── utils/crypto.util.ts            # 加密解密/签名（纯函数）
-    │   ├── services/tencent-api.service.ts # API签名改用 utils/crypto.util
-    │   ├── tencent-event-handler.service.ts # 事件处理服务
-    │   └── tencent-meeting.service.ts      # 腾讯会议主服务
-    ├── types/                              # 类型定义
-    │   ├── tencent-meeting-api.types.ts    # API类型定义
-    │   └── tencent-webhook-events.types.ts # Webhook事件类型
-    ├── utils/                              # 工具类
-    │   └── utils/crypto.util.ts            # 加解密/签名工具（纯函数）
-    └── libs/
-        └── common/
-            └── utils/
-                └── http-file.ts           # HTTP文件工具（已从 tencent-meeting 上移）
-    └── tencent-meeting.module.ts           # 模块配置
+    │   │   ├── base-event.handler.ts
+    │   │   ├── event-handler.factory.ts
+    │   │   ├── meeting-ended.handler.ts
+    │   │   ├── meeting-started.handler.ts
+    │   │   └── recording-completed.handler.ts
+    │   ├── tencent-config.service.ts       # Webhook 配置读取与校验
+    │   ├── tencent-event-handler.service.ts
+    │   └── tencent-meeting.service.ts      # 业务聚合，依赖 libs 的 API 客户端
+    ├── types/
+    │   └── tencent-webhook-events.types.ts # Webhook 事件类型
+    └── tencent-meeting.module.ts           # 模块装配（导入 TencentModule、MeetingModule、LarkModule）
+
+libs/
+└── integrations/
+    └── tencent-meeting/                    # 腾讯会议集成（通用层，可复用）
+        ├── tencent.module.ts               # 导出 TencentApiService
+        ├── tencent-api.service.ts          # 腾讯会议 API 客户端
+        ├── crypto.util.ts                  # 加解密/签名（纯函数）
+        ├── exceptions.ts                   # Webhook/Platform 异常（供 src 直接复用）
+        ├── types.ts                        # API 响应/实体类型
+        └── index.ts                        # Barrel 导出
+
+└── common/
+    └── utils/
+        └── http-file.ts                    # HTTP 文件工具（原 src/tencent-meeting/utils 上移）
 ```
+
+测试位置说明：
+- 腾讯会议集成相关的单元测试就近放置于 `libs/integrations/tencent-meeting/*.spec.ts`，例如 `crypto.util.spec.ts` 与 `tencent-api.service.spec.ts`。
 
 ## 环境配置
 
@@ -78,7 +82,7 @@ TENCENT_MEETING_ENCODING_AES_KEY="your_encoding_aes_key"
 #### 1. Webhook验证 (GET)
 
 ```text
-GET /meeting/tencent/webhook
+GET /webhooks/tencent
 ```
 
 用于腾讯会议平台验证webhook URL的有效性。
@@ -86,7 +90,7 @@ GET /meeting/tencent/webhook
 #### 2. Webhook事件接收 (POST)
 
 ```text
-POST /meeting/tencent/webhook
+POST /webhooks/tencent
 ```
 
 接收腾讯会议的事件通知，目前支持：
@@ -202,13 +206,30 @@ GET /meeting/health
 
 ## 开发说明
 
-本实现参考了原有的Next.js API代码，并完全迁移到NestJS框架，主要改进：
+本实现参考了原有的Next.js API代码，并完全迁移到NestJS框架。经过若干次重构，形成如下边界与依赖：
+
+### 模块依赖与分层
+
+- libs/integrations/tencent-meeting（通用集成层）
+  - 提供 TencentModule（导出 TencentApiService），以及 crypto.util、exceptions、types。
+  - 不依赖 src；供业务模块（src/…）直接复用，利于共享与测试。
+- src/tencent-meeting（业务层）
+  - 通过依赖 `TencentModule` 使用 API 客户端；通过 `@libs/integrations/tencent-meeting` 直接复用异常、加解密与类型。
+  - Webhook 配置读取集中在 `TencentMeetingConfigService`，控制器不再直接拼装配置。
+- 数据访问与共享
+  - `PrismaModule` 统一提供 `PrismaService`；`MeetingModule` 导出 `MeetingRepository`。
+  - `TencentMeetingModule` 通过导入 `MeetingModule` 获取仓储，避免跨域直接提供者注入。
+- 工具与别名
+  - `HttpFileUtil` 上移到 `libs/common/utils/http-file.ts`，统一通过 `@libs/common/utils` 引用。
+  - 统一使用路径别名：`@libs/*`、`@/*`。
+
+### 主要改进点
 
 1. **模块化架构** - 使用NestJS的模块系统组织代码
 2. **依赖注入** - 更好的代码解耦和测试支持
-3. **类型安全** - 完整的TypeScript类型定义
-4. **错误处理** - 统一的异常处理机制
+3. **类型安全** - 完整的TypeScript类型定义（统一在 libs）
+4. **错误处理** - 统一的异常处理（统一在 libs）
 5. **日志记录** - 结构化的日志输出
-6. **配置管理** - 环境变量统一管理
+6. **配置管理** - Webhook 配置集中服务 + 环境变量统一管理
 
 项目已通过TypeScript编译检查，可以直接部署使用。

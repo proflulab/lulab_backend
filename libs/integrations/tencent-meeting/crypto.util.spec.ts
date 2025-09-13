@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { verifySignature } from '../utils/crypto.util';
+import { verifySignature } from '@libs/integrations/tencent-meeting';
 
 describe('TencentCryptoService', () => {
   describe('verifySignature', () => {
@@ -229,3 +229,4 @@ describe('TencentCryptoService', () => {
     });
   });
 });
+

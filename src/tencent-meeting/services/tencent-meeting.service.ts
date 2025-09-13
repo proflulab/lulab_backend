@@ -1,16 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { TencentApiService } from './tencent-api.service';
+import { TencentApiService } from '@libs/integrations/tencent-meeting';
 import {
   RecordingDetail,
   RecordMeetingsResponse,
   MeetingParticipantsResponse,
   MeetingDetailResponse,
-} from '../types/tencent-meeting-api.types';
-import {
-  PlatformApiException,
-  PlatformConfigException,
-} from '../exceptions/platform.exceptions';
+} from '@libs/integrations/tencent-meeting';
+import { PlatformApiException, PlatformConfigException } from '@libs/integrations/tencent-meeting';
 import { HttpFileUtil } from '@libs/common/utils';
 
 /**

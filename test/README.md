@@ -194,10 +194,12 @@ projects: [
 
 测试文件约定：
 
-- 单元测试: `src/**/*.spec.ts`
-- 集成测试: `test/integration/**/*.spec.ts`
+- 单元测试: `src/**/*.spec.ts`、`libs/**/*.spec.ts`（就近放置在实现文件旁）
+- 集成测试: `test/integration/**/*.int-spec.ts` 或 `libs/**/*.int-spec.ts`
 - 端到端测试: `test/e2e/**/*.e2e-spec.ts`
 - 系统测试: `test/system/**/*.spec.ts`
+
+注：腾讯会议签名/解密与开放 API 的单元测试位于 `libs/integrations/tencent-meeting/*.spec.ts`。
 
 ### 使用 Jest CLI（按项目运行）
 

@@ -31,9 +31,10 @@
 
 - `src/auth` 认证模块（JWT、守卫/策略、短信、验证码流程）
 - `src/meeting` 会议业务（控制器/服务/仓储/DTO/异常/工具）
-- `src/tencent-meeting` 腾讯会议（Webhook 控制器、事件处理器工厂、API 客户端、加解密/签名）
+- `src/tencent-meeting` 腾讯会议（Webhook 控制器、事件处理器工厂、业务服务）。加解密/签名与平台 API 客户端抽离到 `libs/integrations/tencent-meeting`。
 - `src/feishu-meeting` 飞书 Webhook（控制器与处理器骨架，签名与逻辑待完善）
-- `libs/integrations-lark` 飞书多维表格通用库与仓储封装（Meeting、MeetingUser）
+- `libs/integrations/lark` 飞书多维表格通用库与仓储封装（Meeting、MeetingUser）
+- `libs/integrations/tencent-meeting` 腾讯会议集成公共库（签名/解密、开放 API 客户端、类型、单元测试）
 - `prisma` Prisma schema、模型拆分与种子数据
 
 ## 快速开始
@@ -93,7 +94,7 @@ pnpm start:dev
 pnpm start:prod
 
 # 测试
-pnpm test           # 单元测试
+pnpm test           # 单元测试（src/ 与 libs/ 下就近存放的 *.spec.ts）
 pnpm test:e2e       # 端到端测试
 pnpm test:integration
 pnpm test:cov       # 覆盖率
@@ -150,12 +151,15 @@ pnpm db:backup
 ## 测试
 
 ```bash
-pnpm test            # 单元测试
+pnpm test            # 单元测试（src/ 与 libs/）
 pnpm test:e2e        # e2e 测试（包含腾讯会议 Webhook URL 校验用例）
 pnpm test:integration
 ```
 
-e2e 中对加解密/签名模块做了 mock，便于在 CI 或本地快速验证路由行为。
+说明：
+- 单元测试默认就近放置在对应实现旁（`src/**/*.spec.ts`、`libs/**/*.spec.ts`）。
+- 集成测试与 e2e 测试需要网络与数据库环境，本地可优先运行 `pnpm test:unit`。
+- e2e 中对加解密/签名模块做了 mock，便于在 CI 或本地快速验证路由行为。
 
 更多测试说明、分层策略与运行方式请见：`test/README.md`
 

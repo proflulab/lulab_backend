@@ -2,7 +2,7 @@ import { createHash, createHmac } from 'node:crypto';
 import {
   WebhookSignatureVerificationException,
   WebhookUrlVerificationException,
-} from '../exceptions/webhook.exceptions';
+} from './exceptions';
 
 export function verifySignature(
   token: string,

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { TencentMeetingEvent } from '../types/tencent-webhook-events.types';
-import { UnsupportedWebhookEventException } from '../exceptions/webhook.exceptions';
+import { UnsupportedWebhookEventException } from '@libs/integrations/tencent-meeting';
 import { EventHandlerFactory } from './event-handlers/event-handler.factory';
 
 /**

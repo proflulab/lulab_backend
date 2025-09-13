@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { WebhookConfigException } from '../exceptions/webhook.exceptions';
+import { WebhookConfigException } from '@libs/integrations/tencent-meeting';
 
 @Injectable()
 export class TencentMeetingConfigService {
@@ -25,4 +25,3 @@ export class TencentMeetingConfigService {
     return { token, encodingAesKey };
   }
 }
-

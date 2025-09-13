@@ -1,6 +1,5 @@
 export interface TencentRecordingFile {
   record_file_id: string;
-  // 其他字段根据实际API响应添加
 }
 
 export interface MeetingSummary {
@@ -18,17 +17,11 @@ export interface RecordingDetail {
   audio_address?: string;
   audio_address_file_type?: string;
   meeting_summary?: MeetingSummary[];
-  // AI会议转写记录
   ai_meeting_transcripts?: MeetingSummary[];
-  // AI会议纪要
   ai_minutes?: MeetingSummary[];
-  // 录制文件名称
   record_name?: string;
-  // 录制开始时间戳
   start_time?: string;
-  // 录制结束时间戳
   end_time?: string;
-  // 会议名称
   meeting_record_name?: string;
 }
 
@@ -136,7 +129,6 @@ export interface MeetingDetailResponse {
   };
 }
 
-// 录制转写相关类型定义
 export interface TranscriptWord {
   wid: string;
   start_time: number;
@@ -172,10 +164,9 @@ export interface RecordingTranscriptDetail {
   };
 }
 
-// 智能纪要相关类型定义
 export interface MeetingMinute {
-  minute: string; // 会议摘要
-  todo: string; // 会议待办
+  minute: string;
+  todo: string;
 }
 
 export interface SmartMinutesResponse {
@@ -187,9 +178,8 @@ export interface SmartMinutesResponse {
   };
 }
 
-// 智能总结相关类型定义
 export interface SmartSummaryResponse {
-  ai_summary: string; // 智能总结内容，base64编码
+  ai_summary: string;
   error_info?: {
     error_code: number;
     new_error_code?: number;
@@ -197,24 +187,24 @@ export interface SmartSummaryResponse {
   };
 }
 
-// 智能话题相关类型定义
 export interface TopicTime {
-  pid: string; // 段落ID
-  start_time: string; // 话题开始时间，单位毫秒
-  end_time: string; // 话题结束时间，单位毫秒
+  pid: string;
+  start_time: string;
+  end_time: string;
 }
 
 export interface AiTopic {
-  topic_id: string; // 话题唯一ID
-  topic_name: string; // 话题主题，base64编码后的结果
-  topic_time: TopicTime[]; // 话题的发言段落及时间段
+  topic_id: string;
+  topic_name: string;
+  topic_time: TopicTime[];
 }
 
 export interface SmartTopicsResponse {
-  ai_topic_list: AiTopic[]; // 录制文件的智能话题列表
+  ai_topic_list: AiTopic[];
   error_info?: {
     error_code: number;
     new_error_code?: number;
     message: string;
   };
 }
+
