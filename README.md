@@ -157,6 +157,8 @@ pnpm test:integration
 
 e2e 中对加解密/签名模块做了 mock，便于在 CI 或本地快速验证路由行为。
 
+更多测试说明、分层策略与运行方式请见：`test/README.md`
+
 ## 安全与配置建议
 
 - 切勿将 `.env` 提交到版本库

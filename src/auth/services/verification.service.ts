@@ -7,7 +7,7 @@ import {
 import { VerificationRepository } from '../repositories/verification.repository';
 import { EmailService } from '../../email/email.service';
 import { AliyunSmsService } from '@libs/integrations/aliyun/aliyun-sms.service';
-import { CodeType } from '../../dto/auth.dto';
+import { CodeType } from '../dto/auth.dto';
 import { VerificationCodeType } from '@prisma/client';
 import {
   generateNumericCode,

@@ -37,18 +37,6 @@ export class MeetingRecordAlreadyExistsException extends MeetingException {
 }
 
 /**
- * 平台API调用异常
- */
-export class PlatformApiException extends MeetingException {
-  constructor(platform: string, operation: string, error: string) {
-    super(
-      `${platform} API调用失败 [${operation}]: ${error}`,
-      HttpStatus.BAD_GATEWAY,
-    );
-  }
-}
-
-/**
  * 文件下载异常
  */
 export class FileDownloadException extends MeetingException {
@@ -65,18 +53,6 @@ export class MeetingValidationException extends MeetingException {
     super(
       `参数验证失败: ${field}=${value}, 要求: ${requirement}`,
       HttpStatus.BAD_REQUEST,
-    );
-  }
-}
-
-/**
- * 平台配置异常
- */
-export class PlatformConfigException extends MeetingException {
-  constructor(platform: string, configKey: string) {
-    super(
-      `平台配置缺失: ${platform}.${configKey}`,
-      HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }
 }

@@ -7,7 +7,7 @@ import {
   ApiConsumes,
   ApiProduces,
 } from '@nestjs/swagger';
-import { RegisterDto, LoginDto, AuthResponseDto } from '../../dto/auth.dto';
+import { RegisterDto, LoginDto, AuthResponseDto } from '../dto/auth.dto';
 
 // 注册接口文档装饰器
 export function ApiRegisterDocs() {

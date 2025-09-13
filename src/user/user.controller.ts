@@ -21,7 +21,7 @@ import { Request } from 'express';
 import { AuthService } from '../auth/services/auth.service';
 import { JwtAuthGuard } from '@libs/security';
 import { User, CurrentUser } from '../auth/decorators/user.decorator';
-import { UpdateProfileDto, UserProfileResponseDto } from '../dto/auth.dto';
+import { UpdateProfileDto, UserProfileResponseDto } from '../auth/dto/auth.dto';
 
 @ApiTags('User')
 @Controller('api/user')

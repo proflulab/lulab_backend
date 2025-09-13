@@ -19,7 +19,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { EmailService } from './email.service';
-import { SendEmailDto } from '../dto/send-email.dto';
+import { SendEmailDto } from './dto/send-email.dto';
 import { Public } from '@libs/security';
 
 @ApiTags('Email')

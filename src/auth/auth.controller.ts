@@ -28,7 +28,7 @@ import {
   VerifyCodeDto,
   ResetPasswordDto,
   AuthResponseDto,
-} from '../dto/auth.dto';
+} from './dto/auth.dto';
 
 @ApiTags('Auth')
 @Controller({

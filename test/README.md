@@ -172,14 +172,46 @@ TestUtils.expectObjectStructure(user, {
 
 ## 📊 测试配置
 
-### Jest 配置
+### Jest 多项目配置（概述）
 
-项目使用多项目Jest配置：
+本项目在根目录使用单一的 `jest.config.ts` 来集中管理所有测试类型，通过 `projects` 配置分离不同层级测试，具备以下优势：
 
-- **单元测试**: `src/**/*.spec.ts`
-- **集成测试**: `test/integration/**/*.spec.ts`
-- **端到端测试**: `test/e2e/**/*.e2e-spec.ts`
-- **系统测试**: `test/system/**/*.spec.ts`
+- 单一配置源，便于维护与统一升级
+- 共享通用设置（TypeScript、环境、路径映射、覆盖率等）
+- 各项目可按需覆盖配置，灵活扩展
+
+核心配置结构（节选）：
+
+```ts
+// jest.config.ts（节选）
+projects: [
+  { displayName: 'unit' },
+  { displayName: 'integration' },
+  { displayName: 'system' },
+  { displayName: 'e2e' },
+]
+```
+
+测试文件约定：
+
+- 单元测试: `src/**/*.spec.ts`
+- 集成测试: `test/integration/**/*.spec.ts`
+- 端到端测试: `test/e2e/**/*.e2e-spec.ts`
+- 系统测试: `test/system/**/*.spec.ts`
+
+### 使用 Jest CLI（按项目运行）
+
+```bash
+# 运行特定项目
+jest --selectProjects unit
+jest --selectProjects unit,integration
+
+# 监听模式
+jest --selectProjects unit --watch
+
+# 生成覆盖率报告
+jest --selectProjects unit --coverage
+```
 
 ### 环境变量
 
@@ -191,6 +223,12 @@ cp .env.test.example .env.test
 
 # 编辑配置
 nano .env.test
+
+# 典型变量示例
+DATABASE_URL="postgresql://user:password@localhost:5432/lulab_test"
+REDIS_URL="redis://localhost:6379"
+TENCENT_SECRET_ID=your_secret_id
+TENCENT_SECRET_KEY=your_secret_key
 ```
 
 ## 🔧 开发指南

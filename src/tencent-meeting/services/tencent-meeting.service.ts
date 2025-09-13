@@ -10,7 +10,7 @@ import {
 import {
   PlatformApiException,
   PlatformConfigException,
-} from '../exceptions/meeting.exceptions';
+} from '../exceptions/platform.exceptions';
 import { HttpFileUtil } from '../utils/http-file.util';
 
 /**

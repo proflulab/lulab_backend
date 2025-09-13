@@ -13,7 +13,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
-import { SendEmailDto } from '../dto/send-email.dto';
+import { SendEmailDto } from './dto/send-email.dto';
 
 export interface EmailOptions {
   to: string;

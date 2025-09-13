@@ -22,7 +22,7 @@ import {
   UserProfileResponseDto,
   AuthType,
   CodeType,
-} from '../../dto/auth.dto';
+} from '../dto/auth.dto';
 import * as bcrypt from 'bcryptjs';
 import { isStrongPassword } from '@libs/common/utils';
 import { User, UserProfile } from '@prisma/client';
