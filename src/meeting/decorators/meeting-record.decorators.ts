@@ -18,7 +18,6 @@ export function ApiGetMeetingRecordsDocs() {
     ApiOperation({
       summary: '获取会议记录列表',
       description: '根据查询条件获取会议记录列表，支持分页、筛选和排序',
-      tags: ['Meeting'],
     }),
     ApiQuery({
       name: 'platform',

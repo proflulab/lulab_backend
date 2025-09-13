@@ -10,7 +10,7 @@ import { AliyunSmsService } from '@libs/integrations/aliyun/aliyun-sms.service';
 import { JwtStrategy, JwtAuthGuard } from '@libs/security';
 import { PrismaService } from '../prisma.service';
 import { VerificationRepository } from './repositories/verification.repository';
-import { EmailService } from '../email/email.service';
+import { EmailModule } from '../email/email.module';
 import { AuthRepository } from './repositories/auth.repository';
 
 @Module({
@@ -27,6 +27,7 @@ import { AuthRepository } from './repositories/auth.repository';
       inject: [ConfigService],
     }),
     AliyunModule,
+    EmailModule,
   ],
   controllers: [AuthController],
   providers: [
@@ -38,7 +39,6 @@ import { AuthRepository } from './repositories/auth.repository';
     PrismaService,
     VerificationRepository,
     AuthRepository,
-    EmailService,
   ],
   exports: [AuthService, JwtAuthGuard, JwtStrategy],
 })
