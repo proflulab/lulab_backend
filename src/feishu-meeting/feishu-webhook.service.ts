@@ -22,7 +22,7 @@ export class FeishuWebhookHandler {
    * 验证飞书 Webhook签名
    * @param params 验证参数
    */
-  verifySignature(params: any): boolean {
+  verifySignature(params: unknown): boolean {
     this.logger.log('验证飞书 Webhook签名');
     // TODO: 实现飞书签名验证逻辑
     return true;
@@ -43,7 +43,7 @@ export class FeishuWebhookHandler {
    * 处理飞书 Webhook事件
    * @param eventData 事件数据
    */
-  async handleEvent(eventData: any): Promise<void> {
+  async handleEvent(eventData: unknown): Promise<void> {
     this.logger.log('处理飞书 Webhook事件', eventData);
     // TODO: 实现飞书事件处理逻辑
   }
@@ -52,7 +52,7 @@ export class FeishuWebhookHandler {
    * 处理飞书 Webhook事件
    */
   async handleWebhookEvent(
-    payload: any,
+    payload: unknown,
     headers: Record<string, string>,
   ): Promise<void> {
     this.logger.log('处理飞书 Webhook事件');

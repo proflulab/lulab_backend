@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import Dysmsapi20170525, * as $Dysmsapi20170525 from '@alicloud/dysmsapi20170525';
-import OpenApi, * as $OpenApi from '@alicloud/openapi-client';
-import Util, * as $Util from '@alicloud/tea-util';
+import * as $OpenApi from '@alicloud/openapi-client';
+import * as $Util from '@alicloud/tea-util';
 import Credential from '@alicloud/credentials';
 import { CodeType } from '../../dto/auth.dto';
 
@@ -69,14 +69,22 @@ export class AliyunSmsService {
 
       // 检查响应状态
       if (response.body?.code !== 'OK') {
-        throw new Error(`短信发送失败: ${response.body?.message}`);
+        const message = response.body?.message ?? '未知错误';
+        throw new Error(`短信发送失败: ${message}`);
       }
     } catch (error) {
-      this.logger.error(`短信发送失败: ${error.message}`);
-      if (error.data && error.data['Recommend']) {
-        this.logger.error(`诊断地址: ${error.data['Recommend']}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`短信发送失败: ${errorMessage}`);
+
+      const typedError = error as Record<string, unknown>;
+      if (typedError?.data && typeof typedError.data === 'object') {
+        const data = typedError.data as Record<string, unknown>;
+        if (data?.Recommend) {
+          this.logger.error(`诊断地址: ${String(data.Recommend)}`);
+        }
       }
-      throw new Error(`短信发送失败: ${error.message}`);
+      throw new Error(`短信发送失败: ${errorMessage}`);
     }
   }
 

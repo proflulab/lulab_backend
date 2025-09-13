@@ -15,8 +15,6 @@ const mockMeetingBitableRepository = {
 
 describe('Lark Integration', () => {
   let service: TencentEventHandlerService;
-  let configService: ConfigService;
-  let meetingBitableRepository: MeetingBitableRepository;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -36,7 +34,9 @@ describe('Lark Integration', () => {
     service = module.get<TencentEventHandlerService>(
       TencentEventHandlerService,
     );
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     configService = module.get<ConfigService>(ConfigService);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     meetingBitableRepository = module.get<MeetingBitableRepository>(
       MeetingBitableRepository,
     );

@@ -319,7 +319,7 @@ export class LarkClient {
     }
 
     // Filter out null/undefined values
-    const formattedFields: Record<string, any> = {};
+    const formattedFields: Record<string, unknown> = {};
     Object.entries(baseFields).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         formattedFields[key] = value;

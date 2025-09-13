@@ -140,7 +140,9 @@ export class RecordingFileBitableRepository {
 
       return response;
     } catch (error) {
-      this.logger.error(`Error in upsertRecordingFileRecord: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error in upsertRecordingFileRecord: ${errorMessage}`);
       throw error;
     }
   }
@@ -176,7 +178,9 @@ export class RecordingFileBitableRepository {
         { filter },
       );
     } catch (error) {
-      this.logger.error(`Error in searchRecordingFileById: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error in searchRecordingFileById: ${errorMessage}`);
       throw error;
     }
   }
@@ -212,8 +216,10 @@ export class RecordingFileBitableRepository {
         { filter },
       );
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       this.logger.error(
-        `Error in searchRecordingFileBySummary: ${error.message}`,
+        `Error in searchRecordingFileBySummary: ${errorMessage}`,
       );
       throw error;
     }
@@ -258,8 +264,10 @@ export class RecordingFileBitableRepository {
         { filter },
       );
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       this.logger.error(
-        `Error in searchRecordingFileByTimeRange: ${error.message}`,
+        `Error in searchRecordingFileByTimeRange: ${errorMessage}`,
       );
       throw error;
     }

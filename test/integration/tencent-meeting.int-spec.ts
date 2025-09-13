@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { TencentApiService } from '../../src/tencent-meeting/services/tencent-api.service';
+import { config } from 'dotenv';
+config({ path: '.env.test' });
 
 // 集成测试配置
 const isIntegrationTest = process.env.RUN_INTEGRATION_TESTS === 'true';
@@ -14,9 +16,6 @@ describeIf(isIntegrationTest)('TencentApiService Integration Tests', () => {
   let configService: ConfigService;
 
   beforeAll(async () => {
-    // 确保测试环境配置已加载
-    require('dotenv').config({ path: '.env.test' });
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [TencentApiService, ConfigService],
     }).compile();
@@ -91,18 +90,20 @@ describeIf(isIntegrationTest)('TencentApiService Integration Tests', () => {
         });
       } catch (error) {
         // 处理预期的错误情况
-        if (error.message.includes('录制文件已经被删除')) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        if (errorMessage.includes('录制文件已经被删除')) {
           console.warn(
             '⚠️ Test recording file not found - this is expected in test environment',
           );
-          expect(error.message).toContain('录制文件已经被删除');
-        } else if (error.message.includes('IP白名单错误')) {
+          expect(errorMessage).toContain('录制文件已经被删除');
+        } else if (errorMessage.includes('IP白名单错误')) {
           console.error(
             '❌ IP whitelist error - please add your IP to Tencent Meeting whitelist',
           );
           throw error;
         } else {
-          console.error('❌ Unexpected API error:', error.message);
+          console.error('❌ Unexpected API error:', errorMessage);
           throw error;
         }
       }
@@ -110,10 +111,9 @@ describeIf(isIntegrationTest)('TencentApiService Integration Tests', () => {
 
     it('should handle non-existent recording file gracefully', async () => {
       const nonExistentFileId = 'non-existent-file-id-' + Date.now();
-      const testUserId = configService.get<string>('USER_ID') || '';
 
       await expect(
-        service.getRecordingFileDetail(nonExistentFileId, testUserId),
+        service.getRecordingFileDetail(nonExistentFileId, ''),
       ).rejects.toThrow(/录制文件已经被删除|API请求失败/);
     });
   });
@@ -122,7 +122,6 @@ describeIf(isIntegrationTest)('TencentApiService Integration Tests', () => {
     it('should return valid meeting records from real API', async () => {
       const now = Math.floor(Date.now() / 1000);
       const oneDayAgo = now - 24 * 60 * 60; // 24小时前
-      const testUserId = configService.get<string>('USER_ID') || '';
 
       try {
         const result = await service.getCorpRecords(oneDayAgo, now, 10, 1);
@@ -160,11 +159,13 @@ describeIf(isIntegrationTest)('TencentApiService Integration Tests', () => {
           meetingsCount: result.record_meetings?.length || 0,
         });
       } catch (error) {
-        if (error.message.includes('IP白名单错误')) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        if (errorMessage.includes('IP白名单错误')) {
           console.error('❌ IP whitelist error');
           throw error;
         } else {
-          console.error('❌ API error:', error.message);
+          console.error('❌ API error:', errorMessage);
           throw error;
         }
       }
@@ -208,10 +209,12 @@ describeIf(isIntegrationTest)('TencentApiService Integration Tests', () => {
 
           console.log(`✅ ${endpoint.name} structure validated`);
         } catch (error) {
-          if (!error.message.includes('IP白名单错误')) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          if (!errorMessage.includes('IP白名单错误')) {
             console.warn(
               `⚠️ ${endpoint.name} validation failed:`,
-              error.message,
+              errorMessage,
             );
           }
         }

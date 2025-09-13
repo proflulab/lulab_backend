@@ -53,8 +53,8 @@ export class AuthService {
   // 用户注册
   async register(
     registerDto: RegisterDto,
-    ip: string,
-    userAgent?: string,
+    _ip: string,
+    _userAgent?: string,
   ): Promise<AuthResponseDto> {
     const { type, username, email, phone, password, code, countryCode } =
       registerDto;
@@ -112,8 +112,8 @@ export class AuthService {
       email || phone || username!,
       this.getLoginType(type),
       true,
-      ip,
-      userAgent,
+      _ip,
+      _userAgent,
     );
 
     // 发送欢迎邮件
@@ -121,7 +121,9 @@ export class AuthService {
       try {
         await this.emailService.sendWelcomeEmail(email, username || 'User');
       } catch (error) {
-        this.logger.warn(`发送欢迎邮件失败: ${error.message}`);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.warn(`发送欢迎邮件失败: ${errorMessage}`);
       }
     }
 
@@ -167,7 +169,6 @@ export class AuthService {
     }
 
     // 验证登录凭据
-    let loginSuccess = false;
     let failureReason = '';
 
     try {
@@ -182,7 +183,6 @@ export class AuthService {
           failureReason = verifyResult.message;
           throw new UnauthorizedException(verifyResult.message);
         }
-        loginSuccess = true;
       } else {
         // 密码登录
         if (!user.password) {
@@ -194,7 +194,6 @@ export class AuthService {
           failureReason = '密码错误';
           throw new UnauthorizedException('用户名或密码错误');
         }
-        loginSuccess = true;
       }
 
       // 更新最后登录时间
@@ -221,6 +220,8 @@ export class AuthService {
         ...tokens,
       };
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       // 记录失败登录日志
       await this.createLoginLog(
         user.id,
@@ -229,7 +230,7 @@ export class AuthService {
         false,
         ip,
         userAgent,
-        failureReason || error.message,
+        failureReason || errorMessage,
       );
       throw error;
     }
@@ -238,8 +239,8 @@ export class AuthService {
   // 发送验证码
   async sendCode(
     sendCodeDto: SendCodeDto,
-    ip: string,
-    userAgent?: string,
+    _ip: string,
+    _userAgent?: string,
   ): Promise<{ success: boolean; message: string }> {
     const { target, type } = sendCodeDto;
 
@@ -262,7 +263,7 @@ export class AuthService {
       }
     }
 
-    return await this.verificationService.sendCode(target, type, ip, userAgent);
+    return await this.verificationService.sendCode(target, type, _ip, _userAgent);
   }
 
   // 验证验证码
@@ -327,7 +328,7 @@ export class AuthService {
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h2>密码重置通知</h2>
-              <p>您好 ${user.profile?.name || 'User'}，</p>
+              <p>您好 ${typeof user.profile === 'object' && user.profile && 'name' in user.profile ? (user.profile as any).name : 'User'}，</p>
               <p>您的 LuLab 账户密码已成功重置。</p>
               <p>重置时间：${new Date().toLocaleString('zh-CN')}</p>
               <p>如果这不是您的操作，请立即联系我们。</p>
@@ -335,7 +336,9 @@ export class AuthService {
           `,
         });
       } catch (error) {
-        this.logger.warn(`发送密码重置通知邮件失败: ${error.message}`);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.warn(`发送密码重置通知邮件失败: ${errorMessage}`);
       }
     }
 
@@ -372,10 +375,10 @@ export class AuthService {
       updateProfileDto;
 
     // 检查用户是否存在
-    const existingUser = (await this.prisma.user.findUnique({
+    const existingUser = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { profile: true },
-    })) as any;
+    });
 
     if (!existingUser) {
       throw new BadRequestException('用户不存在');
@@ -409,7 +412,7 @@ export class AuthService {
         where: {
           unique_phone_combination: {
             countryCode:
-              updateProfileDto.countryCode || existingUser.countryCode,
+              updateProfileDto.countryCode || existingUser.countryCode || '',
             phone,
           },
         },
@@ -532,7 +535,7 @@ export class AuthService {
     phone?: string,
     countryCode?: string,
   ): Promise<void> {
-    const conditions: any[] = [];
+    const conditions: Array<Record<string, unknown>> = [];
     if (username) conditions.push({ username });
     if (email) conditions.push({ email }); // 只有当email不为空时才检查
     if (phone && countryCode)
@@ -547,7 +550,7 @@ export class AuthService {
     });
 
     if (existingUser) {
-      if (username && (existingUser as any).username === username) {
+      if (username && existingUser.username === username) {
         throw new ConflictException('用户名已被注册');
       }
       if (email && existingUser.email === email) {
@@ -567,8 +570,11 @@ export class AuthService {
   private async findUserByTarget(
     target: string,
     countryCode?: string,
-  ): Promise<(User & { profile: any }) | null> {
-    const conditions: any[] = [{ username: target }, { email: target }];
+  ): Promise<(User & { profile: unknown }) | null> {
+    const conditions: Array<Record<string, unknown>> = [
+      { username: target },
+      { email: target },
+    ];
 
     // 如果提供了国家代码，则添加手机号查询条件
     if (countryCode) {
@@ -673,25 +679,25 @@ export class AuthService {
   private formatUserResponse(user: any): UserProfileResponseDto {
     return {
       id: user.id,
-      username: user.username,
-      email: user.email,
-      countryCode: user.countryCode,
-      phone: user.phone,
+      username: user.username || undefined,
+      email: user.email || '',
+      countryCode: user.countryCode || undefined,
+      phone: user.phone || undefined,
       emailVerified: !!user.emailVerifiedAt,
       phoneVerified: !!user.phoneVerifiedAt,
-      lastLoginAt: user.lastLoginAt,
+      lastLoginAt: user.lastLoginAt || undefined,
       createdAt: user.createdAt,
       profile: user.profile
         ? {
-            name: user.profile.name,
-            avatar: user.profile.avatar,
-            bio: user.profile.bio,
-            firstName: user.profile.firstName,
-            lastName: user.profile.lastName,
-            dateOfBirth: user.profile.dateOfBirth,
-            gender: user.profile.gender,
-            city: user.profile.city,
-            country: user.profile.country,
+            name: user.profile.name || undefined,
+            avatar: user.profile.avatar || undefined,
+            bio: user.profile.bio || undefined,
+            firstName: user.profile.firstName || undefined,
+            lastName: user.profile.lastName || undefined,
+            dateOfBirth: user.profile.dateOfBirth || undefined,
+            gender: user.profile.gender || undefined,
+            city: user.profile.city || undefined,
+            country: user.profile.country || undefined,
           }
         : undefined,
     };

@@ -124,7 +124,9 @@ export class MeetingUserBitableRepository {
 
       return response;
     } catch (error) {
-      this.logger.error(`Error in upsertMeetingUserRecord: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error in upsertMeetingUserRecord: ${errorMessage}`);
       throw error;
     }
   }
@@ -132,7 +134,7 @@ export class MeetingUserBitableRepository {
   /**
    * Search user records by uuid
    */
-  async searchMeetingUserByUuid(uuid: string): Promise<any> {
+  async searchMeetingUserByUuid(uuid: string): Promise<unknown> {
     const searchConditions: Array<{
       field_name: string;
       operator: 'is';
@@ -158,7 +160,9 @@ export class MeetingUserBitableRepository {
         { filter },
       );
     } catch (error) {
-      this.logger.error(`Error in searchUserByUuid: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error in searchUserByUuid: ${errorMessage}`);
       throw error;
     }
   }
@@ -166,7 +170,7 @@ export class MeetingUserBitableRepository {
   /**
    * Search user records by userid
    */
-  async searchMeetingUserByUserid(userid: string): Promise<any> {
+  async searchMeetingUserByUserid(userid: string): Promise<unknown> {
     const searchConditions: Array<{
       field_name: string;
       operator: 'is';
@@ -192,7 +196,9 @@ export class MeetingUserBitableRepository {
         { filter },
       );
     } catch (error) {
-      this.logger.error(`Error in searchUserByUserid: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error in searchUserByUserid: ${errorMessage}`);
       throw error;
     }
   }
@@ -200,7 +206,7 @@ export class MeetingUserBitableRepository {
   /**
    * Search user records by user_name
    */
-  async searchMeetingUserByuser_name(user_name: string): Promise<any> {
+  async searchMeetingUserByuser_name(user_name: string): Promise<unknown> {
     const searchConditions: Array<{
       field_name: string;
       operator: 'is';
@@ -226,7 +232,9 @@ export class MeetingUserBitableRepository {
         { filter },
       );
     } catch (error) {
-      this.logger.error(`Error in searchUserByuser_name: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error in searchUserByuser_name: ${errorMessage}`);
       throw error;
     }
   }
@@ -248,7 +256,9 @@ export class MeetingUserBitableRepository {
     };
 
     // 首先查找用户记录
-    const searchResult = await this.searchMeetingUserByUuid(uuid);
+    const searchResult = (await this.searchMeetingUserByUuid(uuid)) as {
+      data?: { items?: Array<{ record_id: string }> };
+    };
 
     if (searchResult.data?.items && searchResult.data.items.length > 0) {
       const existingRecord = searchResult.data.items[0];
@@ -270,7 +280,7 @@ export class MeetingUserBitableRepository {
    */
   async searchMeetingUsersByEnterpriseStatus(
     isEnterpriseUser: boolean,
-  ): Promise<any> {
+  ): Promise<unknown> {
     const searchConditions: Array<{
       field_name: string;
       operator: 'is';
@@ -298,8 +308,10 @@ export class MeetingUserBitableRepository {
         { filter },
       );
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       this.logger.error(
-        `Error in searchUsersByEnterpriseStatus: ${error.message}`,
+        `Error in searchUsersByEnterpriseStatus: ${errorMessage}`,
       );
       throw error;
     }

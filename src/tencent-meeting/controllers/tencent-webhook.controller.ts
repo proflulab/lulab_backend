@@ -25,6 +25,7 @@ import {
   verifySignature,
   aesDecrypt,
   verifyWebhookUrl,
+  generateSignature,
 } from '../services/tencent-crypto.service';
 import { TencentMeetingEvent } from '../types/tencent-webhook-events.types';
 import {
@@ -191,9 +192,11 @@ export class TencentWebhookController {
           decryptedData = await aesDecrypt(encryptedData, encodingAesKey);
         } catch (error) {
           this.logger.error('Failed to decrypt event data', error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           throw new WebhookDecryptionException(
             'TENCENT_MEETING',
-            `Failed to decrypt event data: ${error.message}`,
+            `Failed to decrypt event data: ${errorMessage}`,
           );
         }
 

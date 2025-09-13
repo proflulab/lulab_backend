@@ -386,11 +386,7 @@ export class BitableService {
       matchMode = 'exact',
       caseSensitive = false,
     } = queryConditions;
-    const {
-      mergeFields = false,
-      excludeFields = [],
-      returnFullRecord = true,
-    } = options || {};
+    const { mergeFields = false, excludeFields = [] } = options || {};
 
     try {
       // 1. 构建查询条件
@@ -459,7 +455,9 @@ export class BitableService {
 
       throw new Error('创建记录失败：未返回记录数据');
     } catch (error) {
-      this.logger.error(`执行upsert操作时出错: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`执行upsert操作时出错: ${errorMessage}`);
       throw error;
     }
   }
@@ -553,8 +551,10 @@ export class BitableService {
             index: i + batchIndex,
           };
         } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           this.logger.error(
-            `批量upsert中第${i + batchIndex}条记录失败: ${error.message}`,
+            `批量upsert中第${i + batchIndex}条记录失败: ${errorMessage}`,
           );
           throw error;
         }
@@ -588,8 +588,10 @@ export class BitableService {
         let searchValue: string[];
         if (Array.isArray(value)) {
           searchValue = value.map((v) =>
-            typeof v === 'object' ? JSON.stringify(v) : String(v),
+            typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v),
           );
+        } else if (typeof value === 'object' && value !== null) {
+          searchValue = [JSON.stringify(value)];
         } else {
           searchValue = [String(value)];
         }

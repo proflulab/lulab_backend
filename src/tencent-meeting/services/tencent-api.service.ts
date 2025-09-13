@@ -117,18 +117,19 @@ export class TencentApiService {
     });
 
     // 特殊处理IP白名单错误
+    const errorMessage = errorInfo.message || String(errorInfo);
     if (errorInfo.error_code === 500125) {
       throw new Error(
-        `IP白名单错误: ${errorInfo.message}\n请确保已在腾讯会议应用配置中添加当前服务器IP到白名单。`,
+        `IP白名单错误: ${errorMessage}\n请确保已在腾讯会议应用配置中添加当前服务器IP到白名单。`,
       );
     }
 
     if (errorInfo.error_code === 108004051) {
-      throw new Error(`录制文件已经被删除: ${errorInfo.message}\n`);
+      throw new Error(`录制文件已经被删除: ${errorMessage}\n`);
     }
 
     throw new Error(
-      `API请求失败: ${errorInfo.message} (错误码: ${errorInfo.error_code})`,
+      `API请求失败: ${errorMessage} (错误码: ${errorInfo.error_code})`,
     );
   }
 

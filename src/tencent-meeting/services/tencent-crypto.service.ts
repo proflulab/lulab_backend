@@ -1,4 +1,4 @@
-import { createHash, createHmac } from 'crypto';
+import { createHash, createHmac } from 'node:crypto';
 import {
   WebhookSignatureVerificationException,
   WebhookUrlVerificationException,
@@ -47,7 +47,7 @@ export async function aesDecrypt(
   key: string,
 ): Promise<string> {
   // 1. 导入Web Crypto API
-  const crypto = globalThis.crypto;
+  const crypto = (globalThis as typeof globalThis & { crypto?: Crypto }).crypto;
   if (!crypto) {
     throw new Error('Web Crypto API is not available');
   }
@@ -116,13 +116,8 @@ export async function aesDecrypt(
 
     return decoded;
   } catch (error) {
-    // 提供更详细的错误信息
-    if (error.name === 'OperationError') {
-      throw new Error(
-        `Decryption failed: ${error.message}. Please check if the encodingAesKey is correct.`,
-      );
-    }
-    throw new Error(`AES decryption failed: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`AES decryption failed: ${errorMessage}`);
   }
 }
 
@@ -177,9 +172,10 @@ export async function verifyWebhookUrl(
     ) {
       throw error;
     }
+    const errorMessage = error instanceof Error ? error.message : String(error);
     throw new WebhookUrlVerificationException(
       'TENCENT_MEETING',
-      `URL verification failed: ${error.message}`,
+      `URL verification failed: ${errorMessage}`,
     );
   }
 }

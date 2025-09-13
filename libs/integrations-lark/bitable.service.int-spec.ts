@@ -193,16 +193,24 @@ describe('BitableService (Integration Tests)', () => {
       // 处理可能的富文本格式
       const textField = searchResult.data?.items?.[0]?.fields?.['测试文本'];
       let textValue = '';
+      interface TextFieldItem {
+        text?: string;
+        [key: string]: unknown;
+      }
+
       if (Array.isArray(textField)) {
         if (textField.length > 0) {
           const firstItem = textField[0];
-          textValue =
-            typeof firstItem === 'object' && firstItem !== null
-              ? (firstItem as any).text || String(firstItem)
-              : String(firstItem);
+          if (typeof firstItem === 'object' && firstItem !== null) {
+            const textItem = firstItem as TextFieldItem;
+            textValue = textItem.text || JSON.stringify(firstItem);
+          } else {
+            textValue = String(firstItem);
+          }
         }
       } else if (typeof textField === 'object' && textField !== null) {
-        textValue = (textField as any).text || String(textField);
+        const textItem = textField as TextFieldItem;
+        textValue = textItem.text || JSON.stringify(textField);
       } else {
         textValue = String(textField || '');
       }
@@ -626,18 +634,29 @@ describe('BitableService (Integration Tests)', () => {
       // 处理富文本格式
       const textField = getResult.data?.records?.[0]?.fields?.['测试文本'];
       let textValue = '';
+      interface TextFieldItem {
+        text?: string;
+        [key: string]: unknown;
+      }
+
       if (Array.isArray(textField) && textField.length > 0) {
         const firstItem = textField[0];
-        textValue = (firstItem as any)?.text || String(firstItem);
+        if (typeof firstItem === 'object' && firstItem !== null) {
+          const textItem = firstItem as TextFieldItem;
+          textValue = textItem.text || JSON.stringify(firstItem);
+        } else {
+          textValue = String(firstItem);
+        }
       } else if (typeof textField === 'object' && textField !== null) {
-        textValue = (textField as any).text || String(textField);
+        const textItem = textField as TextFieldItem;
+        textValue = textItem.text || JSON.stringify(textField);
       } else {
         textValue = String(textField || '');
       }
       expect(textValue).toBe('搜索迭代器测试');
-      expect(String(getResult.data?.records?.[0]?.fields?.['测试数字'])).toBe(
-        String(uniqueNum),
-      );
+
+      const numberField = getResult.data?.records?.[0]?.fields?.['测试数字'];
+      expect(Number(numberField)).toBe(uniqueNum);
     });
   });
 

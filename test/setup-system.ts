@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { execSync } from 'child_process';
 
 // 系统测试环境设置
-const setupSystemTests = async () => {
+const setupSystemTests = () => {
   console.log('🚀 Setting up system test environment...');
 
   // 确保测试数据库可用
@@ -26,12 +26,12 @@ const setupSystemTests = async () => {
 };
 
 // 全局设置
-beforeAll(async () => {
-  await setupSystemTests();
+beforeAll(() => {
+  setupSystemTests();
 }, 120000);
 
 // 全局清理
-afterAll(async () => {
+afterAll(() => {
   console.log('🧹 Cleaning up system test environment...');
   // 清理测试数据
   try {

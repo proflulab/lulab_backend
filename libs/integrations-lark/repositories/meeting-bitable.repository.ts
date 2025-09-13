@@ -139,7 +139,9 @@ export class MeetingBitableRepository {
 
       return response;
     } catch (error) {
-      this.logger.error(`Error in upsertMeetingRecord: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error in upsertMeetingRecord: ${errorMessage}`);
       throw error;
     }
   }

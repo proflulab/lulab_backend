@@ -88,7 +88,10 @@ export class TencentMeetingService {
       this.logger.log(`成功获取录制文件详情: ${fileId}`);
       return result;
     } catch (error) {
-      this.logger.error(`获取录制文件详情失败: ${fileId}`, error);
+      this.logger.error(
+        `获取录制文件详情失败: ${fileId}`,
+        error instanceof Error ? error.message : String(error),
+      );
       throw new PlatformApiException(
         'TENCENT_MEETING',
         'getRecordingFileDetail',
@@ -128,7 +131,10 @@ export class TencentMeetingService {
       this.logger.log(`成功获取会议录制列表，共 ${result.total_count} 条记录`);
       return result;
     } catch (error) {
-      this.logger.error(`获取会议录制列表失败`, error);
+      this.logger.error(
+        `获取会议录制列表失败`,
+        error instanceof Error ? error.message : String(error),
+      );
       throw new PlatformApiException(
         'TENCENT_MEETING',
         'getCorpRecords',
@@ -159,7 +165,10 @@ export class TencentMeetingService {
       this.logger.log(`成功获取会议详情: ${meetingId}`);
       return result;
     } catch (error) {
-      this.logger.error(`获取会议详情失败: ${meetingId}`, error);
+      this.logger.error(
+        `获取会议详情失败: ${meetingId}`,
+        error instanceof Error ? error.message : String(error),
+      );
       throw new PlatformApiException(
         'TENCENT_MEETING',
         'getMeetingDetail',
@@ -192,7 +201,10 @@ export class TencentMeetingService {
       );
       return result;
     } catch (error) {
-      this.logger.error(`获取会议参会成员列表失败: ${meetingId}`, error);
+      this.logger.error(
+        `获取会议参会成员列表失败: ${meetingId}`,
+        error instanceof Error ? error.message : String(error),
+      );
       throw new PlatformApiException(
         'TENCENT_MEETING',
         'getMeetingParticipants',
@@ -213,7 +225,10 @@ export class TencentMeetingService {
       this.logger.log(`成功从URL获取文本内容，长度: ${result.length}`);
       return result;
     } catch (error) {
-      this.logger.error(`从URL获取文本内容失败: ${url}`, error);
+      this.logger.error(
+        `从URL获取文本内容失败: ${url}`,
+        error instanceof Error ? error.message : String(error),
+      );
       throw new PlatformApiException(
         'TENCENT_MEETING',
         'fetchTextFromUrl',
@@ -240,9 +255,11 @@ export class TencentMeetingService {
       };
     } catch (error) {
       this.logger.error('腾讯会议API连接测试失败', error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       return {
         success: false,
-        message: `Tencent Meeting API connection failed: ${error.message}`,
+        message: `Tencent Meeting API connection failed: ${errorMessage}`,
       };
     }
   }

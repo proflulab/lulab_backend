@@ -2,13 +2,17 @@ export const TestConfig = {
   // 数据库配置
   database: {
     test: {
-      url: process.env.DATABASE_URL_TEST || 'postgresql://localhost:5432/lulab_test',
+      url:
+        process.env.DATABASE_URL_TEST ||
+        'postgresql://localhost:5432/lulab_test',
       logging: false,
       synchronize: true,
       dropSchema: true,
     },
     integration: {
-      url: process.env.DATABASE_URL_INTEGRATION || 'postgresql://localhost:5432/lulab_integration',
+      url:
+        process.env.DATABASE_URL_INTEGRATION ||
+        'postgresql://localhost:5432/lulab_integration',
       logging: false,
       synchronize: true,
     },

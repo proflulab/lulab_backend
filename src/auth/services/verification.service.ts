@@ -228,8 +228,10 @@ export class VerificationService {
     try {
       await this.aliyunSmsService.sendSms(phone, code, type, countryCode);
     } catch (error) {
-      console.error('短信发送失败:', error.message);
-      throw new BadRequestException(`短信发送失败: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error('短信发送失败:', errorMessage);
+      throw new BadRequestException(`短信发送失败: ${errorMessage}`);
     }
   }
 

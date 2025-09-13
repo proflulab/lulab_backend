@@ -116,7 +116,7 @@ export class TestUtils {
     // 清理上传的测试文件
     const fs = require('fs');
     const path = require('path');
-    
+
     const testUploadsDir = path.join(__dirname, '../../uploads/test');
     if (fs.existsSync(testUploadsDir)) {
       fs.rmSync(testUploadsDir, { recursive: true, force: true });

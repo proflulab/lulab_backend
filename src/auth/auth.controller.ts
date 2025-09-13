@@ -123,10 +123,10 @@ export class AuthController {
   async logout(): Promise<{ success: boolean; message: string }> {
     // JWT是无状态的，客户端删除token即可
     // 如果需要实现token黑名单，可以在这里添加逻辑
-    return {
+    return Promise.resolve({
       success: true,
       message: '退出登录成功',
-    };
+    });
   }
 
   private getClientIp(req: Request): string {

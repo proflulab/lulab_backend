@@ -6,7 +6,6 @@ import {
   IsEnum,
   MinLength,
   Matches,
-  IsPhoneNumber,
 } from 'class-validator';
 
 // 注册/登录类型枚举

@@ -16,16 +16,13 @@ export interface CurrentUser {
   username?: string;
   email?: string;
   phone?: string;
-  profile?: any;
+  profile?: Record<string, unknown>;
 }
 
 export const User = createParamDecorator(
-  (
-    data: keyof CurrentUser | undefined,
-    ctx: ExecutionContext,
-  ): CurrentUser | any => {
+  (data: keyof CurrentUser | undefined, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest();
-    const user = request.user;
+    const user = request.user as CurrentUser | undefined;
 
     return data ? user?.[data] : user;
   },

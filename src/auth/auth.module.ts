@@ -16,7 +16,7 @@ import { EmailService } from '../email/email.service';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET') || 'your-secret-key',
         signOptions: {
           expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '15m',

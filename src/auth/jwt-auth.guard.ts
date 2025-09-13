@@ -29,9 +29,15 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
-    if (err || !user) {
-      throw err || new UnauthorizedException('访问令牌无效或已过期');
+  handleRequest<TUser = any>(err: any, user: any, info: any, context: ExecutionContext, status?: any): TUser {
+    if (err) {
+      if (err instanceof Error) {
+        throw err;
+      }
+      throw new Error(err instanceof Error ? err.message : String(err));
+    }
+    if (!user) {
+      throw new UnauthorizedException('访问令牌无效或已过期');
     }
     return user;
   }

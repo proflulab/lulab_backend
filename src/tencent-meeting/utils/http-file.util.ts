@@ -33,7 +33,9 @@ export class HttpFileUtil {
       return text;
     } catch (error) {
       this.logger.error(`从URL获取文本内容失败: ${url}`, error);
-      throw new Error(`无法从URL获取文件内容: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      throw new Error(`无法从URL获取文件内容: ${errorMessage}`);
     }
   }
 
@@ -48,7 +50,9 @@ export class HttpFileUtil {
       return JSON.parse(text);
     } catch (error) {
       this.logger.error(`解析JSON失败: ${url}`, error);
-      throw new Error(`无法解析JSON数据: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      throw new Error(`无法解析JSON数据: ${errorMessage}`);
     }
   }
 
@@ -78,7 +82,9 @@ export class HttpFileUtil {
       return Buffer.from(buffer);
     } catch (error) {
       this.logger.error(`下载文件失败: ${url}`, error);
-      throw new Error(`无法下载文件: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      throw new Error(`无法下载文件: ${errorMessage}`);
     }
   }
 

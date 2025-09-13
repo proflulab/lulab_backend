@@ -57,9 +57,11 @@ export class EmailService {
     this.transporter = nodemailer.createTransport(emailConfig);
 
     // 验证邮件配置
-    this.transporter.verify((error, success) => {
+    this.transporter.verify((error: Error | null, success: boolean) => {
       if (error) {
-        this.logger.warn('邮件服务配置错误，邮件功能将不可用:', error.message);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.warn('邮件服务配置错误，邮件功能将不可用:', errorMessage);
       } else {
         this.logger.log('邮件服务已就绪');
       }
@@ -102,11 +104,16 @@ export class EmailService {
         messageId: info.messageId,
       };
     } catch (error) {
-      this.logger.error(`邮件发送失败: ${error.message}`, error.stack);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        `邮件发送失败: ${errorMessage}`,
+        error instanceof Error ? error.stack : undefined,
+      );
 
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
       };
     }
   }
@@ -121,7 +128,9 @@ export class EmailService {
       this.logger.log('SMTP连接验证成功');
       return true;
     } catch (error) {
-      this.logger.warn(`SMTP连接验证失败: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.warn(`SMTP连接验证失败: ${errorMessage}`);
       return false;
     }
   }
@@ -150,7 +159,9 @@ export class EmailService {
         `邮件发送成功: ${options.to}, MessageId: ${result.messageId}`,
       );
     } catch (error) {
-      this.logger.error(`邮件发送失败: ${options.to}`, error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`邮件发送失败: ${options.to}`, errorMessage);
       throw error;
     }
   }

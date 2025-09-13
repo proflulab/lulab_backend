@@ -8,16 +8,13 @@ export class BitableFieldValidator {
    * Validate required fields are present
    */
   static validateRequiredFields(
-    fields: Record<string, any>,
+    fields: Record<string, unknown>,
     requiredFields: string[],
   ): void {
     for (const field of requiredFields) {
-      if (
-        fields[field] === undefined ||
-        fields[field] === null ||
-        fields[field] === ''
-      ) {
-        throw new InvalidFieldException(field, fields[field]);
+      const value = fields[field];
+      if (value === undefined || value === null || value === '') {
+        throw new InvalidFieldException(field, value);
       }
     }
   }
@@ -25,7 +22,7 @@ export class BitableFieldValidator {
   /**
    * Validate field types
    */
-  static validateFieldTypes(fields: Record<string, any>): void {
+  static validateFieldTypes(fields: Record<string, unknown>): void {
     Object.entries(fields).forEach(([fieldName, fieldValue]) => {
       // Skip null/undefined values
       if (fieldValue === null || fieldValue === undefined) {
@@ -78,8 +75,10 @@ export class BitableFieldValidator {
   /**
    * Clean and normalize field values
    */
-  static normalizeFields(fields: Record<string, any>): Record<string, any> {
-    const normalized: Record<string, any> = {};
+  static normalizeFields(
+    fields: Record<string, unknown>,
+  ): Record<string, unknown> {
+    const normalized: Record<string, unknown> = {};
 
     Object.entries(fields).forEach(([fieldName, fieldValue]) => {
       // Skip null/undefined values
@@ -108,9 +107,9 @@ export class BitableFieldValidator {
    * Validate and normalize fields in one step
    */
   static validateAndNormalize(
-    fields: Record<string, any>,
+    fields: Record<string, unknown>,
     requiredFields: string[] = [],
-  ): Record<string, any> {
+  ): Record<string, unknown> {
     const normalized = this.normalizeFields(fields);
     this.validateRequiredFields(normalized, requiredFields);
     this.validateFieldTypes(normalized);
