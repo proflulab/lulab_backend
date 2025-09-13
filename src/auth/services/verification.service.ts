@@ -5,9 +5,9 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { VerificationRepository } from '../repositories/verification.repository';
-import { EmailService } from '../../email/email.service';
+import { EmailService } from '@/email/email.service';
 import { AliyunSmsService } from '@libs/integrations/aliyun/aliyun-sms.service';
-import { CodeType } from '../dto/auth.dto';
+import { CodeType } from '../enums/code-type.enum';
 import { VerificationCodeType } from '@prisma/client';
 import {
   generateNumericCode,

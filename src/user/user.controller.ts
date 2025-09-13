@@ -18,10 +18,10 @@ import {
   ApiConsumes,
 } from '@nestjs/swagger';
 import { Request } from 'express';
-import { AuthService } from '../auth/services/auth.service';
-import { JwtAuthGuard } from '@libs/security';
-import { User, CurrentUser } from '../auth/decorators/user.decorator';
-import { UpdateProfileDto, UserProfileResponseDto } from '../auth/dto/auth.dto';
+import { AuthService } from '@/auth/services/auth.service';
+import { JwtAuthGuard, User, CurrentUser } from '@libs/security';
+import { UpdateProfileDto } from '@/auth/dto/update-profile.dto';
+import { UserProfileResponseDto } from '@/auth/dto/user-profile-response.dto';
 
 @ApiTags('User')
 @Controller('api/user')

@@ -8,9 +8,9 @@ import { VerificationService } from './services/verification.service';
 import { AliyunModule } from '@libs/integrations/aliyun/aliyun.module';
 import { AliyunSmsService } from '@libs/integrations/aliyun/aliyun-sms.service';
 import { JwtStrategy, JwtAuthGuard } from '@libs/security';
-import { PrismaService } from '../prisma.service';
+import { PrismaService } from '@/prisma.service';
 import { VerificationRepository } from './repositories/verification.repository';
-import { EmailModule } from '../email/email.module';
+import { EmailModule } from '@/email/email.module';
 import { AuthRepository } from './repositories/auth.repository';
 
 @Module({

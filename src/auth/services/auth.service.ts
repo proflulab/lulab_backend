@@ -10,19 +10,17 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { AuthRepository } from '../repositories/auth.repository';
 import { VerificationService } from './verification.service';
-import { EmailService } from '../../email/email.service';
-import {
-  RegisterDto,
-  LoginDto,
-  SendCodeDto,
-  VerifyCodeDto,
-  ResetPasswordDto,
-  UpdateProfileDto,
-  AuthResponseDto,
-  UserProfileResponseDto,
-  AuthType,
-  CodeType,
-} from '../dto/auth.dto';
+import { EmailService } from '@/email/email.service';
+import { RegisterDto } from '../dto/register.dto';
+import { LoginDto } from '../dto/login.dto';
+import { SendCodeDto } from '../dto/send-code.dto';
+import { VerifyCodeDto } from '../dto/verify-code.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
+import { UpdateProfileDto } from '../dto/update-profile.dto';
+import { AuthResponseDto } from '../dto/auth-response.dto';
+import { UserProfileResponseDto } from '../dto/user-profile-response.dto';
+import { AuthType } from '../enums/auth-type.enum';
+import { CodeType } from '../enums/code-type.enum';
 import * as bcrypt from 'bcryptjs';
 import { isStrongPassword } from '@libs/common/utils';
 import { User, UserProfile } from '@prisma/client';

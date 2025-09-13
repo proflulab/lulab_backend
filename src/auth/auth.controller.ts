@@ -21,14 +21,12 @@ import {
 import { Request } from 'express';
 import { AuthService } from './services/auth.service';
 import { JwtAuthGuard, Public } from '@libs/security';
-import {
-  RegisterDto,
-  LoginDto,
-  SendCodeDto,
-  VerifyCodeDto,
-  ResetPasswordDto,
-  AuthResponseDto,
-} from './dto/auth.dto';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+import { SendCodeDto } from './dto/send-code.dto';
+import { VerifyCodeDto } from './dto/verify-code.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { AuthResponseDto } from './dto/auth-response.dto';
 
 @ApiTags('Auth')
 @Controller({
