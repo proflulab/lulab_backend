@@ -3,13 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../prisma.service';
 import { ConfigService } from '@nestjs/config';
-
-export interface JwtPayload {
-  sub: string;
-  username?: string;
-  iat?: number;
-  exp?: number;
-}
+import { JwtPayload, AuthenticatedUser } from './types';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -24,7 +18,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtPayload) {
+  async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
       include: {
@@ -47,8 +41,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return {
       id: user.id,
       username: user.username,
-      email: user.email,
+      email: user.email || '',
       phone: user.phone,
+      countryCode: user.countryCode,
       profile: user.profile,
     };
   }

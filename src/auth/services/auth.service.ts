@@ -25,16 +25,7 @@ import {
 } from '../../dto/auth.dto';
 import * as bcrypt from 'bcryptjs';
 import { User } from '@prisma/client';
-
-// 定义登录日志类型枚举
-enum LoginLogType {
-  USERNAME_PASSWORD = 'USERNAME_PASSWORD',
-  EMAIL_PASSWORD = 'EMAIL_PASSWORD',
-  EMAIL_CODE = 'EMAIL_CODE',
-  PHONE_PASSWORD = 'PHONE_PASSWORD',
-  PHONE_CODE = 'PHONE_CODE',
-  PASSWORD_RESET = 'PASSWORD_RESET',
-}
+import { LoginType } from '../types';
 
 @Injectable()
 export class AuthService {
@@ -48,7 +39,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly verificationService: VerificationService,
     private readonly emailService: EmailService,
-  ) {}
+  ) { }
 
   // 用户注册
   async register(
@@ -312,7 +303,7 @@ export class AuthService {
     await this.createLoginLog(
       user.id,
       target,
-      LoginLogType.PASSWORD_RESET,
+      LoginType.PASSWORD_RESET,
       true,
       ip,
       userAgent,
@@ -639,7 +630,7 @@ export class AuthService {
   private async createLoginLog(
     userId: string | null,
     target: string,
-    type: LoginLogType,
+    type: LoginType,
     success: boolean,
     ip: string,
     userAgent?: string,
@@ -689,16 +680,16 @@ export class AuthService {
       createdAt: user.createdAt,
       profile: user.profile
         ? {
-            name: user.profile.name || undefined,
-            avatar: user.profile.avatar || undefined,
-            bio: user.profile.bio || undefined,
-            firstName: user.profile.firstName || undefined,
-            lastName: user.profile.lastName || undefined,
-            dateOfBirth: user.profile.dateOfBirth || undefined,
-            gender: user.profile.gender || undefined,
-            city: user.profile.city || undefined,
-            country: user.profile.country || undefined,
-          }
+          name: user.profile.name || undefined,
+          avatar: user.profile.avatar || undefined,
+          bio: user.profile.bio || undefined,
+          firstName: user.profile.firstName || undefined,
+          lastName: user.profile.lastName || undefined,
+          dateOfBirth: user.profile.dateOfBirth || undefined,
+          gender: user.profile.gender || undefined,
+          city: user.profile.city || undefined,
+          country: user.profile.country || undefined,
+        }
         : undefined,
     };
   }
@@ -716,14 +707,14 @@ export class AuthService {
     }
   }
 
-  private getLoginType(authType: AuthType): LoginLogType {
+  private getLoginType(authType: AuthType): LoginType {
     const typeMap = {
-      [AuthType.USERNAME_PASSWORD]: LoginLogType.USERNAME_PASSWORD,
-      [AuthType.EMAIL_PASSWORD]: LoginLogType.EMAIL_PASSWORD,
-      [AuthType.EMAIL_CODE]: LoginLogType.EMAIL_CODE,
-      [AuthType.PHONE_PASSWORD]: LoginLogType.PHONE_PASSWORD,
-      [AuthType.PHONE_CODE]: LoginLogType.PHONE_CODE,
+      [AuthType.USERNAME_PASSWORD]: LoginType.USERNAME_PASSWORD,
+      [AuthType.EMAIL_PASSWORD]: LoginType.EMAIL_PASSWORD,
+      [AuthType.EMAIL_CODE]: LoginType.EMAIL_CODE,
+      [AuthType.PHONE_PASSWORD]: LoginType.PHONE_PASSWORD,
+      [AuthType.PHONE_CODE]: LoginType.PHONE_CODE,
     };
-    return typeMap[authType] || LoginLogType.USERNAME_PASSWORD;
+    return typeMap[authType] || LoginType.USERNAME_PASSWORD;
   }
 }

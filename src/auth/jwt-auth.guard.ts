@@ -6,6 +6,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
+import { AuthenticatedUser } from './types';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -29,16 +30,19 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  handleRequest<TUser = any>(err: any, user: any, info: any, context: ExecutionContext, status?: any): TUser {
+  handleRequest<TUser = AuthenticatedUser>(
+    err: Error | null,
+    user: AuthenticatedUser | null | undefined,
+    info: unknown,
+    context: ExecutionContext,
+    status?: number
+  ): TUser {
     if (err) {
-      if (err instanceof Error) {
-        throw err;
-      }
-      throw new Error(err instanceof Error ? err.message : String(err));
+      throw err;
     }
     if (!user) {
       throw new UnauthorizedException('访问令牌无效或已过期');
     }
-    return user;
+    return user as TUser;
   }
 }
