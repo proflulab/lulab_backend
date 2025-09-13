@@ -10,7 +10,6 @@
  */
 
 // 集成测试设置文件
-import { ConfigService } from '@nestjs/config';
 try {
   require('dotenv').config({ path: '.env.test' });
 } catch (error) {

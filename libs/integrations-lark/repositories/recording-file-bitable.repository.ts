@@ -10,6 +10,7 @@ import {
 
 interface RecordingFileData {
   record_file_id: string;
+  meet: string[];
   participants?: string[];
   start_time?: number;
   end_time?: number;
@@ -53,6 +54,9 @@ export class RecordingFileBitableRepository {
   ): Promise<CreateRecordResponse> {
     const fields: BitableField = {
       record_file_id: recordingData.record_file_id,
+      ...(recordingData.meet && {
+        meet: recordingData.meet,
+      }),
       ...(recordingData.participants && {
         participants: recordingData.participants,
       }),
@@ -87,6 +91,9 @@ export class RecordingFileBitableRepository {
   ): Promise<CreateRecordResponse | UpdateRecordResponse> {
     const fields: BitableField = {
       record_file_id: recordingData.record_file_id,
+      ...(recordingData.meet && {
+        meet: recordingData.meet,
+      }),
       ...(recordingData.participants && {
         participants: recordingData.participants,
       }),

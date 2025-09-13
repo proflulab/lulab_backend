@@ -5,6 +5,7 @@ import { BitableService } from './bitable.service';
 import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
+  RecordingFileBitableRepository,
 } from './repositories';
 
 @Module({
@@ -14,12 +15,14 @@ import {
     BitableService,
     MeetingBitableRepository,
     MeetingUserBitableRepository,
+    RecordingFileBitableRepository,
   ],
   exports: [
     LarkClient,
     BitableService,
     MeetingBitableRepository,
     MeetingUserBitableRepository,
+    RecordingFileBitableRepository,
   ],
 })
 export class LarkModule {}

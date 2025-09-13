@@ -31,7 +31,7 @@ import {
 export class BitableService {
   private readonly logger = new Logger(BitableService.name);
 
-  constructor(private readonly larkClient: LarkClient) { }
+  constructor(private readonly larkClient: LarkClient) {}
 
   /**
    * Create a simple record with common field types

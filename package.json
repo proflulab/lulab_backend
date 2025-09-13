@@ -20,9 +20,15 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:integration": "RUN_INTEGRATION_TESTS=true jest --config ./test/jest-integration.json",
-    "test:integration:watch": "RUN_INTEGRATION_TESTS=true jest --config ./test/jest-integration.json --watch",
+    "test:unit": "jest --selectProjects unit",
+    "test:unit:watch": "jest --selectProjects unit --watch",
+    "test:integration": "jest --selectProjects integration",
+    "test:integration:watch": "jest --selectProjects integration --watch",
+    "test:system": "jest --selectProjects system",
+    "test:system:watch": "jest --selectProjects system --watch",
+    "test:e2e": "jest --selectProjects e2e",
+    "test:all": "jest --selectProjects unit,integration,system,e2e",
+    "test:ci": "jest --selectProjects unit,integration,system,e2e --coverage",
     "validate:tencent-api": "tsx scripts/validate-tencent-api.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
@@ -96,26 +102,5 @@
     "tsx": "^4.20.3",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node",
-    "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/$1",
-      "^@libs/(.*)$": "<rootDir>/../libs/$1"
-    }
-  }
+   }
 }

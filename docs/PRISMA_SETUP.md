@@ -18,7 +18,25 @@
 
 ### 3. 数据模型
 
-目前 schema 中没有定义数据模型，可以根据需要添加。
+Prisma schema 包含多个模型文件，位于 `prisma/models/` 目录中：
+
+- `auth.prisma` - 认证相关模型
+- `channel.prisma` - 渠道相关模型
+- `curriculum.prisma` - 课程相关模型
+- `department.prisma` - 部门相关模型
+- `login.prisma` - 登录相关模型
+- `meet.prisma` - 会议相关模型（核心功能）
+- `order.prisma` - 订单相关模型
+- `organization.prisma` - 组织相关模型
+- `permission.prisma` - 权限相关模型
+- `product.prisma` - 产品相关模型
+- `profile.prisma` - 用户档案相关模型
+- `project.prisma` - 项目相关模型
+- `refund.prisma` - 退款相关模型
+- `relations.prisma` - 关系相关模型
+- `role.prisma` - 角色相关模型
+- `user.prisma` - 用户相关模型
+- `verification.prisma` - 验证相关模型
 
 ### 4. NestJS 服务
 

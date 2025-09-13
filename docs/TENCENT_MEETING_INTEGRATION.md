@@ -16,17 +16,38 @@
 
 ```text
 src/
-├── meeting/                          # 会议模块
-│   ├── dto/
-│   │   └── meeting.dto.ts           # 数据传输对象
-│   ├── meeting.controller.ts        # 控制器 - 处理HTTP请求
-│   ├── meeting.service.ts           # 服务层 - 业务逻辑
-│   └── meeting.module.ts            # 模块配置
-└── utils/
-    └── tencent-meeting/             # 腾讯会议工具类
-        ├── crypto.ts                # 加密解密工具
-        ├── types.ts                 # 类型定义
-        └── meeting-api.service.ts   # API服务
+└── tencent-meeting/                        # 腾讯会议模块
+    ├── controllers/                        # 控制器
+    │   ├── tencent-webhook.controller.ts   # Webhook控制器
+    │   └── tencent-webhook.controller.spec.ts # 控制器测试
+    ├── decorators/                         # 装饰器
+    │   └── tencent-webhook.decorators.ts   # Webhook装饰器
+    ├── dto/                                # 数据传输对象
+    │   └── tencent-webhook-body.dto.ts     # Webhook请求体DTO
+    ├── exceptions/                         # 异常处理
+    │   ├── meeting.exceptions.ts           # 会议相关异常
+    │   └── webhook.exceptions.ts           # Webhook相关异常
+    ├── interceptors/                       # 拦截器
+    │   └── webhook-logging.interceptor.ts  # Webhook日志拦截器
+    ├── services/                           # 服务层
+    │   ├── event-handlers/                 # 事件处理器
+    │   │   ├── base-event.handler.ts       # 基础事件处理器
+    │   │   ├── event-handler.factory.ts    # 事件处理器工厂
+    │   │   ├── meeting-ended.handler.ts    # 会议结束事件处理器
+    │   │   ├── meeting-started.handler.ts  # 会议开始事件处理器
+    │   │   └── recording-completed.handler.ts # 录制完成事件处理器
+    │   ├── tencent-api.service.ts          # 腾讯会议API服务
+    │   ├── tencent-api.service.spec.ts     # API服务测试
+    │   ├── tencent-crypto.service.ts       # 加密解密服务
+    │   ├── tencent-crypto.service.spec.ts  # 加密服务测试
+    │   ├── tencent-event-handler.service.ts # 事件处理服务
+    │   └── tencent-meeting.service.ts      # 腾讯会议主服务
+    ├── types/                              # 类型定义
+    │   ├── tencent-meeting-api.types.ts    # API类型定义
+    │   └── tencent-webhook-events.types.ts # Webhook事件类型
+    ├── utils/                              # 工具类
+    │   └── http-file.util.ts               # HTTP文件工具
+    └── tencent-meeting.module.ts           # 模块配置
 ```
 
 ## 环境配置

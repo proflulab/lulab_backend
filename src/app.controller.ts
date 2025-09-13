@@ -10,12 +10,8 @@
  */
 
 import { Controller, Get } from '@nestjs/common';
-import {
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Public } from './auth/decorators/public.decorator';
 import { AppService } from './app.service';
 
 @ApiTags('Default')
@@ -24,9 +20,9 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
+  @Public()
   @ApiOperation({ summary: '获取欢迎信息' })
   @ApiResponse({ status: 200, description: '返回欢迎信息', type: String })
-  @ApiBearerAuth()
   getHello(): string {
     return this.appService.getHello();
   }

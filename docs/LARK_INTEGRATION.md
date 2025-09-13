@@ -2,6 +2,27 @@
 
 本文档说明如何将腾讯会议事件与飞书多维表格集成，实现会议数据自动记录。
 
+## 项目结构
+
+```text
+libs/
+└── integrations-lark/                  # 飞书集成库
+    ├── bitable.service.ts              # 多维表格核心服务
+    ├── bitable.service.int-spec.ts     # 集成测试
+    ├── lark.client.ts                  # 飞书客户端
+    ├── lark.module.ts                  # 模块配置
+    ├── lark.types.ts                   # 类型定义
+    ├── exceptions/                     # 异常处理
+    │   └── lark.exceptions.ts          # 飞书相关异常
+    ├── repositories/                   # 数据访问层
+    │   ├── index.ts                    # 导出文件
+    │   ├── meeting-bitable.repository.ts # 会议记录仓库
+    │   ├── meetinguser-bitable.repository.ts # 会议用户仓库
+    │   └── recording-file-bitable.repository.ts # 录制文件仓库
+    └── validators/                     # 验证器
+        └── field.validator.ts          # 字段验证器
+```
+
 ## 功能概述
 
 当腾讯会议开始时，系统会自动在飞书多维表格中创建一条会议记录，包含以下信息：
