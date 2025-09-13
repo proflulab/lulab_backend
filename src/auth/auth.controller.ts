@@ -59,8 +59,6 @@ export class AuthController {
     return await this.authService.login(loginDto, ip, userAgent);
   }
 
-  // 验证码相关接口已迁移至 VerificationController
-
   @Public()
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
@@ -78,7 +76,6 @@ export class AuthController {
     );
   }
 
-  @Public()
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK)
   @ApiRefreshTokenDocs()

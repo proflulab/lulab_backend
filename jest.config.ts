@@ -35,6 +35,7 @@ const config: Config = {
       testMatch: [
         '<rootDir>/src/**/*.spec.ts',
         '<rootDir>/libs/**/*.spec.ts',
+        '<rootDir>/test/unit/**/*.spec.ts',
       ],
       coverageDirectory: 'coverage/unit',
       coverageThreshold: {

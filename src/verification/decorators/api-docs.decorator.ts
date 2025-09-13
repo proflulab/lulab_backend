@@ -8,7 +8,6 @@ import {
   ApiProduces,
 } from '@nestjs/swagger';
 
-// 发送验证码接口文档装饰器（从 Auth 模块迁移）
 export function ApiSendCodeDocs() {
   return applyDecorators(
     ApiOperation({
