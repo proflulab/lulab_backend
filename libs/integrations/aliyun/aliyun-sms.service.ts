@@ -3,7 +3,7 @@ import Dysmsapi20170525, * as $Dysmsapi20170525 from '@alicloud/dysmsapi20170525
 import * as $OpenApi from '@alicloud/openapi-client';
 import * as $Util from '@alicloud/tea-util';
 import Credential from '@alicloud/credentials';
-import { CodeType } from '../../dto/auth.dto';
+import { CodeType } from '@/dto/auth.dto';
 
 @Injectable()
 export class AliyunSmsService {
@@ -18,7 +18,6 @@ export class AliyunSmsService {
    * 创建阿里云短信客户端
    */
   private createClient(): Dysmsapi20170525 {
-    // 工程代码建议使用更安全的无AK方式，凭据配置方式请参见：https://help.aliyun.com/document_detail/378664.html
     const credential = new Credential();
     const config = new $OpenApi.Config({
       credential: credential,

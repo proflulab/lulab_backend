@@ -5,11 +5,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './services/auth.service';
 import { VerificationService } from './services/verification.service';
-import { AliyunSmsService } from './services/aliyun-sms.service';
-import { JwtStrategy } from './jwt.strategy';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { AliyunModule } from '@libs/integrations/aliyun/aliyun.module';
+import { AliyunSmsService } from '@libs/integrations/aliyun/aliyun-sms.service';
+import { JwtStrategy, JwtAuthGuard } from '@libs/security';
 import { PrismaService } from '../prisma.service';
+import { VerificationRepository } from './repositories/verification.repository';
 import { EmailService } from '../email/email.service';
+import { AuthRepository } from './repositories/auth.repository';
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { EmailService } from '../email/email.service';
       }),
       inject: [ConfigService],
     }),
+    AliyunModule,
   ],
   controllers: [AuthController],
   providers: [
@@ -33,6 +36,8 @@ import { EmailService } from '../email/email.service';
     JwtStrategy,
     JwtAuthGuard,
     PrismaService,
+    VerificationRepository,
+    AuthRepository,
     EmailService,
   ],
   exports: [AuthService, JwtAuthGuard, JwtStrategy],

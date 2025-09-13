@@ -8,7 +8,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../../prisma.service';
+import { AuthRepository } from '../repositories/auth.repository';
 import { VerificationService } from './verification.service';
 import { EmailService } from '../../email/email.service';
 import {
@@ -24,6 +24,7 @@ import {
   CodeType,
 } from '../../dto/auth.dto';
 import * as bcrypt from 'bcryptjs';
+import { isStrongPassword } from '@libs/common/utils';
 import { User, UserProfile } from '@prisma/client';
 import { LoginType } from '../types';
 
@@ -35,7 +36,7 @@ export class AuthService {
   private readonly lockoutDuration = 15 * 60 * 1000; // 15分钟
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly authRepo: AuthRepository,
     private readonly jwtService: JwtService,
     private readonly verificationService: VerificationService,
     private readonly emailService: EmailService,
@@ -76,25 +77,15 @@ export class AuthService {
     const hashedPassword = password ? await this.hashPassword(password) : null;
     const now = new Date();
 
-    const user = await this.prisma.user.create({
-      data: {
-        username,
-        email: email || null, // 如果没有邮箱则为null
-        phone,
-        countryCode,
-        password: hashedPassword,
-        // 根据注册方式设置验证状态
-        emailVerifiedAt: type === AuthType.EMAIL_CODE ? now : null,
-        phoneVerifiedAt: type === AuthType.PHONE_CODE ? now : null,
-        profile: {
-          create: {
-            name: username || email?.split('@')[0] || phone || '用户',
-          },
-        },
-      },
-      include: {
-        profile: true,
-      },
+    const user = await this.authRepo.createUserWithProfile({
+      username,
+      email: email || null,
+      phone,
+      countryCode,
+      password: hashedPassword,
+      emailVerifiedAt: type === AuthType.EMAIL_CODE ? now : null,
+      phoneVerifiedAt: type === AuthType.PHONE_CODE ? now : null,
+      profileName: username || email?.split('@')[0] || phone || '用户',
     });
 
     // 记录登录日志
@@ -188,10 +179,7 @@ export class AuthService {
       }
 
       // 更新最后登录时间
-      await this.prisma.user.update({
-        where: { id: user.id },
-        data: { lastLoginAt: new Date() },
-      });
+      await this.authRepo.updateUserLastLoginAt(user.id, new Date());
 
       // 记录成功登录日志
       await this.createLoginLog(
@@ -294,10 +282,7 @@ export class AuthService {
 
     // 更新密码
     const hashedPassword = await this.hashPassword(newPassword);
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { password: hashedPassword },
-    });
+    await this.authRepo.updateUserPassword(user.id, hashedPassword);
 
     // 记录登录日志
     await this.createLoginLog(
@@ -341,12 +326,7 @@ export class AuthService {
 
   // 获取用户信息
   async getProfile(userId: string): Promise<UserProfileResponseDto> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        profile: true,
-      },
-    });
+    const user = await this.authRepo.getUserByIdWithProfile(userId);
 
     if (!user) {
       throw new BadRequestException('用户不存在');
@@ -367,10 +347,7 @@ export class AuthService {
       updateProfileDto;
 
     // 检查用户是否存在
-    const existingUser = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { profile: true },
-    });
+    const existingUser = await this.authRepo.getUserByIdWithProfile(userId);
 
     if (!existingUser) {
       throw new BadRequestException('用户不存在');
@@ -378,18 +355,14 @@ export class AuthService {
 
     // 检查用户名、邮箱、手机号的唯一性
     if (username && username !== existingUser.username) {
-      const usernameExists = await this.prisma.user.findUnique({
-        where: { username: username },
-      });
+      const usernameExists = await this.authRepo.findUserByUsername(username);
       if (usernameExists) {
         throw new ConflictException('用户名已被使用');
       }
     }
 
     if (email && email !== existingUser.email) {
-      const emailExists = await this.prisma.user.findUnique({
-        where: { email },
-      });
+      const emailExists = await this.authRepo.findUserByEmail(email);
       if (emailExists) {
         throw new ConflictException('邮箱已被使用');
       }
@@ -400,47 +373,30 @@ export class AuthService {
       (phone !== existingUser.phone ||
         updateProfileDto.countryCode !== existingUser.countryCode)
     ) {
-      const phoneExists = await this.prisma.user.findUnique({
-        where: {
-          unique_phone_combination: {
-            countryCode:
-              updateProfileDto.countryCode || existingUser.countryCode || '',
-            phone,
-          },
-        },
-      });
+      const phoneExists = await this.authRepo.findUserByPhoneCombination(
+        updateProfileDto.countryCode || existingUser.countryCode || '',
+        phone,
+      );
       if (phoneExists) {
         throw new ConflictException('手机号已被使用');
       }
     }
 
     // 更新用户信息
-    const updatedUser = await this.prisma.user.update({
-      where: { id: userId },
-      data: {
+    const updatedUser = await this.authRepo.updateUserWithProfileUpsert(
+      userId,
+      {
         ...(username ? { username } : {}),
         email,
         phone,
         countryCode,
         profile: {
-          upsert: {
-            create: {
-              name: name || username || email?.split('@')[0] || phone,
-              avatar,
-              bio,
-            },
-            update: {
-              name,
-              avatar,
-              bio,
-            },
-          },
+          name: name || username || email?.split('@')[0] || phone,
+          avatar,
+          bio,
         },
       },
-      include: {
-        profile: true,
-      },
-    });
+    );
 
     return this.formatUserResponse(updatedUser);
   }
@@ -452,9 +408,7 @@ export class AuthService {
         secret: process.env.JWT_REFRESH_SECRET,
       });
 
-      const user = await this.prisma.user.findUnique({
-        where: { id: payload.sub },
-      });
+      const user = await this.authRepo.getUserById(payload.sub);
 
       if (!user) {
         throw new UnauthorizedException('用户不存在');
@@ -532,11 +486,7 @@ export class AuthService {
 
     if (conditions.length === 0) return;
 
-    const existingUser = await this.prisma.user.findFirst({
-      where: {
-        OR: conditions,
-      },
-    });
+    const existingUser = await this.authRepo.findFirstByConditions(conditions);
 
     if (existingUser) {
       if (username && existingUser.username === username) {
@@ -575,40 +525,23 @@ export class AuthService {
       conditions.push({ phone: target });
     }
 
-    return await this.prisma.user.findFirst({
-      where: {
-        OR: conditions,
-      },
-      include: {
-        profile: true,
-      },
-    });
+    return await this.authRepo.findUserByTarget(target, countryCode);
   }
 
   private async checkLoginLockout(target: string, ip: string): Promise<void> {
     const fifteenMinutesAgo = new Date(Date.now() - this.lockoutDuration);
 
     // 检查同一目标的失败次数
-    const targetFailures = await this.prisma.loginLog.count({
-      where: {
-        target,
-        success: false,
-        createdAt: {
-          gte: fifteenMinutesAgo,
-        },
-      },
-    });
+    const targetFailures = await this.authRepo.countLoginFailuresByTargetSince(
+      target,
+      fifteenMinutesAgo,
+    );
 
     // 检查同一IP的失败次数
-    const ipFailures = await this.prisma.loginLog.count({
-      where: {
-        ip,
-        success: false,
-        createdAt: {
-          gte: fifteenMinutesAgo,
-        },
-      },
-    });
+    const ipFailures = await this.authRepo.countLoginFailuresByIpSince(
+      ip,
+      fifteenMinutesAgo,
+    );
 
     if (targetFailures >= this.maxLoginAttempts) {
       throw new HttpException(
@@ -634,16 +567,14 @@ export class AuthService {
     userAgent?: string,
     failureReason?: string,
   ): Promise<void> {
-    await this.prisma.loginLog.create({
-      data: {
-        userId,
-        target,
-        loginType: type,
-        success,
-        ip,
-        userAgent,
-        failReason: failureReason,
-      },
+    await this.authRepo.createLoginLog({
+      userId,
+      target,
+      loginType: type,
+      success,
+      ip,
+      userAgent,
+      failReason: failureReason,
     });
   }
 
@@ -703,7 +634,7 @@ export class AuthService {
     if (password.length < 8) {
       throw new BadRequestException('密码长度至少为8位');
     }
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+    if (!isStrongPassword(password)) {
       throw new BadRequestException('密码必须包含大小写字母和数字');
     }
   }

@@ -19,7 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { Request } from 'express';
 import { AuthService } from '../auth/services/auth.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '@libs/security';
 import { User, CurrentUser } from '../auth/decorators/user.decorator';
 import { UpdateProfileDto, UserProfileResponseDto } from '../dto/auth.dto';
 

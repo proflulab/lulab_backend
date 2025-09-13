@@ -32,7 +32,7 @@ import {
   WebhookDecryptionException,
   WebhookConfigException,
 } from '../exceptions/webhook.exceptions';
-import { Public } from '../../auth/decorators/public.decorator';
+import { Public } from '@libs/security';
 
 /**
  * Tencent Meeting Webhook Controller

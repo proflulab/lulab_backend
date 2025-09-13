@@ -4,16 +4,21 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { PrismaService } from '../../prisma.service';
+import { VerificationRepository } from '../repositories/verification.repository';
 import { EmailService } from '../../email/email.service';
-import { AliyunSmsService } from './aliyun-sms.service';
+import { AliyunSmsService } from '@libs/integrations/aliyun/aliyun-sms.service';
 import { CodeType } from '../../dto/auth.dto';
 import { VerificationCodeType } from '@prisma/client';
+import {
+  generateNumericCode,
+  isValidEmail,
+  isValidCnPhone,
+} from '@libs/common/utils';
 
 @Injectable()
 export class VerificationService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly repo: VerificationRepository,
     private readonly emailService: EmailService,
     private readonly aliyunSmsService: AliyunSmsService,
   ) {}
@@ -27,8 +32,8 @@ export class VerificationService {
     countryCode?: string,
   ): Promise<{ success: boolean; message: string }> {
     // 验证目标格式
-    const isEmail = this.isValidEmail(target);
-    const isPhone = this.isValidPhone(target);
+    const isEmail = isValidEmail(target);
+    const isPhone = isValidCnPhone(target);
 
     if (!isEmail && !isPhone) {
       throw new BadRequestException('目标必须是有效的邮箱或手机号');
@@ -38,22 +43,20 @@ export class VerificationService {
     await this.checkSendLimit(target, ip);
 
     // 生成验证码
-    const code = this.generateCode();
+    const code = generateNumericCode(6);
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5分钟后过期
 
     // 转换验证码类型
     const codeType = this.convertCodeType(type);
 
     // 保存验证码到数据库
-    await this.prisma.verificationCode.create({
-      data: {
-        target,
-        code,
-        type: codeType,
-        expiresAt,
-        ip,
-        userAgent,
-      },
+    await this.repo.createVerificationCode({
+      target,
+      code,
+      type: codeType,
+      expiresAt,
+      ip,
+      userAgent,
     });
 
     // 发送验证码
@@ -82,20 +85,11 @@ export class VerificationService {
     const codeType = this.convertCodeType(type);
 
     // 查找有效的验证码
-    const verificationCode = await this.prisma.verificationCode.findFirst({
-      where: {
-        target,
-        code,
-        type: codeType,
-        used: false,
-        expiresAt: {
-          gt: new Date(),
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    const verificationCode = await this.repo.findValidVerificationCode(
+      target,
+      code,
+      codeType,
+    );
 
     if (!verificationCode) {
       return {
@@ -105,14 +99,7 @@ export class VerificationService {
     }
 
     // 标记验证码为已使用
-    await this.prisma.verificationCode.update({
-      where: {
-        id: verificationCode.id,
-      },
-      data: {
-        used: true,
-      },
-    });
+    await this.repo.markVerificationCodeUsed(verificationCode.id);
 
     return {
       valid: true,
@@ -122,15 +109,7 @@ export class VerificationService {
 
   // 清理过期验证码
   async cleanExpiredCodes(): Promise<number> {
-    const result = await this.prisma.verificationCode.deleteMany({
-      where: {
-        expiresAt: {
-          lt: new Date(),
-        },
-      },
-    });
-
-    return result.count;
+    return this.repo.deleteExpiredVerificationCodes(new Date());
   }
 
   // 检查发送频率限制
@@ -140,14 +119,10 @@ export class VerificationService {
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     // 检查同一目标1小时内发送次数（最多5次）
-    const targetCount = await this.prisma.verificationCode.count({
-      where: {
-        target,
-        createdAt: {
-          gte: oneHourAgo,
-        },
-      },
-    });
+    const targetCount = await this.repo.countSentToTargetSince(
+      target,
+      oneHourAgo,
+    );
 
     if (targetCount >= 5) {
       throw new HttpException(
@@ -157,14 +132,7 @@ export class VerificationService {
     }
 
     // 检查同一IP1天内发送次数（最多20次）
-    const ipCount = await this.prisma.verificationCode.count({
-      where: {
-        ip,
-        createdAt: {
-          gte: oneDayAgo,
-        },
-      },
-    });
+    const ipCount = await this.repo.countSentFromIpSince(ip, oneDayAgo);
 
     if (ipCount >= 20) {
       throw new HttpException(
@@ -176,26 +144,7 @@ export class VerificationService {
 
   // 更新发送限制记录
   private async updateSendLimit(target: string, ip: string): Promise<void> {
-    await this.prisma.codeSendLimit.upsert({
-      where: {
-        target_ip: {
-          target,
-          ip,
-        },
-      },
-      update: {
-        sendCount: {
-          increment: 1,
-        },
-        lastSentAt: new Date(),
-      },
-      create: {
-        target,
-        ip,
-        sendCount: 1,
-        lastSentAt: new Date(),
-      },
-    });
+    await this.repo.upsertSendLimit(target, ip, new Date());
   }
 
   // 发送邮箱验证码
@@ -235,22 +184,7 @@ export class VerificationService {
     }
   }
 
-  // 生成6位数字验证码
-  private generateCode(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  }
-
-  // 验证邮箱格式
-  private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-
-  // 验证手机号格式（简单验证）
-  private isValidPhone(phone: string): boolean {
-    const phoneRegex = /^[1-9]\d{10}$/; // 中国手机号格式
-    return phoneRegex.test(phone);
-  }
+  // 工具函数移动至 @libs/common/utils
 
   // 转换验证码类型
   private convertCodeType(type: CodeType): VerificationCodeType {

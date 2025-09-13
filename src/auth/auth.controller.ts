@@ -20,8 +20,7 @@ import {
 } from './decorators/api-docs.decorator';
 import { Request } from 'express';
 import { AuthService } from './services/auth.service';
-import { JwtAuthGuard } from './jwt-auth.guard';
-import { Public } from './decorators/public.decorator';
+import { JwtAuthGuard, Public } from '@libs/security';
 import {
   RegisterDto,
   LoginDto,
