@@ -11,7 +11,7 @@ import {
   PlatformApiException,
   PlatformConfigException,
 } from '../exceptions/platform.exceptions';
-import { HttpFileUtil } from '../utils/http-file.util';
+import { HttpFileUtil } from '@libs/common/utils';
 
 /**
  * 腾讯会议平台服务

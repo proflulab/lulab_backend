@@ -15,17 +15,14 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { ApiTags } from '@nestjs/swagger';
 import { TencentEventHandlerService } from '../services/tencent-event-handler.service';
+import { TencentMeetingConfigService } from '../services/tencent-config.service';
 import { TencentWebhookEventBodyDto } from '../dto/tencent-webhook-body.dto';
 import { WebhookLoggingInterceptor } from '../interceptors/webhook-logging.interceptor';
 import {
   ApiTencentUrlVerificationDocs,
   ApiTencentEventReceiverDocs,
 } from '../decorators/tencent-webhook.decorators';
-import {
-  verifySignature,
-  aesDecrypt,
-  verifyWebhookUrl,
-} from '../services/tencent-crypto.service';
+import { verifySignature, aesDecrypt, verifyWebhookUrl } from '../utils/crypto.util';
 import { TencentMeetingEvent } from '../types/tencent-webhook-events.types';
 import {
   WebhookSignatureVerificationException,
@@ -48,32 +45,13 @@ export class TencentWebhookController {
   constructor(
     private readonly tencentEventHandlerService: TencentEventHandlerService,
     private readonly configService: ConfigService,
+    private readonly tencentConfig: TencentMeetingConfigService,
   ) {}
 
   /**
    * 获取并验证腾讯会议配置
    */
-  private getTencentMeetingConfig(): { token: string; encodingAesKey: string } {
-    const token = this.configService.get<string>('TENCENT_MEETING_TOKEN');
-    if (!token) {
-      throw new WebhookConfigException(
-        'TENCENT_MEETING',
-        'TENCENT_MEETING_TOKEN',
-      );
-    }
-
-    const encodingAesKey = this.configService.get<string>(
-      'TENCENT_MEETING_ENCODING_AES_KEY',
-    );
-    if (!encodingAesKey) {
-      throw new WebhookConfigException(
-        'TENCENT_MEETING',
-        'TENCENT_MEETING_ENCODING_AES_KEY',
-      );
-    }
-
-    return { token, encodingAesKey };
-  }
+  // Config is now provided by TencentMeetingConfigService
 
   /**
    * Tencent Meeting Webhook URL verification endpoint (GET)
@@ -105,7 +83,7 @@ export class TencentWebhookController {
       const decodedNonce = decodeURIComponent(nonce);
       const decodedSignature = decodeURIComponent(signature);
 
-      const { token, encodingAesKey } = this.getTencentMeetingConfig();
+      const { token, encodingAesKey } = this.tencentConfig.getWebhookConfig();
       return await verifyWebhookUrl(
         decodedCheckStr,
         decodedTimestamp,
@@ -166,7 +144,7 @@ export class TencentWebhookController {
         const encryptedData = body.data;
 
         // Verify signature using the encrypted data
-        const { token, encodingAesKey } = this.getTencentMeetingConfig();
+        const { token, encodingAesKey } = this.tencentConfig.getWebhookConfig();
         const isValid = verifySignature(
           token,
           timestamp,

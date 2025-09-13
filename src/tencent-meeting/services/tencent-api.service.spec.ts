@@ -20,8 +20,8 @@ const mockConfigService = {
 // 模拟 fetch
 global.fetch = jest.fn();
 
-// 模拟 tencent-crypto.service
-jest.mock('./tencent-crypto.service', () => ({
+// 模拟 crypto util（签名生成）
+jest.mock('../utils/crypto.util', () => ({
   generateSignature: jest.fn(() => 'mock-signature'),
 }));
 

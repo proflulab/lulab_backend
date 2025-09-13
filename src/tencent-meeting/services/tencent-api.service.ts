@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { generateSignature } from './tencent-crypto.service';
+import { generateSignature } from '../utils/crypto.util';
 import {
   RecordingDetail,
   RecordMeetingsResponse,

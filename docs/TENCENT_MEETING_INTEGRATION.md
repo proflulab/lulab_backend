@@ -38,15 +38,19 @@ src/
     │   │   └── recording-completed.handler.ts # 录制完成事件处理器
     │   ├── tencent-api.service.ts          # 腾讯会议API服务
     │   ├── tencent-api.service.spec.ts     # API服务测试
-    │   ├── tencent-crypto.service.ts       # 加密解密服务
-    │   ├── tencent-crypto.service.spec.ts  # 加密服务测试
+    │   ├── utils/crypto.util.ts            # 加密解密/签名（纯函数）
+    │   ├── services/tencent-api.service.ts # API签名改用 utils/crypto.util
     │   ├── tencent-event-handler.service.ts # 事件处理服务
     │   └── tencent-meeting.service.ts      # 腾讯会议主服务
     ├── types/                              # 类型定义
     │   ├── tencent-meeting-api.types.ts    # API类型定义
     │   └── tencent-webhook-events.types.ts # Webhook事件类型
     ├── utils/                              # 工具类
-    │   └── http-file.util.ts               # HTTP文件工具
+    │   └── utils/crypto.util.ts            # 加解密/签名工具（纯函数）
+    └── libs/
+        └── common/
+            └── utils/
+                └── http-file.ts           # HTTP文件工具（已从 tencent-meeting 上移）
     └── tencent-meeting.module.ts           # 模块配置
 ```
 
