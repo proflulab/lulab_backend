@@ -17,9 +17,7 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
-  UseInterceptors,
 } from '@nestjs/common';
-import { WebhookLoggingInterceptor } from './interceptors/webhook-logging.interceptor';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { FeishuWebhookHandler } from './feishu-webhook.service';
 
@@ -29,7 +27,6 @@ import { FeishuWebhookHandler } from './feishu-webhook.service';
  */
 @ApiTags('Webhooks')
 @Controller('webhooks/feishu')
-@UseInterceptors(WebhookLoggingInterceptor)
 export class FeishuWebhookController {
   private readonly logger = new Logger(FeishuWebhookController.name);
 
@@ -53,17 +50,17 @@ export class FeishuWebhookController {
     status: 200,
     description: 'Webhook处理成功',
   })
-  async handleFeishuWebhook(
+  handleFeishuWebhook(
     @Body() body: any,
     @Headers() headers: Record<string, string>,
-  ): Promise<void> {
+  ): void {
     this.logger.log('收到飞书Webhook请求');
 
     try {
       // TODO: 实现飞书Webhook事件处理逻辑
-      await this.feishuWebhookHandler.handleWebhookEvent(body, headers);
-    } catch (error) {
-      this.logger.error('处理飞书Webhook失败', error.stack);
+      this.feishuWebhookHandler.handleWebhookEvent(body, headers);
+    } catch (error: unknown) {
+      this.logger.error('处理飞书Webhook失败', (error as Error).stack);
       throw error;
     }
   }

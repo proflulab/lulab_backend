@@ -44,10 +44,11 @@ export class HttpFileUtil {
    * @param url JSON文件URL
    * @returns JSON对象
    */
-  static async fetchJsonFromUrl<T = any>(url: string): Promise<T> {
+  static async fetchJsonFromUrl<T = unknown>(url: string): Promise<T> {
     try {
       const text = await this.fetchTextFromUrl(url);
-      return JSON.parse(text);
+      const parsed = JSON.parse(text) as T;
+      return parsed;
     } catch (error) {
       this.logger.error(`解析JSON失败: ${url}`, error);
       const errorMessage =

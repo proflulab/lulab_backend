@@ -4,7 +4,7 @@ import { TencentEventPayload } from '../../types/tencent-webhook-events.types';
 import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
-} from '@libs/integrations-lark/repositories';
+} from '@libs/integrations/lark/repositories';
 
 /**
  * 会议结束事件处理器

@@ -87,15 +87,15 @@ export class TencentMeetingService {
       );
       this.logger.log(`成功获取录制文件详情: ${fileId}`);
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error(
         `获取录制文件详情失败: ${fileId}`,
-        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error.stack : undefined,
       );
       throw new PlatformApiException(
         'TENCENT_MEETING',
         'getRecordingFileDetail',
-        error.message,
+        error instanceof Error ? error.message : String(error),
       );
     }
   }
@@ -130,15 +130,15 @@ export class TencentMeetingService {
       );
       this.logger.log(`成功获取会议录制列表，共 ${result.total_count} 条记录`);
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error(
         `获取会议录制列表失败`,
-        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error.stack : undefined,
       );
       throw new PlatformApiException(
         'TENCENT_MEETING',
         'getCorpRecords',
-        error.message,
+        error instanceof Error ? error.message : String(error),
       );
     }
   }
@@ -164,15 +164,15 @@ export class TencentMeetingService {
       );
       this.logger.log(`成功获取会议详情: ${meetingId}`);
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error(
         `获取会议详情失败: ${meetingId}`,
-        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error.stack : undefined,
       );
       throw new PlatformApiException(
         'TENCENT_MEETING',
         'getMeetingDetail',
-        error.message,
+        error instanceof Error ? error.message : String(error),
       );
     }
   }
@@ -200,15 +200,15 @@ export class TencentMeetingService {
         `成功获取会议参会成员列表: ${meetingId}，共 ${result.total_count} 人`,
       );
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error(
         `获取会议参会成员列表失败: ${meetingId}`,
-        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error.stack : undefined,
       );
       throw new PlatformApiException(
         'TENCENT_MEETING',
         'getMeetingParticipants',
-        error.message,
+        error instanceof Error ? error.message : String(error),
       );
     }
   }
@@ -224,15 +224,15 @@ export class TencentMeetingService {
       const result = await HttpFileUtil.fetchTextFromUrl(url);
       this.logger.log(`成功从URL获取文本内容，长度: ${result.length}`);
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error(
         `从URL获取文本内容失败: ${url}`,
-        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error.stack : undefined,
       );
       throw new PlatformApiException(
         'TENCENT_MEETING',
         'fetchTextFromUrl',
-        error.message,
+        error instanceof Error ? error.message : String(error),
       );
     }
   }
@@ -253,8 +253,11 @@ export class TencentMeetingService {
         success: true,
         message: 'Tencent Meeting API connection successful',
       };
-    } catch (error) {
-      this.logger.error('腾讯会议API连接测试失败', error);
+    } catch (error: unknown) {
+      this.logger.error(
+        '腾讯会议API连接测试失败',
+        error instanceof Error ? error.stack : undefined,
+      );
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       return {

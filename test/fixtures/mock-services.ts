@@ -100,10 +100,20 @@ export const mockVerificationService = {
   generateCode: jest.fn(),
 };
 
+interface MockProviders {
+  prisma?: Partial<typeof mockPrismaService>;
+  auth?: Partial<typeof mockAuthService>;
+  email?: Partial<typeof mockEmailService>;
+  user?: Partial<typeof mockUserService>;
+  meeting?: Partial<typeof mockMeetingService>;
+  tencent?: Partial<typeof mockTencentApiService>;
+  verification?: Partial<typeof mockVerificationService>;
+}
+
 /**
  * Helper to create mock providers array for testing modules
  */
-export const createMockProviders = (customMocks: Record<string, any> = {}) => [
+export const createMockProviders = (customMocks: MockProviders = {}) => [
   {
     provide: 'PrismaService',
     useValue: { ...mockPrismaService, ...customMocks.prisma },

@@ -25,7 +25,6 @@ import {
   verifySignature,
   aesDecrypt,
   verifyWebhookUrl,
-  generateSignature,
 } from '../services/tencent-crypto.service';
 import { TencentMeetingEvent } from '../types/tencent-webhook-events.types';
 import {
@@ -115,10 +114,10 @@ export class TencentWebhookController {
         token,
         encodingAesKey,
       );
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error(
         'Failed to handle Tencent Meeting Webhook URL verification',
-        error.stack,
+        (error as Error).stack,
       );
       throw error;
     }
@@ -190,8 +189,11 @@ export class TencentWebhookController {
         let decryptedData: string;
         try {
           decryptedData = await aesDecrypt(encryptedData, encodingAesKey);
-        } catch (error) {
-          this.logger.error('Failed to decrypt event data', error);
+        } catch (error: unknown) {
+          this.logger.error(
+            'Failed to decrypt event data',
+            error instanceof Error ? error.stack : undefined,
+          );
           const errorMessage =
             error instanceof Error ? error.message : String(error);
           throw new WebhookDecryptionException(
@@ -203,8 +205,10 @@ export class TencentWebhookController {
         // Parse JSON
         let eventData: TencentMeetingEvent;
         try {
-          eventData = JSON.parse(decryptedData);
-        } catch (error) {
+          eventData = JSON.parse(
+            decryptedData,
+          ) as unknown as TencentMeetingEvent;
+        } catch {
           this.logger.error('Failed to parse decrypted JSON data', {
             decryptedData: decryptedData.substring(0, 200) + '...',
           });
@@ -227,8 +231,11 @@ export class TencentWebhookController {
         // 不等待处理完成，避免超时导致腾讯会议重试
         this.tencentEventHandlerService
           .handleEvent(eventData)
-          .catch((error) => {
-            this.logger.error('Failed to handle event asynchronously', error);
+          .catch((error: unknown) => {
+            this.logger.error(
+              'Failed to handle event asynchronously',
+              error instanceof Error ? error.stack : undefined,
+            );
           });
 
         // 必须返回这个确切字符串，不能有任何变化
@@ -239,10 +246,11 @@ export class TencentWebhookController {
       throw new BadRequestException(
         'Invalid Webhook request - missing data field',
       );
-    } catch (error) {
+    } catch (error: unknown) {
+      const err = error as Error;
       this.logger.error('Failed to handle Tencent Meeting Webhook', {
-        error: error.message,
-        stack: error.stack,
+        error: err?.message,
+        stack: err?.stack,
         body: body ? JSON.stringify(body).substring(0, 500) + '...' : 'no body',
       });
 

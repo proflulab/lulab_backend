@@ -18,12 +18,19 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
   private readonly logger = new Logger(WebhookLoggingInterceptor.name);
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context
+      .switchToHttp()
+      .getRequest<Request<any, any, unknown, any>>();
     const response = context.switchToHttp().getResponse<Response>();
     const startTime = Date.now();
 
-    // 提取关键信息
-    const { method, url, headers, body, query, ip } = request;
+    // 提取关键信息（避免对潜在 any 的解构带来的不安全）
+    const method = request.method;
+    const url = request.url;
+    const headers = request.headers as Record<string, unknown>;
+    const body = request.body;
+    const query = request.query as Record<string, unknown>;
+    const ip = request.ip;
 
     // 记录请求开始
     this.logger.log(`Webhook请求开始: ${method} ${url}`, {
@@ -72,13 +79,18 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
           });
         }
       }),
-      catchError((error) => {
+      catchError((error: unknown) => {
         const duration = Date.now() - startTime;
 
+        const err = error as {
+          message?: string;
+          stack?: string;
+          status?: number;
+        };
         this.logger.error(`Webhook请求失败: ${method} ${url} - ${duration}ms`, {
-          error: error.message,
-          stack: error.stack,
-          statusCode: error.status || 500,
+          error: err?.message,
+          stack: err?.stack,
+          statusCode: err?.status ?? 500,
           duration,
           timestamp: new Date().toISOString(),
         });
@@ -91,8 +103,10 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
   /**
    * 过滤请求头，只保留重要的非敏感信息
    */
-  private filterHeaders(headers: Record<string, any>): Record<string, any> {
-    const importantHeaders: Record<string, any> = {};
+  private filterHeaders(
+    headers: Record<string, unknown>,
+  ): Record<string, unknown> {
+    const importantHeaders: Record<string, unknown> = {};
 
     // 需要记录的重要头部
     const headersToLog = [
@@ -116,7 +130,9 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
       if (value) {
         // 对签名进行部分遮蔽
         if (key.includes('signature')) {
-          importantHeaders[key] = this.maskSignature(value);
+          if (typeof value === 'string') {
+            importantHeaders[key] = this.maskSignature(value);
+          }
         } else {
           importantHeaders[key] = value;
         }
@@ -129,7 +145,10 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
   /**
    * 判断是否应该记录请求体
    */
-  private shouldLogBody(body: any, headers: Record<string, any>): boolean {
+  private shouldLogBody(
+    body: unknown,
+    headers: Record<string, unknown>,
+  ): boolean {
     // 不记录太大的请求体
     const bodySize = JSON.stringify(body).length;
     if (bodySize > 10000) {
@@ -138,7 +157,8 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
     }
 
     // 不记录二进制内容
-    const contentType = headers['content-type'] || '';
+    const ctRaw = headers['content-type'];
+    const contentType = typeof ctRaw === 'string' ? ctRaw : '';
     if (
       contentType.includes('multipart/form-data') ||
       contentType.includes('application/octet-stream')
@@ -152,7 +172,7 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
   /**
    * 判断是否应该记录响应数据
    */
-  private shouldLogResponse(data: any): boolean {
+  private shouldLogResponse(data: unknown): boolean {
     if (!data) return false;
 
     const dataSize = JSON.stringify(data).length;
@@ -162,12 +182,14 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
   /**
    * 清理请求体中的敏感信息
    */
-  private sanitizeBody(body: any): any {
+  private sanitizeBody(body: unknown): unknown {
     if (typeof body !== 'object' || body === null) {
       return body;
     }
 
-    const sanitized = { ...body };
+    const sanitized: Record<string, unknown> = {
+      ...(body as Record<string, unknown>),
+    };
 
     // 移除或遮蔽敏感字段
     const sensitiveFields = [
@@ -180,15 +202,16 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
     ];
 
     for (const field of sensitiveFields) {
-      if (sanitized[field]) {
+      if (field in sanitized) {
         sanitized[field] = '***MASKED***';
       }
     }
 
     // 递归处理嵌套对象
     for (const key in sanitized) {
-      if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
-        sanitized[key] = this.sanitizeBody(sanitized[key]);
+      const val = sanitized[key];
+      if (typeof val === 'object' && val !== null) {
+        sanitized[key] = this.sanitizeBody(val);
       }
     }
 
@@ -198,12 +221,14 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
   /**
    * 清理响应数据中的敏感信息
    */
-  private sanitizeResponse(data: any): any {
+  private sanitizeResponse(data: unknown): unknown {
     if (typeof data !== 'object' || data === null) {
       return data;
     }
 
-    const sanitized = { ...data };
+    const sanitized: Record<string, unknown> = {
+      ...(data as Record<string, unknown>),
+    };
 
     // 移除或遮蔽敏感字段
     const sensitiveFields = [
@@ -215,7 +240,7 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
     ];
 
     for (const field of sensitiveFields) {
-      if (sanitized[field]) {
+      if (field in sanitized) {
         sanitized[field] = '***MASKED***';
       }
     }
@@ -272,11 +297,15 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
   /**
    * 获取请求的唯一标识
    */
-  private getRequestId(headers: Record<string, any>): string {
-    return (
-      headers['x-request-id'] ||
-      headers['x-correlation-id'] ||
-      `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    );
+  private getRequestId(headers: Record<string, unknown>): string {
+    const reqId = headers['x-request-id'];
+    if (typeof reqId === 'string') {
+      return reqId;
+    }
+    const corrId = headers['x-correlation-id'];
+    if (typeof corrId === 'string') {
+      return corrId;
+    }
+    return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 }

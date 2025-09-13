@@ -17,7 +17,7 @@ import { TencentApiService } from './services/tencent-api.service';
 import { TencentEventHandlerService } from './services/tencent-event-handler.service';
 import { MeetingRepository } from '../meeting/repositories/meeting.repository';
 import { PrismaService } from '../prisma.service';
-import { LarkModule } from '../../libs/integrations-lark/lark.module';
+import { LarkModule } from '../../libs/integrations/lark/lark.module';
 import { EventHandlerFactory } from './services/event-handlers/event-handler.factory';
 import { MeetingStartedHandler } from './services/event-handlers/meeting-started.handler';
 import { MeetingEndedHandler } from './services/event-handlers/meeting-ended.handler';

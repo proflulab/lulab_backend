@@ -183,34 +183,52 @@ export class TencentMeetingEventUtils {
   static getCreateFromDescription(
     createFrom: TencentMeetingCreateFrom,
   ): string {
-    const descriptions = {
-      [TencentMeetingCreateFrom.EMPTY]: '空来源',
-      [TencentMeetingCreateFrom.CLIENT]: '客户端',
-      [TencentMeetingCreateFrom.WEB]: 'Web端',
-      [TencentMeetingCreateFrom.WECHAT_WORK]: '企业微信',
-      [TencentMeetingCreateFrom.WECHAT]: '微信',
-      [TencentMeetingCreateFrom.OUTLOOK]: 'Outlook',
-      [TencentMeetingCreateFrom.REST_API]: 'REST API',
-      [TencentMeetingCreateFrom.TENCENT_DOCS]: '腾讯文档',
-      [TencentMeetingCreateFrom.ROOMS_SMART_RECORDING]: 'Rooms智能录制',
-    };
-    return descriptions[createFrom] || '未知来源';
+    switch (createFrom) {
+      case TencentMeetingCreateFrom.EMPTY:
+        return '空来源';
+      case TencentMeetingCreateFrom.CLIENT:
+        return '客户端';
+      case TencentMeetingCreateFrom.WEB:
+        return 'Web端';
+      case TencentMeetingCreateFrom.WECHAT_WORK:
+        return '企业微信';
+      case TencentMeetingCreateFrom.WECHAT:
+        return '微信';
+      case TencentMeetingCreateFrom.OUTLOOK:
+        return 'Outlook';
+      case TencentMeetingCreateFrom.REST_API:
+        return 'REST API';
+      case TencentMeetingCreateFrom.TENCENT_DOCS:
+        return '腾讯文档';
+      case TencentMeetingCreateFrom.ROOMS_SMART_RECORDING:
+        return 'Rooms智能录制';
+      default:
+        return '未知来源';
+    }
   }
 
   /**
    * 获取终端设备类型的描述文本
    */
   static getInstanceTypeDescription(instanceType: TencentInstanceType): string {
-    const descriptions = {
-      [TencentInstanceType.UNKNOWN]: '未知设备',
-      [TencentInstanceType.PC]: 'PC端',
-      [TencentInstanceType.MOBILE]: '移动端',
-      [TencentInstanceType.WEB]: 'Web端',
-      [TencentInstanceType.ROOMS]: 'Rooms设备',
-      [TencentInstanceType.PHONE]: '电话接入',
-      [TencentInstanceType.OUTDOOR]: '户外设备',
-    };
-    return descriptions[instanceType] || '未知设备';
+    switch (instanceType) {
+      case TencentInstanceType.UNKNOWN:
+        return '未知设备';
+      case TencentInstanceType.PC:
+        return 'PC端';
+      case TencentInstanceType.MOBILE:
+        return '移动端';
+      case TencentInstanceType.WEB:
+        return 'Web端';
+      case TencentInstanceType.ROOMS:
+        return 'Rooms设备';
+      case TencentInstanceType.PHONE:
+        return '电话接入';
+      case TencentInstanceType.OUTDOOR:
+        return '户外设备';
+      default:
+        return '未知设备';
+    }
   }
 
   /**
@@ -248,7 +266,8 @@ export class TencentMeetingEventUtils {
     const meetingInfo = payload.meeting_info;
     const operator = payload.operator;
 
-    switch (event.event) {
+    const eventType = event.event as TencentMeetingEventType;
+    switch (eventType) {
       case TencentMeetingEventType.MEETING_START:
         return `会议「${meetingInfo.subject}」开始，由 ${operator.user_name} 触发`;
       case TencentMeetingEventType.MEETING_END:

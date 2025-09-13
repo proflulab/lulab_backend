@@ -4,7 +4,7 @@
  * @Description: 腾讯会议Webhook请求体DTO
  */
 
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 /**

@@ -33,9 +33,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   handleRequest<TUser = AuthenticatedUser>(
     err: Error | null,
     user: AuthenticatedUser | null | undefined,
-    info: unknown,
-    context: ExecutionContext,
-    status?: number
+    // _info: unknown,
+    // _context: ExecutionContext,
+    // _status?: number,
   ): TUser {
     if (err) {
       throw err;

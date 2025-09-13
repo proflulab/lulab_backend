@@ -81,7 +81,12 @@ export class AliyunSmsService {
       if (typedError?.data && typeof typedError.data === 'object') {
         const data = typedError.data as Record<string, unknown>;
         if (data?.Recommend) {
-          this.logger.error(`诊断地址: ${String(data.Recommend)}`);
+          const recommend = data.Recommend as unknown;
+          const recommendStr =
+            typeof recommend === 'string'
+              ? recommend
+              : JSON.stringify(recommend);
+          this.logger.error(`诊断地址: ${recommendStr}`);
         }
       }
       throw new Error(`短信发送失败: ${errorMessage}`);

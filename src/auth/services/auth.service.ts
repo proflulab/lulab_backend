@@ -24,7 +24,7 @@ import {
   CodeType,
 } from '../../dto/auth.dto';
 import * as bcrypt from 'bcryptjs';
-import { User } from '@prisma/client';
+import { User, UserProfile } from '@prisma/client';
 import { LoginType } from '../types';
 
 @Injectable()
@@ -39,19 +39,19 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly verificationService: VerificationService,
     private readonly emailService: EmailService,
-  ) { }
+  ) {}
 
   // 用户注册
   async register(
     registerDto: RegisterDto,
-    _ip: string,
-    _userAgent?: string,
+    ip: string,
+    userAgent?: string,
   ): Promise<AuthResponseDto> {
     const { type, username, email, phone, password, code, countryCode } =
       registerDto;
 
     // 验证注册方式
-    await this.validateRegisterType(type, registerDto);
+    this.validateRegisterType(type, registerDto);
 
     // 检查用户是否已存在
     await this.checkUserExists(username, email, phone, countryCode);
@@ -103,8 +103,8 @@ export class AuthService {
       email || phone || username!,
       this.getLoginType(type),
       true,
-      _ip,
-      _userAgent,
+      ip,
+      userAgent,
     );
 
     // 发送欢迎邮件
@@ -119,7 +119,7 @@ export class AuthService {
     }
 
     // 生成JWT令牌
-    const tokens = await this.generateTokens(user.id);
+    const tokens = this.generateTokens(user.id);
 
     return {
       user: this.formatUserResponse(user),
@@ -204,7 +204,7 @@ export class AuthService {
       );
 
       // 生成JWT令牌
-      const tokens = await this.generateTokens(user.id);
+      const tokens = this.generateTokens(user.id);
 
       return {
         user: this.formatUserResponse(user),
@@ -230,8 +230,8 @@ export class AuthService {
   // 发送验证码
   async sendCode(
     sendCodeDto: SendCodeDto,
-    _ip: string,
-    _userAgent?: string,
+    ip: string,
+    userAgent?: string,
   ): Promise<{ success: boolean; message: string }> {
     const { target, type } = sendCodeDto;
 
@@ -254,7 +254,7 @@ export class AuthService {
       }
     }
 
-    return await this.verificationService.sendCode(target, type, _ip, _userAgent);
+    return await this.verificationService.sendCode(target, type, ip, userAgent);
   }
 
   // 验证验证码
@@ -319,7 +319,7 @@ export class AuthService {
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h2>密码重置通知</h2>
-              <p>您好 ${typeof user.profile === 'object' && user.profile && 'name' in user.profile ? (user.profile as any).name : 'User'}，</p>
+              <p>您好 ${typeof user.profile === 'object' && user.profile && 'name' in user.profile ? (user.profile as { name?: string }).name || 'User' : 'User'}，</p>
               <p>您的 LuLab 账户密码已成功重置。</p>
               <p>重置时间：${new Date().toLocaleString('zh-CN')}</p>
               <p>如果这不是您的操作，请立即联系我们。</p>
@@ -362,6 +362,7 @@ export class AuthService {
     ip: string,
     userAgent?: string,
   ): Promise<UserProfileResponseDto> {
+    this.logger.log(`用户 ${userId} 正在更新资料，IP: ${ip}, UA: ${userAgent}`);
     const { username, email, phone, countryCode, name, avatar, bio } =
       updateProfileDto;
 
@@ -447,7 +448,7 @@ export class AuthService {
   // 刷新令牌
   async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
     try {
-      const payload = this.jwtService.verify(refreshToken, {
+      const payload = this.jwtService.verify<{ sub: string }>(refreshToken, {
         secret: process.env.JWT_REFRESH_SECRET,
       });
 
@@ -468,18 +469,15 @@ export class AuthService {
       );
 
       return { accessToken };
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('刷新令牌无效');
     }
   }
 
   // 私有方法
 
-  private async validateRegisterType(
-    type: AuthType,
-    registerDto: RegisterDto,
-  ): Promise<void> {
-    const { username, email, phone, password, code } = registerDto;
+  private validateRegisterType(type: AuthType, registerDto: RegisterDto): void {
+    const { email, phone, password, code } = registerDto;
 
     switch (type) {
       case AuthType.USERNAME_PASSWORD:
@@ -561,7 +559,7 @@ export class AuthService {
   private async findUserByTarget(
     target: string,
     countryCode?: string,
-  ): Promise<(User & { profile: unknown }) | null> {
+  ): Promise<(User & { profile: UserProfile | null }) | null> {
     const conditions: Array<Record<string, unknown>> = [
       { username: target },
       { email: target },
@@ -649,9 +647,10 @@ export class AuthService {
     });
   }
 
-  private async generateTokens(
-    userId: string,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
+  private generateTokens(userId: string): {
+    accessToken: string;
+    refreshToken: string;
+  } {
     const payload = { sub: userId };
 
     const accessToken = this.jwtService.sign(payload, {
@@ -667,7 +666,9 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private formatUserResponse(user: any): UserProfileResponseDto {
+  private formatUserResponse(
+    user: User & { profile: UserProfile | null },
+  ): UserProfileResponseDto {
     return {
       id: user.id,
       username: user.username || undefined,
@@ -680,22 +681,22 @@ export class AuthService {
       createdAt: user.createdAt,
       profile: user.profile
         ? {
-          name: user.profile.name || undefined,
-          avatar: user.profile.avatar || undefined,
-          bio: user.profile.bio || undefined,
-          firstName: user.profile.firstName || undefined,
-          lastName: user.profile.lastName || undefined,
-          dateOfBirth: user.profile.dateOfBirth || undefined,
-          gender: user.profile.gender || undefined,
-          city: user.profile.city || undefined,
-          country: user.profile.country || undefined,
-        }
+            name: user.profile.name || undefined,
+            avatar: user.profile.avatar || undefined,
+            bio: user.profile.bio || undefined,
+            firstName: user.profile.firstName || undefined,
+            lastName: user.profile.lastName || undefined,
+            dateOfBirth: user.profile.dateOfBirth || undefined,
+            gender: user.profile.gender || undefined,
+            city: user.profile.city || undefined,
+            country: user.profile.country || undefined,
+          }
         : undefined,
     };
   }
 
-  private async hashPassword(password: string): Promise<string> {
-    return await bcrypt.hash(password, this.saltRounds);
+  private hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, this.saltRounds);
   }
 
   private validatePassword(password: string): void {

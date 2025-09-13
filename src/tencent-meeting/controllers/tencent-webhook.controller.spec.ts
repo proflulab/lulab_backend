@@ -12,7 +12,7 @@ jest.mock('../services/tencent-crypto.service');
 describe('TencentWebhookController', () => {
   let controller: TencentWebhookController;
   let configService: ConfigService;
-  let tencentEventHandlerService: TencentEventHandlerService;
+  // Note: Event handler service is mocked via provider; no direct usage here
   let mockVerifyWebhookUrl: jest.MockedFunction<
     typeof tencentCryptoService.verifyWebhookUrl
   >;
@@ -47,9 +47,7 @@ describe('TencentWebhookController', () => {
 
     controller = module.get<TencentWebhookController>(TencentWebhookController);
     configService = module.get<ConfigService>(ConfigService);
-    tencentEventHandlerService = module.get<TencentEventHandlerService>(
-      TencentEventHandlerService,
-    );
+    // No direct retrieval of TencentEventHandlerService required
 
     // Mock logger to avoid console output during tests
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
@@ -97,7 +95,9 @@ describe('TencentWebhookController', () => {
         mockConfig.token,
         mockConfig.encodingAesKey,
       );
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(configService.get).toHaveBeenCalledWith('TENCENT_MEETING_TOKEN');
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(configService.get).toHaveBeenCalledWith(
         'TENCENT_MEETING_ENCODING_AES_KEY',
       );
@@ -119,6 +119,7 @@ describe('TencentWebhookController', () => {
         new WebhookConfigException('TENCENT_MEETING', 'TENCENT_MEETING_TOKEN'),
       );
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(configService.get).toHaveBeenCalledWith('TENCENT_MEETING_TOKEN');
       expect(mockVerifyWebhookUrl).not.toHaveBeenCalled();
     });
@@ -192,7 +193,9 @@ describe('TencentWebhookController', () => {
         ),
       );
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(configService.get).toHaveBeenCalledWith('TENCENT_MEETING_TOKEN');
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(configService.get).toHaveBeenCalledWith(
         'TENCENT_MEETING_ENCODING_AES_KEY',
       );

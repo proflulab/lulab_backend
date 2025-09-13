@@ -13,11 +13,8 @@
 import { config } from 'dotenv';
 config({ path: '.env.test' });
 
-
 // 设置更长的超时时间用于集成测试
 jest.setTimeout(60000);
 
 // 全局测试配置
 console.log('🔧 Integration test setup complete');
-
-

@@ -61,7 +61,7 @@ export class EmailController {
         {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: '服务器内部错误',
-          error: error.message,
+          error: (error as Error).message,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -92,7 +92,7 @@ export class EmailController {
         {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: '验证连接时发生错误',
-          error: error.message,
+          error: (error as Error).message,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );

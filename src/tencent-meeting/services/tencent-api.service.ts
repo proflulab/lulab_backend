@@ -40,11 +40,13 @@ export class TencentApiService {
   private async sendRequest<T>(
     method: string,
     requestUri: string,
-    queryParams: Record<string, any> = {},
+    queryParams: Record<string, unknown> = {},
   ): Promise<T> {
     try {
       // 构建完整的请求URI
-      const queryString = new URLSearchParams(queryParams).toString();
+      const queryString = new URLSearchParams(
+        queryParams as Record<string, string>,
+      ).toString();
       const fullRequestUri = queryString
         ? `${requestUri}?${queryString}`
         : requestUri;
@@ -83,15 +85,21 @@ export class TencentApiService {
         headers,
       });
 
-      const responseData = await response.json();
+      const responseData = (await response.json()) as {
+        error_info?: {
+          error_code?: number;
+          new_error_code?: number;
+          message?: string;
+        };
+      } & T;
 
       // 统一错误处理
       if (responseData.error_info) {
         this.handleApiError(responseData.error_info, fullRequestUri, timestamp);
       }
 
-      return responseData as T;
-    } catch (error) {
+      return responseData;
+    } catch (error: unknown) {
       console.error('API请求失败:', error);
       throw error;
     }
@@ -104,7 +112,11 @@ export class TencentApiService {
    * @param timestamp 时间戳
    */
   private handleApiError(
-    errorInfo: any,
+    errorInfo: {
+      error_code?: number;
+      new_error_code?: number;
+      message?: string;
+    },
     requestUri: string,
     timestamp: string,
   ): void {
@@ -117,19 +129,19 @@ export class TencentApiService {
     });
 
     // 特殊处理IP白名单错误
-    const errorMessage = errorInfo.message || String(errorInfo);
-    if (errorInfo.error_code === 500125) {
+    const errorMessage = errorInfo?.message ?? JSON.stringify(errorInfo);
+    if (errorInfo?.error_code === 500125) {
       throw new Error(
         `IP白名单错误: ${errorMessage}\n请确保已在腾讯会议应用配置中添加当前服务器IP到白名单。`,
       );
     }
 
-    if (errorInfo.error_code === 108004051) {
+    if (errorInfo?.error_code === 108004051) {
       throw new Error(`录制文件已经被删除: ${errorMessage}\n`);
     }
 
     throw new Error(
-      `API请求失败: ${errorMessage} (错误码: ${errorInfo.error_code})`,
+      `API请求失败: ${errorMessage} (错误码: ${errorInfo?.error_code})`,
     );
   }
 
@@ -218,7 +230,7 @@ export class TencentApiService {
     userId: string,
     subMeetingId?: string | null,
   ): Promise<MeetingParticipantsResponse> {
-    const params: Record<string, any> = { userid: userId };
+    const params: Record<string, string | number> = { userid: userId };
     if (subMeetingId) {
       params.sub_meeting_id = subMeetingId;
     }
@@ -246,7 +258,7 @@ export class TencentApiService {
     pid?: string,
     limit?: number,
   ): Promise<RecordingTranscriptDetail> {
-    const params: Record<string, any> = {
+    const params: Record<string, string | number> = {
       meeting_id: meetingId,
       record_file_id: recordFileId,
       operator_id: userId,
@@ -285,7 +297,7 @@ export class TencentApiService {
     lang: string = 'default',
     pwd?: string,
   ): Promise<SmartMinutesResponse> {
-    const params: Record<string, any> = {
+    const params: Record<string, string | number> = {
       operator_id: userId,
       operator_id_type: 1,
       minute_type: minuteType,

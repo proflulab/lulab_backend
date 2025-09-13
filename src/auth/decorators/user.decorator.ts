@@ -19,10 +19,14 @@ export interface CurrentUser {
   profile?: Record<string, unknown>;
 }
 
+interface RequestWithUser {
+  user?: CurrentUser;
+}
+
 export const User = createParamDecorator(
   (data: keyof CurrentUser | undefined, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    const user = request.user as CurrentUser | undefined;
+    const request = ctx.switchToHttp().getRequest<RequestWithUser>();
+    const user = request.user;
 
     return data ? user?.[data] : user;
   },

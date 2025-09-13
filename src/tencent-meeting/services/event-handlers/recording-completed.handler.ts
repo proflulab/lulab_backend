@@ -16,7 +16,7 @@ import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
   RecordingFileBitableRepository,
-} from '@libs/integrations-lark/repositories';
+} from '@libs/integrations/lark/repositories';
 
 /**
  * 录制完成事件处理器
@@ -47,7 +47,7 @@ export class RecordingCompletedHandler extends BaseEventHandler {
       `录制完成 [${index}]: ${meeting_info.subject} (${meeting_info.meeting_code})`,
     );
 
-    let meetingRecordId;
+    let meetingRecordId: string | undefined;
 
     try {
       const meetingResult = await this.MeetingBitable.upsertMeetingRecord({
@@ -64,10 +64,10 @@ export class RecordingCompletedHandler extends BaseEventHandler {
         meetingRecordId = meetingResult.data.record.record_id;
         this.logger.log(`操作者记录ID: ${meetingRecordId}`);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error(
         `处理录制完成事件失败: ${meeting_info.meeting_id}`,
-        error,
+        error instanceof Error ? error.stack : undefined,
       );
       // 不抛出错误，避免影响主流程
     }
@@ -80,10 +80,11 @@ export class RecordingCompletedHandler extends BaseEventHandler {
 
       for (const file of recording_files) {
         try {
+          const meetIds: string[] = meetingRecordId ? [meetingRecordId] : [];
           const recordingResult =
             await this.recordingFileBitable.upsertRecordingFileRecord({
               record_file_id: file.record_file_id,
-              meet: [meetingRecordId],
+              meet: meetIds,
               start_time: meeting_info.start_time * 1000,
               end_time: meeting_info.end_time * 1000,
             });
@@ -93,8 +94,11 @@ export class RecordingCompletedHandler extends BaseEventHandler {
               `录制文件记录已创建/更新: ${file.record_file_id} (记录ID: ${recordingResult.data.record.record_id})`,
             );
           }
-        } catch (error) {
-          this.logger.error(`处理录制文件失败: ${file.record_file_id}`, error);
+        } catch (error: unknown) {
+          this.logger.error(
+            `处理录制文件失败: ${file.record_file_id}`,
+            error instanceof Error ? error.stack : undefined,
+          );
           // 不抛出错误，避免影响主流程
         }
       }

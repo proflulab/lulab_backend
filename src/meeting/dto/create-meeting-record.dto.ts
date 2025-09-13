@@ -103,7 +103,7 @@ export class CreateMeetingRecordDto {
     minimum: 0,
   })
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
+  @Transform(({ value }) => parseInt(String(value)))
   @IsNumber({}, { message: '持续时间必须是数字' })
   @Min(0, { message: '持续时间不能小于0' })
   duration?: number;

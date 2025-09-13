@@ -143,11 +143,20 @@ export class MeetingRepository {
   /**
    * 获取会议记录列表
    */
-  async getMeetingRecords(params: GetMeetingRecordsParams) {
+  async getMeetingRecords(params: GetMeetingRecordsParams): Promise<{
+    records: any[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
     const { platform, startDate, endDate, page = 1, limit = 10 } = params;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: {
+      platform?: typeof platform;
+      startTime?: { gte?: Date; lte?: Date };
+    } = {};
     if (platform) {
       where.platform = platform;
     }

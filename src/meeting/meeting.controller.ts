@@ -73,8 +73,8 @@ export class MeetingController {
         limit: result.limit,
         totalPages: Math.ceil(result.total / result.limit),
       };
-    } catch (error) {
-      this.logger.error('获取会议记录失败', error.stack);
+    } catch (error: unknown) {
+      this.logger.error('获取会议记录失败', (error as Error).stack);
       throw error;
     }
   }
@@ -95,8 +95,8 @@ export class MeetingController {
 
       this.logger.log(`获取会议记录详情成功: ${record.id}`);
       return record;
-    } catch (error) {
-      this.logger.error(`获取会议记录详情失败: ${id}`, error.stack);
+    } catch (error: unknown) {
+      this.logger.error(`获取会议记录详情失败: ${id}`, (error as Error).stack);
       throw error;
     }
   }
@@ -120,8 +120,8 @@ export class MeetingController {
 
       this.logger.log(`创建会议记录成功: ${record.id}`);
       return record;
-    } catch (error) {
-      this.logger.error('创建会议记录失败', error.stack);
+    } catch (error: unknown) {
+      this.logger.error('创建会议记录失败', (error as Error).stack);
       throw error;
     }
   }
@@ -146,8 +146,8 @@ export class MeetingController {
 
       this.logger.log(`更新会议记录成功: ${record.id}`);
       return record;
-    } catch (error) {
-      this.logger.error(`更新会议记录失败: ${id}`, error.stack);
+    } catch (error: unknown) {
+      this.logger.error(`更新会议记录失败: ${id}`, (error as Error).stack);
       throw error;
     }
   }
@@ -167,8 +167,8 @@ export class MeetingController {
       await this.meetingService.deleteMeetingRecord(id);
 
       this.logger.log(`删除会议记录成功: ${id}`);
-    } catch (error) {
-      this.logger.error(`删除会议记录失败: ${id}`, error.stack);
+    } catch (error: unknown) {
+      this.logger.error(`删除会议记录失败: ${id}`, (error as Error).stack);
       throw error;
     }
   }
@@ -179,22 +179,22 @@ export class MeetingController {
   @Get('stats/summary')
   @HttpCode(HttpStatus.OK)
   @ApiGetMeetingStatsDocs()
-  async getMeetingStats(
+  getMeetingStats(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
-  ): Promise<any> {
+  ): any {
     this.logger.log('获取会议统计信息', { startDate, endDate });
 
     try {
-      const stats = await this.meetingService.getMeetingStats({
+      const stats = this.meetingService.getMeetingStats({
         startDate: startDate ? new Date(startDate) : undefined,
         endDate: endDate ? new Date(endDate) : undefined,
       });
 
       this.logger.log('获取会议统计信息成功');
       return stats;
-    } catch (error) {
-      this.logger.error('获取会议统计信息失败', error.stack);
+    } catch (error: unknown) {
+      this.logger.error('获取会议统计信息失败', (error as Error).stack);
       throw error;
     }
   }
@@ -215,8 +215,11 @@ export class MeetingController {
 
       this.logger.log(`重新处理会议录制文件成功: ${record.id}`);
       return record;
-    } catch (error) {
-      this.logger.error(`重新处理会议录制文件失败: ${id}`, error.stack);
+    } catch (error: unknown) {
+      this.logger.error(
+        `重新处理会议录制文件失败: ${id}`,
+        (error as Error).stack,
+      );
       throw error;
     }
   }
@@ -227,7 +230,7 @@ export class MeetingController {
   @Get('health')
   @HttpCode(HttpStatus.OK)
   @ApiHealthCheckDocs()
-  async healthCheck() {
+  healthCheck() {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),

@@ -20,9 +20,8 @@ export class FeishuWebhookHandler {
 
   /**
    * 验证飞书 Webhook签名
-   * @param params 验证参数
    */
-  verifySignature(params: unknown): boolean {
+  verifySignature(): boolean {
     this.logger.log('验证飞书 Webhook签名');
     // TODO: 实现飞书签名验证逻辑
     return true;
@@ -31,9 +30,8 @@ export class FeishuWebhookHandler {
   /**
    * 解密飞书 Webhook数据
    * @param encryptedData 加密数据
-   * @param key 解密密钥
    */
-  async decryptData(encryptedData: string, key: string): Promise<string> {
+  decryptData(encryptedData: string): string {
     this.logger.log('解密飞书 Webhook数据');
     // TODO: 实现飞书数据解密逻辑
     return encryptedData;
@@ -41,21 +39,24 @@ export class FeishuWebhookHandler {
 
   /**
    * 处理飞书 Webhook事件
-   * @param eventData 事件数据
    */
-  async handleEvent(eventData: unknown): Promise<void> {
-    this.logger.log('处理飞书 Webhook事件', eventData);
+  handleEvent(): void {
+    this.logger.log('处理飞书 Webhook事件');
     // TODO: 实现飞书事件处理逻辑
   }
 
   /**
    * 处理飞书 Webhook事件
    */
-  async handleWebhookEvent(
-    payload: unknown,
-    headers: Record<string, string>,
-  ): Promise<void> {
+  handleWebhookEvent(body?: unknown, headers?: Record<string, string>): void {
     this.logger.log('处理飞书 Webhook事件');
+    // 预留：记录基础信息，防止未使用参数告警
+    if (body) {
+      this.logger.debug('收到飞书Webhook Body');
+    }
+    if (headers) {
+      this.logger.debug('收到飞书Webhook Headers');
+    }
     // TODO: 实现飞书 Webhook处理逻辑
     throw new Error('飞书 Webhook处理尚未实现');
   }

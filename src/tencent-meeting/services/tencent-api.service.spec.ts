@@ -1,11 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { TencentApiService } from './tencent-api.service';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 
 // 模拟 ConfigService
 const mockConfigService = {
   get: jest.fn((key: string) => {
-    const config = {
+    const config: Record<string, string> = {
       TENCENT_MEETING_SECRET_ID: 'mock-secret-id',
       TENCENT_MEETING_SECRET_KEY: 'mock-secret-key',
       TENCENT_MEETING_APP_ID: 'mock-app-id',
@@ -23,6 +24,11 @@ global.fetch = jest.fn();
 jest.mock('./tencent-crypto.service', () => ({
   generateSignature: jest.fn(() => 'mock-signature'),
 }));
+
+// Helper to create a typed fetch JSON response
+const jsonResponse = (data: unknown) => ({
+  json: jest.fn().mockResolvedValueOnce(data),
+});
 
 describe('TencentApiService', () => {
   let service: TencentApiService;
@@ -87,9 +93,9 @@ describe('TencentApiService', () => {
         },
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockResponse),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        jsonResponse(mockResponse),
+      );
 
       const result = await service.getRecordingFileDetail(
         'test-file-id',
@@ -118,9 +124,9 @@ describe('TencentApiService', () => {
         },
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockError),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        jsonResponse(mockError),
+      );
 
       await expect(
         service.getRecordingFileDetail('deleted-file-id', 'test-user-id'),
@@ -135,9 +141,9 @@ describe('TencentApiService', () => {
         },
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockError),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        jsonResponse(mockError),
+      );
 
       await expect(
         service.getRecordingFileDetail('test-file-id', 'test-user-id'),
@@ -167,9 +173,9 @@ describe('TencentApiService', () => {
         ],
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockResponse),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        jsonResponse(mockResponse),
+      );
 
       const startTime = Math.floor(new Date('2024-01-01').getTime() / 1000);
       const endTime = Math.floor(new Date('2024-01-31').getTime() / 1000);
@@ -200,16 +206,16 @@ describe('TencentApiService', () => {
 
     it('should limit page size to maximum 20', async () => {
       const mockResponse = { total_count: 0, record_meetings: [] };
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockResponse),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        jsonResponse(mockResponse),
+      );
 
       const startTime = Math.floor(new Date('2024-01-01').getTime() / 1000);
       const endTime = Math.floor(new Date('2024-01-02').getTime() / 1000);
 
       await service.getCorpRecords(startTime, endTime, 50, 1);
 
-      const fetchCall = (global.fetch as jest.Mock).mock.calls[0][0];
+      const fetchCall = String((global.fetch as jest.Mock).mock.calls[0][0]);
       expect(fetchCall).toContain('page_size=20'); // 应该被限制为20
     });
   });
@@ -225,9 +231,9 @@ describe('TencentApiService', () => {
         participants: ['user1', 'user2'],
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockResponse),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        jsonResponse(mockResponse),
+      );
 
       const result = await service.getMeetingDetail(
         'test-meeting-id',
@@ -249,13 +255,13 @@ describe('TencentApiService', () => {
 
     it('should include instanceId parameter when provided', async () => {
       const mockResponse = { meeting_id: 'test-meeting-id' };
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockResponse),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        jsonResponse(mockResponse),
+      );
 
       await service.getMeetingDetail('test-meeting-id', 'test-user-id', '2');
 
-      const fetchCall = (global.fetch as jest.Mock).mock.calls[0][0];
+      const fetchCall = String((global.fetch as jest.Mock).mock.calls[0][0]);
       expect(fetchCall).toContain('instanceid=2');
     });
   });
@@ -279,9 +285,9 @@ describe('TencentApiService', () => {
         ],
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockResponse),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        jsonResponse(mockResponse),
+      );
 
       const result = await service.getMeetingParticipants(
         'test-meeting-id',
@@ -313,7 +319,7 @@ describe('TencentApiService', () => {
         'sub-123',
       );
 
-      const fetchCall = (global.fetch as jest.Mock).mock.calls[0][0];
+      const fetchCall = String((global.fetch as jest.Mock).mock.calls[0][0]);
       expect(fetchCall).toContain('sub_meeting_id=sub-123');
     });
 
@@ -329,7 +335,7 @@ describe('TencentApiService', () => {
         null,
       );
 
-      const fetchCall = (global.fetch as jest.Mock).mock.calls[0][0];
+      const fetchCall = String((global.fetch as jest.Mock).mock.calls[0][0]);
       expect(fetchCall).not.toContain('sub_meeting_id');
     });
   });
@@ -346,11 +352,9 @@ describe('TencentApiService', () => {
     });
 
     it('should handle unexpected response format', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        json: jest
-          .fn()
-          .mockResolvedValueOnce({ some_unexpected_field: 'value' }),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        jsonResponse({ some_unexpected_field: 'value' }),
+      );
 
       const result = await service.getRecordingFileDetail(
         'test-file-id',

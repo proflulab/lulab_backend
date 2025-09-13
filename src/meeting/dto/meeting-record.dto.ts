@@ -64,7 +64,7 @@ export class QueryMeetingRecordsDto {
     default: 1,
   })
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
+  @Transform(({ value }) => parseInt(String(value)))
   @IsNumber()
   @Min(1)
   page?: number = 1;
@@ -76,7 +76,7 @@ export class QueryMeetingRecordsDto {
     default: 10,
   })
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
+  @Transform(({ value }) => parseInt(String(value)))
   @IsNumber()
   @Min(1)
   @Max(100)

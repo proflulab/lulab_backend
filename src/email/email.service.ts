@@ -12,6 +12,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { SendEmailDto } from '../dto/send-email.dto';
 
 export interface EmailOptions {
@@ -25,7 +26,7 @@ export interface EmailOptions {
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private transporter: nodemailer.Transporter;
+  private transporter: nodemailer.Transporter<SMTPTransport.SentMessageInfo>;
 
   constructor(private readonly configService: ConfigService) {
     this.createTransporter();
@@ -57,7 +58,7 @@ export class EmailService {
     this.transporter = nodemailer.createTransport(emailConfig);
 
     // 验证邮件配置
-    this.transporter.verify((error: Error | null, success: boolean) => {
+    this.transporter.verify((error: Error | null) => {
       if (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
@@ -83,7 +84,7 @@ export class EmailService {
 
       const { to, cc, bcc, subject, text, html } = sendEmailDto;
 
-      const mailOptions = {
+      const mailOptions: nodemailer.SendMailOptions = {
         from:
           this.configService.get<string>('SMTP_FROM') ||
           this.configService.get<string>('SMTP_USER'),
@@ -143,7 +144,7 @@ export class EmailService {
         throw new Error(errorMsg);
       }
 
-      const mailOptions = {
+      const mailOptions: nodemailer.SendMailOptions = {
         from:
           options.from ||
           this.configService.get<string>('SMTP_FROM') ||
