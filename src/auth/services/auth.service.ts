@@ -211,8 +211,6 @@ export class AuthService {
     }
   }
 
-  // 验证码发送与校验接口已拆分到 VerificationModule
-
   // 重置密码
   async resetPassword(
     resetPasswordDto: ResetPasswordDto,
