@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { CodeType } from '@/verification/enums/code-type.enum';
+import { CodeType } from '@/verification/enums';
 
 export class SendCodeDto {
   @ApiProperty({ description: '目标邮箱或手机号' })

@@ -41,14 +41,14 @@
 
 ### 后端技术栈
 
-- **框架**: NestJS (Node.js)
-- **语言**: TypeScript
-- **数据库**: PostgreSQL
-- **ORM**: Prisma
-- **API文档**: Swagger/OpenAPI
-- **测试**: Jest
-- **打包**: Webpack
-- **依赖管理**: pnpm
+- 框架: NestJS (Node.js)
+- 语言: TypeScript
+- 数据库: PostgreSQL
+- ORM: Prisma
+- API 文档: Swagger/OpenAPI
+- 测试: Jest + Supertest
+- 构建: Nest build（tsc/SWC）
+- 依赖管理: pnpm
 
 ### 第三方服务集成
 
@@ -62,34 +62,48 @@
 ### 核心模块
 
 #### 1. 认证模块 (Auth Module)
-- 用户注册、登录、JWT认证
-- 短信验证码服务
-- 密码加密和验证
+
+- 用例服务拆分（聚合服务已移除）：
+  - RegisterService：注册流程（验证码校验、用户创建、欢迎邮件、登录日志）
+  - LoginService：登录流程（密码/验证码、限流、登录日志、最后登录时间）
+  - PasswordService：重置密码（验证码校验、密码强度校验、通知邮件）
+  - ProfileService：用户资料（获取/更新、唯一性校验）
+  - TokenService：令牌签发与刷新
+  - AuthPolicyService：登录策略（失败次数限制、登录日志、类型映射）
+- 仓储层：
+  - UserRepository：用户与档案读写
+  - LoginLogRepository：登录日志统计与写入
+  - 说明：原 AuthRepository 已拆分并移除
 
 #### 2. 会议模块 (Meeting Module)
+
 - 会议记录管理
 - 会议数据存储
 - 会议文件处理
 - 会议参与者管理
 
 #### 3. 腾讯会议集成模块 (Tencent Meeting Module)
+
 - Webhook事件处理
 - API服务调用
 - 数据解密和验证
 - 事件分发和处理
 
 #### 4. 飞书集成模块 (Lark Integration Module)
+
 - 多维表格API调用
 - 数据同步服务
 - 批量操作支持
 - Upsert操作支持
 
 #### 5. 用户模块 (User Module)
+
 - 用户信息管理
 - 权限控制
 - 用户档案管理
 
 #### 6. 邮件模块 (Email Module)
+
 - 邮件发送服务
 - 模板管理
 - 发送记录跟踪
@@ -97,6 +111,7 @@
 ### 共享库
 
 #### 1. 飞书集成库 (Integrations-Lark)
+
 - Bitable服务
 - 飞书客户端
 - 数据仓库

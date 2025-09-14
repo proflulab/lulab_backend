@@ -18,7 +18,7 @@ import {
   ApiConsumes,
 } from '@nestjs/swagger';
 import { Request } from 'express';
-import { AuthService } from '@/auth/services/auth.service';
+import { ProfileService } from '@/auth/services/profile.service';
 import { JwtAuthGuard, User, CurrentUser } from '@libs/security';
 import { UpdateProfileDto } from '@/auth/dto/update-profile.dto';
 import { UserProfileResponseDto } from '@/auth/dto/user-profile-response.dto';
@@ -27,7 +27,7 @@ import { UserProfileResponseDto } from '@/auth/dto/user-profile-response.dto';
 @Controller('api/user')
 @UseGuards(JwtAuthGuard)
 export class UserController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly profileService: ProfileService) {}
 
   @Get('profile')
   @ApiOperation({
@@ -79,7 +79,7 @@ export class UserController {
   })
   @ApiBearerAuth()
   async getProfile(@User() user: CurrentUser): Promise<UserProfileResponseDto> {
-    return await this.authService.getProfile(user.id);
+    return await this.profileService.getProfile(user.id);
   }
 
   @Put('profile')
@@ -195,7 +195,7 @@ export class UserController {
   ): Promise<UserProfileResponseDto> {
     const ip = this.getClientIp(req);
     const userAgent = req.get('User-Agent');
-    return await this.authService.updateProfile(
+    return await this.profileService.updateProfile(
       user.id,
       updateProfileDto,
       ip,
@@ -204,11 +204,15 @@ export class UserController {
   }
 
   private getClientIp(req: Request): string {
+    const xff = req.headers['x-forwarded-for'];
+    const xReal = req.headers['x-real-ip'];
+    const forwarded = Array.isArray(xff) ? xff[0] : xff?.split(',')[0];
+    const realIp = Array.isArray(xReal) ? xReal[0] : xReal;
     return (
-      (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
-      (req.headers['x-real-ip'] as string) ||
-      req.connection.remoteAddress ||
-      req.socket.remoteAddress ||
+      forwarded?.trim() ||
+      realIp?.trim() ||
+      req.ip ||
+      req.socket?.remoteAddress ||
       '127.0.0.1'
     );
   }

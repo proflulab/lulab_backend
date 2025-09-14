@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsEnum, IsOptional, IsString } from 'class-validator';
-import { AuthType } from '@/auth/enums/auth-type.enum';
+import { AuthType } from '@/auth/enums';
 
 export class LoginDto {
   @ApiProperty({ description: '登录类型', enum: AuthType })

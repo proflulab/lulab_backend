@@ -79,3 +79,45 @@ export function buildWelcomeEmail(username: string) {
 
   return { subject, html };
 }
+
+export function buildPasswordResetNotificationEmail(
+  username: string,
+  resetAt?: Date,
+): { subject: string; html: string } {
+  const subject = 'LuLab 密码重置通知';
+  const resetTime = (resetAt ?? new Date()).toLocaleString('zh-CN');
+  const safeName = username || 'User';
+
+  const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #007bff; margin: 0;">LuLab</h1>
+        </div>
+
+        <div style="background-color: #f8f9fa; padding: 30px; border-radius: 8px;">
+          <h2 style="color: #333; margin-top: 0;">密码重置通知</h2>
+          <p style="color: #666; font-size: 16px; line-height: 1.5;">您好 ${safeName}，</p>
+          <p style="color: #666; font-size: 16px; line-height: 1.5;">您的 LuLab 账户密码已成功重置。</p>
+
+          <div style="background-color: #fff; padding: 20px; border-radius: 6px; margin: 20px 0; border: 1px solid #e9ecef;">
+            <p style="color: #333; margin: 0; font-size: 14px;">重置时间：<strong>${resetTime}</strong></p>
+          </div>
+
+          <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 6px; margin: 20px 0;">
+            <p style="color: #856404; margin: 0; font-size: 14px;">
+              <strong>⚠️ 安全提示：</strong><br>
+              • 如果这不是您的操作，请立即联系我们并修改密码<br>
+              • 建议开启两步验证以提升账户安全
+            </p>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+          <p style="color: #999; font-size: 12px; margin: 0;">此邮件由 LuLab 系统自动发送，请勿回复</p>
+          <p style="color: #999; font-size: 12px; margin: 5px 0 0 0;">© 2024 LuLab. All rights reserved.</p>
+        </div>
+      </div>
+    `;
+
+  return { subject, html };
+}
