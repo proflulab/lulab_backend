@@ -23,11 +23,20 @@ import { MeetingModule } from './meeting/meeting.module';
 import { TencentMeetingModule } from './tencent-meeting/tencent-meeting.module';
 import { FeishuMeetingModule } from './feishu-meeting/feishu-meeting.module';
 import { VerificationModule } from '@/verification/verification.module';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { AppResolver } from './app.resolver';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: true,
+      playground: true,
+      introspection: true,
     }),
     EmailModule,
     AuthModule,
@@ -41,6 +50,7 @@ import { VerificationModule } from '@/verification/verification.module';
   providers: [
     AppService,
     PrismaService,
+    AppResolver,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

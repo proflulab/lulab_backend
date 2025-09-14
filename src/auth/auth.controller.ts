@@ -112,6 +112,7 @@ export class AuthController {
     const xReal = req.headers['x-real-ip'];
     const forwarded = Array.isArray(xff) ? xff[0] : xff?.split(',')[0];
     const realIp = Array.isArray(xReal) ? xReal[0] : xReal;
+
     return (
       forwarded?.trim() ||
       realIp?.trim() ||

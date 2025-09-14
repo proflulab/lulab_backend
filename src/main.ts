@@ -41,6 +41,7 @@ async function bootstrap() {
   console.log(`🚀 Application is running on: http://localhost:${port}`);
   console.log(`📚 Swagger documentation: http://localhost:${port}/api`);
   console.log(`📄 Swagger API JSON: http://localhost:${port}/api-json`);
+  console.log(`🎯 GraphQL endpoint: http://localhost:${port}/graphql`);
 }
 bootstrap().catch((error) => {
   console.error('❌ Application failed to start:', error);
