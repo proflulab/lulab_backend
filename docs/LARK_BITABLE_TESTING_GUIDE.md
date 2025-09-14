@@ -7,6 +7,7 @@
 ### 1. 配置测试环境变量
 
 1. 复制测试环境文件：
+
 ```bash
 cp .env.test.example .env.test
 ```
@@ -26,6 +27,7 @@ LARK_TEST_TABLE_ID=你的测试表格ID
 ### 2. 获取飞书配置信息
 
 #### 获取 LARK_APP_ID 和 LARK_APP_SECRET
+
 1. 登录 [飞书开放平台](https://open.feishu.cn/)
 2. 进入「开发者后台」
 3. 创建「企业自建应用」
@@ -34,6 +36,7 @@ LARK_TEST_TABLE_ID=你的测试表格ID
    - App Secret → `LARK_APP_SECRET`
 
 #### 获取 LARK_TEST_APP_TOKEN 和 LARK_TEST_TABLE_ID
+
 1. 在飞书中创建一个测试用的多维表格
 2. 获取 app_token：
    - 打开多维表格，复制URL中的token部分
@@ -47,6 +50,7 @@ LARK_TEST_TABLE_ID=你的测试表格ID
 ### 3. 配置IP白名单
 
 确保当前服务器的IP地址已添加到飞书应用的IP白名单：
+
 1. 登录 [飞书开放平台](https://open.feishu.cn/)
 2. 进入应用管理 → 安全设置
 3. 在「IP白名单」中添加当前服务器IP
@@ -54,6 +58,7 @@ LARK_TEST_TABLE_ID=你的测试表格ID
 ### 4. 测试表格字段要求
 
 测试用例假设测试表格包含以下字段：
+
 - `测试文本` (文本类型)
 - `测试数字` (数字类型)
 - `测试布尔` (复选框类型)
@@ -63,6 +68,7 @@ LARK_TEST_TABLE_ID=你的测试表格ID
 ## 运行测试
 
 ### 运行所有集成测试
+
 ```bash
 # 使用pnpm
 pnpm test:integration
@@ -72,12 +78,14 @@ npx jest libs/integrations-lark/bitable.service.spec.ts --config ./test/jest-int
 ```
 
 ### 运行单个测试文件
+
 ```bash
 # 运行bitable服务测试
 npx jest libs/integrations-lark/bitable.service.spec.ts --config ./test/jest-integration.json --runInBand
 ```
 
 ### 调试模式运行
+
 ```bash
 # 启用详细日志
 DEBUG=true npx jest libs/integrations-lark/bitable.service.spec.ts --config ./test/jest-integration.json --verbose
@@ -86,6 +94,7 @@ DEBUG=true npx jest libs/integrations-lark/bitable.service.spec.ts --config ./te
 ## 测试说明
 
 ### 测试内容
+
 测试文件 `bitable.service.spec.ts` 包含以下测试场景：
 
 1. **基础CRUD操作**
@@ -114,9 +123,11 @@ DEBUG=true npx jest libs/integrations-lark/bitable.service.spec.ts --config ./te
    - 无效的字段名
 
 ### 测试数据清理
+
 测试运行后会自动清理创建的测试记录，确保不影响测试环境。
 
 ### 注意事项
+
 1. 确保测试表格有足够的权限（应用需要有编辑权限）
 2. 测试会真实操作多维表格，请使用专门的测试表格
 3. 如果测试失败，请检查网络连接和IP白名单配置
@@ -143,6 +154,7 @@ DEBUG=true npx jest libs/integrations-lark/bitable.service.spec.ts --config ./te
    - 解决：检查 `.env.test` 中的配置是否正确
 
 ### 调试技巧
+
 1. 启用详细日志：`LOG_API_RESPONSES=true`
 2. 使用 `--verbose` 参数查看详细测试输出
 3. 检查飞书开放平台中的应用日志

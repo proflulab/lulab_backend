@@ -65,6 +65,7 @@ Content-Type: application/json
 ```
 
 **Headers**:
+
 - `timestamp`: 时间戳
 - `nonce`: 随机数
 - `signature`: 签名
@@ -138,11 +139,13 @@ interface TencentEventPayload {
 ### 本地测试
 
 1. **启动服务**:
+
 ```bash
 npm run start:dev
 ```
 
 2. **运行测试脚本**:
+
 ```bash
 npm run test:tencent-webhook
 ```
@@ -150,11 +153,13 @@ npm run test:tencent-webhook
 ### 手动测试
 
 使用curl测试URL验证：
+
 ```bash
 curl -X GET "http://localhost:3000/webhooks/tencent?check_str=dGVzdA==&timestamp=1234567890&nonce=123456&signature=computed_signature"
 ```
 
 使用curl测试事件接收：
+
 ```bash
 curl -X POST "http://localhost:3000/webhooks/tencent" \
   -H "Content-Type: application/json" \
@@ -183,6 +188,7 @@ curl -X POST "http://localhost:3000/webhooks/tencent" \
 ### 日志查看
 
 查看应用日志：
+
 ```bash
 # 开发环境
 npm run start:dev

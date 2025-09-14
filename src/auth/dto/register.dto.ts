@@ -7,7 +7,7 @@ import {
   MinLength,
   Matches,
 } from 'class-validator';
-import { AuthType } from '@/auth/enums/auth-type.enum';
+import { AuthType } from '@/auth/enums';
 
 export class RegisterDto {
   @ApiProperty({ description: '注册类型', enum: AuthType })

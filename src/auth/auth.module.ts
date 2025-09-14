@@ -3,11 +3,18 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
-import { AuthService } from './services/auth.service';
-import { JwtStrategy, JwtAuthGuard } from '@libs/security';
+import { RegisterService } from './services/register.service';
+import { LoginService } from './services/login.service';
+import { PasswordService } from './services/password.service';
+import { ProfileService } from './services/profile.service';
+import { TokenService } from './services/token.service';
+import { AuthPolicyService } from './services/auth-policy.service';
+import { JwtStrategy, JwtAuthGuard, JWT_USER_LOOKUP } from '@libs/security';
 import { PrismaService } from '@/prisma.service';
 import { EmailModule } from '@/email/email.module';
-import { AuthRepository } from './repositories/auth.repository';
+import { UserRepository } from './repositories/user.repository';
+import { LoginLogRepository } from './repositories/login-log.repository';
+import { JwtUserLookupService } from './services/jwt-user-lookup.service';
 
 @Module({
   imports: [
@@ -26,12 +33,28 @@ import { AuthRepository } from './repositories/auth.repository';
   ],
   controllers: [AuthController],
   providers: [
-    AuthService,
+    RegisterService,
+    LoginService,
+    PasswordService,
+    ProfileService,
+    TokenService,
+    AuthPolicyService,
     JwtStrategy,
     JwtAuthGuard,
     PrismaService,
-    AuthRepository,
+    UserRepository,
+    LoginLogRepository,
+    { provide: JWT_USER_LOOKUP, useClass: JwtUserLookupService },
   ],
-  exports: [AuthService, JwtAuthGuard, JwtStrategy],
+  exports: [
+    RegisterService,
+    LoginService,
+    PasswordService,
+    ProfileService,
+    TokenService,
+    AuthPolicyService,
+    JwtAuthGuard,
+    JwtStrategy,
+  ],
 })
 export class AuthModule {}

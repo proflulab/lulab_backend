@@ -17,7 +17,10 @@ import {
   ApiLogoutDocs,
 } from './decorators/api-docs.decorator';
 import { Request } from 'express';
-import { AuthService } from './services/auth.service';
+import { RegisterService } from './services/register.service';
+import { LoginService } from './services/login.service';
+import { PasswordService } from './services/password.service';
+import { TokenService } from './services/token.service';
 import { JwtAuthGuard, Public } from '@libs/security';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -31,7 +34,12 @@ import { AuthResponseDto } from './dto/auth-response.dto';
 })
 @UseGuards(JwtAuthGuard)
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly registerService: RegisterService,
+    private readonly loginService: LoginService,
+    private readonly passwordService: PasswordService,
+    private readonly tokenService: TokenService,
+  ) {}
 
   @Public()
   @Post('register')
@@ -43,7 +51,7 @@ export class AuthController {
   ): Promise<AuthResponseDto> {
     const ip = this.getClientIp(req);
     const userAgent = req.get('User-Agent');
-    return await this.authService.register(registerDto, ip, userAgent);
+    return await this.registerService.register(registerDto, ip, userAgent);
   }
 
   @Public()
@@ -56,7 +64,7 @@ export class AuthController {
   ): Promise<AuthResponseDto> {
     const ip = this.getClientIp(req);
     const userAgent = req.get('User-Agent');
-    return await this.authService.login(loginDto, ip, userAgent);
+    return await this.loginService.login(loginDto, ip, userAgent);
   }
 
   @Public()
@@ -69,7 +77,7 @@ export class AuthController {
   ): Promise<{ success: boolean; message: string }> {
     const ip = this.getClientIp(req);
     const userAgent = req.get('User-Agent');
-    return await this.authService.resetPassword(
+    return await this.passwordService.resetPassword(
       resetPasswordDto,
       ip,
       userAgent,
@@ -83,7 +91,7 @@ export class AuthController {
   async refreshToken(
     @Body('refreshToken') refreshToken: string,
   ): Promise<{ accessToken: string }> {
-    return await this.authService.refreshToken(refreshToken);
+    return await this.tokenService.refreshToken(refreshToken);
   }
 
   @Post('logout')
@@ -100,10 +108,14 @@ export class AuthController {
   }
 
   private getClientIp(req: Request): string {
+    const xff = req.headers['x-forwarded-for'];
+    const xReal = req.headers['x-real-ip'];
+    const forwarded = Array.isArray(xff) ? xff[0] : xff?.split(',')[0];
+    const realIp = Array.isArray(xReal) ? xReal[0] : xReal;
     return (
-      (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
-      (req.headers['x-real-ip'] as string) ||
-      req.connection?.remoteAddress ||
+      forwarded?.trim() ||
+      realIp?.trim() ||
+      req.ip ||
       req.socket?.remoteAddress ||
       '127.0.0.1'
     );

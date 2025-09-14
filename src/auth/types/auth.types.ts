@@ -66,22 +66,9 @@ export interface AuthTokens {
 }
 
 // 登录类型枚举
-export enum LoginType {
-  USERNAME_PASSWORD = 'USERNAME_PASSWORD',
-  EMAIL_PASSWORD = 'EMAIL_PASSWORD',
-  EMAIL_CODE = 'EMAIL_CODE',
-  PHONE_PASSWORD = 'PHONE_PASSWORD',
-  PHONE_CODE = 'PHONE_CODE',
-  PASSWORD_RESET = 'PASSWORD_RESET',
-}
-
-// 验证类型枚举
-export enum VerificationType {
-  EMAIL_VERIFICATION = 'EMAIL_VERIFICATION',
-  PHONE_VERIFICATION = 'PHONE_VERIFICATION',
-  PASSWORD_RESET = 'PASSWORD_RESET',
-  LOGIN_VERIFICATION = 'LOGIN_VERIFICATION',
-}
+// 枚举已移动到 src/auth/enums 目录：
+// - LoginType: src/auth/enums/login-type.enum.ts
+// - VerificationType: src/auth/enums/verification-type.enum.ts
 
 // 会话信息接口
 export interface SessionInfo {
