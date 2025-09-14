@@ -207,4 +207,3 @@ export interface SmartTopicsResponse {
     message: string;
   };
 }
-

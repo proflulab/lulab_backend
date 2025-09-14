@@ -46,7 +46,17 @@ describe('TencentApiService', () => {
 
   describe('getConfig', () => {
     it('returns correct config', () => {
-      const config = (service as any).getConfig();
+      const getConfig = Reflect.get(
+        service as object,
+        'getConfig',
+      ) as (this: TencentApiService) => {
+        secretId: string;
+        secretKey: string;
+        appId: string;
+        sdkId: string;
+        userId: string;
+      };
+      const config = getConfig.call(service);
       expect(config).toEqual({
         secretId: 'mock-secret-id',
         secretKey: 'mock-secret-key',
@@ -66,9 +76,14 @@ describe('TencentApiService', () => {
         subject: 'Test Meeting',
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(mockResponse));
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        jsonResponse(mockResponse),
+      );
 
-      const result = await service.getRecordingFileDetail('test-file-id', 'test-user-id');
+      const result = await service.getRecordingFileDetail(
+        'test-file-id',
+        'test-user-id',
+      );
 
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/v1/addresses/test-file-id'),
@@ -78,29 +93,48 @@ describe('TencentApiService', () => {
             'Content-Type': 'application/json',
             'X-TC-Key': 'mock-secret-id',
             'X-TC-Signature': 'mock-signature',
-          }),
-        }),
+          }) as unknown as Record<string, unknown>,
+        }) as unknown as Record<string, unknown>,
       );
       expect(result).toEqual(mockResponse);
     });
 
     it('should handle API errors', async () => {
-      const mockError = { error_info: { error_code: 108004051, message: '录制文件已经被删除' } };
-      (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(mockError));
-      await expect(service.getRecordingFileDetail('deleted-file-id', 'test-user-id')).rejects.toThrow('录制文件已经被删除');
+      const mockError = {
+        error_info: { error_code: 108004051, message: '录制文件已经被删除' },
+      };
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        jsonResponse(mockError),
+      );
+      await expect(
+        service.getRecordingFileDetail('deleted-file-id', 'test-user-id'),
+      ).rejects.toThrow('录制文件已经被删除');
     });
 
     it('should handle IP whitelist error', async () => {
-      const mockError = { error_info: { error_code: 500125, message: 'IP未在白名单' } };
-      (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(mockError));
-      await expect(service.getRecordingFileDetail('test-file-id', 'test-user-id')).rejects.toThrow('IP白名单错误');
+      const mockError = {
+        error_info: { error_code: 500125, message: 'IP未在白名单' },
+      };
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        jsonResponse(mockError),
+      );
+      await expect(
+        service.getRecordingFileDetail('test-file-id', 'test-user-id'),
+      ).rejects.toThrow('IP白名单错误');
     });
   });
 
   describe('getCorpRecords', () => {
     it('returns meeting records', async () => {
-      const mockResponse = { total_count: 2, current_page: 1, total_page: 1, record_meetings: [] };
-      (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(mockResponse));
+      const mockResponse = {
+        total_count: 2,
+        current_page: 1,
+        total_page: 1,
+        record_meetings: [],
+      };
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        jsonResponse(mockResponse),
+      );
 
       const startTime = Math.floor(new Date('2024-01-01').getTime() / 1000);
       const endTime = Math.floor(new Date('2024-01-31').getTime() / 1000);
@@ -116,17 +150,23 @@ describe('TencentApiService', () => {
     it('validates time range (max 31 days)', async () => {
       const startTime = Math.floor(new Date('2024-01-01').getTime() / 1000);
       const endTime = Math.floor(new Date('2024-02-15').getTime() / 1000);
-      await expect(service.getCorpRecords(startTime, endTime)).rejects.toThrow('时间区间不允许超过31天');
+      await expect(service.getCorpRecords(startTime, endTime)).rejects.toThrow(
+        '时间区间不允许超过31天',
+      );
     });
 
     it('limits page size to max 20', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse({ total_count: 0, record_meetings: [] }));
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        jsonResponse({ total_count: 0, record_meetings: [] }),
+      );
       const startTime = Math.floor(new Date('2024-01-01').getTime() / 1000);
       const endTime = Math.floor(new Date('2024-01-02').getTime() / 1000);
       await service.getCorpRecords(startTime, endTime, 50, 1);
-      const fetchCall = String((global.fetch as jest.Mock).mock.calls[0][0]);
+      const calls = (global.fetch as jest.Mock).mock.calls as Array<
+        [unknown, unknown?]
+      >;
+      const fetchCall = String(calls[0]?.[0]);
       expect(fetchCall).toContain('page_size=20');
     });
   });
 });
-

@@ -1,15 +1,16 @@
-import { buildVerificationEmail, buildWelcomeEmail } from '@libs/common/email-templates';
+import {
+  buildVerificationEmail,
+  buildWelcomeEmail,
+} from '@libs/common/email-templates';
 
 describe('email-templates', () => {
   describe('buildVerificationEmail', () => {
-    const cases: Array<[
-      Parameters<typeof buildVerificationEmail>[0],
-      string,
-    ]> = [
-      ['register', '注册'],
-      ['login', '登录'],
-      ['reset_password', '重置密码'],
-    ];
+    const cases: Array<[Parameters<typeof buildVerificationEmail>[0], string]> =
+      [
+        ['register', '注册'],
+        ['login', '登录'],
+        ['reset_password', '重置密码'],
+      ];
 
     it.each(cases)('builds subject and html for %s', (type, zh) => {
       const code = '123456';
@@ -36,4 +37,3 @@ describe('email-templates', () => {
     });
   });
 });
-

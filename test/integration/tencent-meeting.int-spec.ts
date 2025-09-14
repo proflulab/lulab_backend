@@ -12,25 +12,27 @@ import { config } from 'dotenv';
 // 使用测试环境变量
 config({ path: '.env.test' });
 
+type TencentApiMock = jest.Mocked<
+  Pick<
+    TencentApiService,
+    | 'getCorpRecords'
+    | 'getMeetingDetail'
+    | 'getRecordingFileDetail'
+    | 'getMeetingParticipants'
+  >
+>;
+
 describe('Tencent Meeting Integration (mocked API)', () => {
   let moduleRef: TestingModule;
   let meetingService: TencentMeetingService;
   let configService: ConfigService;
 
-  const mockTencentApi: jest.Mocked<
-    Pick<
-      TencentApiService,
-      | 'getCorpRecords'
-      | 'getMeetingDetail'
-      | 'getRecordingFileDetail'
-      | 'getMeetingParticipants'
-    >
-  > = {
+  const mockTencentApi: TencentApiMock = {
     getCorpRecords: jest.fn(),
     getMeetingDetail: jest.fn(),
     getRecordingFileDetail: jest.fn(),
     getMeetingParticipants: jest.fn(),
-  } as any;
+  } as unknown as TencentApiMock;
 
   beforeAll(async () => {
     moduleRef = await Test.createTestingModule({

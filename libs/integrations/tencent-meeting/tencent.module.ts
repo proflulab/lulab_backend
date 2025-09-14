@@ -8,4 +8,3 @@ import { TencentApiService } from './tencent-api.service';
   exports: [TencentApiService],
 })
 export class TencentModule {}
-

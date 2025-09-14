@@ -88,7 +88,6 @@ export class TencentApiService {
 
       return responseData;
     } catch (error: unknown) {
-      // eslint-disable-next-line no-console
       console.error('API请求失败:', error);
       throw error;
     }
@@ -117,11 +116,9 @@ export class TencentApiService {
     fileId: string,
     userId: string,
   ): Promise<RecordingDetail> {
-    return this.sendRequest<RecordingDetail>(
-      'GET',
-      `/v1/addresses/${fileId}`,
-      { userid: userId },
-    );
+    return this.sendRequest<RecordingDetail>('GET', `/v1/addresses/${fileId}`, {
+      userid: userId,
+    });
   }
 
   async getCorpRecords(
@@ -218,4 +215,3 @@ export class TencentApiService {
     );
   }
 }
-

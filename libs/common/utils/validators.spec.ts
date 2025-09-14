@@ -1,4 +1,8 @@
-import { isStrongPassword, isValidCnPhone, isValidEmail } from '@libs/common/utils';
+import {
+  isStrongPassword,
+  isValidCnPhone,
+  isValidEmail,
+} from '@libs/common/utils';
 
 describe('validators', () => {
   describe('isValidEmail', () => {
@@ -62,4 +66,3 @@ describe('validators', () => {
     });
   });
 });
-

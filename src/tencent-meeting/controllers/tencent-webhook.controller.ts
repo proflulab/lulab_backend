@@ -22,12 +22,15 @@ import {
   ApiTencentUrlVerificationDocs,
   ApiTencentEventReceiverDocs,
 } from '../decorators/tencent-webhook.decorators';
-import { verifySignature, aesDecrypt, verifyWebhookUrl } from '@libs/integrations/tencent-meeting';
+import {
+  verifySignature,
+  aesDecrypt,
+  verifyWebhookUrl,
+} from '@libs/integrations/tencent-meeting';
 import { TencentMeetingEvent } from '../types/tencent-webhook-events.types';
 import {
   WebhookSignatureVerificationException,
   WebhookDecryptionException,
-  WebhookConfigException,
 } from '@libs/integrations/tencent-meeting';
 import { Public } from '@libs/security';
 

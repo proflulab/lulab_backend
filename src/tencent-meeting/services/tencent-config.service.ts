@@ -9,7 +9,10 @@ export class TencentMeetingConfigService {
   getWebhookConfig(): { token: string; encodingAesKey: string } {
     const token = this.configService.get<string>('TENCENT_MEETING_TOKEN');
     if (!token) {
-      throw new WebhookConfigException('TENCENT_MEETING', 'TENCENT_MEETING_TOKEN');
+      throw new WebhookConfigException(
+        'TENCENT_MEETING',
+        'TENCENT_MEETING_TOKEN',
+      );
     }
 
     const encodingAesKey = this.configService.get<string>(

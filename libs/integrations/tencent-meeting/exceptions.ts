@@ -69,20 +69,28 @@ export class WebhookUrlVerificationException extends WebhookException {
 
 // Platform exceptions
 export class MeetingException extends HttpException {
-  constructor(message: string, status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR) {
+  constructor(
+    message: string,
+    status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+  ) {
     super(message, status);
   }
 }
 
 export class PlatformConfigException extends MeetingException {
   constructor(platform: string, configKey: string) {
-    super(`平台配置缺失: ${platform}.${configKey}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    super(
+      `平台配置缺失: ${platform}.${configKey}`,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
 }
 
 export class PlatformApiException extends MeetingException {
   constructor(platform: string, operation: string, error: string) {
-    super(`${platform} API调用失败 [${operation}]: ${error}`, HttpStatus.BAD_GATEWAY);
+    super(
+      `${platform} API调用失败 [${operation}]: ${error}`,
+      HttpStatus.BAD_GATEWAY,
+    );
   }
 }
-

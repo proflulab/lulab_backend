@@ -7,7 +7,10 @@ import {
   MeetingParticipantsResponse,
   MeetingDetailResponse,
 } from '@libs/integrations/tencent-meeting';
-import { PlatformApiException, PlatformConfigException } from '@libs/integrations/tencent-meeting';
+import {
+  PlatformApiException,
+  PlatformConfigException,
+} from '@libs/integrations/tencent-meeting';
 import { HttpFileUtil } from '@libs/common/utils';
 
 /**

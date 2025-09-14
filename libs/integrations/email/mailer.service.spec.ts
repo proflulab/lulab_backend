@@ -49,9 +49,7 @@ describe('MailerService', () => {
     const svc = new MailerService(config);
 
     // No transporter -> send returns null, verify returns false
-    await expect(
-      svc.send({ to: 'a@b.com', subject: 'x' }),
-    ).resolves.toBeNull();
+    await expect(svc.send({ to: 'a@b.com', subject: 'x' })).resolves.toBeNull();
     await expect(svc.verify()).resolves.toBe(false);
 
     // createTransport should not be called
@@ -150,7 +148,7 @@ describe('MailerService', () => {
     const config = makeConfig({ SMTP_USER: 'u', SMTP_PASS: 'p' });
     // constructor triggers callback branch
     // no assertions needed; execution covers warning branch
-    // eslint-disable-next-line no-new
+
     new MailerService(config);
     expect(createTransport).toHaveBeenCalled();
     expect(transporter.verify).toHaveBeenCalled();

@@ -8,14 +8,19 @@ import * as tencentCryptoService from '@libs/integrations/tencent-meeting';
 import { TencentMeetingConfigService } from '../services/tencent-config.service';
 
 // Mock the crypto util
-jest.mock('@libs/integrations/tencent-meeting', () => ({
-  ...jest.requireActual('@libs/integrations/tencent-meeting'),
-  verifyWebhookUrl: jest.fn(),
-}));
+jest.mock('@libs/integrations/tencent-meeting', () => {
+  const actualUnknown = jest.requireActual(
+    '@libs/integrations/tencent-meeting',
+  ) as unknown;
+  const actual = actualUnknown as Record<string, unknown>;
+  return {
+    ...actual,
+    verifyWebhookUrl: jest.fn(),
+  } as Record<string, unknown>;
+});
 
 describe('TencentWebhookController', () => {
   let controller: TencentWebhookController;
-  let configService: ConfigService;
   let tencentConfig: TencentMeetingConfigService;
   // Note: Event handler service is mocked via provider; no direct usage here
   let mockVerifyWebhookUrl: jest.MockedFunction<
@@ -57,7 +62,6 @@ describe('TencentWebhookController', () => {
     }).compile();
 
     controller = module.get<TencentWebhookController>(TencentWebhookController);
-    configService = module.get<ConfigService>(ConfigService);
     tencentConfig = module.get<TencentMeetingConfigService>(
       TencentMeetingConfigService,
     );
@@ -85,9 +89,9 @@ describe('TencentWebhookController', () => {
 
     it('should successfully verify webhook URL and return decrypted string', async () => {
       // Arrange
-      (tencentConfig.getWebhookConfig as jest.Mock).mockReturnValue(
-        mockConfig,
-      );
+      const getWebhookConfigSpy = jest
+        .spyOn(tencentConfig, 'getWebhookConfig')
+        .mockReturnValue(mockConfig);
       const expectedResult = 'decrypted_check_str';
       mockVerifyWebhookUrl.mockResolvedValue(expectedResult);
 
@@ -109,19 +113,19 @@ describe('TencentWebhookController', () => {
         mockConfig.token,
         mockConfig.encodingAesKey,
       );
-      expect(tencentConfig.getWebhookConfig).toHaveBeenCalled();
+      expect(getWebhookConfigSpy).toHaveBeenCalled();
     });
 
     it('should throw WebhookConfigException when TENCENT_MEETING_TOKEN is undefined', async () => {
       // Arrange
-      (tencentConfig.getWebhookConfig as jest.Mock).mockImplementationOnce(
-        () => {
+      const getWebhookConfigSpy = jest
+        .spyOn(tencentConfig, 'getWebhookConfig')
+        .mockImplementationOnce(() => {
           throw new WebhookConfigException(
             'TENCENT_MEETING',
             'TENCENT_MEETING_TOKEN',
           );
-        },
-      );
+        });
 
       // Act & Assert
       await expect(
@@ -135,15 +139,13 @@ describe('TencentWebhookController', () => {
         new WebhookConfigException('TENCENT_MEETING', 'TENCENT_MEETING_TOKEN'),
       );
 
-      expect(tencentConfig.getWebhookConfig).toHaveBeenCalled();
+      expect(getWebhookConfigSpy).toHaveBeenCalled();
       expect(mockVerifyWebhookUrl).not.toHaveBeenCalled();
     });
 
     it('should log the webhook verification request', async () => {
       // Arrange
-      (tencentConfig.getWebhookConfig as jest.Mock).mockReturnValue(
-        mockConfig,
-      );
+      jest.spyOn(tencentConfig, 'getWebhookConfig').mockReturnValue(mockConfig);
       const logSpy = jest.spyOn(Logger.prototype, 'log');
       mockVerifyWebhookUrl.mockResolvedValue('test_result');
 
@@ -163,9 +165,7 @@ describe('TencentWebhookController', () => {
 
     it('should log error and re-throw when verifyWebhookUrl fails', async () => {
       // Arrange
-      (tencentConfig.getWebhookConfig as jest.Mock).mockReturnValue(
-        mockConfig,
-      );
+      (tencentConfig.getWebhookConfig as jest.Mock).mockReturnValue(mockConfig);
       const errorMessage = 'Verification failed';
       const error = new Error(errorMessage);
       const logSpy = jest.spyOn(Logger.prototype, 'error');
@@ -189,14 +189,14 @@ describe('TencentWebhookController', () => {
 
     it('should throw WebhookConfigException when TENCENT_MEETING_ENCODING_AES_KEY is missing', async () => {
       // Arrange
-      (tencentConfig.getWebhookConfig as jest.Mock).mockImplementationOnce(
-        () => {
+      const getWebhookConfigSpy = jest
+        .spyOn(tencentConfig, 'getWebhookConfig')
+        .mockImplementationOnce(() => {
           throw new WebhookConfigException(
             'TENCENT_MEETING',
             'TENCENT_MEETING_ENCODING_AES_KEY',
           );
-        },
-      );
+        });
 
       // Act & Assert
       await expect(
@@ -213,15 +213,13 @@ describe('TencentWebhookController', () => {
         ),
       );
 
-      expect(tencentConfig.getWebhookConfig).toHaveBeenCalled();
+      expect(getWebhookConfigSpy).toHaveBeenCalled();
       expect(mockVerifyWebhookUrl).not.toHaveBeenCalled();
     });
 
     it('should call verifyWebhookUrl with correct parameters in correct order', async () => {
       // Arrange
-      (tencentConfig.getWebhookConfig as jest.Mock).mockReturnValue(
-        mockConfig,
-      );
+      jest.spyOn(tencentConfig, 'getWebhookConfig').mockReturnValue(mockConfig);
       mockVerifyWebhookUrl.mockResolvedValue('test_result');
 
       // Act
