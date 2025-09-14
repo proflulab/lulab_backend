@@ -2,6 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { TencentApiService } from './tencent-api.service';
 
+type TMConfig = {
+  secretId: string;
+  secretKey: string;
+  appId: string;
+  sdkId: string;
+  userId: string;
+};
+
 const mockConfigService = {
   get: jest.fn((key: string) => {
     const config: Record<string, string> = {
@@ -46,17 +54,10 @@ describe('TencentApiService', () => {
 
   describe('getConfig', () => {
     it('returns correct config', () => {
-      const getConfig = Reflect.get(
-        service as object,
-        'getConfig',
-      ) as (this: TencentApiService) => {
-        secretId: string;
-        secretKey: string;
-        appId: string;
-        sdkId: string;
-        userId: string;
-      };
-      const config = getConfig.call(service);
+      const getConfig = Reflect.get(service as object, 'getConfig') as (
+        this: TencentApiService,
+      ) => TMConfig;
+      const config: TMConfig = getConfig.call(service) as unknown as TMConfig;
       expect(config).toEqual({
         secretId: 'mock-secret-id',
         secretKey: 'mock-secret-key',

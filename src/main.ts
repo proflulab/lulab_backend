@@ -40,6 +40,7 @@ async function bootstrap() {
   await app.listen(port);
   console.log(`🚀 Application is running on: http://localhost:${port}`);
   console.log(`📚 Swagger documentation: http://localhost:${port}/api`);
+  console.log(`📄 Swagger API JSON: http://localhost:${port}/api-json`);
 }
 bootstrap().catch((error) => {
   console.error('❌ Application failed to start:', error);
