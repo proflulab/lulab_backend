@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { TencentMeetingService } from '@/tencent-meeting/services/tencent-meeting.service';
-import { TencentApiService } from '@/tencent-meeting/services/tencent-api.service';
-import { PlatformApiException } from '@/tencent-meeting/exceptions/platform.exceptions';
+import { TencentApiService } from '@libs/integrations/tencent-meeting/tencent-api.service';
+import { PlatformApiException } from '@libs/integrations/tencent-meeting';
 import {
   RecordMeetingsResponse,
   MeetingDetailResponse,
-} from '@/tencent-meeting/types/tencent-meeting-api.types';
+} from '@libs/integrations/tencent-meeting';
 import { config } from 'dotenv';
 
 // 使用测试环境变量
