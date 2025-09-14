@@ -100,10 +100,17 @@ export class AuthController {
   }
 
   private getClientIp(req: Request): string {
+    const xff = req.headers['x-forwarded-for'];
+    const xReal = req.headers['x-real-ip'];
+    const forwarded = Array.isArray(xff)
+      ? xff[0]
+      : xff?.split(',')[0];
+    const realIp = Array.isArray(xReal) ? xReal[0] : xReal;
+
     return (
-      (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
-      (req.headers['x-real-ip'] as string) ||
-      req.connection?.remoteAddress ||
+      forwarded?.trim() ||
+      realIp?.trim() ||
+      req.ip ||
       req.socket?.remoteAddress ||
       '127.0.0.1'
     );
