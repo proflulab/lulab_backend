@@ -23,7 +23,7 @@ try {
 }
 
 import { ConfigService } from '@nestjs/config';
-import { TencentApiService } from '../src/tencent-meeting/services/tencent-api.service';
+import { TencentApiService } from '../libs/integrations/tencent-meeting';
 
 interface ValidationResult {
   endpoint: string;

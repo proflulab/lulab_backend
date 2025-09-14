@@ -3,38 +3,38 @@
  * @Date: 2025-01-03 10:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
  * @LastEditTime: 2025-09-03 02:41:47
- * @FilePath: /lulab_backend/src/tencent_meeting/tencent-meeting.module.ts
+ * @FilePath: /lulab_backend/src/tencent-meeting/tencent-meeting.module.ts
  * @Description: 腾讯会议模块
- * 
- * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ *
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
 
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { TencentWebhookController } from './controllers/tencent-webhook.controller';
 import { TencentMeetingService } from './services/tencent-meeting.service';
-import { TencentApiService } from './services/tencent-api.service';
-import { TencentEventHandlerFactory } from './services/handlers/event-handler-factory';
-import { RecordingCompletedHandler } from './services/handlers/recording-completed-handler';
-import { MeetingStartedHandler } from './services/handlers/meeting-started-handler';
-import { MeetingRepository } from '../meeting/repositories/meeting.repository';
-import { PrismaService } from '../prisma.service';
+import { TencentModule } from '@libs/integrations/tencent-meeting/tencent.module';
+import { TencentEventHandlerService } from './services/tencent-event-handler.service';
+import { LarkModule } from '@libs/integrations/lark/lark.module';
+import { EventHandlerFactory } from './services/event-handlers/event-handler.factory';
+import { MeetingStartedHandler } from './services/event-handlers/meeting-started.handler';
+import { MeetingEndedHandler } from './services/event-handlers/meeting-ended.handler';
+import { RecordingCompletedHandler } from './services/event-handlers/recording-completed.handler';
+import { MeetingModule } from '../meeting/meeting.module';
+import { TencentMeetingConfigService } from './services/tencent-config.service';
 
 @Module({
-  imports: [HttpModule],
+  imports: [HttpModule, LarkModule, MeetingModule, TencentModule],
   controllers: [TencentWebhookController],
   providers: [
     TencentMeetingService,
-    TencentApiService,
-    TencentEventHandlerFactory,
-    RecordingCompletedHandler,
+    TencentEventHandlerService,
+    TencentMeetingConfigService,
+    EventHandlerFactory,
     MeetingStartedHandler,
-    MeetingRepository,
-    PrismaService,
+    MeetingEndedHandler,
+    RecordingCompletedHandler,
   ],
-  exports: [
-    TencentMeetingService,
-    TencentApiService,
-  ],
+  exports: [TencentMeetingService],
 })
-export class TencentMeetingModule { }
+export class TencentMeetingModule {}

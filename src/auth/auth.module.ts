@@ -4,19 +4,17 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './services/auth.service';
-import { VerificationService } from './services/verification.service';
-import { AliyunSmsService } from './services/aliyun-sms.service';
-import { JwtStrategy } from './jwt.strategy';
-import { JwtAuthGuard } from './jwt-auth.guard';
-import { PrismaService } from '../prisma.service';
-import { EmailService } from '../email/email.service';
+import { JwtStrategy, JwtAuthGuard } from '@libs/security';
+import { PrismaService } from '@/prisma.service';
+import { EmailModule } from '@/email/email.module';
+import { AuthRepository } from './repositories/auth.repository';
 
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET') || 'your-secret-key',
         signOptions: {
           expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '15m',
@@ -24,17 +22,16 @@ import { EmailService } from '../email/email.service';
       }),
       inject: [ConfigService],
     }),
+    EmailModule,
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
-    VerificationService,
-    AliyunSmsService,
     JwtStrategy,
     JwtAuthGuard,
     PrismaService,
-    EmailService,
+    AuthRepository,
   ],
   exports: [AuthService, JwtAuthGuard, JwtStrategy],
 })
-export class AuthModule { }
+export class AuthModule {}
