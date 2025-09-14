@@ -103,7 +103,7 @@ export function ApiSendCodeDocs() {
           target: {
             type: 'string',
             description: '邮箱或手机号',
-            example: 'user@example.com',
+            example: 'user@example.com||13800000000',
           },
           type: {
             type: 'string',

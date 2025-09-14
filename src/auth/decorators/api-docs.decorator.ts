@@ -343,6 +343,23 @@ export function ApiRefreshTokenDocs() {
     }),
     ApiConsumes('application/json'),
     ApiProduces('application/json'),
+    ApiBody({
+      description: '刷新令牌请求体',
+      schema: {
+        type: 'object',
+        required: ['refreshToken'],
+        properties: {
+          refreshToken: {
+            type: 'string',
+            description: '用于换取新访问令牌的刷新令牌',
+            example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refresh...',
+          },
+        },
+        example: {
+          refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refresh...',
+        },
+      },
+    }),
     ApiResponse({
       status: 200,
       description: '令牌刷新成功，返回新的访问令牌',
