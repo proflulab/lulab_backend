@@ -26,7 +26,7 @@ TENCENT_MEETING_ENCODING_AES_KEY=your_43_character_base64_key
 
 # 飞书多维表格配置（可选）
 LARK_BITABLE_APP_TOKEN=your_lark_bitable_app_token
-LARK_BITABLE_MEETING_TABLE_ID=your_meeting_table_id
+LARK_TABLE_MEETING=your_meeting_table_id
 ```
 
 ### Webhook URL配置

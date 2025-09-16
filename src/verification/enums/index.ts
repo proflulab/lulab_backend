@@ -1,1 +1,1 @@
-export * from './code-type.enum';
+export * from '@libs/common/enums';

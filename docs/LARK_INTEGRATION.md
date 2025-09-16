@@ -58,7 +58,7 @@ libs/
 
 3. 获取表格信息：
    - `LARK_BITABLE_APP_TOKEN`: 多维表格的App Token
-   - `LARK_BITABLE_MEETING_TABLE_ID`: 会议记录表的Table ID
+   - `LARK_TABLE_MEETING`: 会议记录表的Table ID
 
 ### 3. 应用权限配置
 
@@ -76,7 +76,7 @@ libs/
 LARK_APP_ID=your_lark_app_id
 LARK_APP_SECRET=your_lark_app_secret
 LARK_BITABLE_APP_TOKEN=your_bitable_app_token
-LARK_BITABLE_MEETING_TABLE_ID=your_meeting_table_id
+LARK_TABLE_MEETING=your_meeting_table_id
 ```
 
 ## 使用说明

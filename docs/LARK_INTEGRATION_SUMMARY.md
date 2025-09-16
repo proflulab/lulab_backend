@@ -60,7 +60,7 @@ scripts/
 LARK_APP_ID=你的飞书应用ID
 LARK_APP_SECRET=你的飞书应用密钥
 LARK_BITABLE_APP_TOKEN=多维表格应用Token
-LARK_BITABLE_MEETING_TABLE_ID=会议记录表格ID
+LARK_TABLE_MEETING=会议记录表格ID
 ```
 
 ## 🚀 使用方法

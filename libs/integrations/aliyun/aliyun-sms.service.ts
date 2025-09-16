@@ -1,16 +1,21 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
 import Dysmsapi20170525, * as $Dysmsapi20170525 from '@alicloud/dysmsapi20170525';
 import * as $OpenApi from '@alicloud/openapi-client';
 import * as $Util from '@alicloud/tea-util';
 import Credential from '@alicloud/credentials';
-import { CodeType } from '@/verification/enums/code-type.enum';
+import { CodeType } from '@libs/common/enums';
+import { aliyunConfig } from './config/aliyun.config';
 
 @Injectable()
 export class AliyunSmsService {
   private readonly logger = new Logger(AliyunSmsService.name);
   private client: Dysmsapi20170525;
 
-  constructor() {
+  constructor(
+    @Inject(aliyunConfig.KEY)
+    private readonly cfg: ConfigType<typeof aliyunConfig>,
+  ) {
     this.client = this.createClient();
   }
 
@@ -98,14 +103,10 @@ export class AliyunSmsService {
    */
   private getTemplateCode(type: CodeType): string {
     const templateMap = {
-      [CodeType.REGISTER]:
-        process.env.ALIYUN_SMS_TEMPLATE_REGISTER || 'SMS_271525576',
-      [CodeType.LOGIN]:
-        process.env.ALIYUN_SMS_TEMPLATE_LOGIN || 'SMS_271525576',
-      [CodeType.RESET_PASSWORD]:
-        process.env.ALIYUN_SMS_TEMPLATE_RESET || 'SMS_271525576',
-    };
-
+      [CodeType.REGISTER]: this.cfg.sms.templates.register,
+      [CodeType.LOGIN]: this.cfg.sms.templates.login,
+      [CodeType.RESET_PASSWORD]: this.cfg.sms.templates.resetPassword,
+    } as const;
     return templateMap[type];
   }
 
@@ -114,6 +115,6 @@ export class AliyunSmsService {
    * 注意：签名需要在阿里云控制台中预先配置并审核通过
    */
   private getSignName(): string {
-    return process.env.ALIYUN_SMS_SIGN_NAME || '视算新里程科技';
+    return this.cfg.sms.signName;
   }
 }

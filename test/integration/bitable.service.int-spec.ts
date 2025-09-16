@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { BitableService } from './bitable.service';
-import { LarkClient } from './lark.client';
+import {
+  BitableService,
+  LarkClient,
+  larkConfig,
+} from '@libs/integrations/lark';
 import * as path from 'path';
 
 // 加载测试环境变量
@@ -23,18 +26,10 @@ describe('BitableService (Integration Tests)', () => {
           envFilePath: envPath,
           isGlobal: true,
         }),
+        // Register Lark configuration for injection token CONFIGURATION(lark)
+        ConfigModule.forFeature(larkConfig),
       ],
-      providers: [
-        BitableService,
-        LarkClient,
-        {
-          provide: ConfigService,
-          useFactory: () => {
-            const config = new ConfigService();
-            return config;
-          },
-        },
-      ],
+      providers: [BitableService, LarkClient],
     }).compile();
 
     service = module.get<BitableService>(BitableService);

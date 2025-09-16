@@ -3,6 +3,6 @@
  * This file provides a centralized export point for all repository classes
  */
 
-export * from './meeting-bitable.repository';
-export * from './meetinguser-bitable.repository';
-export * from './recording-file-bitable.repository';
+export * from './meeting.repository';
+export * from './meeting-user.repository';
+export * from './meeting-recording-file.repository';

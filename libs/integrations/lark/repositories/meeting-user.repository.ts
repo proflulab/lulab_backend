@@ -1,27 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { BitableService } from '../bitable.service';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
+import { BitableService } from '../services/bitable.service';
 import {
   CreateRecordResponse,
   UpdateRecordResponse,
   BitableField,
   SearchFilter,
-} from '../lark.types';
-
-interface MeetingUserData {
-  uuid: string;
-  userid?: string;
-  user_name?: string;
-  phone_hase?: string;
-  is_enterprise_user?: boolean;
-}
-
-interface UpdateMeetingUserData {
-  userid?: string;
-  user_name?: string;
-  phone_hase?: string;
-  is_enterprise_user?: boolean;
-}
+} from '../types/lark.types';
+import { larkConfig } from '../config/lark.config';
+import { MeetingUserData, UpdateMeetingUserData } from '../types';
 
 /**
  * Repository layer for User Bitable operations
@@ -35,16 +22,14 @@ export class MeetingUserBitableRepository {
 
   constructor(
     private readonly bitableService: BitableService,
-    private readonly configService: ConfigService,
+    @Inject(larkConfig.KEY) private readonly cfg: ConfigType<typeof larkConfig>,
   ) {
-    this.appToken = this.configService.get<string>('LARK_BITABLE_APP_TOKEN')!;
-    this.tableId = this.configService.get<string>(
-      'LARK_BITABLE_MEETING_USER_TABLE_ID',
-    )!;
+    this.appToken = this.cfg.bitable.appToken;
+    this.tableId = this.cfg.bitable.tableIds.meetingUser;
 
     if (!this.appToken || !this.tableId) {
       throw new Error(
-        'LARK_BITABLE_APP_TOKEN and LARK_BITABLE_MEETING_USER_TABLE_ID must be configured in environment variables',
+        'LARK_BITABLE_APP_TOKEN and LARK_TABLE_MEETING_USER must be configured in environment variables',
       );
     }
   }

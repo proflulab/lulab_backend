@@ -1,64 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
-import {
-  MeetingPlatform,
-  MeetingType,
-  FileType,
-  StorageType,
-  ProcessingStatus,
-} from '@prisma/client';
-
-export interface CreateMeetingRecordData {
-  platform: MeetingPlatform;
-  platformMeetingId: string;
-  title: string;
-  meetingCode: string;
-  type: MeetingType;
-  hostUserId: string;
-  hostUserName: string;
-  startTime: Date;
-  endTime: Date;
-  durationSeconds: number;
-  hasRecording: boolean;
-  recordingStatus: ProcessingStatus;
-  processingStatus: ProcessingStatus;
-  metadata?: any;
-}
-
-export interface UpdateMeetingRecordData {
-  recordingStatus?: ProcessingStatus;
-  processingStatus?: ProcessingStatus;
-  participantCount?: number;
-  participantList?: any;
-  transcript?: string;
-  summary?: string;
-}
-
-export interface CreateMeetingFileData {
-  meetingRecordId: string;
-  fileName: string;
-  fileType: FileType;
-  storageType: StorageType;
-  downloadUrl?: string;
-  content?: string;
-  mimeType: string;
-  processingStatus: ProcessingStatus;
-}
-
-export interface UpdateMeetingFileData {
-  fileName?: string;
-  content?: string;
-  processingStatus?: ProcessingStatus;
-  metadata?: any;
-}
-
-export interface GetMeetingRecordsParams {
-  platform?: MeetingPlatform;
-  startDate?: Date;
-  endDate?: Date;
-  page?: number;
-  limit?: number;
-}
+import type {
+  CreateMeetingRecordData,
+  UpdateMeetingRecordData,
+  CreateMeetingFileData,
+  UpdateMeetingFileData,
+  GetMeetingRecordsParams,
+} from '@/meeting/types/meeting.types';
+import { MeetingPlatform } from '@prisma/client';
 
 @Injectable()
 export class MeetingRepository {
