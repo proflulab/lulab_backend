@@ -36,7 +36,7 @@
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
     "db:seed": "tsx prisma/seed.ts",
-    "db:clean": "tsx prisma/seed.ts clean",
+    "db:cleandata": "tsx prisma/seed.ts clean",
     "db:drop": "tsx prisma/seed.ts drop",
     "db:drop:force": "tsx prisma/seed.ts drop --force",
     "db:seed:reset": "tsx prisma/seed.ts reset",

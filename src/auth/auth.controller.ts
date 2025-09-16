@@ -84,6 +84,7 @@ export class AuthController {
     );
   }
 
+  @Public()
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK)
   @ApiRefreshTokenDocs()
