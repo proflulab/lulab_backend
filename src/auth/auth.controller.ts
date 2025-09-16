@@ -3,7 +3,6 @@ import {
   Post,
   Body,
   Req,
-  UseGuards,
   HttpCode,
   HttpStatus,
   ValidationPipe,
@@ -21,24 +20,25 @@ import { RegisterService } from './services/register.service';
 import { LoginService } from './services/login.service';
 import { PasswordService } from './services/password.service';
 import { TokenService } from './services/token.service';
-import { JwtAuthGuard, Public } from '@libs/security';
+import { Public } from '@libs/security';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
+import { TokenBlacklistService } from './services/token-blacklist.service';
 
 @ApiTags('Auth')
 @Controller({
   path: 'api/auth',
   version: '1',
 })
-@UseGuards(JwtAuthGuard)
 export class AuthController {
   constructor(
     private readonly registerService: RegisterService,
     private readonly loginService: LoginService,
     private readonly passwordService: PasswordService,
     private readonly tokenService: TokenService,
+    private readonly tokenBlacklist: TokenBlacklistService,
   ) {}
 
   @Public()
@@ -84,7 +84,6 @@ export class AuthController {
     );
   }
 
-  @Public()
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK)
   @ApiRefreshTokenDocs()
@@ -98,13 +97,21 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiLogoutDocs()
   @ApiBearerAuth()
-  async logout(): Promise<{ success: boolean; message: string }> {
-    // JWT是无状态的，客户端删除token即可
-    // 如果需要实现token黑名单，可以在这里添加逻辑
-    return Promise.resolve({
+  async logout(
+    @Req() req: Request,
+  ): Promise<{ success: boolean; message: string }> {
+    // 将当前访问令牌加入黑名单（直到其过期）
+    const authHeader = req.get('authorization') || req.get('Authorization');
+    const token = authHeader?.startsWith('Bearer ')
+      ? authHeader.slice('Bearer '.length).trim()
+      : undefined;
+    if (token) {
+      await this.tokenBlacklist.add(token);
+    }
+    return {
       success: true,
       message: '退出登录成功',
-    });
+    };
   }
 
   private getClientIp(req: Request): string {

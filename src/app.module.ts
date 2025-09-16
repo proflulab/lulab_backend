@@ -18,10 +18,10 @@ import { EmailModule } from './email/email.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { JwtAuthGuard } from '@libs/security';
-import { PrismaService } from './prisma.service';
+import { PrismaModule } from './prisma.module';
 import { MeetingModule } from './meeting/meeting.module';
 import { TencentMeetingModule } from './tencent-meeting/tencent-meeting.module';
-import { FeishuMeetingModule } from './feishu-meeting/feishu-meeting.module';
+import { LarkMeetingModule } from './lark-meeting/lark-meeting.module';
 import { VerificationModule } from '@/verification/verification.module';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
@@ -40,18 +40,18 @@ import { ScheduleModule } from '@nestjs/schedule';
       introspection: true,
     }),
     ScheduleModule.forRoot(),
+    PrismaModule,
     EmailModule,
     AuthModule,
     UserModule,
     MeetingModule,
     TencentMeetingModule,
-    FeishuMeetingModule,
+    LarkMeetingModule,
     VerificationModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
-    PrismaService,
     AppResolver,
     {
       provide: APP_GUARD,

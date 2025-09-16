@@ -39,7 +39,7 @@
 │  │     └─ index.ts            # 导出 code-type.enum.ts
 │  ├─ meeting/
 │  ├─ tencent-meeting/
-│  ├─ feishu-meeting/
+│  ├─ lark-meeting/
 │  ├─ email/
 │  ├─ user/
 │  └─ prisma.service.ts
@@ -102,4 +102,3 @@ docs/
 - 集成指南（腾讯/飞书）：对应 `docs/*INTEGRATION*.md`
 - API 使用：`docs/API_DOCUMENTATION.md` + Swagger `/api`
 - 规范与测试：`docs/PROJECT_GUIDELINES.md` 与 `test/README.md`
-

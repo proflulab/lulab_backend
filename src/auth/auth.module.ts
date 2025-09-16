@@ -9,15 +9,21 @@ import { PasswordService } from './services/password.service';
 import { ProfileService } from './services/profile.service';
 import { TokenService } from './services/token.service';
 import { AuthPolicyService } from './services/auth-policy.service';
-import { JwtStrategy, JwtAuthGuard, JWT_USER_LOOKUP } from '@libs/security';
-import { PrismaService } from '@/prisma.service';
+import {
+  JwtStrategy,
+  JWT_USER_LOOKUP,
+  JWT_TOKEN_BLACKLIST,
+} from '@libs/security';
+import { RedisModule } from '@/redis/redis.module';
 import { EmailModule } from '@/email/email.module';
 import { UserRepository } from './repositories/user.repository';
 import { LoginLogRepository } from './repositories/login-log.repository';
 import { JwtUserLookupService } from './services/jwt-user-lookup.service';
+import { TokenBlacklistService } from './services/token-blacklist.service';
 
 @Module({
   imports: [
+    RedisModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -40,11 +46,11 @@ import { JwtUserLookupService } from './services/jwt-user-lookup.service';
     TokenService,
     AuthPolicyService,
     JwtStrategy,
-    JwtAuthGuard,
-    PrismaService,
     UserRepository,
     LoginLogRepository,
     { provide: JWT_USER_LOOKUP, useClass: JwtUserLookupService },
+    TokenBlacklistService,
+    { provide: JWT_TOKEN_BLACKLIST, useExisting: TokenBlacklistService },
   ],
   exports: [
     RegisterService,
@@ -53,8 +59,7 @@ import { JwtUserLookupService } from './services/jwt-user-lookup.service';
     ProfileService,
     TokenService,
     AuthPolicyService,
-    JwtAuthGuard,
-    JwtStrategy,
+    TokenBlacklistService,
   ],
 })
 export class AuthModule {}

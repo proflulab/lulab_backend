@@ -69,6 +69,7 @@
   - PasswordService：重置密码（验证码校验、密码强度校验、通知邮件）
   - ProfileService：用户资料（获取/更新、唯一性校验）
   - TokenService：令牌签发与刷新
+  - TokenBlacklistService：令牌撤销（黑名单，基于 jti，Redis 优先，内存回退）
   - AuthPolicyService：登录策略（失败次数限制、登录日志、类型映射）
 - 仓储层：
   - UserRepository：用户与档案读写

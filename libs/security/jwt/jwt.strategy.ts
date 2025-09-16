@@ -1,9 +1,19 @@
-import { Injectable, Inject, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  UnauthorizedException,
+  Optional,
+} from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import type { JwtPayload, AuthenticatedUser } from '../types';
-import { JWT_USER_LOOKUP, type JwtUserLookup } from '../types';
+import {
+  JWT_USER_LOOKUP,
+  type JwtUserLookup,
+  JWT_TOKEN_BLACKLIST,
+  type JwtTokenBlacklist,
+} from '../types';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -11,6 +21,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly configService: ConfigService,
     @Inject(JWT_USER_LOOKUP)
     private readonly userLookup: JwtUserLookup,
+    @Optional()
+    @Inject(JWT_TOKEN_BLACKLIST)
+    private readonly blacklist?: JwtTokenBlacklist,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -20,6 +33,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
+    // Optional token blacklist check (if provided by the app layer)
+    if (payload?.jti && this.blacklist) {
+      const revoked = await this.blacklist.isTokenBlacklisted(payload.jti);
+      if (revoked) {
+        throw new UnauthorizedException('访问令牌已撤销');
+      }
+    }
     const authUser = await this.userLookup.getAuthenticatedUserById(
       payload.sub,
     );
