@@ -1,23 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { BitableService } from '../bitable.service';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
+import { BitableService } from '../services/bitable.service';
 import {
   CreateRecordResponse,
   UpdateRecordResponse,
   BitableField,
   SearchFilter,
-} from '../lark.types';
-
-interface RecordingFileData {
-  record_file_id: string;
-  meet: string[];
-  participants?: string[];
-  start_time?: number;
-  end_time?: number;
-  meeting_summary?: string;
-  ai_meeting_transcripts?: string;
-  ai_minutes?: string;
-}
+} from '../types/lark.types';
+import { larkConfig } from '../config/lark.config';
+import { RecordingFileData } from '../types';
 
 /**
  * Repository for recording file-related Bitable operations
@@ -31,16 +22,14 @@ export class RecordingFileBitableRepository {
 
   constructor(
     private readonly bitableService: BitableService,
-    private readonly configService: ConfigService,
+    @Inject(larkConfig.KEY) private readonly cfg: ConfigType<typeof larkConfig>,
   ) {
-    this.appToken = this.configService.get<string>('LARK_BITABLE_APP_TOKEN')!;
-    this.tableId = this.configService.get<string>(
-      'LARK_BITABLE_RECORDING_FILE_TABLE_ID',
-    )!;
+    this.appToken = this.cfg.bitable.appToken;
+    this.tableId = this.cfg.bitable.tableIds.recordingFile;
 
     if (!this.appToken || !this.tableId) {
       throw new Error(
-        'LARK_BITABLE_APP_TOKEN and LARK_BITABLE_RECORDING_FILE_TABLE_ID must be configured in environment variables',
+        'LARK_BITABLE_APP_TOKEN and LARK_TABLE_MEETING_RECORD_FILE must be configured in environment variables',
       );
     }
   }

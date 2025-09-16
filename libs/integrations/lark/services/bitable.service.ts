@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { LarkClient } from './lark.client';
+import { LarkClient } from '../lark.client';
 import {
   CreateRecordRequest,
   CreateRecordResponse,
@@ -25,7 +25,7 @@ import {
   BatchGetRecordResponse,
   BatchDeleteRecordRequest,
   BatchDeleteRecordResponse,
-} from './lark.types';
+} from '../types/lark.types';
 
 @Injectable()
 export class BitableService {

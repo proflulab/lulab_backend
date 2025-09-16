@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigService, ConfigType } from '@nestjs/config';
 import * as lark from '@larksuiteoapi/node-sdk';
 import {
   LarkClientConfig,
@@ -23,21 +23,23 @@ import {
   BatchGetRecordResponse,
   BatchDeleteRecordRequest,
   BatchDeleteRecordResponse,
-} from './lark.types';
+} from './types/lark.types';
+import { larkConfig } from './config/lark.config';
 
 @Injectable()
 export class LarkClient {
   private readonly logger = new Logger(LarkClient.name);
   private client: lark.Client;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    @Inject(larkConfig.KEY)
+    private readonly cfg: ConfigType<typeof larkConfig>,
+  ) {
     const config: LarkClientConfig = {
-      appId: this.configService.get<string>('LARK_APP_ID') || '',
-      appSecret: this.configService.get<string>('LARK_APP_SECRET') || '',
-      logLevel:
-        this.configService.get<'debug' | 'info' | 'warn' | 'error'>(
-          'LARK_LOG_LEVEL',
-        ) || 'info',
+      appId: this.cfg.appId || '',
+      appSecret: this.cfg.appSecret || '',
+      logLevel: this.cfg.logLevel || 'info',
     };
 
     if (!config.appId || !config.appSecret) {

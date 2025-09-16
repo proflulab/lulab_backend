@@ -67,8 +67,8 @@ TENCENT_MEETING_ENCODING_AES_KEY="your_encoding_aes_key"
 LARK_APP_ID="your_app_id"
 LARK_APP_SECRET="your_app_secret"
 LARK_BITABLE_APP_TOKEN="your_app_token"
-LARK_BITABLE_MEETING_TABLE_ID="your_meeting_table_id"
-LARK_BITABLE_RECORDING_FILE_TABLE_ID="your_recording_file_table_id"
+LARK_TABLE_MEETING="your_meeting_table_id"
+LARK_TABLE_MEETING_RECORD_FILE="your_recording_file_table_id"
 
 # 阿里云短信配置
 ALIYUN_ACCESS_KEY_ID="your_access_key_id"
@@ -452,8 +452,8 @@ crontab -e
 | LARK_APP_ID | 飞书应用ID | your_app_id |
 | LARK_APP_SECRET | 飞书应用密钥 | your_app_secret |
 | LARK_BITABLE_APP_TOKEN | 多维表格应用令牌 | your_app_token |
-| LARK_BITABLE_MEETING_TABLE_ID | 会议表格ID | your_meeting_table_id |
-| LARK_BITABLE_RECORDING_FILE_TABLE_ID | 录制文件表格ID | your_recording_file_table_id |
+| LARK_TABLE_MEETING | 会议表格ID | your_meeting_table_id |
+| LARK_TABLE_MEETING_RECORD_FILE | 录制文件表格ID | your_recording_file_table_id |
 
 ## 故障排除
 

@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LarkClient } from './lark.client';
-import { BitableService } from './bitable.service';
+import { BitableService } from './services/bitable.service';
 import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
   RecordingFileBitableRepository,
 } from './repositories';
+import { larkConfig } from './config/lark.config';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule.forFeature(larkConfig)],
   providers: [
     LarkClient,
     BitableService,

@@ -55,7 +55,7 @@
 在 `.env` 文件中添加以下配置：
 
 ```bash
-LARK_BITABLE_RECORDING_FILE_TABLE_ID=your_recording_file_table_id
+LARK_TABLE_MEETING_RECORD_FILE=your_recording_file_table_id
 ```
 
 ### 2. 在代码中使用

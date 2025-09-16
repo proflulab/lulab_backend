@@ -26,6 +26,7 @@ import { VerificationModule } from '@/verification/verification.module';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { AppResolver } from './app.resolver';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { AppResolver } from './app.resolver';
       playground: true,
       introspection: true,
     }),
+    ScheduleModule.forRoot(),
     EmailModule,
     AuthModule,
     UserModule,
