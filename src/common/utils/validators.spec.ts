@@ -1,8 +1,4 @@
-import {
-  isStrongPassword,
-  isValidCnPhone,
-  isValidEmail,
-} from '@libs/common/utils';
+import { isStrongPassword, isValidCnPhone, isValidEmail } from './index';
 
 describe('validators', () => {
   describe('isValidEmail', () => {

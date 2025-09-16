@@ -1,4 +1,4 @@
-import { generateNumericCode } from '@libs/common/utils';
+import { generateNumericCode } from './index';
 
 describe('generateNumericCode', () => {
   it('returns empty string for non-positive length', () => {

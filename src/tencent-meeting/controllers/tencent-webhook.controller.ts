@@ -26,13 +26,13 @@ import {
   verifySignature,
   aesDecrypt,
   verifyWebhookUrl,
-} from '@libs/integrations/tencent-meeting';
+} from '../../integrations/tencent-meeting';
 import { TencentMeetingEvent } from '../types/tencent-webhook-events.types';
 import {
   WebhookSignatureVerificationException,
   WebhookDecryptionException,
-} from '@libs/integrations/tencent-meeting';
-import { Public } from '@libs/security';
+} from '../../integrations/tencent-meeting';
+import { Public } from '../../security';
 
 /**
  * Tencent Meeting Webhook Controller

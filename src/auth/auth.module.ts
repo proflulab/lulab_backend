@@ -9,11 +9,7 @@ import { PasswordService } from './services/password.service';
 import { ProfileService } from './services/profile.service';
 import { TokenService } from './services/token.service';
 import { AuthPolicyService } from './services/auth-policy.service';
-import {
-  JwtStrategy,
-  JWT_USER_LOOKUP,
-  JWT_TOKEN_BLACKLIST,
-} from '@libs/security';
+import { JwtStrategy, JWT_USER_LOOKUP, JWT_TOKEN_BLACKLIST } from '../security';
 import { RedisModule } from '@/redis/redis.module';
 import { EmailModule } from '@/email/email.module';
 import { UserRepository } from './repositories/user.repository';

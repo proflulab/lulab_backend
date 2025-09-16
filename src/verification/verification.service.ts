@@ -6,14 +6,14 @@ import {
 } from '@nestjs/common';
 import { VerificationRepository } from './repositories/verification.repository';
 import { EmailService } from '@/email/email.service';
-import { AliyunSmsService } from '@libs/integrations/aliyun/aliyun-sms.service';
+import { AliyunSmsService } from '../integrations/aliyun/aliyun-sms.service';
 import { CodeType } from '@/verification/enums';
 import { VerificationCodeType } from '@prisma/client';
 import {
   generateNumericCode,
   isValidEmail,
   isValidCnPhone,
-} from '@libs/common/utils';
+} from '../common/utils';
 
 @Injectable()
 export class VerificationService {

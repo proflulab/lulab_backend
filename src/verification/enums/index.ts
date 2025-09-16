@@ -1,1 +1,1 @@
-export * from '@libs/common/enums';
+export * from '../../common/enums';

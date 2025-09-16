@@ -20,7 +20,7 @@ import { RegisterService } from './services/register.service';
 import { LoginService } from './services/login.service';
 import { PasswordService } from './services/password.service';
 import { TokenService } from './services/token.service';
-import { Public } from '@libs/security';
+import { Public } from '../security';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';

@@ -17,7 +17,7 @@ import { AppService } from './app.service';
 import { EmailModule } from './email/email.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
-import { JwtAuthGuard } from '@libs/security';
+import { JwtAuthGuard } from './security';
 import { PrismaModule } from './prisma.module';
 import { MeetingModule } from './meeting/meeting.module';
 import { TencentMeetingModule } from './tencent-meeting/tencent-meeting.module';

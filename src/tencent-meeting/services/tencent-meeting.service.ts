@@ -1,17 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { TencentApiService } from '@libs/integrations/tencent-meeting';
+import { TencentApiService } from '../../integrations/tencent-meeting';
 import {
   RecordingDetail,
   RecordMeetingsResponse,
   MeetingParticipantsResponse,
   MeetingDetailResponse,
-} from '@libs/integrations/tencent-meeting';
+} from '../../integrations/tencent-meeting';
 import {
   PlatformApiException,
   PlatformConfigException,
-} from '@libs/integrations/tencent-meeting';
-import { HttpFileUtil } from '@libs/common/utils';
+} from '../../integrations/tencent-meeting';
+import { HttpFileUtil } from '../../common/utils';
 
 /**
  * 腾讯会议平台服务

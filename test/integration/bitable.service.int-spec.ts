@@ -4,7 +4,7 @@ import {
   BitableService,
   LarkClient,
   larkConfig,
-} from '@libs/integrations/lark';
+} from '../../src/integrations/lark';
 import * as path from 'path';
 
 // 加载测试环境变量

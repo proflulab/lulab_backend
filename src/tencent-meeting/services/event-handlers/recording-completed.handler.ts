@@ -16,7 +16,7 @@ import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
   RecordingFileBitableRepository,
-} from '@libs/integrations/lark/repositories';
+} from '../../../integrations/lark/repositories';
 
 /**
  * 录制完成事件处理器

@@ -10,7 +10,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { VerificationService } from './verification.service';
 import { SendCodeDto } from './dto/send-code.dto';
 import { VerifyCodeDto } from './dto/verify-code.dto';
-import { Public } from '@libs/security';
+import { Public } from '../security';
 import {
   ApiSendCodeDocs,
   ApiVerifyCodeDocs,

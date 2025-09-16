@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { verifySignature } from '@libs/integrations/tencent-meeting';
+import { verifySignature } from './index';
 
 describe('TencentCryptoService', () => {
   describe('verifySignature', () => {

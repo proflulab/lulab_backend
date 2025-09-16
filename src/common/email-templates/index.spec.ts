@@ -2,7 +2,7 @@ import {
   buildVerificationEmail,
   buildWelcomeEmail,
   buildPasswordResetNotificationEmail,
-} from '@libs/common/email-templates';
+} from './index';
 
 describe('email-templates', () => {
   describe('buildVerificationEmail', () => {

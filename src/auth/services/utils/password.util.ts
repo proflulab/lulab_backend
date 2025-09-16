@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { isStrongPassword } from '@libs/common/utils';
+import { isStrongPassword } from '../../../common/utils';
 
 const SALT_ROUNDS = 12;
 
