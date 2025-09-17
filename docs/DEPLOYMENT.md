@@ -119,33 +119,41 @@ CREATE DATABASE lulab_backend OWNER lulab_user;
 \q
 ```
 
-#### 运行数据库迁移
+#### 运行数据库初始化
 
 ```bash
 # 生成Prisma客户端
-npx prisma generate
+pnpm db:generate
 
-# 运行数据库迁移
-npx prisma migrate dev --name init
+# 运行数据库推送（开发环境）
+pnpm db:push
+
+# 或者运行迁移（生产环境）
+pnpm db:migrate
+
+# 初始化种子数据（可选）
+pnpm db:seed
 ```
 
 ### 5. 启动应用
 
 ```bash
 # 开发模式启动
-pnpm run start:dev
+pnpm start:dev
 
 # 或者构建后启动
-pnpm run build
-pnpm run start:prod
+pnpm build
+pnpm start:prod
 ```
 
 ### 6. 验证部署
 
 访问以下URL验证应用是否正常运行：
 
+- 主页: `http://localhost:3000`
 - API文档: `http://localhost:3000/api`
-- 健康检查: `http://localhost:3000/health`
+- GraphQL Playground: `http://localhost:3000/graphql`
+- 会议健康检查: `http://localhost:3000/meetings/health`
 
 ## 测试环境部署
 
@@ -194,13 +202,25 @@ docker-compose -f docker-compose.test.yml up -d
 
 ```bash
 # 运行单元测试
-pnpm run test
+pnpm test
 
 # 运行集成测试
-pnpm run test:integration
+pnpm test:integration
+
+# 运行系统测试
+pnpm test:system
 
 # 运行端到端测试
-pnpm run test:e2e
+pnpm test:e2e
+
+# 运行所有测试
+pnpm test:all
+
+# 生成测试覆盖率报告
+pnpm test:cov
+
+# CI 环境下的测试
+pnpm test:ci
 ```
 
 ## 生产环境部署
@@ -241,11 +261,14 @@ git clone <repository-url> .
 #### 安装依赖和构建
 
 ```bash
-# 安装依赖
+# 安装依赖（生产模式）
 pnpm install --prod
 
 # 构建应用
-pnpm run build
+pnpm build
+
+# 验证构建结果
+node dist/main.js --version
 ```
 
 #### 配置环境变量
@@ -265,14 +288,17 @@ sudo nano /etc/lulab_backend/.env
 
 ### 3. 数据库设置
 
-#### 生产数据库配置
+#### 运行生产迁移
 
 ```bash
-# 连接到生产数据库
-psql -h your-production-db-host -U your-db-user -d lulab_backend
+# 运行生产数据库迁移
+pnpm db:migrate
 
-# 运行生产迁移
+# 或者使用 Prisma CLI
 npx prisma migrate deploy
+
+# 初始化生产数据（可选）
+pnpm db:seed
 ```
 
 ### 4. 进程管理

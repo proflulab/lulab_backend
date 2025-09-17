@@ -36,7 +36,7 @@ export class TokenBlacklistService {
     if (ttlMs <= 0) return { jti, added: false };
 
     const ttlSec = Math.max(Math.floor(ttlMs / 1000), 1);
-    const key = `jwt:blacklist:${jti}`;
+    const key = `jwt:blacklist:access:${jti}`;
 
     if (this.redis.isReady()) {
       try {
@@ -63,7 +63,7 @@ export class TokenBlacklistService {
       try {
         const exists = await this.redis
           .getClient()!
-          .exists(`jwt:blacklist:${jti}`);
+          .exists(`jwt:blacklist:access:${jti}`);
         return exists === 1;
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);

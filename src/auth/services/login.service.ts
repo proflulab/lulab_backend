@@ -91,7 +91,12 @@ export class LoginService {
         userAgent,
       });
 
-      const tokens = this.tokenService.generateTokens(user.id);
+      const tokens = await this.tokenService.generateTokens(user.id, {
+        ip,
+        userAgent,
+        deviceInfo: loginDto.deviceInfo,
+        deviceId: loginDto.deviceId,
+      });
 
       return {
         user: formatUserResponse(user),

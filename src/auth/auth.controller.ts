@@ -6,6 +6,8 @@ import {
   HttpCode,
   HttpStatus,
   ValidationPipe,
+  UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
@@ -24,8 +26,11 @@ import { Public } from '../security';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { LogoutDto } from './dto/logout.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { TokenBlacklistService } from './services/token-blacklist.service';
+import { User, CurrentUser } from '../security';
 
 @ApiTags('Auth')
 @Controller({
@@ -33,6 +38,8 @@ import { TokenBlacklistService } from './services/token-blacklist.service';
   version: '1',
 })
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     private readonly registerService: RegisterService,
     private readonly loginService: LoginService,
@@ -89,9 +96,17 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiRefreshTokenDocs()
   async refreshToken(
-    @Body('refreshToken') refreshToken: string,
-  ): Promise<{ accessToken: string }> {
-    return await this.tokenService.refreshToken(refreshToken);
+    @Body(ValidationPipe) refreshTokenDto: RefreshTokenDto,
+    @Req() req: Request,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const ip = this.getClientIp(req);
+    const userAgent = req.get('User-Agent');
+    return await this.tokenService.refreshToken(refreshTokenDto.refreshToken, { 
+      ip, 
+      userAgent,
+      deviceInfo: refreshTokenDto.deviceInfo,
+      deviceId: refreshTokenDto.deviceId,
+    });
   }
 
   @Post('logout')
@@ -99,20 +114,92 @@ export class AuthController {
   @ApiLogoutDocs()
   @ApiBearerAuth()
   async logout(
+    @User() user: CurrentUser,
     @Req() req: Request,
-  ): Promise<{ success: boolean; message: string }> {
-    // 将当前访问令牌加入黑名单（直到其过期）
-    const authHeader = req.get('authorization') || req.get('Authorization');
-    const token = authHeader?.startsWith('Bearer ')
-      ? authHeader.slice('Bearer '.length).trim()
-      : undefined;
-    if (token) {
-      await this.tokenBlacklist.add(token);
-    }
-    return {
-      success: true,
-      message: '退出登录成功',
+    @Body(ValidationPipe) logoutDto: LogoutDto = {},
+  ): Promise<{
+    success: boolean;
+    message: string;
+    details?: {
+      accessTokenRevoked: boolean;
+      refreshTokenRevoked: boolean;
+      allDevicesLoggedOut?: boolean;
+      revokedTokensCount?: number;
     };
+  }> {
+    try {
+      // 获取当前访问令牌
+      const authHeader = req.get('authorization') || req.get('Authorization');
+      const accessToken = authHeader?.startsWith('Bearer ')
+        ? authHeader.slice('Bearer '.length).trim()
+        : undefined;
+
+      if (!accessToken) {
+        throw new UnauthorizedException('未找到访问令牌');
+      }
+
+      // 获取请求上下文
+      const ip = this.getClientIp(req);
+      const userAgent = req.get('User-Agent');
+
+      // 执行全面登出
+      const logoutResult = await this.tokenService.logout(
+        user.id,
+        accessToken,
+        {
+          refreshToken: logoutDto.refreshToken,
+          deviceId: logoutDto.deviceId,
+          revokeAllDevices: logoutDto.revokeAllDevices,
+          userAgent,
+          ip,
+        },
+      );
+
+      this.logger.log(
+        `User ${user.id} logout: ${JSON.stringify({
+          accessRevoked: logoutResult.accessTokenRevoked,
+          refreshRevoked: logoutResult.refreshTokenRevoked,
+          allDevices: logoutResult.allDevicesLoggedOut,
+          revokedCount: logoutResult.revokedTokensCount,
+          ip,
+          userAgent,
+        })}`,
+      );
+
+      return {
+        success: true,
+        message: logoutResult.message,
+        details: {
+          accessTokenRevoked: logoutResult.accessTokenRevoked,
+          refreshTokenRevoked: logoutResult.refreshTokenRevoked,
+          allDevicesLoggedOut: logoutResult.allDevicesLoggedOut,
+          revokedTokensCount: logoutResult.revokedTokensCount,
+        },
+      };
+    } catch (error) {
+      this.logger.error('Logout failed', error);
+      // 即使出错，也要尽力撤销当前访问令牌
+      const authHeader = req.get('authorization') || req.get('Authorization');
+      const token = authHeader?.startsWith('Bearer ')
+        ? authHeader.slice('Bearer '.length).trim()
+        : undefined;
+      if (token) {
+        try {
+          await this.tokenBlacklist.add(token);
+        } catch {
+          // 忽略错误
+        }
+      }
+
+      return {
+        success: true, // 返回成功，因为至少访问令牌被撤销了
+        message: '退出登录部分成功，当前会话已终止',
+        details: {
+          accessTokenRevoked: !!token,
+          refreshTokenRevoked: false,
+        },
+      };
+    }
   }
 
   private getClientIp(req: Request): string {

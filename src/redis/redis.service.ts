@@ -9,7 +9,7 @@ export class RedisService implements OnModuleDestroy {
 
   constructor(private readonly config: ConfigService) {
     const redisUrl = this.config.get<string>('REDIS_URL');
-    
+
     if (redisUrl) {
       // 如果存在 REDIS_URL，优先使用 URL 连接
       this.client = new Redis(redisUrl, {
@@ -46,7 +46,9 @@ export class RedisService implements OnModuleDestroy {
         this.logger.warn('Redis reconnecting...'),
       );
     } else {
-      this.logger.warn('Redis configuration not found; Redis features are disabled');
+      this.logger.warn(
+        'Redis configuration not found; Redis features are disabled',
+      );
     }
   }
 

@@ -13,6 +13,7 @@ import { JwtStrategy, JWT_USER_LOOKUP, JWT_TOKEN_BLACKLIST } from '../security';
 import { RedisModule } from '@/redis/redis.module';
 import { EmailModule } from '@/email/email.module';
 import { UserRepository } from './repositories/user.repository';
+import { RefreshTokenRepository } from './repositories/refresh-token.repository';
 import { LoginLogRepository } from './repositories/login-log.repository';
 import { JwtUserLookupService } from './services/jwt-user-lookup.service';
 import { TokenBlacklistService } from './services/token-blacklist.service';
@@ -43,6 +44,7 @@ import { TokenBlacklistService } from './services/token-blacklist.service';
     AuthPolicyService,
     JwtStrategy,
     UserRepository,
+    RefreshTokenRepository,
     LoginLogRepository,
     { provide: JWT_USER_LOOKUP, useClass: JwtUserLookupService },
     TokenBlacklistService,

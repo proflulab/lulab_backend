@@ -5,7 +5,7 @@ import { TencentApiService } from '@/integrations/tencent-meeting/tencent-api.se
 import {
   RecordMeetingsResponse,
   MeetingDetailResponse,
-  PlatformApiException
+  PlatformApiException,
 } from '@/integrations/tencent-meeting';
 import { config } from 'dotenv';
 
