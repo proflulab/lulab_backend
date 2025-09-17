@@ -33,15 +33,19 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
 
       switch (service) {
         case 'upload':
-          return this.processUploadJob(action, payload);
+          return await Promise.resolve(this.processUploadJob(action, payload));
         case 'tencent-meeting':
-          return this.processTencentMeetingJob(action, payload);
+          return await Promise.resolve(
+            this.processTencentMeetingJob(action, payload),
+          );
         case 'lark':
-          return this.processLarkJob(action, payload);
+          return await Promise.resolve(this.processLarkJob(action, payload));
         case 'aliyun-sms':
-          return this.processAliyunSmsJob(action, payload);
+          return await Promise.resolve(
+            this.processAliyunSmsJob(action, payload),
+          );
         default:
-          throw new UnrecoverableError(`Unknown service: ${service}`);
+          throw new UnrecoverableError(`Unknown service: ${String(service)}`);
       }
     });
   }
@@ -49,7 +53,10 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
   /**
    * Process upload jobs
    */
-  private processUploadJob(action: string, payload: any): any {
+  private processUploadJob(
+    action: string,
+    payload: Record<string, unknown>,
+  ): unknown {
     try {
       this.logger.debug(`Processing upload job: ${action}`);
 
@@ -72,7 +79,10 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
   /**
    * Process Tencent Meeting jobs
    */
-  private processTencentMeetingJob(action: string, payload: any): any {
+  private processTencentMeetingJob(
+    action: string,
+    payload: Record<string, unknown>,
+  ): unknown {
     try {
       this.logger.debug(`Processing Tencent Meeting job: ${action}`);
 
@@ -105,7 +115,10 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
   /**
    * Process Lark Bitable jobs
    */
-  private processLarkJob(action: string, payload: any): any {
+  private processLarkJob(
+    action: string,
+    payload: Record<string, unknown>,
+  ): unknown {
     try {
       this.logger.debug(`Processing Lark job: ${action}`);
 
@@ -138,7 +151,10 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
   /**
    * Process Aliyun SMS jobs
    */
-  private processAliyunSmsJob(action: string, payload: any): any {
+  private processAliyunSmsJob(
+    action: string,
+    payload: Record<string, unknown>,
+  ): unknown {
     try {
       this.logger.debug(`Processing Aliyun SMS job: ${action}`);
 
@@ -159,12 +175,13 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
   }
 
   // Upload implementation methods
-  /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
-  private uploadRecording(payload: any): any {
+  private uploadRecording(
+    payload: Record<string, unknown>,
+  ): Record<string, unknown> {
     const { fileUrl, fileName, meetingId, storageProvider } = payload;
 
     this.logger.debug(
-      `Uploading recording ${fileName} for meeting ${meetingId} to ${storageProvider}`,
+      `Uploading recording ${String(fileName)} for meeting ${String(meetingId)} to ${String(storageProvider)}`,
     );
 
     // Simulate upload logic
@@ -173,7 +190,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
       fileName,
       fileUrl,
       storageProvider,
-      uploadedUrl: `https://${storageProvider}.example.com/recordings/${meetingId}/${fileName}`,
+      uploadedUrl: `https://${String(storageProvider)}.example.com/recordings/${String(meetingId)}/${String(fileName)}`,
       uploadedAt: new Date(),
       status: 'uploaded',
       metadata: {
@@ -189,7 +206,9 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
   }
 
   // Tencent Meeting implementation methods
-  private createTencentMeeting(payload: any): any {
+  private createTencentMeeting(
+    payload: Record<string, unknown>,
+  ): Record<string, unknown> {
     const { meetingData } = payload;
 
     this.logger.debug(`Creating Tencent Meeting`);
@@ -206,8 +225,10 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
     return result;
   }
 
-  private updateTencentMeeting(payload: any): any {
-    this.logger.debug(`Updating Tencent Meeting ${payload.meetingId}`);
+  private updateTencentMeeting(
+    payload: Record<string, unknown>,
+  ): Record<string, unknown> {
+    this.logger.debug(`Updating Tencent Meeting ${String(payload.meetingId)}`);
     return {
       meetingId: payload.meetingId,
       status: 'updated',
@@ -215,8 +236,10 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
     };
   }
 
-  private deleteTencentMeeting(payload: any): any {
-    this.logger.debug(`Deleting Tencent Meeting ${payload.meetingId}`);
+  private deleteTencentMeeting(
+    payload: Record<string, unknown>,
+  ): Record<string, unknown> {
+    this.logger.debug(`Deleting Tencent Meeting ${String(payload.meetingId)}`);
     return {
       meetingId: payload.meetingId,
       status: 'deleted',
@@ -224,8 +247,10 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
     };
   }
 
-  private fetchTencentMeeting(payload: any): any {
-    this.logger.debug(`Fetching Tencent Meeting ${payload.meetingId}`);
+  private fetchTencentMeeting(
+    payload: Record<string, unknown>,
+  ): Record<string, unknown> {
+    this.logger.debug(`Fetching Tencent Meeting ${String(payload.meetingId)}`);
     return {
       meetingId: payload.meetingId,
       status: 'fetched',
@@ -233,9 +258,11 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
     };
   }
 
-  private processTencentWebhook(payload: any): any {
+  private processTencentWebhook(
+    payload: Record<string, unknown>,
+  ): Record<string, unknown> {
     const { eventType, payload: webhookPayload } = payload;
-    this.logger.debug(`Processing Tencent webhook: ${eventType}`);
+    this.logger.debug(`Processing Tencent webhook: ${String(eventType)}`);
     return {
       eventType,
       processed: true,
@@ -245,10 +272,14 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
   }
 
   // Lark implementation methods
-  private createLarkRecord(payload: any): any {
+  private createLarkRecord(
+    payload: Record<string, unknown>,
+  ): Record<string, unknown> {
     const { appId, tableId, data } = payload;
 
-    this.logger.debug(`Creating Lark record in ${appId}/${tableId}`);
+    this.logger.debug(
+      `Creating Lark record in ${String(appId)}/${String(tableId)}`,
+    );
 
     const result = {
       appId,
@@ -262,10 +293,12 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
     return result;
   }
 
-  private updateLarkRecord(payload: any): any {
+  private updateLarkRecord(
+    payload: Record<string, unknown>,
+  ): Record<string, unknown> {
     const { appId, tableId, recordId, data } = payload;
     this.logger.debug(
-      `Updating Lark record ${recordId} in ${appId}/${tableId}`,
+      `Updating Lark record ${String(recordId)} in ${String(appId)}/${String(tableId)}`,
     );
     return {
       appId,
@@ -277,10 +310,12 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
     };
   }
 
-  private deleteLarkRecord(payload: any): any {
+  private deleteLarkRecord(
+    payload: Record<string, unknown>,
+  ): Record<string, unknown> {
     const { appId, tableId, recordId } = payload;
     this.logger.debug(
-      `Deleting Lark record ${recordId} in ${appId}/${tableId}`,
+      `Deleting Lark record ${String(recordId)} in ${String(appId)}/${String(tableId)}`,
     );
     return {
       appId,
@@ -291,37 +326,45 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
     };
   }
 
-  private batchCreateLarkRecords(payload: any): any {
+  private batchCreateLarkRecords(
+    payload: Record<string, unknown>,
+  ): Record<string, unknown> {
     const { appId, tableId, records } = payload;
+    const recordsArray = records as unknown[];
     this.logger.debug(
-      `Batch creating ${records.length} Lark records in ${appId}/${tableId}`,
+      `Batch creating ${recordsArray.length} Lark records in ${String(appId)}/${String(tableId)}`,
     );
     return {
       appId,
       tableId,
-      created: records.length,
+      created: recordsArray.length,
       status: 'batch-created',
       createdAt: new Date(),
     };
   }
 
-  private batchUpdateLarkRecords(payload: any): any {
+  private batchUpdateLarkRecords(
+    payload: Record<string, unknown>,
+  ): Record<string, unknown> {
     const { appId, tableId, records } = payload;
+    const recordsArray = records as unknown[];
     this.logger.debug(
-      `Batch updating ${records.length} Lark records in ${appId}/${tableId}`,
+      `Batch updating ${recordsArray.length} Lark records in ${String(appId)}/${String(tableId)}`,
     );
     return {
       appId,
       tableId,
-      updated: records.length,
+      updated: recordsArray.length,
       status: 'batch-updated',
       updatedAt: new Date(),
     };
   }
 
-  private processLarkWebhook(payload: any): any {
+  private processLarkWebhook(
+    payload: Record<string, unknown>,
+  ): Record<string, unknown> {
     const { eventType, payload: webhookPayload } = payload;
-    this.logger.debug(`Processing Lark webhook: ${eventType}`);
+    this.logger.debug(`Processing Lark webhook: ${String(eventType)}`);
     return {
       eventType,
       processed: true,
@@ -331,10 +374,12 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
   }
 
   // Aliyun SMS implementation methods
-  private sendAliyunSms(payload: any): any {
+  private sendAliyunSms(
+    payload: Record<string, unknown>,
+  ): Record<string, unknown> {
     const { phoneNumber, message, templateCode, templateParams } = payload;
 
-    this.logger.debug(`Sending SMS to ${phoneNumber}`);
+    this.logger.debug(`Sending SMS to ${String(phoneNumber)}`);
 
     // Simulate SMS sending
     const smsResult = {
@@ -349,7 +394,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
       cost: 0.05, // Mock cost
     };
 
-    this.logger.debug(`SMS sent successfully to ${phoneNumber}`);
+    this.logger.debug(`SMS sent successfully to ${String(phoneNumber)}`);
     return smsResult;
   }
 }

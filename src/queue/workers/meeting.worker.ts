@@ -42,7 +42,7 @@ export class MeetingWorker extends BaseWorker<MeetingProcessingJobData> {
         case 'sync':
           return this.syncMeetingData(meetingId, payload);
         default:
-          throw new Error(`Unknown action: ${action}`);
+          throw new Error(`Unknown action: ${String(action)}`);
       }
     });
   }
@@ -50,7 +50,14 @@ export class MeetingWorker extends BaseWorker<MeetingProcessingJobData> {
   /**
    * Process meeting record
    */
-  private processMeetingRecord(meetingId: string, payload: any): unknown {
+  private processMeetingRecord(
+    meetingId: string,
+    payload: {
+      meetingData?: unknown;
+      analysisType?: string;
+      syncTarget?: string;
+    },
+  ): unknown {
     try {
       this.logger.debug(`Processing meeting record ${meetingId}`);
 
@@ -62,12 +69,15 @@ export class MeetingWorker extends BaseWorker<MeetingProcessingJobData> {
       // 4. Update meeting status
       // 5. Trigger follow-up actions
 
+      const meetingData = payload.meetingData as
+        | { participants?: unknown[]; duration?: number }
+        | undefined;
       const result = {
         meetingId,
         status: 'processed',
         processedAt: new Date(),
-        participants: payload?.meetingData?.participants || [],
-        duration: payload?.meetingData?.duration || 0,
+        participants: meetingData?.participants || [],
+        duration: meetingData?.duration || 0,
         metadata: {
           processedBy: 'meeting-worker',
           processingTime: Date.now(),
@@ -89,11 +99,18 @@ export class MeetingWorker extends BaseWorker<MeetingProcessingJobData> {
   /**
    * Analyze meeting content
    */
-  private analyzeMeetingContent(meetingId: string, payload: any): unknown {
+  private analyzeMeetingContent(
+    meetingId: string,
+    payload: {
+      meetingData?: unknown;
+      analysisType?: string;
+      syncTarget?: string;
+    },
+  ): unknown {
     try {
       const { analysisType, meetingData } = payload;
       this.logger.debug(
-        `Analyzing meeting content ${meetingId} with type ${analysisType}`,
+        `Analyzing meeting content ${meetingId} with type ${String(analysisType)}`,
       );
 
       // Simulate content analysis
@@ -104,6 +121,9 @@ export class MeetingWorker extends BaseWorker<MeetingProcessingJobData> {
       // 4. Create summary
       // 5. Store analysis results
 
+      const meetingDataObj = meetingData as
+        | { participants?: unknown[]; actionItems?: unknown[] }
+        | undefined;
       const analysisResult = {
         meetingId,
         analysisType,
@@ -112,9 +132,9 @@ export class MeetingWorker extends BaseWorker<MeetingProcessingJobData> {
           keywords: ['project', 'deadline', 'team', 'progress'],
           summary:
             'Meeting focused on project progress and upcoming deadlines.',
-          actionItems: payload?.meetingData?.actionItems || [],
+          actionItems: meetingDataObj?.actionItems || [],
           participantEngagement: {
-            totalSpeakers: meetingData?.participants?.length || 0,
+            totalSpeakers: meetingDataObj?.participants?.length || 0,
             averageSpeakingTime: 5.2,
           },
         },
@@ -140,10 +160,19 @@ export class MeetingWorker extends BaseWorker<MeetingProcessingJobData> {
   /**
    * Sync meeting data with external systems
    */
-  private syncMeetingData(meetingId: string, payload: any): unknown {
+  private syncMeetingData(
+    meetingId: string,
+    payload: {
+      meetingData?: unknown;
+      analysisType?: string;
+      syncTarget?: string;
+    },
+  ): unknown {
     try {
       const { syncTarget } = payload;
-      this.logger.debug(`Syncing meeting data ${meetingId} to ${syncTarget}`);
+      this.logger.debug(
+        `Syncing meeting data ${meetingId} to ${String(syncTarget)}`,
+      );
 
       // Simulate data synchronization
       // In real implementation, this would:
@@ -170,7 +199,7 @@ export class MeetingWorker extends BaseWorker<MeetingProcessingJobData> {
           syncedBy: 'meeting-sync-worker',
           apiVersion: '2.0',
           retryCount: 0,
-        } as any,
+        } as Record<string, unknown>,
       };
 
       // Simulate different sync targets
@@ -183,16 +212,16 @@ export class MeetingWorker extends BaseWorker<MeetingProcessingJobData> {
           syncResult.metadata.tencentMeetingId = `tm_${meetingId}`;
           break;
         default:
-          this.logger.warn(`Unknown sync target: ${syncTarget}`);
+          this.logger.warn(`Unknown sync target: ${String(syncTarget)}`);
       }
 
       this.logger.debug(
-        `Meeting data synced successfully for ${meetingId} to ${syncTarget}`,
+        `Meeting data synced successfully for ${meetingId} to ${String(syncTarget)}`,
       );
       return syncResult;
     } catch (error) {
       this.logger.error(
-        `Failed to sync meeting data ${meetingId} to ${payload.syncTarget}: ${
+        `Failed to sync meeting data ${meetingId} to ${String(payload.syncTarget)}: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );

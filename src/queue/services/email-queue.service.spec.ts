@@ -17,8 +17,8 @@ describe('EmailQueueService', () => {
   };
 
   const mockConfigService = {
-    get: jest.fn((key: string, defaultValue?: any) => {
-      const config = {
+    get: jest.fn((key: string, defaultValue?: unknown) => {
+      const config: Record<string, unknown> = {
         REDIS_HOST: 'localhost',
         REDIS_PORT: 6379,
         REDIS_PASSWORD: undefined,
@@ -59,7 +59,10 @@ describe('EmailQueueService', () => {
 
   it('should send verification email', async () => {
     const mockAdd = jest.fn().mockResolvedValue({ id: 'email-job-123' });
+    // Using type assertion for test mocking
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     (service as any).queue = { add: mockAdd };
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
     const result = await service.sendVerificationEmail('test@example.com', {
       verificationCode: '123456',
@@ -67,6 +70,7 @@ describe('EmailQueueService', () => {
 
     expect(mockAdd).toHaveBeenCalledWith(
       JobType.SEND_VERIFICATION_EMAIL,
+      /* eslint-disable @typescript-eslint/no-unsafe-assignment */
       expect.objectContaining({
         to: 'test@example.com',
         subject: 'Email Verification Required',
@@ -81,13 +85,17 @@ describe('EmailQueueService', () => {
         priority: 10, // high priority maps to 10
         jobId: expect.any(String),
       }),
+      /* eslint-enable @typescript-eslint/no-unsafe-assignment */
     );
     expect(result).toEqual({ id: 'email-job-123' });
   });
 
   it('should send password reset email', async () => {
     const mockAdd = jest.fn().mockResolvedValue({ id: 'reset-job-123' });
+    // Using type assertion for test mocking
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     (service as any).queue = { add: mockAdd };
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
     const result = await service.sendPasswordResetEmail('test@example.com', {
       resetToken: 'reset-token-123',
@@ -113,7 +121,10 @@ describe('EmailQueueService', () => {
     const mockAddBulkJobs = jest
       .fn()
       .mockResolvedValue([{ id: 'notification-job-123' }]);
+    // Using type assertion for test mocking
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     (service as any).addBulkJobs = mockAddBulkJobs;
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
     const result = await service.sendNotificationEmail(
       'test@example.com',
@@ -123,6 +134,7 @@ describe('EmailQueueService', () => {
       { priority: 'normal' },
     );
 
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
     expect(mockAddBulkJobs).toHaveBeenCalledWith(
       expect.arrayContaining([
         expect.objectContaining({
@@ -140,6 +152,7 @@ describe('EmailQueueService', () => {
         }),
       ]),
     );
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
     expect(result).toEqual([{ id: 'notification-job-123' }]);
   });
 
@@ -148,10 +161,13 @@ describe('EmailQueueService', () => {
   // be instantiated without errors. The actual job processing would fail gracefully.
 
   it('should map priority values correctly', () => {
+    // Using type assertion for test access to private method
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
     const getPriorityValue = (service as any).getPriorityValue.bind(service);
 
     expect(getPriorityValue('high')).toBe(10);
     expect(getPriorityValue('normal')).toBe(5);
     expect(getPriorityValue('low')).toBe(1);
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
   });
 });

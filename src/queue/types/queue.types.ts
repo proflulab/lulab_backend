@@ -43,7 +43,7 @@ export interface BaseJobData {
   idempotencyKey: string;
   userId?: string;
   correlationId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: Date;
 }
 
@@ -54,7 +54,7 @@ export interface MeetingProcessingJobData extends BaseJobData {
   meetingId: string;
   action: 'process' | 'analyze' | 'sync';
   payload: {
-    meetingData?: any;
+    meetingData?: unknown;
     analysisType?: string;
     syncTarget?: string;
   };
@@ -67,7 +67,7 @@ export interface EmailJobData extends BaseJobData {
   to: string | string[];
   subject: string;
   template: string;
-  templateData: Record<string, any>;
+  templateData: Record<string, unknown>;
   priority?: 'low' | 'normal' | 'high';
 }
 
@@ -77,7 +77,7 @@ export interface EmailJobData extends BaseJobData {
 export interface ExternalApiJobData extends BaseJobData {
   service: 'tencent-meeting' | 'lark' | 'aliyun-sms' | 'upload';
   action: string;
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
   retryConfig?: {
     maxAttempts?: number;
     backoffDelay?: number;
@@ -89,7 +89,7 @@ export interface ExternalApiJobData extends BaseJobData {
  */
 export interface ScheduledTaskJobData extends BaseJobData {
   taskType: string;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
 }
 
 /**
@@ -228,7 +228,7 @@ export interface QueueMetrics {
 /**
  * Job result interface
  */
-export interface JobResult<T = any> {
+export interface JobResult<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;

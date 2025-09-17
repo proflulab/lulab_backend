@@ -60,7 +60,11 @@ export class QueueUsageExamples {
   /**
    * Example 2: User registration workflow
    */
-  async userRegistrationWorkflow(email: string, phone: string, userData: any) {
+  async userRegistrationWorkflow(
+    email: string,
+    phone: string,
+    userData: { name: string },
+  ) {
     this.logger.log('Example 2: User registration workflow');
 
     // 1. Send welcome email
@@ -95,7 +99,12 @@ export class QueueUsageExamples {
     meetingId: string,
     attendees: string[],
     meetingTime: Date,
-    meetingData: any,
+    meetingData: {
+      title: string;
+      url: string;
+      organizer: string;
+      agenda: string;
+    },
   ) {
     this.logger.log('Example 3: Meeting invitation and reminders');
 
@@ -156,7 +165,7 @@ export class QueueUsageExamples {
   async processWebhookEvent(
     source: 'tencent-meeting' | 'lark',
     eventType: string,
-    payload: any,
+    payload: Record<string, unknown>,
   ) {
     this.logger.log('Example 5: Webhook processing');
 
@@ -166,7 +175,7 @@ export class QueueUsageExamples {
         source,
         eventType,
         payload,
-        signature: payload.signature,
+        signature: payload.signature as string | undefined,
       },
       {
         priority: 5, // High priority for real-time events
@@ -311,7 +320,7 @@ export class QueueUsageExamples {
 /**
  * Standalone execution example
  */
-export async function runStandaloneExample() {
+export function runStandaloneExample(): void {
   const logger = new Logger('QueueExamples');
   logger.log('This is how you would use the queue system in your services...');
 
@@ -351,5 +360,5 @@ export async function runStandaloneExample() {
 }
 
 if (require.main === module) {
-  runStandaloneExample();
+  void runStandaloneExample();
 }

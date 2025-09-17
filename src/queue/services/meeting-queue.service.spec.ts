@@ -17,8 +17,8 @@ describe('MeetingQueueService', () => {
   };
 
   const mockConfigService = {
-    get: jest.fn((key: string, defaultValue?: any) => {
-      const config = {
+    get: jest.fn((key: string, defaultValue?: unknown) => {
+      const config: Record<string, unknown> = {
         REDIS_HOST: 'localhost',
         REDIS_PORT: 6379,
         REDIS_PASSWORD: undefined,
@@ -59,12 +59,15 @@ describe('MeetingQueueService', () => {
 
   it('should add process job', async () => {
     const mockAdd = jest.fn().mockResolvedValue({ id: 'job-123' });
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     (service as any).queue = { add: mockAdd };
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
     const result = await service.addProcessJob('meeting-1', 'process', {
       meetingData: { title: 'Test Meeting' },
     });
 
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
     expect(mockAdd).toHaveBeenCalledWith(
       JobType.PROCESS_MEETING_RECORD,
       expect.objectContaining({
@@ -79,12 +82,15 @@ describe('MeetingQueueService', () => {
         jobId: expect.any(String),
       }),
     );
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
     expect(result).toEqual({ id: 'job-123' });
   });
 
   it('should add analysis job', async () => {
     const mockAdd = jest.fn().mockResolvedValue({ id: 'analysis-job-123' });
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     (service as any).queue = { add: mockAdd };
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
     const result = await service.addAnalysisJob(
       'meeting-1',
@@ -112,7 +118,9 @@ describe('MeetingQueueService', () => {
 
   it('should add sync job', async () => {
     const mockAdd = jest.fn().mockResolvedValue({ id: 'sync-job-123' });
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     (service as any).queue = { add: mockAdd };
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
     const result = await service.addSyncJob(
       'meeting-1',
@@ -144,6 +152,7 @@ describe('MeetingQueueService', () => {
   // be instantiated without errors. The actual job processing would fail gracefully.
 
   it('should get correct job type for action', () => {
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
     const getJobTypeForAction = (service as any).getJobTypeForAction.bind(
       service,
     );
@@ -153,9 +162,11 @@ describe('MeetingQueueService', () => {
       JobType.ANALYZE_MEETING_CONTENT,
     );
     expect(getJobTypeForAction('sync')).toBe(JobType.SYNC_MEETING_DATA);
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
   });
 
   it('should throw error for unknown action', () => {
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return */
     const getJobTypeForAction = (service as any).getJobTypeForAction.bind(
       service,
     );
@@ -163,5 +174,6 @@ describe('MeetingQueueService', () => {
     expect(() => getJobTypeForAction('unknown')).toThrow(
       'Unknown meeting action: unknown',
     );
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return */
   });
 });

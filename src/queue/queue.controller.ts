@@ -222,7 +222,11 @@ export class QueueController {
       const job = await this.meetingQueue.addProcessJob(
         body.meetingId,
         body.action,
-        body.payload,
+        body.payload as {
+          meetingData?: unknown;
+          analysisType?: string;
+          syncTarget?: string;
+        },
         {
           userId: body.userId,
           jobOptions: { priority: body.priority },
@@ -269,7 +273,7 @@ export class QueueController {
         body.to,
         body.subject,
         body.template,
-        body.templateData,
+        body.templateData as Record<string, unknown>,
         {
           priority: body.priority,
           delay: body.delay,

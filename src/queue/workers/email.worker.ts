@@ -40,13 +40,13 @@ export class EmailWorker extends BaseWorker<EmailJobData> {
           return this.sendVerificationEmail(
             to as string,
             subject,
-            templateData as Record<string, unknown>,
+            templateData,
           );
         case JobType.SEND_PASSWORD_RESET_EMAIL:
           return this.sendPasswordResetEmail(
             to as string,
             subject,
-            templateData as Record<string, unknown>,
+            templateData,
           );
         case JobType.SEND_NOTIFICATION_EMAIL:
           return this.sendNotificationEmail(

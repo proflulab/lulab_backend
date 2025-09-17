@@ -26,14 +26,14 @@ export class MeetingQueueService extends BaseQueueService {
     meetingId: string,
     action: 'process' | 'analyze' | 'sync',
     payload: {
-      meetingData?: any;
+      meetingData?: unknown;
       analysisType?: string;
       syncTarget?: string;
     },
     options?: {
       userId?: string;
       correlationId?: string;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
       jobOptions?: QueueJobOptions;
     },
   ) {
@@ -59,7 +59,7 @@ export class MeetingQueueService extends BaseQueueService {
   async addAnalysisJob(
     meetingId: string,
     analysisType: string,
-    meetingData: any,
+    meetingData: unknown,
     options?: {
       userId?: string;
       priority?: number;
@@ -86,7 +86,7 @@ export class MeetingQueueService extends BaseQueueService {
   async addSyncJob(
     meetingId: string,
     syncTarget: string,
-    meetingData: any,
+    meetingData: unknown,
     options?: {
       userId?: string;
       maxRetries?: number;
@@ -113,7 +113,7 @@ export class MeetingQueueService extends BaseQueueService {
     jobs: Array<{
       meetingId: string;
       action: 'process' | 'analyze' | 'sync';
-      payload: any;
+      payload: unknown;
       options?: {
         userId?: string;
         priority?: number;
@@ -129,7 +129,11 @@ export class MeetingQueueService extends BaseQueueService {
         createdAt: new Date(),
         meetingId: job.meetingId,
         action: job.action,
-        payload: job.payload,
+        payload: job.payload as {
+          meetingData?: unknown;
+          analysisType?: string;
+          syncTarget?: string;
+        },
       } as MeetingProcessingJobData,
       opts: {
         priority: job.options?.priority || 1,
@@ -146,7 +150,7 @@ export class MeetingQueueService extends BaseQueueService {
     meetingId: string,
     cronExpression: string,
     action: 'process' | 'analyze' | 'sync',
-    payload: any,
+    payload: unknown,
   ) {
     const jobData: MeetingProcessingJobData = {
       idempotencyKey: `recurring-${meetingId}-${action}`,
@@ -154,7 +158,11 @@ export class MeetingQueueService extends BaseQueueService {
       createdAt: new Date(),
       meetingId,
       action,
-      payload,
+      payload: payload as {
+        meetingData?: unknown;
+        analysisType?: string;
+        syncTarget?: string;
+      },
     };
 
     const jobType = this.getJobTypeForAction(action);
@@ -175,7 +183,8 @@ export class MeetingQueueService extends BaseQueueService {
       case 'sync':
         return JobType.SYNC_MEETING_DATA;
       default:
-        throw new Error(`Unknown meeting action: ${action}`);
+        // This should never happen with proper typing, but TypeScript doesn't know that
+        throw new Error(`Unknown meeting action: ${String(action)}`);
     }
   }
 }
