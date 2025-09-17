@@ -2,12 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../../redis/redis.service';
 import { BaseQueueService } from './base-queue.service';
-import {
-  QueueName,
-  JobType,
-  EmailJobData,
-  QueueJobOptions,
-} from '../types';
+import { QueueName, JobType, EmailJobData, QueueJobOptions } from '../types';
 import { randomUUID } from 'crypto';
 
 /**
@@ -15,10 +10,7 @@ import { randomUUID } from 'crypto';
  */
 @Injectable()
 export class EmailQueueService extends BaseQueueService {
-  constructor(
-    configService: ConfigService,
-    redisService: RedisService,
-  ) {
+  constructor(configService: ConfigService, redisService: RedisService) {
     super(configService, redisService, QueueName.EMAIL_SENDING);
   }
 
@@ -182,10 +174,12 @@ export class EmailQueueService extends BaseQueueService {
       delay?: number;
     },
   ) {
-    const delay = options?.delay || this.calculateReminderDelay(
-      templateData.meetingTime,
-      templateData.reminderMinutes,
-    );
+    const delay =
+      options?.delay ||
+      this.calculateReminderDelay(
+        templateData.meetingTime,
+        templateData.reminderMinutes,
+      );
 
     return this.sendNotificationEmail(
       to,
@@ -257,7 +251,9 @@ export class EmailQueueService extends BaseQueueService {
     meetingTime: Date,
     reminderMinutes: number,
   ): number {
-    const reminderTime = new Date(meetingTime.getTime() - reminderMinutes * 60 * 1000);
+    const reminderTime = new Date(
+      meetingTime.getTime() - reminderMinutes * 60 * 1000,
+    );
     const delay = reminderTime.getTime() - Date.now();
     return Math.max(0, delay); // Don't allow negative delays
   }

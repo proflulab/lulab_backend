@@ -77,4 +77,4 @@ import { RedisModule } from './redis/redis.module';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

@@ -15,10 +15,7 @@ import { randomUUID } from 'crypto';
  */
 @Injectable()
 export class MeetingQueueService extends BaseQueueService {
-  constructor(
-    configService: ConfigService,
-    redisService: RedisService,
-  ) {
+  constructor(configService: ConfigService, redisService: RedisService) {
     super(configService, redisService, QueueName.MEETING_PROCESSING);
   }
 
@@ -41,7 +38,8 @@ export class MeetingQueueService extends BaseQueueService {
     },
   ) {
     const jobData: MeetingProcessingJobData = {
-      idempotencyKey: options?.correlationId || `${meetingId}-${action}-${Date.now()}`,
+      idempotencyKey:
+        options?.correlationId || `${meetingId}-${action}-${Date.now()}`,
       userId: options?.userId,
       correlationId: options?.correlationId || randomUUID(),
       metadata: options?.metadata,
