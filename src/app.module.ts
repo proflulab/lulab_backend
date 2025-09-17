@@ -31,6 +31,8 @@ import { OpenaiModule } from './integrations/openai/openai.module';
 import { BullModule } from '@nestjs/bullmq';
 import { redisConfig } from './configs';
 import { TasksModule } from './task/tasks.module';
+import { QueueModule } from './queue/queue.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -53,6 +55,8 @@ import { TasksModule } from './task/tasks.module';
     }),
     TasksModule,
     ScheduleModule.forRoot(),
+    RedisModule,
+    QueueModule,
     PrismaModule,
     MailModule,
     AuthModule,
@@ -73,4 +77,4 @@ import { TasksModule } from './task/tasks.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }
