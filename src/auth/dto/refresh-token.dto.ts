@@ -6,7 +6,10 @@ export class RefreshTokenDto {
   @IsString()
   refreshToken: string;
 
-  @ApiProperty({ required: false, description: '设备信息，如设备型号、操作系统等' })
+  @ApiProperty({
+    required: false,
+    description: '设备信息，如设备型号、操作系统等',
+  })
   @IsOptional()
   @IsString()
   deviceInfo?: string;

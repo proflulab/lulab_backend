@@ -101,8 +101,8 @@ export class AuthController {
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const ip = this.getClientIp(req);
     const userAgent = req.get('User-Agent');
-    return await this.tokenService.refreshToken(refreshTokenDto.refreshToken, { 
-      ip, 
+    return await this.tokenService.refreshToken(refreshTokenDto.refreshToken, {
+      ip,
       userAgent,
       deviceInfo: refreshTokenDto.deviceInfo,
       deviceId: refreshTokenDto.deviceId,

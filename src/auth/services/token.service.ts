@@ -191,7 +191,9 @@ export class TokenService {
       // 计算新的刷新令牌过期时间
       let newExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // fallback
       try {
-        const durationMs = this.parseDurationToMs(this.refreshExpiresIn || '7d');
+        const durationMs = this.parseDurationToMs(
+          this.refreshExpiresIn || '7d',
+        );
         newExpiresAt = new Date(Date.now() + durationMs);
       } catch (err) {
         this.logger.warn(
@@ -207,13 +209,18 @@ export class TokenService {
           token: newRefreshToken,
           jti: newRefreshJti,
           expiresAt: newExpiresAt,
-          deviceInfo: context?.deviceInfo || oldTokenRecord.deviceInfo || undefined,
+          deviceInfo:
+            context?.deviceInfo || oldTokenRecord.deviceInfo || undefined,
           deviceId: context?.deviceId || oldTokenRecord.deviceId || undefined,
-          userAgent: context?.userAgent || oldTokenRecord.userAgent || undefined,
+          userAgent:
+            context?.userAgent || oldTokenRecord.userAgent || undefined,
           ip: context?.ip || oldTokenRecord.ip || undefined,
         });
       } catch (error) {
-        this.logger.error('Failed to store new refresh token during rotation', error);
+        this.logger.error(
+          'Failed to store new refresh token during rotation',
+          error,
+        );
         // 如果存储失败，仍然返回旧的刷新令牌，但记录错误
         return { accessToken, refreshToken };
       }
@@ -304,7 +311,7 @@ export class TokenService {
       }
 
       // 4. 处理所有设备登出
-      if (options.revokeAllDevices||!options.refreshToken) {
+      if (options.revokeAllDevices || !options.refreshToken) {
         const revokedCount =
           await this.refreshTokenRepo.revokeAllTokensByUserId(userId);
         result.allDevicesLoggedOut = true;
