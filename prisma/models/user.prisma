@@ -19,6 +19,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   Authenticator Authenticator[]
+  refreshTokens RefreshToken[] // User's refresh tokens
 
   // 个人详细信息
   profile UserProfile?

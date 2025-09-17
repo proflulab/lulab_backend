@@ -18,45 +18,45 @@
 src/
 └── tencent-meeting/                        # 腾讯会议模块（业务侧）
     ├── controllers/
-    │   ├── tencent-webhook.controller.ts   # Webhook 控制器（路由：/webhooks/tencent）
-    │   └── tencent-webhook.controller.spec.ts
+    │   ├── tencent-meeting.controller.ts   # 会议管理API控制器
+    │   └── tencent-webhook.controller.ts   # Webhook 控制器（路由：/webhooks/tencent）
     ├── decorators/
-    │   └── tencent-webhook.decorators.ts
+    │   └── tencent-webhook.decorators.ts   # API文档装饰器
     ├── dto/
-    │   └── tencent-webhook-body.dto.ts
+    │   └── tencent-webhook-body.dto.ts     # Webhook请求体DTO
     ├── interceptors/
-    │   └── webhook-logging.interceptor.ts
+    │   └── webhook-logging.interceptor.ts  # Webhook日志拦截器
     ├── services/
     │   ├── event-handlers/                 # 事件处理器
-    │   │   ├── base-event.handler.ts
-    │   │   ├── event-handler.factory.ts
-    │   │   ├── meeting-ended.handler.ts
-    │   │   ├── meeting-started.handler.ts
-    │   │   └── recording-completed.handler.ts
+    │   │   ├── base-event.handler.ts       # 基础事件处理器
+    │   │   ├── event-handler.factory.ts    # 事件处理器工厂
+    │   │   ├── meeting-ended.handler.ts    # 会议结束处理器
+    │   │   ├── meeting-started.handler.ts  # 会议开始处理器
+    │   │   └── recording-completed.handler.ts # 录制完成处理器
     │   ├── tencent-config.service.ts       # Webhook 配置读取与校验
-    │   ├── tencent-event-handler.service.ts
-    │   └── tencent-meeting.service.ts      # 业务聚合，依赖 libs 的 API 客户端
+    │   ├── tencent-event-handler.service.ts # 事件分发服务
+    │   └── tencent-meeting.service.ts      # 业务聚合服务
     ├── types/
     │   └── tencent-webhook-events.types.ts # Webhook 事件类型
-    └── tencent-meeting.module.ts           # 模块装配（导入 TencentModule、MeetingModule、LarkModule）
+    └── tencent-meeting.module.ts           # 模块装配
 
-libs/
-└── integrations/
-    └── tencent-meeting/                    # 腾讯会议集成（通用层，可复用）
-        ├── tencent.module.ts               # 导出 TencentApiService
-        ├── tencent-api.service.ts          # 腾讯会议 API 客户端
-        ├── crypto.util.ts                  # 加解密/签名（纯函数）
-        ├── exceptions.ts                   # Webhook/Platform 异常（供 src 直接复用）
-        ├── types.ts                        # API 响应/实体类型
-        └── index.ts                        # Barrel 导出
+src/integrations/
+└── tencent-meeting/                    # 腾讯会议集成（通用层）
+    ├── tencent.module.ts               # 导出 TencentApiService
+    ├── tencent-api.service.ts          # 腾讯会议 API 客户端
+    ├── crypto.util.ts                  # 加解密/签名工具
+    ├── exceptions.ts                   # Webhook/Platform 异常
+    ├── types.ts                        # API 响应/实体类型
+    └── index.ts                        # Barrel 导出
 
-└── common/
-    └── utils/
-        └── http-file.ts                    # HTTP 文件工具（原 src/tencent-meeting/utils 上移）
+src/common/
+└── utils/
+    └── http-file.ts                    # HTTP 文件下载工具
 ```
 
 测试位置说明：
-- 腾讯会议集成相关的单元测试就近放置于 `libs/integrations/tencent-meeting/*.spec.ts`，例如 `crypto.util.spec.ts` 与 `tencent-api.service.spec.ts`。
+- 腾讯会议集成相关的单元测试就近放置于 `src/integrations/tencent-meeting/*.spec.ts`
+- 集成测试放置于 `test/integration/tencent-meeting.int-spec.ts`
 
 ## 环境配置
 
@@ -102,7 +102,7 @@ POST /webhooks/tencent
 #### 3. 获取会议记录列表
 
 ```text
-GET /meeting/records
+GET /meetings
 ```
 
 查询参数：
@@ -116,13 +116,25 @@ GET /meeting/records
 #### 4. 获取会议记录详情
 
 ```text
-GET /meeting/records/:id
+GET /meetings/:id
 ```
 
-#### 5. 健康检查
+#### 5. 会议统计信息
 
 ```text
-GET /meeting/health
+GET /meetings/stats
+```
+
+#### 6. 重新处理会议记录
+
+```text
+POST /meetings/:id/reprocess
+```
+
+#### 7. 健康检查
+
+```text
+GET /meetings/health
 ```
 
 ## 数据库模型

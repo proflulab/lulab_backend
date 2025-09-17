@@ -38,7 +38,7 @@
 - `src/verification`：验证码控制器/服务、`enums`（`index.ts` 汇总）
 - `src/meeting`：会议业务模块
 - `src/tencent-meeting`：腾讯会议 Webhook 与业务对接
-- `src/feishu-meeting`：飞书 Webhook 骨架
+- `src/lark-meeting`：Lark（飞书） Webhook 骨架（兼容旧路由 /webhooks/feishu）
 - `libs/`：第三方平台集成与共享库
 - `prisma/`：`schema.prisma`、migrations、`seed`
 - `test/`：unit/integration/system/e2e
@@ -62,7 +62,7 @@ pnpm install
 - 邮件：`SMTP_HOST`、`SMTP_PORT`、`SMTP_USER`、`SMTP_PASS`、`SMTP_FROM`
 - 短信：`ALIBABA_CLOUD_ACCESS_KEY_ID`、`ALIBABA_CLOUD_ACCESS_KEY_SECRET`、`ALIYUN_SMS_SIGN_NAME`、模板变量
 - 腾讯会议：`TENCENT_MEETING_*`（APP/SDK/SecretId/SecretKey、Webhook Token/EncodingAESKey）
-- 飞书：`LARK_APP_ID`、`LARK_APP_SECRET`、`LARK_BITABLE_*`
+- Lark（飞书）：`LARK_APP_ID`、`LARK_APP_SECRET`、`LARK_BITABLE_*`
 
 3) 初始化数据库
 
@@ -115,13 +115,20 @@ pnpm db:push | db:migrate | db:reset | db:seed | db:drop | db:backup
 
 - 认证（`/api/auth`）
   - `POST /register`、`POST /login`、`POST /reset-password`、`POST /refresh-token`、`POST /logout`
+  
+### Token 撤销（黑名单）
+
+- 为访问令牌与刷新令牌加入 `jti`（JWT ID），并提供基于内存的黑名单以支持登出后的令牌撤销。
+- `POST /auth/logout` 会将当前 `Authorization: Bearer <token>` 中的令牌加入黑名单，直至该令牌自然过期。
+- 刷新令牌接口会在签发新 Access Token 前检查刷新令牌是否在黑名单中。
+- 默认实现为单机内存；多实例部署需替换为共享存储（如 Redis）来共享撤销状态。
 - 验证码（`/api/verification`）
   - `POST /send`、`POST /verify`
 - 用户（`/api/user`）
   - `GET /profile`、`PUT /profile`
 - Webhooks
   - 腾讯会议：`GET /webhooks/tencent`（URL 校验）、`POST /webhooks/tencent`（事件接收）
-  - 飞书：`POST /webhooks/feishu`
+  - Lark（飞书）：`POST /webhooks/lark`（保留兼容别名：`/webhooks/feishu`）
 
 ## 腾讯会议开放 API 提示
 

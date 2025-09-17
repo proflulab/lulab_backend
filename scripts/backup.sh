@@ -5,23 +5,23 @@ set -e
 
 # 显示当前工作目录
 echo "Current working directory: $(pwd)"
-echo "Checking for .env.local file..."
+echo "Checking for .env file..."
 
 # 列出所有 .env 文件
 ls -la .env* 2>/dev/null || echo "No .env files found"
 
 # 检查是否在正确的目录
-if [ ! -f ".env.local" ]; then
-    echo "Error: .env.local file not found in $(pwd)"
+if [ ! -f ".env" ]; then
+    echo "Error: .env file not found in $(pwd)"
     echo "Please run this script from the project root directory."
     exit 1
 fi
 
-echo "Found .env.local file"
+echo "Found .env file"
 
 # 加载环境变量
 set -a
-source .env.local
+source .env
 set +a
 
 # 检查 DATABASE_URL 是否存在

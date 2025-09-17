@@ -20,7 +20,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { EmailService } from './email.service';
 import { SendEmailDto } from './dto/send-email.dto';
-import { Public } from '@libs/security';
+import { Public } from '../security';
 
 @ApiTags('Email')
 @Controller('email')

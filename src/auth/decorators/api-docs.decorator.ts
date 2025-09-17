@@ -362,7 +362,7 @@ export function ApiRefreshTokenDocs() {
     }),
     ApiResponse({
       status: 200,
-      description: '令牌刷新成功，返回新的访问令牌',
+      description: '令牌刷新成功，返回新的访问令牌和刷新令牌（令牌轮换）',
       schema: {
         type: 'object',
         properties: {
@@ -371,9 +371,15 @@ export function ApiRefreshTokenDocs() {
             description: '新的访问令牌',
             example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
           },
+          refreshToken: {
+            type: 'string',
+            description: '新的刷新令牌（令牌轮换后生成的新令牌）',
+            example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new_refresh...',
+          },
         },
         example: {
           accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+          refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new_refresh...',
         },
       },
     }),
@@ -417,11 +423,40 @@ export function ApiLogoutDocs() {
     ApiOperation({
       summary: '退出登录',
       description:
-        '用户退出登录。由于JWT是无状态的，客户端删除token即可完成退出。如果需要实现token黑名单，可以在服务端添加相应逻辑。',
+        '用户退出登录。支持全面的令牌撤销，包括访问令牌和刷新令牌。可选择撤销单个设备或所有设备的令牌。',
       tags: ['Auth'],
     }),
     ApiConsumes('application/json'),
     ApiProduces('application/json'),
+    ApiBody({
+      description: '登出请求参数（可选）',
+      required: false,
+      schema: {
+        type: 'object',
+        properties: {
+          refreshToken: {
+            type: 'string',
+            description: '刷新令牌（可选），用于撤销该刷新令牌',
+            example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refresh...',
+          },
+          deviceId: {
+            type: 'string',
+            description: '设备ID（可选），用于撤销特定设备的所有令牌',
+            example: 'mobile-app-ios',
+          },
+          revokeAllDevices: {
+            type: 'boolean',
+            description: '是否撤销所有设备的令牌（可选）',
+            example: false,
+          },
+        },
+        example: {
+          refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refresh...',
+          deviceId: 'mobile-app-ios',
+          revokeAllDevices: false,
+        },
+      },
+    }),
     ApiResponse({
       status: 200,
       description: '退出登录成功',
@@ -430,10 +465,53 @@ export function ApiLogoutDocs() {
         properties: {
           success: { type: 'boolean', description: '退出是否成功' },
           message: { type: 'string', description: '退出结果消息' },
+          details: {
+            type: 'object',
+            properties: {
+              accessTokenRevoked: {
+                type: 'boolean',
+                description: '访问令牌是否被撤销',
+              },
+              refreshTokenRevoked: {
+                type: 'boolean',
+                description: '刷新令牌是否被撤销',
+              },
+              allDevicesLoggedOut: {
+                type: 'boolean',
+                description: '是否撤销了所有设备的令牌',
+              },
+              revokedTokensCount: {
+                type: 'number',
+                description: '撤销的令牌数量',
+              },
+            },
+          },
         },
-        example: {
-          success: true,
-          message: '退出登录成功',
+        examples: {
+          simple_logout: {
+            summary: '简单登出',
+            value: {
+              success: true,
+              message: '退出登录成功',
+              details: {
+                accessTokenRevoked: true,
+                refreshTokenRevoked: false,
+              },
+            },
+          },
+          comprehensive_logout: {
+            summary: '全面登出',
+            value: {
+              success: true,
+              message: '退出登录成功，已撤销所有设备的 3 个令牌',
+              details: {
+                accessTokenRevoked: true,
+                refreshTokenRevoked: true,
+                allDevicesLoggedOut: true,
+                revokedTokensCount: 3,
+              },
+            },
+          },
         },
       },
     }),

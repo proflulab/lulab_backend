@@ -9,11 +9,9 @@ const common: Partial<Config> = {
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    '^@libs/(.*)$': '<rootDir>/libs/$1',
   },
   collectCoverageFrom: [
     'src/**/*.ts',
-    'libs/**/*.ts',
     '!src/main.ts',
     '!src/**/*.module.ts',
     '!src/**/*.dto.ts',
@@ -21,9 +19,6 @@ const common: Partial<Config> = {
     '!src/**/*.entity.ts',
     '!src/**/*.exception.ts',
     '!src/**/*.decorator.ts',
-    '!libs/**/*.types.ts',
-    '!libs/**/*.exception.ts',
-    '!libs/**/*.decorator.ts',
   ],
 };
 
@@ -34,7 +29,6 @@ const config: Config = {
       ...common,
       testMatch: [
         '<rootDir>/src/**/*.spec.ts',
-        '<rootDir>/libs/**/*.spec.ts',
         '<rootDir>/test/unit/**/*.spec.ts',
       ],
       coverageDirectory: 'coverage/unit',
@@ -52,7 +46,6 @@ const config: Config = {
       ...common,
       testMatch: [
         '<rootDir>/test/integration/**/*.int-spec.ts',
-        '<rootDir>/libs/**/*.int-spec.ts',
       ],
       coverageDirectory: 'coverage/integration',
       setupFilesAfterEnv: ['<rootDir>/test/setup-integration.ts'],

@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import type { AuthenticatedUser, JwtUserLookup } from '@libs/security';
+import type { AuthenticatedUser, JwtUserLookup } from '../../security';
 import { UserRepository } from '../repositories/user.repository';
 
 @Injectable()

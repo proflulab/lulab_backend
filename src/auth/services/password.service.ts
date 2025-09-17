@@ -5,7 +5,7 @@ import { CodeType } from '@/verification/enums';
 import { UserRepository } from '../repositories/user.repository';
 import { AuthPolicyService } from './auth-policy.service';
 import { EmailService } from '@/email/email.service';
-import { buildPasswordResetNotificationEmail } from '@libs/common/email-templates';
+import { buildPasswordResetNotificationEmail } from '../../common/email-templates';
 import { hashPassword, validatePassword } from './utils/password.util';
 import { LoginType } from '@/auth/enums';
 

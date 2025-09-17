@@ -4,13 +4,12 @@ import {
   Put,
   Body,
   Req,
-  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { ProfileService } from '@/auth/services/profile.service';
-import { JwtAuthGuard, User, CurrentUser } from '@libs/security';
+import { User, CurrentUser } from '../security';
 import { UpdateProfileDto } from '@/auth/dto/update-profile.dto';
 import { UserProfileResponseDto } from '@/auth/dto/user-profile-response.dto';
 import {
@@ -20,7 +19,6 @@ import {
 
 @ApiTags('User')
 @Controller('api/user')
-@UseGuards(JwtAuthGuard)
 export class UserController {
   constructor(private readonly profileService: ProfileService) {}
 

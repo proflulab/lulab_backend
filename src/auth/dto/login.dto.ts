@@ -36,4 +36,17 @@ export class LoginDto {
   @IsOptional()
   @IsString()
   code?: string;
+
+  @ApiProperty({
+    required: false,
+    description: '设备信息，如设备型号、操作系统等',
+  })
+  @IsOptional()
+  @IsString()
+  deviceInfo?: string;
+
+  @ApiProperty({ required: false, description: '设备ID，用于标识唯一设备' })
+  @IsOptional()
+  @IsString()
+  deviceId?: string;
 }

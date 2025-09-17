@@ -5,3 +5,29 @@ services:
       - '3000:3000'
     env_file:
       - .env
+    depends_on:
+      - redis
+    networks:
+      - lulab_network
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DATABASES: ${REDIS_DATABASES}
+      REDIS_MAXMEMORY: ${REDIS_MAXMEMORY}
+      REDIS_APPENDONLY: ${REDIS_APPENDONLY}
+    networks:
+      - lulab_network
+
+volumes:
+  redis_data:
+
+networks:
+  lulab_network:
+    driver: bridge
+    name: lulab_backend_network

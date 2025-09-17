@@ -52,10 +52,17 @@
 
 ### 第三方服务集成
 
-- **腾讯会议**: Webhook事件接收和API调用
-- **飞书**: 多维表格数据同步
-- **阿里云**: 短信服务
-- **邮件服务**: SMTP/邮件API
+- **腾讯会议**: Webhook事件接收和API调用（录制、参会者、转写、智能功能）
+- **飞书**: 多维表格数据同步，支持 Upsert 操作
+- **阿里云**: 短信服务 (SMS)
+- **邮件服务**: SMTP/邮件API，支持 Nodemailer
+
+### 现代化特性
+
+- **GraphQL 支持**: 集成 Apollo Server，提供 GraphQL API 能力
+- **定时任务**: 使用 @nestjs/schedule 支持定时任务调度
+- **路径别名**: 配置 `@/` 指向 `src/`，提升代码可读性
+- **TypeScript 支持**: 全面使用 TypeScript，配合 tsx 运行时工具
 
 ## 模块划分
 
@@ -63,17 +70,19 @@
 
 #### 1. 认证模块 (Auth Module)
 
-- 用例服务拆分（聚合服务已移除）：
-  - RegisterService：注册流程（验证码校验、用户创建、欢迎邮件、登录日志）
-  - LoginService：登录流程（密码/验证码、限流、登录日志、最后登录时间）
-  - PasswordService：重置密码（验证码校验、密码强度校验、通知邮件）
-  - ProfileService：用户资料（获取/更新、唯一性校验）
-  - TokenService：令牌签发与刷新
-  - AuthPolicyService：登录策略（失败次数限制、登录日志、类型映射）
+- 服务分层架构：
+  - **RegisterService**：注册流程（验证码校验、用户创建、欢迎邮件、登录日志）
+  - **LoginService**：登录流程（密码/验证码、限流、登录日志、最后登录时间）
+  - **PasswordService**：重置密码（验证码校验、密码强度校验、通知邮件）
+  - **ProfileService**：用户资料（获取/更新、唯一性校验）
+  - **TokenService**：令牌签发、刷新和验证
+  - **TokenBlacklistService**：令牌撤销（黑名单，基于 jti，内存实现，支持 Redis 扩展）
+  - **AuthPolicyService**：登录策略（失败次数限制、登录日志、类型映射）
+  - **JwtUserLookupService**：用户查找和缓存服务
 - 仓储层：
-  - UserRepository：用户与档案读写
-  - LoginLogRepository：登录日志统计与写入
-  - 说明：原 AuthRepository 已拆分并移除
+  - **UserRepository**：用户与档案读写
+  - **LoginLogRepository**：登录日志统计与写入
+  - **RefreshTokenRepository**：刷新令牌管理
 
 #### 2. 会议模块 (Meeting Module)
 
@@ -82,40 +91,78 @@
 - 会议文件处理
 - 会议参与者管理
 
-#### 3. 腾讯会议集成模块 (Tencent Meeting Module)
+#### 5. 腾讯会议集成模块 (Tencent Meeting Module)
 
-- Webhook事件处理
-- API服务调用
-- 数据解密和验证
-- 事件分发和处理
+- **Webhook事件处理器**：
+  - MeetingStartedHandler：会议开始事件
+  - MeetingEndedHandler：会议结束事件
+  - RecordingCompletedHandler：录制完成事件
+- **服务层**：
+  - TencentMeetingService：业务服务封装
+  - TencentEventHandlerService：Webhook 事件分发
+  - TencentMeetingConfigService：配置管理
+- **控制器**：
+  - TencentWebhookController：Webhook 事件接收
+  - TencentMeetingController：管理接口
 
-#### 4. 飞书集成模块 (Lark Integration Module)
+#### 4. 集成服务模块 (Integration Services)
 
-- 多维表格API调用
-- 数据同步服务
-- 批量操作支持
-- Upsert操作支持
+##### 飞书集成 (Lark Integration)
+- **LarkClient**：飞书 SDK 封装和 API 调用
+- **BitableService**：多维表格操作服务
+- **Repositories**：
+  - MeetingBitableRepository：会议记录管理
+  - MeetingUserBitableRepository：会议用户管理
+  - RecordingFileBitableRepository：录制文件管理
+- **类型定义**：MeetingData, MeetingUserData, RecordingFileData
+- **异常处理**：Lark 相关异常类
+- **数据验证**：字段验证器
 
-#### 5. 用户模块 (User Module)
+##### 腾讯会议集成 (Tencent Meeting Integration)
+- **TencentApiService**：腾讯会议开放 API 调用
+- **加密工具**：签名验证和 AES 解密
+- **类型定义**：会议、录制、参会者等 API 响应类型
+- **异常处理**：腾讯会议 API 相关异常
 
-- 用户信息管理
-- 权限控制
-- 用户档案管理
+##### 其他集成服务
+- **阿里云短信 (Aliyun SMS)**：短信发送服务
+- **邮件服务 (Email Service)**：SMTP 邮件发送服务
 
-#### 6. 邮件模块 (Email Module)
+#### 6. 飞书会议模块 (Lark Meeting Module)
 
-- 邮件发送服务
-- 模板管理
-- 发送记录跟踪
+- **LarkWebhookController**：飞书 Webhook 事件接收
+- **LarkWebhookService**：飞书事件处理服务
+- **兼容性支持**：保留旧的 `/webhooks/feishu` 路由别名
 
-### 共享库
+#### 7. 邮件模块 (Email Module)
 
-#### 1. 飞书集成库 (Integrations-Lark)
+- **EmailController**：邮件发送 API 接口
+- **EmailService**：邮件发送业务逻辑
+- **模板管理**：邮件模板系统
 
-- Bitable服务
-- 飞书客户端
-- 数据仓库
-- 验证器
+#### 8. 验证码模块 (Verification Module)
+
+- **VerificationController**：验证码 API 接口
+- **VerificationService**：验证码生成、发送和验证
+- **多渠道支持**：邮件和短信验证码
+
+#### 9. 用户模块 (User Module)
+
+- **UserController**：用户管理 API 接口
+- **UserService**：用户信息管理业务逻辑
+- **功能**：用户档案管理、权限控制
+
+#### 10. 安全模块 (Security Module)
+
+- **JWT 守卫**：JwtAuthGuard，提供路由级别的身份验证
+- **装饰器**：@Public 装饰器，用于标记公开接口
+- **类型定义**：安全相关类型和接口
+
+#### 11. 公共模块 (Common Module)
+
+- **工具类**：随机数生成、验证器、HTTP 文件处理
+- **邮件模板**：邮件模板系统
+- **枚举类型**：公共枚举定义
 
 ## 数据流设计
 
@@ -124,25 +171,27 @@
 ```text
 1. 腾讯会议平台发送Webhook事件
          ↓
-2. Webhook控制器接收并验证请求
+2. TencentWebhookController 接收并验证请求
          ↓
-3. 事件处理器工厂分发事件
+3. TencentEventHandlerService 事件分发
          ↓
-4. 具体事件处理器处理业务逻辑
+4. EventHandlerFactory 选择具体事件处理器
          ↓
-5. 数据持久化到PostgreSQL数据库
+5. 具体事件处理器处理业务逻辑
          ↓
-6. (可选) 同步数据到飞书多维表格
+6. 数据持久化到PostgreSQL数据库
+         ↓
+7. (可选) 同步数据到飞书多维表格
 ```
 
 ### 会议录制文件处理流程
 
 ```text
-1. 接收录制完成事件
+1. 接收录制完成事件 (RecordingCompletedHandler)
          ↓
-2. 调用腾讯会议API获取录制文件详情
+2. 调用腾讯会诮API获取录制文件详情
          ↓
-3. 下载录制文件
+3. 下载录制文件（HttpFileUtil）
          ↓
 4. 存储文件到对象存储
          ↓
@@ -150,7 +199,23 @@
          ↓
 6. 创建或更新数据库记录
          ↓
-7. (可选) 同步到飞书多维表格
+7. 同步到飞书 Bitable (通过 RecordingFileBitableRepository)
+```
+
+### 飞书 Bitable 数据同步流程
+
+```text
+1. 业务事件触发数据更新
+         ↓
+2. BitableRepository 接收数据操作请求
+         ↓
+3. 数据验证和类型转换 (FieldValidator)
+         ↓
+4. LarkClient 调用飞书 Bitable API
+         ↓
+5. Upsert 操作（基于唯一键去重）
+         ↓
+6. 返回操作结果和记录 ID
 ```
 
 ## 数据库设计

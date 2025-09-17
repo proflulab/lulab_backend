@@ -1,6 +1,8 @@
-# 飞书Webhook集成指南
+# Lark（飞书） Webhook 集成指南
 
-本文档详细说明如何在项目中集成和配置飞书Webhook，实现会议事件的实时处理。
+本文档详细说明如何在项目中集成和配置 Lark（飞书） Webhook，实现会议事件的实时处理。
+
+> 命名统一：主路由为 `/webhooks/lark`，保留兼容别名 `/webhooks/feishu`。
 
 ## 功能特性
 
@@ -47,15 +49,15 @@ FEISHU_VERIFICATION_TOKEN=your_feishu_verification_token
 
 在飞书开放平台配置以下URL：
 
-- **事件订阅URL**: `https://your-domain.com/webhooks/feishu/event`
-- **验证URL**: `https://your-domain.com/webhooks/feishu/verify`
+- **事件订阅URL**: `https://your-domain.com/webhooks/lark/event`
+- **验证URL**: `https://your-domain.com/webhooks/lark/verify`
 
 ### 3. API端点说明
 
 #### 事件接收端点
 
 ```http
-POST /webhooks/feishu/event
+POST /webhooks/lark/event
 Content-Type: application/json
 X-Lark-Signature: sha256=xxx
 X-Lark-Request-Timestamp: 1630000000
@@ -78,7 +80,7 @@ X-Lark-Request-Nonce: random_string
 #### URL验证端点
 
 ```http
-GET /webhooks/feishu/verify?challenge=challenge_string
+GET /webhooks/lark/verify?challenge=challenge_string
 
 响应：
 {
@@ -153,7 +155,7 @@ private async handleRecordingReady(data: any): Promise<void> {
 
    ```bash
    # 访问测试端点
-   curl http://localhost:3000/webhooks/feishu/verify?challenge=test_challenge
+   curl http://localhost:3000/webhooks/lark/verify?challenge=test_challenge
    
    # 预期响应: {"challenge":"test_challenge"}
    ```

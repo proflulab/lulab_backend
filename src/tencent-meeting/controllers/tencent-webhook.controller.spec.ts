@@ -3,14 +3,14 @@ import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
 import { TencentWebhookController } from './tencent-webhook.controller';
 import { TencentEventHandlerService } from '../services/tencent-event-handler.service';
-import { WebhookConfigException } from '@libs/integrations/tencent-meeting';
-import * as tencentCryptoService from '@libs/integrations/tencent-meeting';
+import { WebhookConfigException } from '../../integrations/tencent-meeting';
+import * as tencentCryptoService from '../../integrations/tencent-meeting';
 import { TencentMeetingConfigService } from '../services/tencent-config.service';
 
 // Mock the crypto util
-jest.mock('@libs/integrations/tencent-meeting', () => {
+jest.mock('../../integrations/tencent-meeting', () => {
   const actualUnknown = jest.requireActual(
-    '@libs/integrations/tencent-meeting',
+    '../../integrations/tencent-meeting',
   ) as unknown;
   const actual = actualUnknown as Record<string, unknown>;
   return {

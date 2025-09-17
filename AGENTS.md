@@ -39,3 +39,4 @@ A concise guide for contributors working in this NestJS monorepo. Follow these c
 - Never commit `.env`. Base on `.env.example`; document new keys.
 - Initialize DB: `pnpm db:generate && pnpm db:push && pnpm db:seed` (seed optional).
 - Rotate `JWT_*` and third‑party secrets in production; restrict Tencent API IP allowlist as required.
+
