@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Job } from 'bullmq';
 import { RedisService } from '../../redis/redis.service';
@@ -35,18 +35,18 @@ export class EmailWorker extends BaseWorker<EmailJobData> {
         },
       );
 
-      switch (job.name) {
+      switch (job.name as JobType) {
         case JobType.SEND_VERIFICATION_EMAIL:
           return this.sendVerificationEmail(
             to as string,
             subject,
-            templateData,
+            templateData as Record<string, unknown>,
           );
         case JobType.SEND_PASSWORD_RESET_EMAIL:
           return this.sendPasswordResetEmail(
             to as string,
             subject,
-            templateData,
+            templateData as Record<string, unknown>,
           );
         case JobType.SEND_NOTIFICATION_EMAIL:
           return this.sendNotificationEmail(
@@ -64,11 +64,11 @@ export class EmailWorker extends BaseWorker<EmailJobData> {
   /**
    * Send verification email
    */
-  private async sendVerificationEmail(
+  private sendVerificationEmail(
     to: string,
     subject: string,
-    templateData: any,
-  ): Promise<any> {
+    templateData: Record<string, unknown>,
+  ): Promise<unknown> {
     try {
       this.logger.debug(`Sending verification email to ${to}`);
 
@@ -89,15 +89,25 @@ export class EmailWorker extends BaseWorker<EmailJobData> {
         sentAt: new Date(),
         provider: 'smtp',
         metadata: {
-          verificationCode: templateData.verificationCode,
-          verificationUrl: templateData.verificationUrl,
+          verificationCode:
+            typeof templateData['verificationCode'] === 'string'
+              ? templateData['verificationCode']
+              : undefined,
+          verificationUrl:
+            typeof templateData['verificationUrl'] === 'string'
+              ? templateData['verificationUrl']
+              : undefined,
         },
       };
 
       this.logger.debug(`Verification email sent successfully to ${to}`);
-      return emailResult;
+      return Promise.resolve(emailResult);
     } catch (error) {
-      this.logger.error(`Failed to send verification email to ${to}:`, error);
+      this.logger.error(
+        `Failed to send verification email to ${to}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
       throw error;
     }
   }
@@ -105,11 +115,11 @@ export class EmailWorker extends BaseWorker<EmailJobData> {
   /**
    * Send password reset email
    */
-  private async sendPasswordResetEmail(
+  private sendPasswordResetEmail(
     to: string,
     subject: string,
-    templateData: any,
-  ): Promise<any> {
+    templateData: Record<string, unknown>,
+  ): Promise<unknown> {
     try {
       this.logger.debug(`Sending password reset email to ${to}`);
 
@@ -123,16 +133,29 @@ export class EmailWorker extends BaseWorker<EmailJobData> {
         sentAt: new Date(),
         provider: 'smtp',
         metadata: {
-          resetToken: templateData.resetToken,
-          resetUrl: templateData.resetUrl,
-          expiresInMinutes: templateData.expiresInMinutes || 30,
+          resetToken:
+            typeof templateData['resetToken'] === 'string'
+              ? templateData['resetToken']
+              : undefined,
+          resetUrl:
+            typeof templateData['resetUrl'] === 'string'
+              ? templateData['resetUrl']
+              : undefined,
+          expiresInMinutes:
+            typeof templateData['expiresInMinutes'] === 'number'
+              ? templateData['expiresInMinutes']
+              : 30,
         },
       };
 
       this.logger.debug(`Password reset email sent successfully to ${to}`);
-      return emailResult;
+      return Promise.resolve(emailResult);
     } catch (error) {
-      this.logger.error(`Failed to send password reset email to ${to}:`, error);
+      this.logger.error(
+        `Failed to send password reset email to ${to}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
       throw error;
     }
   }
@@ -144,7 +167,7 @@ export class EmailWorker extends BaseWorker<EmailJobData> {
     to: string | string[],
     subject: string,
     template: string,
-    templateData: any,
+    templateData: Record<string, unknown>,
   ): Promise<any> {
     try {
       const recipients = Array.isArray(to) ? to : [to];
@@ -154,23 +177,21 @@ export class EmailWorker extends BaseWorker<EmailJobData> {
 
       // Simulate email sending
       const emailResults = await Promise.all(
-        recipients.map(async (recipient) => {
-          return {
-            messageId: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            to: recipient,
-            subject,
-            template,
-            status: 'sent',
-            sentAt: new Date(),
-            provider: 'smtp',
-            metadata: {
-              templateData: {
-                ...templateData,
-                recipient,
-              },
+        recipients.map((recipient) => ({
+          messageId: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          to: recipient,
+          subject,
+          template,
+          status: 'sent',
+          sentAt: new Date(),
+          provider: 'smtp',
+          metadata: {
+            templateData: {
+              ...templateData,
+              recipient,
             },
-          };
-        }),
+          },
+        })),
       );
 
       this.logger.debug(
@@ -185,8 +206,9 @@ export class EmailWorker extends BaseWorker<EmailJobData> {
       };
     } catch (error) {
       this.logger.error(
-        `Failed to send notification email to ${Array.isArray(to) ? to.join(', ') : to}:`,
-        error,
+        `Failed to send notification email to ${
+          Array.isArray(to) ? to.join(', ') : to
+        }: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }

@@ -1,14 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Job } from 'bullmq';
 import { RedisService } from '../../redis/redis.service';
 import { BaseWorker } from './base-worker';
-import {
-  QueueName,
-  JobType,
-  MeetingProcessingJobData,
-  JobResult,
-} from '../types';
+import { QueueName, MeetingProcessingJobData, JobResult } from '../types';
 
 /**
  * Meeting processing worker
@@ -31,6 +26,7 @@ export class MeetingWorker extends BaseWorker<MeetingProcessingJobData> {
     job: Job<MeetingProcessingJobData>,
   ): Promise<JobResult> {
     return this.executeJob(job, async (data) => {
+      await Promise.resolve();
       const { meetingId, action, payload } = data;
 
       this.logger.log(`Processing meeting ${meetingId} with action ${action}`, {
@@ -54,10 +50,7 @@ export class MeetingWorker extends BaseWorker<MeetingProcessingJobData> {
   /**
    * Process meeting record
    */
-  private async processMeetingRecord(
-    meetingId: string,
-    payload: any,
-  ): Promise<any> {
+  private processMeetingRecord(meetingId: string, payload: any): unknown {
     try {
       this.logger.debug(`Processing meeting record ${meetingId}`);
 
@@ -85,8 +78,9 @@ export class MeetingWorker extends BaseWorker<MeetingProcessingJobData> {
       return result;
     } catch (error) {
       this.logger.error(
-        `Failed to process meeting record ${meetingId}:`,
-        error,
+        `Failed to process meeting record ${meetingId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       );
       throw error;
     }
@@ -95,10 +89,7 @@ export class MeetingWorker extends BaseWorker<MeetingProcessingJobData> {
   /**
    * Analyze meeting content
    */
-  private async analyzeMeetingContent(
-    meetingId: string,
-    payload: any,
-  ): Promise<any> {
+  private analyzeMeetingContent(meetingId: string, payload: any): unknown {
     try {
       const { analysisType, meetingData } = payload;
       this.logger.debug(
@@ -138,8 +129,9 @@ export class MeetingWorker extends BaseWorker<MeetingProcessingJobData> {
       return analysisResult;
     } catch (error) {
       this.logger.error(
-        `Failed to analyze meeting content ${meetingId}:`,
-        error,
+        `Failed to analyze meeting content ${meetingId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       );
       throw error;
     }
@@ -148,9 +140,9 @@ export class MeetingWorker extends BaseWorker<MeetingProcessingJobData> {
   /**
    * Sync meeting data with external systems
    */
-  private async syncMeetingData(meetingId: string, payload: any): Promise<any> {
+  private syncMeetingData(meetingId: string, payload: any): unknown {
     try {
-      const { syncTarget, meetingData } = payload;
+      const { syncTarget } = payload;
       this.logger.debug(`Syncing meeting data ${meetingId} to ${syncTarget}`);
 
       // Simulate data synchronization
@@ -200,8 +192,9 @@ export class MeetingWorker extends BaseWorker<MeetingProcessingJobData> {
       return syncResult;
     } catch (error) {
       this.logger.error(
-        `Failed to sync meeting data ${meetingId} to ${payload.syncTarget}:`,
-        error,
+        `Failed to sync meeting data ${meetingId} to ${payload.syncTarget}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       );
       throw error;
     }

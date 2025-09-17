@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Param,
-  Query,
   Body,
   HttpException,
   HttpStatus,
@@ -13,7 +12,6 @@ import {
   ApiOperation,
   ApiResponse,
   ApiParam,
-  ApiQuery,
   ApiBody,
 } from '@nestjs/swagger';
 import {
@@ -23,6 +21,15 @@ import {
   ExternalApiQueueService,
 } from './services';
 import { QueueName } from './types';
+
+function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
+}
 
 @ApiTags('Queue Management')
 @Controller('admin/queues')
@@ -42,7 +49,7 @@ export class QueueController {
       return await this.queueMonitoring.getSystemHealth();
     } catch (error) {
       throw new HttpException(
-        `Failed to get system health: ${error.message}`,
+        `Failed to get system health: ${errorMessage(error)}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -56,7 +63,7 @@ export class QueueController {
       return await this.queueMonitoring.getAllQueueMetrics();
     } catch (error) {
       throw new HttpException(
-        `Failed to get queue metrics: ${error.message}`,
+        `Failed to get queue metrics: ${errorMessage(error)}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -71,7 +78,7 @@ export class QueueController {
       return await this.queueMonitoring.getQueueMetrics(queueName);
     } catch (error) {
       throw new HttpException(
-        `Failed to get metrics for queue ${queueName}: ${error.message}`,
+        `Failed to get metrics for queue ${queueName}: ${errorMessage(error)}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -86,7 +93,7 @@ export class QueueController {
       return await this.queueMonitoring.getQueueHealth(queueName);
     } catch (error) {
       throw new HttpException(
-        `Failed to get health for queue ${queueName}: ${error.message}`,
+        `Failed to get health for queue ${queueName}: ${errorMessage(error)}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -102,10 +109,14 @@ export class QueueController {
     @Param('jobId') jobId: string,
   ) {
     try {
-      return await this.queueMonitoring.getJobDetails(queueName, jobId);
+      const details: unknown = await this.queueMonitoring.getJobDetails(
+        queueName,
+        jobId,
+      );
+      return details as Record<string, unknown>;
     } catch (error) {
       throw new HttpException(
-        `Failed to get job details: ${error.message}`,
+        `Failed to get job details: ${errorMessage(error)}`,
         HttpStatus.NOT_FOUND,
       );
     }
@@ -145,7 +156,7 @@ export class QueueController {
       return await this.queueMonitoring.cleanAllQueues(body);
     } catch (error) {
       throw new HttpException(
-        `Failed to clean queues: ${error.message}`,
+        `Failed to clean queues: ${errorMessage(error)}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -160,7 +171,7 @@ export class QueueController {
       return { message: 'All queues paused successfully' };
     } catch (error) {
       throw new HttpException(
-        `Failed to pause queues: ${error.message}`,
+        `Failed to pause queues: ${errorMessage(error)}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -175,7 +186,7 @@ export class QueueController {
       return { message: 'All queues resumed successfully' };
     } catch (error) {
       throw new HttpException(
-        `Failed to resume queues: ${error.message}`,
+        `Failed to resume queues: ${errorMessage(error)}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -220,7 +231,7 @@ export class QueueController {
       return { jobId: job?.id, message: 'Meeting job added successfully' };
     } catch (error) {
       throw new HttpException(
-        `Failed to add meeting job: ${error.message}`,
+        `Failed to add meeting job: ${errorMessage(error)}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -267,7 +278,7 @@ export class QueueController {
       return { jobId: job?.[0]?.id, message: 'Email job added successfully' };
     } catch (error) {
       throw new HttpException(
-        `Failed to add email job: ${error.message}`,
+        `Failed to add email job: ${errorMessage(error)}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -302,37 +313,65 @@ export class QueueController {
     },
   ) {
     try {
-      let job;
+      let job: { id?: string } | null | undefined;
       switch (body.service) {
         case 'tencent-meeting':
           job = await this.externalApiQueue.addTencentMeetingSyncJob(
             {
-              meetingId: body.payload.meetingId,
-              action: body.action as any,
-              meetingData: body.payload,
+              meetingId: (body.payload as { meetingId: string }).meetingId,
+              action: body.action as unknown as
+                | 'create'
+                | 'update'
+                | 'delete'
+                | 'fetch',
+              meetingData: body.payload as unknown as Record<string, unknown>,
             },
             { priority: body.priority },
           );
           break;
         case 'lark':
           job = await this.externalApiQueue.addLarkBitableSyncJob(
-            body.payload,
+            body.payload as unknown as {
+              appId: string;
+              tableId: string;
+              recordId?: string;
+              action:
+                | 'create'
+                | 'update'
+                | 'delete'
+                | 'batch-create'
+                | 'batch-update';
+              data: any;
+            },
             { priority: body.priority },
           );
           break;
         case 'aliyun-sms':
-          job = await this.externalApiQueue.addSendSmsJob(body.payload, {
-            priority: body.priority,
-          });
+          job = await this.externalApiQueue.addSendSmsJob(
+            body.payload as unknown as {
+              phoneNumber: string;
+              message: string;
+              templateCode?: string;
+              templateParams?: Record<string, string>;
+            },
+            {
+              priority: body.priority,
+            },
+          );
           break;
         case 'upload':
           job = await this.externalApiQueue.addUploadRecordingJob(
-            body.payload,
+            body.payload as unknown as {
+              fileUrl: string;
+              fileName: string;
+              meetingId: string;
+              storageProvider: 'aliyun' | 'aws' | 'tencent';
+            },
             { priority: body.priority, maxRetries: body.maxRetries },
           );
           break;
         default:
-          throw new Error(`Unknown service: ${body.service}`);
+          throw new Error('Unknown service');
       }
       return {
         jobId: job?.id,
@@ -340,7 +379,7 @@ export class QueueController {
       };
     } catch (error) {
       throw new HttpException(
-        `Failed to add external API job: ${error.message}`,
+        `Failed to add external API job: ${errorMessage(error)}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

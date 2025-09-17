@@ -192,7 +192,7 @@ export class ExternalApiQueueService extends BaseQueueService {
         createdAt: new Date(),
         service: job.service,
         action: job.action,
-        payload: job.payload,
+        payload: job.payload as unknown as Record<string, any>,
       };
 
       return {
@@ -268,7 +268,7 @@ export class ExternalApiQueueService extends BaseQueueService {
       createdAt: new Date(),
       service,
       action,
-      payload,
+      payload: payload as unknown as Record<string, any>,
     };
 
     const jobType = this.getJobTypeForService(service, action);
@@ -283,7 +283,6 @@ export class ExternalApiQueueService extends BaseQueueService {
    */
   private getJobTypeForService(
     service: 'tencent-meeting' | 'lark' | 'aliyun-sms' | 'upload',
-    action: string,
   ): JobType {
     switch (service) {
       case 'upload':
@@ -295,7 +294,7 @@ export class ExternalApiQueueService extends BaseQueueService {
       case 'aliyun-sms':
         return JobType.SEND_SMS;
       default:
-        throw new Error(`Unknown service: ${service}`);
+        throw new Error('Unknown service');
     }
   }
 }

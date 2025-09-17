@@ -42,7 +42,7 @@ export function createQueueConnectionOptions(
         retryDelayOnFailover: 100,
         lazyConnect: true,
       };
-    } catch (error) {
+    } catch {
       // Fall back to individual config if URL parsing fails
     }
   }

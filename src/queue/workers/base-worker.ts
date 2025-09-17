@@ -2,7 +2,7 @@ import { Logger, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Worker, Job, UnrecoverableError } from 'bullmq';
 import { RedisService } from '../../redis/redis.service';
-import { QueueName, JobType, BaseJobData, JobResult } from '../types';
+import { QueueName, BaseJobData, JobResult } from '../types';
 import { getQueueConfig } from '../config/queue.config';
 
 /**
@@ -59,23 +59,26 @@ export abstract class BaseWorker<T extends BaseJobData = BaseJobData>
     });
 
     this.worker.on('error', (error) => {
-      this.logger.error(`Worker error in queue ${this.queueName}:`, error);
+      this.logger.error(
+        `Worker error in queue ${this.queueName}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
     });
 
     this.worker.on('active', (job) => {
       this.logger.debug(`Processing job ${job.id} in queue ${this.queueName}`);
     });
 
-    this.worker.on('completed', (job, result) => {
-      this.logger.debug(`Job ${job.id} completed in queue ${this.queueName}`, {
-        result,
-      });
+    this.worker.on('completed', (job) => {
+      this.logger.debug(`Job ${job.id} completed in queue ${this.queueName}`);
     });
 
     this.worker.on('failed', (job, err) => {
       this.logger.error(
-        `Job ${job?.id} failed in queue ${this.queueName}:`,
-        err,
+        `Job ${job?.id} failed in queue ${this.queueName}: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
       );
     });
 
@@ -94,7 +97,7 @@ export abstract class BaseWorker<T extends BaseJobData = BaseJobData>
    */
   protected async executeJob(
     job: Job<T>,
-    processor: (data: T) => Promise<any>,
+    processor: (data: T) => Promise<unknown>,
   ): Promise<JobResult> {
     const startTime = Date.now();
     const { idempotencyKey } = job.data;
@@ -103,10 +106,10 @@ export abstract class BaseWorker<T extends BaseJobData = BaseJobData>
       this.logger.debug(`Starting job ${job.id} with key ${idempotencyKey}`);
 
       // Pre-execution validation
-      await this.validateJobData(job.data);
+      this.validateJobData(job.data);
 
       // Execute the job
-      const result = await processor(job.data);
+      const result: unknown = await processor(job.data);
 
       const jobResult: JobResult = {
         success: true,
@@ -132,8 +135,9 @@ export abstract class BaseWorker<T extends BaseJobData = BaseJobData>
       };
 
       this.logger.error(
-        `Job ${job.id} failed after ${jobResult.duration}ms:`,
-        error,
+        `Job ${job.id} failed after ${jobResult.duration}ms: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       );
 
       // Determine if error is recoverable
@@ -148,7 +152,7 @@ export abstract class BaseWorker<T extends BaseJobData = BaseJobData>
   /**
    * Validate job data before processing
    */
-  protected async validateJobData(data: T): Promise<void> {
+  protected validateJobData(data: T): void {
     if (!data.idempotencyKey) {
       throw new Error('Job data must include idempotencyKey');
     }
@@ -191,14 +195,18 @@ export abstract class BaseWorker<T extends BaseJobData = BaseJobData>
 
       await redis?.setex(key, ttl, JSON.stringify(result));
     } catch (error) {
-      this.logger.error('Failed to mark job as processed:', error);
+      this.logger.error(
+        `Failed to mark job as processed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
     }
   }
 
   /**
    * Determine if an error is unrecoverable
    */
-  protected isUnrecoverableError(error: any): boolean {
+  protected isUnrecoverableError(error: unknown): boolean {
     // Add logic to determine unrecoverable errors
     if (error instanceof UnrecoverableError) {
       return true;
@@ -215,7 +223,7 @@ export abstract class BaseWorker<T extends BaseJobData = BaseJobData>
       /duplicate/i,
     ];
 
-    const errorMessage = error?.message || String(error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return unrecoverablePatterns.some((pattern) => pattern.test(errorMessage));
   }
 
@@ -231,7 +239,7 @@ export abstract class BaseWorker<T extends BaseJobData = BaseJobData>
    */
   async pause(): Promise<void> {
     if (this.worker) {
-      await this.worker.pause();
+      await Promise.resolve(this.worker.pause());
       this.logger.log(`Worker for queue ${this.queueName} paused`);
     }
   }
@@ -241,7 +249,7 @@ export abstract class BaseWorker<T extends BaseJobData = BaseJobData>
    */
   async resume(): Promise<void> {
     if (this.worker) {
-      await this.worker.resume();
+      await Promise.resolve(this.worker.resume());
       this.logger.log(`Worker for queue ${this.queueName} resumed`);
     }
   }
@@ -251,7 +259,7 @@ export abstract class BaseWorker<T extends BaseJobData = BaseJobData>
    */
   async close(): Promise<void> {
     if (this.worker) {
-      await this.worker.close();
+      await Promise.resolve(this.worker.close());
       this.logger.log(`Worker for queue ${this.queueName} closed`);
     }
   }

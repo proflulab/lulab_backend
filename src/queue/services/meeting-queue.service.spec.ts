@@ -6,8 +6,6 @@ import { JobType } from '../types';
 
 describe('MeetingQueueService', () => {
   let service: MeetingQueueService;
-  let configService: ConfigService;
-  let redisService: RedisService;
 
   const mockRedisService = {
     isReady: jest.fn(() => true),
@@ -49,8 +47,6 @@ describe('MeetingQueueService', () => {
     }).compile();
 
     service = module.get<MeetingQueueService>(MeetingQueueService);
-    configService = module.get<ConfigService>(ConfigService);
-    redisService = module.get<RedisService>(RedisService);
   });
 
   afterEach(() => {

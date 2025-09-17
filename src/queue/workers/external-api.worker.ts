@@ -1,9 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Job, UnrecoverableError } from 'bullmq';
 import { RedisService } from '../../redis/redis.service';
 import { BaseWorker } from './base-worker';
-import { QueueName, JobType, ExternalApiJobData, JobResult } from '../types';
+import { QueueName, ExternalApiJobData, JobResult } from '../types';
 
 /**
  * External API integration worker
@@ -49,7 +49,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
   /**
    * Process upload jobs
    */
-  private async processUploadJob(action: string, payload: any): Promise<any> {
+  private processUploadJob(action: string, payload: any): any {
     try {
       this.logger.debug(`Processing upload job: ${action}`);
 
@@ -60,7 +60,11 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
           throw new UnrecoverableError(`Unknown upload action: ${action}`);
       }
     } catch (error) {
-      this.logger.error(`Upload job failed:`, error);
+      this.logger.error(
+        `Upload job failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
       throw error;
     }
   }
@@ -68,10 +72,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
   /**
    * Process Tencent Meeting jobs
    */
-  private async processTencentMeetingJob(
-    action: string,
-    payload: any,
-  ): Promise<any> {
+  private processTencentMeetingJob(action: string, payload: any): any {
     try {
       this.logger.debug(`Processing Tencent Meeting job: ${action}`);
 
@@ -92,7 +93,11 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
           );
       }
     } catch (error) {
-      this.logger.error(`Tencent Meeting job failed:`, error);
+      this.logger.error(
+        `Tencent Meeting job failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
       throw error;
     }
   }
@@ -100,7 +105,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
   /**
    * Process Lark Bitable jobs
    */
-  private async processLarkJob(action: string, payload: any): Promise<any> {
+  private processLarkJob(action: string, payload: any): any {
     try {
       this.logger.debug(`Processing Lark job: ${action}`);
 
@@ -121,7 +126,11 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
           throw new UnrecoverableError(`Unknown Lark action: ${action}`);
       }
     } catch (error) {
-      this.logger.error(`Lark job failed:`, error);
+      this.logger.error(
+        `Lark job failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
       throw error;
     }
   }
@@ -129,10 +138,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
   /**
    * Process Aliyun SMS jobs
    */
-  private async processAliyunSmsJob(
-    action: string,
-    payload: any,
-  ): Promise<any> {
+  private processAliyunSmsJob(action: string, payload: any): any {
     try {
       this.logger.debug(`Processing Aliyun SMS job: ${action}`);
 
@@ -143,13 +149,18 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
           throw new UnrecoverableError(`Unknown Aliyun SMS action: ${action}`);
       }
     } catch (error) {
-      this.logger.error(`Aliyun SMS job failed:`, error);
+      this.logger.error(
+        `Aliyun SMS job failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
       throw error;
     }
   }
 
   // Upload implementation methods
-  private async uploadRecording(payload: any): Promise<any> {
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
+  private uploadRecording(payload: any): any {
     const { fileUrl, fileName, meetingId, storageProvider } = payload;
 
     this.logger.debug(
@@ -178,7 +189,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
   }
 
   // Tencent Meeting implementation methods
-  private async createTencentMeeting(payload: any): Promise<any> {
+  private createTencentMeeting(payload: any): any {
     const { meetingData } = payload;
 
     this.logger.debug(`Creating Tencent Meeting`);
@@ -195,7 +206,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
     return result;
   }
 
-  private async updateTencentMeeting(payload: any): Promise<any> {
+  private updateTencentMeeting(payload: any): any {
     this.logger.debug(`Updating Tencent Meeting ${payload.meetingId}`);
     return {
       meetingId: payload.meetingId,
@@ -204,7 +215,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
     };
   }
 
-  private async deleteTencentMeeting(payload: any): Promise<any> {
+  private deleteTencentMeeting(payload: any): any {
     this.logger.debug(`Deleting Tencent Meeting ${payload.meetingId}`);
     return {
       meetingId: payload.meetingId,
@@ -213,7 +224,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
     };
   }
 
-  private async fetchTencentMeeting(payload: any): Promise<any> {
+  private fetchTencentMeeting(payload: any): any {
     this.logger.debug(`Fetching Tencent Meeting ${payload.meetingId}`);
     return {
       meetingId: payload.meetingId,
@@ -222,7 +233,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
     };
   }
 
-  private async processTencentWebhook(payload: any): Promise<any> {
+  private processTencentWebhook(payload: any): any {
     const { eventType, payload: webhookPayload } = payload;
     this.logger.debug(`Processing Tencent webhook: ${eventType}`);
     return {
@@ -234,7 +245,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
   }
 
   // Lark implementation methods
-  private async createLarkRecord(payload: any): Promise<any> {
+  private createLarkRecord(payload: any): any {
     const { appId, tableId, data } = payload;
 
     this.logger.debug(`Creating Lark record in ${appId}/${tableId}`);
@@ -251,7 +262,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
     return result;
   }
 
-  private async updateLarkRecord(payload: any): Promise<any> {
+  private updateLarkRecord(payload: any): any {
     const { appId, tableId, recordId, data } = payload;
     this.logger.debug(
       `Updating Lark record ${recordId} in ${appId}/${tableId}`,
@@ -266,7 +277,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
     };
   }
 
-  private async deleteLarkRecord(payload: any): Promise<any> {
+  private deleteLarkRecord(payload: any): any {
     const { appId, tableId, recordId } = payload;
     this.logger.debug(
       `Deleting Lark record ${recordId} in ${appId}/${tableId}`,
@@ -280,7 +291,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
     };
   }
 
-  private async batchCreateLarkRecords(payload: any): Promise<any> {
+  private batchCreateLarkRecords(payload: any): any {
     const { appId, tableId, records } = payload;
     this.logger.debug(
       `Batch creating ${records.length} Lark records in ${appId}/${tableId}`,
@@ -294,7 +305,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
     };
   }
 
-  private async batchUpdateLarkRecords(payload: any): Promise<any> {
+  private batchUpdateLarkRecords(payload: any): any {
     const { appId, tableId, records } = payload;
     this.logger.debug(
       `Batch updating ${records.length} Lark records in ${appId}/${tableId}`,
@@ -308,7 +319,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
     };
   }
 
-  private async processLarkWebhook(payload: any): Promise<any> {
+  private processLarkWebhook(payload: any): any {
     const { eventType, payload: webhookPayload } = payload;
     this.logger.debug(`Processing Lark webhook: ${eventType}`);
     return {
@@ -320,7 +331,7 @@ export class ExternalApiWorker extends BaseWorker<ExternalApiJobData> {
   }
 
   // Aliyun SMS implementation methods
-  private async sendAliyunSms(payload: any): Promise<any> {
+  private sendAliyunSms(payload: any): any {
     const { phoneNumber, message, templateCode, templateParams } = payload;
 
     this.logger.debug(`Sending SMS to ${phoneNumber}`);

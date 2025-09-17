@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Queue, QueueEvents } from 'bullmq';
 import { RedisService } from '../../redis/redis.service';
-import { QueueName, QueueMetrics, JobStatus } from '../types';
+import { QueueName, QueueMetrics } from '../types';
 import { getQueueConfig } from '../config/queue.config';
 
 /**
@@ -79,7 +79,7 @@ export class QueueMonitoringService {
       this.recordJobEvent(queueName, jobId, 'waiting');
     });
 
-    queueEvents.on('active', ({ jobId, prev }) => {
+    queueEvents.on('active', ({ jobId }) => {
       this.logger.debug(
         `Job ${jobId} started processing in queue ${queueName}`,
       );
@@ -143,7 +143,7 @@ export class QueueMonitoringService {
     queueName: QueueName,
     jobId: string,
     status: string,
-    metadata?: any,
+    metadata?: unknown,
   ): void {
     // In a real implementation, this would:
     // 1. Store metrics in time-series database (InfluxDB, Prometheus)
@@ -191,7 +191,11 @@ export class QueueMonitoringService {
         paused: counts.paused,
       };
     } catch (error) {
-      this.logger.error(`Failed to get metrics for queue ${queueName}:`, error);
+      this.logger.error(
+        `Failed to get metrics for queue ${queueName}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
       throw error;
     }
   }
@@ -207,8 +211,9 @@ export class QueueMonitoringService {
         metrics[queueName] = await this.getQueueMetrics(queueName);
       } catch (error) {
         this.logger.error(
-          `Failed to get metrics for queue ${queueName}:`,
-          error,
+          `Failed to get metrics for queue ${queueName}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
         );
         metrics[queueName] = {
           waiting: 0,
@@ -244,10 +249,7 @@ export class QueueMonitoringService {
       'QUEUE_MAX_FAILED_JOBS',
       50,
     );
-    const maxStalled = this.configService.get<number>(
-      'QUEUE_MAX_STALLED_JOBS',
-      10,
-    );
+    // const maxStalled = this.configService.get<number>('QUEUE_MAX_STALLED_JOBS', 10);
 
     // Check for potential issues
     if (metrics.waiting > maxWaiting) {
@@ -356,7 +358,11 @@ export class QueueMonitoringService {
           `Cleaned queue ${queueName}: ${completedCount.length} completed, ${failedCount.length} failed`,
         );
       } catch (error) {
-        this.logger.error(`Failed to clean queue ${queueName}:`, error);
+        this.logger.error(
+          `Failed to clean queue ${queueName}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
         results[queueName] = { completed: 0, failed: 0 };
       }
     }
@@ -381,9 +387,9 @@ export class QueueMonitoringService {
     return {
       id: job.id,
       name: job.name,
-      data: job.data,
+      data: job.data as unknown,
       progress: job.progress,
-      returnvalue: job.returnvalue,
+      returnvalue: job.returnvalue as unknown,
       failedReason: job.failedReason,
       finishedOn: job.finishedOn,
       processedOn: job.processedOn,
@@ -403,7 +409,11 @@ export class QueueMonitoringService {
         await queue.pause();
         this.logger.log(`Paused queue: ${queueName}`);
       } catch (error) {
-        this.logger.error(`Failed to pause queue ${queueName}:`, error);
+        this.logger.error(
+          `Failed to pause queue ${queueName}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
       }
     }
   }
@@ -417,7 +427,11 @@ export class QueueMonitoringService {
         await queue.resume();
         this.logger.log(`Resumed queue: ${queueName}`);
       } catch (error) {
-        this.logger.error(`Failed to resume queue ${queueName}:`, error);
+        this.logger.error(
+          `Failed to resume queue ${queueName}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
       }
     }
   }
@@ -433,8 +447,9 @@ export class QueueMonitoringService {
         this.logger.log(`Closed queue events for: ${queueName}`);
       } catch (error) {
         this.logger.error(
-          `Failed to close queue events for ${queueName}:`,
-          error,
+          `Failed to close queue events for ${queueName}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
         );
       }
     }
@@ -445,7 +460,11 @@ export class QueueMonitoringService {
         await queue.close();
         this.logger.log(`Closed queue: ${queueName}`);
       } catch (error) {
-        this.logger.error(`Failed to close queue ${queueName}:`, error);
+        this.logger.error(
+          `Failed to close queue ${queueName}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
       }
     }
 

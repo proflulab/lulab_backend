@@ -52,7 +52,11 @@ export abstract class BaseQueueService {
    */
   private setupQueueEvents(): void {
     this.queue.on('error', (error) => {
-      this.logger.error(`Queue ${this.queueName} error:`, error);
+      this.logger.error(
+        `Queue ${this.queueName} error: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
     });
 
     this.queue.on('waiting', (job) => {
@@ -103,8 +107,9 @@ export abstract class BaseQueueService {
       return job;
     } catch (error) {
       this.logger.error(
-        `Failed to add job ${jobType} to queue ${this.queueName}:`,
-        error,
+        `Failed to add job ${jobType} to queue ${this.queueName}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       );
       throw error;
     }
@@ -165,8 +170,9 @@ export abstract class BaseQueueService {
       return addedJobs;
     } catch (error) {
       this.logger.error(
-        `Failed to add bulk jobs to queue ${this.queueName}:`,
-        error,
+        `Failed to add bulk jobs to queue ${this.queueName}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       );
       throw error;
     }
@@ -186,7 +192,11 @@ export abstract class BaseQueueService {
       const exists = await redis?.exists(key);
       return !!exists;
     } catch (error) {
-      this.logger.error('Failed to check idempotency:', error);
+      this.logger.error(
+        `Failed to check idempotency: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
       return false;
     }
   }
@@ -208,7 +218,11 @@ export abstract class BaseQueueService {
       const key = `idempotency:${this.queueName}:${idempotencyKey}`;
       await redis?.setex(key, ttlSeconds, JSON.stringify(result));
     } catch (error) {
-      this.logger.error('Failed to mark job as processed:', error);
+      this.logger.error(
+        `Failed to mark job as processed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
     }
   }
 
@@ -226,9 +240,13 @@ export abstract class BaseQueueService {
       const redis = this.redisService.getClient();
       const key = `idempotency:${this.queueName}:${idempotencyKey}`;
       const result = await redis?.get(key);
-      return result ? JSON.parse(result) : null;
+      return result ? (JSON.parse(result) as unknown as JobResult) : null;
     } catch (error) {
-      this.logger.error('Failed to get idempotency result:', error);
+      this.logger.error(
+        `Failed to get idempotency result: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
       return null;
     }
   }
@@ -257,7 +275,14 @@ export abstract class BaseQueueService {
   /**
    * Get queue statistics
    */
-  async getQueueStats() {
+  async getQueueStats(): Promise<{
+    waiting: number;
+    active: number;
+    completed: number;
+    failed: number;
+    delayed: number;
+    paused: number;
+  }> {
     if (!this.queue) {
       return {
         waiting: 0,
@@ -269,14 +294,22 @@ export abstract class BaseQueueService {
       };
     }
 
-    return this.queue.getJobCounts(
+    const counts = (await this.queue.getJobCounts(
       'waiting',
       'active',
       'completed',
       'failed',
       'delayed',
       'paused',
-    );
+    )) as unknown as {
+      waiting: number;
+      active: number;
+      completed: number;
+      failed: number;
+      delayed: number;
+      paused: number;
+    };
+    return counts;
   }
 
   /**
