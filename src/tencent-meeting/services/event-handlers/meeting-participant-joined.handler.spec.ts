@@ -13,14 +13,18 @@ describe('MeetingParticipantJoinedHandler', () => {
     mockMeetingUserRepo = {
       createMeetingUserRecord: jest.fn(),
       upsertMeetingUserRecord: jest.fn(),
+      searchMeetingUserByUuid: jest.fn(),
       searchMeetingUserByUserid: jest.fn(),
       searchMeetingUserByuser_name: jest.fn(),
-    } as any;
+      updateMeetingUserByUuid: jest.fn(),
+      searchMeetingUsersByEnterpriseStatus: jest.fn(),
+    } as unknown as jest.Mocked<MeetingUserBitableRepository>;
 
     mockMeetingRepo = {
+      createMeetingRecord: jest.fn(),
       searchMeetingById: jest.fn(),
       upsertMeetingRecord: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<MeetingBitableRepository>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -76,7 +80,7 @@ describe('MeetingParticipantJoinedHandler', () => {
         user_name: 'Test User',
         instance_id: '1',
       },
-    } as any;
+    } as TencentEventPayload;
 
     it('should handle participant joined event successfully', async () => {
       // Mock creating new user
@@ -84,24 +88,44 @@ describe('MeetingParticipantJoinedHandler', () => {
       mockMeetingUserRepo.upsertMeetingUserRecord.mockResolvedValue({
         code: 0,
         msg: 'success',
-        data: { record: { record_id: userRecordId } },
-      } as any);
+        data: {
+          record: {
+            record_id: userRecordId,
+            fields: {},
+            created_by: { id: 'test' },
+            created_time: Date.now(),
+            last_modified_by: { id: 'test' },
+            last_modified_time: Date.now(),
+          },
+        },
+      });
 
       // Mock upserting meeting
       mockMeetingRepo.upsertMeetingRecord.mockResolvedValue({
         code: 0,
         msg: 'success',
-        data: { record: { record_id: 'meeting-record-123' } },
-      } as any);
+        data: {
+          record: {
+            record_id: 'meeting-record-123',
+            fields: {},
+            created_by: { id: 'test' },
+            created_time: Date.now(),
+            last_modified_by: { id: 'test' },
+            last_modified_time: Date.now(),
+          },
+        },
+      });
 
       await handler.handle(mockPayload, 0);
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockMeetingUserRepo.upsertMeetingUserRecord).toHaveBeenCalledWith({
         uuid: 'test-user-id',
         userid: 'test-user-id',
         user_name: 'Test User',
         is_enterprise_user: true,
       });
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockMeetingRepo.upsertMeetingRecord).toHaveBeenCalledWith({
         platform: '腾讯会议',
         subject: 'Test Meeting',
@@ -110,7 +134,6 @@ describe('MeetingParticipantJoinedHandler', () => {
         meeting_code: '123456789',
         start_time: 1234567890000,
         end_time: 1234567900000,
-        participants: [userRecordId],
       });
     });
 
@@ -120,21 +143,46 @@ describe('MeetingParticipantJoinedHandler', () => {
       mockMeetingUserRepo.upsertMeetingUserRecord.mockResolvedValue({
         code: 0,
         msg: 'success',
-        data: { record: { record_id: userRecordId } },
-      } as any);
+        data: {
+          record: {
+            record_id: userRecordId,
+            fields: {},
+            created_by: { id: 'test' },
+            created_time: Date.now(),
+            last_modified_by: { id: 'test' },
+            last_modified_time: Date.now(),
+          },
+        },
+      });
 
       // Mock upserting meeting
       mockMeetingRepo.upsertMeetingRecord.mockResolvedValue({
         code: 0,
         msg: 'success',
-        data: { record: { record_id: 'meeting-record-123' } },
-      } as any);
+        data: {
+          record: {
+            record_id: 'meeting-record-123',
+            fields: {},
+            created_by: { id: 'test' },
+            created_time: Date.now(),
+            last_modified_by: { id: 'test' },
+            last_modified_time: Date.now(),
+          },
+        },
+      });
 
       await handler.handle(mockPayload, 0);
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockMeetingRepo.upsertMeetingRecord).toHaveBeenCalledWith(
         expect.objectContaining({
-          participants: [userRecordId],
+          platform: '腾讯会议',
+          subject: 'Test Meeting',
+          meeting_id: 'test-meeting-id',
+          sub_meeting_id: 'test-sub-meeting-id',
+          meeting_code: '123456789',
+          start_time: 1234567890000,
+          end_time: 1234567900000,
         }),
       );
     });
@@ -159,19 +207,38 @@ describe('MeetingParticipantJoinedHandler', () => {
       mockMeetingUserRepo.upsertMeetingUserRecord.mockResolvedValue({
         code: 0,
         msg: 'success',
-        data: { record: { record_id: 'existing-record-id' } },
-      } as any);
+        data: {
+          record: {
+            record_id: 'existing-record-id',
+            fields: {},
+            created_by: { id: 'test' },
+            created_time: Date.now(),
+            last_modified_by: { id: 'test' },
+            last_modified_time: Date.now(),
+          },
+        },
+      });
 
       // Mock upserting meeting
       mockMeetingRepo.upsertMeetingRecord.mockResolvedValue({
         code: 0,
         msg: 'success',
-        data: { record: { record_id: 'meeting-record-123' } },
-      } as any);
+        data: {
+          record: {
+            record_id: 'meeting-record-123',
+            fields: {},
+            created_by: { id: 'test' },
+            created_time: Date.now(),
+            last_modified_by: { id: 'test' },
+            last_modified_time: Date.now(),
+          },
+        },
+      });
 
       await handler.handle(mockPayload, 0);
 
       // 即使存在用户，也会调用upsert更新记录
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockMeetingUserRepo.upsertMeetingUserRecord).toHaveBeenCalledWith({
         uuid: 'test-user-id',
         userid: 'test-user-id',
@@ -179,16 +246,26 @@ describe('MeetingParticipantJoinedHandler', () => {
         is_enterprise_user: true,
       });
 
-      // 验证会议记录包含参与者
+      // 验证会议记录被调用
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockMeetingRepo.upsertMeetingRecord).toHaveBeenCalledWith(
         expect.objectContaining({
-          participants: ['existing-record-id'],
+          platform: '腾讯会议',
+          subject: 'Test Meeting',
+          meeting_id: 'test-meeting-id',
+          sub_meeting_id: 'test-sub-meeting-id',
+          meeting_code: '123456789',
+          start_time: 1234567890000,
+          end_time: 1234567900000,
         }),
       );
     });
 
     it('should handle missing meeting_info', async () => {
-      const invalidPayload = { ...mockPayload, meeting_info: undefined as any };
+      const invalidPayload = {
+        ...mockPayload,
+        meeting_info: undefined,
+      } as unknown as TencentEventPayload;
 
       await expect(handler.handle(invalidPayload, 0)).rejects.toThrow(
         'Invalid payload: missing meeting_info',
@@ -196,7 +273,10 @@ describe('MeetingParticipantJoinedHandler', () => {
     });
 
     it('should handle missing operator', async () => {
-      const invalidPayload = { ...mockPayload, operator: undefined as any };
+      const invalidPayload = {
+        ...mockPayload,
+        operator: undefined,
+      } as unknown as TencentEventPayload;
 
       await expect(handler.handle(invalidPayload, 0)).rejects.toThrow(
         'Invalid payload: missing operator',

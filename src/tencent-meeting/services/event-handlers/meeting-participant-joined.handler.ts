@@ -82,7 +82,9 @@ export class MeetingParticipantJoinedHandler extends BaseEventHandler {
       if (meetingResult.data?.record) {
         const meetingRecordIds = meetingResult.data.record.fields
           .participants as string[];
-        this.logger.log(`会议记录ID: ${meetingRecordIds}`);
+        this.logger.log(
+          `会议记录ID: ${meetingRecordIds?.join(', ') || 'none'}`,
+        );
 
         await this.meetingBitable.upsertMeetingRecord({
           platform: '腾讯会议',
