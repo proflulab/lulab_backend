@@ -14,7 +14,7 @@ import { MeetingController } from './meeting.controller';
 import { MeetingService } from './meeting.service';
 import { MeetingRepository } from './repositories/meeting.repository';
 import { HttpModule } from '@nestjs/axios';
-import { PrismaModule } from '../prisma.module';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   imports: [HttpModule, PrismaModule],

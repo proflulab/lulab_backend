@@ -8,4 +8,5 @@ export interface MeetingData {
   end_time?: number;
   operator?: string[];
   creator?: string[];
+  participants?: string[];
 }

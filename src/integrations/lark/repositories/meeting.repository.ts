@@ -54,6 +54,7 @@ export class MeetingBitableRepository {
       ...(meetingData.end_time && { end_time: meetingData.end_time }),
       ...(meetingData.operator && { operator: meetingData.operator }),
       ...(meetingData.creator && { creator: meetingData.creator }),
+      ...(meetingData.participants && { participants: meetingData.participants }),
     };
 
     this.logger.log(
@@ -88,6 +89,7 @@ export class MeetingBitableRepository {
       ...(meetingData.end_time && { end_time: meetingData.end_time }),
       ...(meetingData.operator && { operator: meetingData.operator }),
       ...(meetingData.creator && { creator: meetingData.creator }),
+      ...(meetingData.participants && { participants: meetingData.participants }),
     };
 
     // 构建匹配字段数组 - 根据是否有 sub_meeting_id 决定匹配字段
