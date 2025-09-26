@@ -4,11 +4,9 @@ export interface MeetingUserData {
   user_name?: string;
   phone_hase?: string;
   is_enterprise_user?: boolean;
+  meet?: string[];
+  user?: string[];
+  meet_creator?: string[];
 }
 
-export interface UpdateMeetingUserData {
-  userid?: string;
-  user_name?: string;
-  phone_hase?: string;
-  is_enterprise_user?: boolean;
-}
+export type UpdateMeetingUserData = Partial<Omit<MeetingUserData, 'uuid'>>;

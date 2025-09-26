@@ -1,6 +1,6 @@
 export interface MeetingData {
   platform: string;
-  subject: string;
+  subject?: string;
   meeting_id: string;
   sub_meeting_id?: string;
   meeting_code?: string;
