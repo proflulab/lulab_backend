@@ -80,19 +80,24 @@ export class MeetingParticipantJoinedHandler extends BaseEventHandler {
       });
 
       if (meetingResult.data?.record) {
-        const meetingRecordIds = meetingResult.data.record.fields
-          .participants as string[];
-        this.logger.log(
-          `会议记录ID: ${meetingRecordIds?.join(', ') || 'none'}`,
+        const meetingRecordsearch = await this.meetingBitable.searchMeetingById(
+          meeting_info.meeting_id,
+          meeting_info.sub_meeting_id,
         );
+
+        const participantsField = meetingRecordsearch.data?.items[0].fields
+          .participants as { link_record_ids: string[] } | undefined;
 
         await this.meetingBitable.upsertMeetingRecord({
           platform: '腾讯会议',
           meeting_id: meeting_info.meeting_id,
           sub_meeting_id: meeting_info.sub_meeting_id,
-          participants: meetingRecordIds
-            ? [...meetingRecordIds, participantRecordId]
-            : [participantRecordId],
+          participants: participantRecordId
+            ? [
+                ...(participantsField?.link_record_ids || []),
+                participantRecordId,
+              ]
+            : participantsField?.link_record_ids || [],
         });
       }
       this.logger.log(`成功处理会议记录: ${meeting_info.meeting_id}`);

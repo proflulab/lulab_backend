@@ -6,6 +6,7 @@ import {
   UpdateRecordResponse,
   BitableField,
   SearchFilter,
+  SearchRecordResponse,
 } from '../types/lark.types';
 import { larkConfig } from '../config/lark.config';
 import { MeetingData } from '../types';
@@ -151,7 +152,7 @@ export class MeetingBitableRepository {
   async searchMeetingById(
     meetingId: string,
     subMeetingId?: string,
-  ): Promise<unknown> {
+  ): Promise<SearchRecordResponse> {
     const searchConditions: Array<{
       field_name: string;
       operator: 'is';
