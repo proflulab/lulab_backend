@@ -49,6 +49,9 @@ export class MeetingUserBitableRepository {
       ...(userData.is_enterprise_user !== undefined && {
         is_enterprise_user: userData.is_enterprise_user,
       }),
+      ...(userData.meet && { meet: userData.meet }),
+      ...(userData.user && { user: userData.user }),
+      ...(userData.meet_creator && { meet_creator: userData.meet_creator }),
     };
 
     this.logger.log(`Creating new user record: ${userData.uuid}`);
@@ -75,6 +78,9 @@ export class MeetingUserBitableRepository {
       ...(userData.is_enterprise_user !== undefined && {
         is_enterprise_user: userData.is_enterprise_user,
       }),
+      ...(userData.meet && { meet: userData.meet }),
+      ...(userData.user && { user: userData.user }),
+      ...(userData.meet_creator && { meet_creator: userData.meet_creator }),
     };
 
     try {
@@ -238,6 +244,9 @@ export class MeetingUserBitableRepository {
       ...(updateData.is_enterprise_user !== undefined && {
         is_enterprise_user: updateData.is_enterprise_user,
       }),
+      ...(updateData.meet && { meet: updateData.meet }),
+      ...(updateData.user && { user: updateData.user }),
+      ...(updateData.meet_creator && { meet_creator: updateData.meet_creator }),
     };
 
     // 首先查找用户记录

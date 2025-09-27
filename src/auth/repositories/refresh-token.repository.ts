@@ -1,39 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/prisma.service';
+import { PrismaService } from '@/prisma/prisma.service';
 import { createHash } from 'node:crypto';
-
-// Temporary interface until Prisma generates the RefreshToken type
-export interface RefreshToken {
-  id: string;
-  userId: string;
-  tokenHash: string;
-  jti: string;
-  deviceInfo?: string | null;
-  deviceId?: string | null;
-  userAgent?: string | null;
-  ip?: string | null;
-  expiresAt: Date;
-  revokedAt?: Date | null;
-  replacedBy?: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface CreateRefreshTokenData {
-  userId: string;
-  token: string;
-  jti: string;
-  expiresAt: Date;
-  deviceInfo?: string;
-  deviceId?: string;
-  userAgent?: string;
-  ip?: string;
-}
-
-export interface RevokeRefreshTokenOptions {
-  revokedAt?: Date;
-  replacedBy?: string;
-}
+import {
+  RefreshToken,
+  CreateRefreshTokenData,
+  RevokeRefreshTokenOptions,
+} from '../types';
 
 @Injectable()
 export class RefreshTokenRepository {

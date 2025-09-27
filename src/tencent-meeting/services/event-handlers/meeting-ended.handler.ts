@@ -89,7 +89,6 @@ export class MeetingEndedHandler extends BaseEventHandler {
         start_time: meeting_info.start_time * 1000,
         end_time: meeting_info.end_time * 1000,
         creator: [creatorRecordId || ''],
-        operator: [operatorRecordId || ''],
       });
     } catch (error) {
       this.logger.error(

@@ -5,6 +5,8 @@ import {
   CreateRecordResponse,
   UpdateRecordResponse,
   BitableField,
+  SearchFilter,
+  SearchRecordResponse,
 } from '../types/lark.types';
 import { larkConfig } from '../config/lark.config';
 import { MeetingData } from '../types';
@@ -42,8 +44,10 @@ export class MeetingBitableRepository {
   ): Promise<CreateRecordResponse> {
     const fields: BitableField = {
       platform: meetingData.platform,
-      subject: meetingData.subject,
       meeting_id: meetingData.meeting_id,
+      ...(meetingData.subject && {
+        subject: meetingData.subject,
+      }),
       ...(meetingData.sub_meeting_id && {
         sub_meeting_id: meetingData.sub_meeting_id,
       }),
@@ -54,6 +58,9 @@ export class MeetingBitableRepository {
       ...(meetingData.end_time && { end_time: meetingData.end_time }),
       ...(meetingData.operator && { operator: meetingData.operator }),
       ...(meetingData.creator && { creator: meetingData.creator }),
+      ...(meetingData.participants && {
+        participants: meetingData.participants,
+      }),
     };
 
     this.logger.log(
@@ -76,8 +83,10 @@ export class MeetingBitableRepository {
   ): Promise<CreateRecordResponse | UpdateRecordResponse> {
     const fields: BitableField = {
       platform: meetingData.platform,
-      subject: meetingData.subject,
       meeting_id: meetingData.meeting_id,
+      ...(meetingData.subject && {
+        subject: meetingData.subject,
+      }),
       ...(meetingData.sub_meeting_id && {
         sub_meeting_id: meetingData.sub_meeting_id,
       }),
@@ -88,6 +97,9 @@ export class MeetingBitableRepository {
       ...(meetingData.end_time && { end_time: meetingData.end_time }),
       ...(meetingData.operator && { operator: meetingData.operator }),
       ...(meetingData.creator && { creator: meetingData.creator }),
+      ...(meetingData.participants && {
+        participants: meetingData.participants,
+      }),
     };
 
     // 构建匹配字段数组 - 根据是否有 sub_meeting_id 决定匹配字段
@@ -130,6 +142,56 @@ export class MeetingBitableRepository {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(`Error in upsertMeetingRecord: ${errorMessage}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Search meeting records by meeting_id and optional sub_meeting_id
+   */
+  async searchMeetingById(
+    meetingId: string,
+    subMeetingId?: string,
+  ): Promise<SearchRecordResponse> {
+    const searchConditions: Array<{
+      field_name: string;
+      operator: 'is';
+      value: string[];
+    }> = [
+      {
+        field_name: 'meeting_id',
+        operator: 'is',
+        value: [meetingId],
+      },
+    ];
+
+    // 如果有子会议ID，添加子会议ID条件
+    if (subMeetingId) {
+      searchConditions.push({
+        field_name: 'sub_meeting_id',
+        operator: 'is',
+        value: [subMeetingId],
+      });
+    }
+
+    const filter: SearchFilter = {
+      conjunction: 'and',
+      conditions: searchConditions,
+    };
+
+    try {
+      this.logger.log(
+        `Searching meeting by ID: ${meetingId}${subMeetingId ? ` (sub_meeting_id: ${subMeetingId})` : ''}`,
+      );
+      return await this.bitableService.searchRecords(
+        this.appToken,
+        this.tableId,
+        { filter },
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error in searchMeetingById: ${errorMessage}`);
       throw error;
     }
   }

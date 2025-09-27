@@ -18,7 +18,7 @@ import { EmailModule } from './email/email.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { JwtAuthGuard } from './security';
-import { PrismaModule } from './prisma.module';
+import { PrismaModule } from './prisma/prisma.module';
 import { MeetingModule } from './meeting/meeting.module';
 import { TencentMeetingModule } from './tencent-meeting/tencent-meeting.module';
 import { LarkMeetingModule } from './lark-meeting/lark-meeting.module';

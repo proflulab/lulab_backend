@@ -20,6 +20,7 @@ import { EventHandlerFactory } from './services/event-handlers/event-handler.fac
 import { MeetingStartedHandler } from './services/event-handlers/meeting-started.handler';
 import { MeetingEndedHandler } from './services/event-handlers/meeting-ended.handler';
 import { RecordingCompletedHandler } from './services/event-handlers/recording-completed.handler';
+import { MeetingParticipantJoinedHandler } from './services/event-handlers/meeting-participant-joined.handler';
 import { MeetingModule } from '../meeting/meeting.module';
 import { TencentMeetingConfigService } from './services/tencent-config.service';
 
@@ -34,6 +35,7 @@ import { TencentMeetingConfigService } from './services/tencent-config.service';
     MeetingStartedHandler,
     MeetingEndedHandler,
     RecordingCompletedHandler,
+    MeetingParticipantJoinedHandler,
   ],
   exports: [TencentMeetingService],
 })
