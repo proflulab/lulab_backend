@@ -314,6 +314,7 @@ export class TencentApiService {
 
   /**
    * Retrieves AI-generated discussion topics for a recording
+   * https://cloud.tencent.com/document/product/1095/105660
    * @param fileId - Unique identifier of the recording file
    * @param userId - User ID making the request
    * @returns Promise resolving to smart discussion topics
