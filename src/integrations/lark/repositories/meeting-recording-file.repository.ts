@@ -6,7 +6,7 @@ import {
   UpdateRecordResponse,
   BitableField,
   SearchFilter,
-} from '../types/lark.types';
+} from '../types/lark-bitable.types';
 import { larkConfig } from '../config/lark.config';
 import { RecordingFileData } from '../types';
 
@@ -59,7 +59,9 @@ export class RecordingFileBitableRepository {
       }),
       ...(recordingData.ai_minutes && { ai_minutes: recordingData.ai_minutes }),
       ...(recordingData.todo && { todo: recordingData.todo }),
-      ...(recordingData.fullsummary && { fullsummary: recordingData.fullsummary }),
+      ...(recordingData.fullsummary && {
+        fullsummary: recordingData.fullsummary,
+      }),
     };
 
     this.logger.log(
@@ -98,7 +100,9 @@ export class RecordingFileBitableRepository {
       }),
       ...(recordingData.ai_minutes && { ai_minutes: recordingData.ai_minutes }),
       ...(recordingData.todo && { todo: recordingData.todo }),
-      ...(recordingData.fullsummary && { fullsummary: recordingData.fullsummary }),
+      ...(recordingData.fullsummary && {
+        fullsummary: recordingData.fullsummary,
+      }),
     };
 
     try {

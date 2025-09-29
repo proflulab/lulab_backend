@@ -83,37 +83,43 @@ export class RecordingCompletedHandler extends BaseEventHandler {
       for (const file of recording_files) {
         try {
           const meetIds: string[] = meetingRecordId ? [meetingRecordId] : [];
-          
+
           // 获取智能摘要、待办事项和会议纪要
           let fullsummary = '';
           let todo = '';
           let ai_minutes = '';
-          
+
           try {
             // 获取智能全文摘要
-            const summaryResponse = await this.tencentMeetingApi.getSmartFullSummary(
-              file.record_file_id,
-              meeting_info.creator.userid || '',
-            );
+            const summaryResponse =
+              await this.tencentMeetingApi.getSmartFullSummary(
+                file.record_file_id,
+                meeting_info.creator.userid || '',
+              );
             fullsummary = summaryResponse.ai_summary || '';
             this.logger.log(`获取智能摘要成功: ${file.record_file_id}`);
           } catch (error) {
-            this.logger.warn(`获取智能摘要失败: ${file.record_file_id}, 错误: ${error.message}`);
+            this.logger.warn(
+              `获取智能摘要失败: ${file.record_file_id}, 错误: ${error.message}`,
+            );
           }
-          
+
           try {
             // 获取智能会议纪要（包含待办事项）
-            const minutesResponse = await this.tencentMeetingApi.getSmartMeetingMinutes(
-              file.record_file_id,
-              meeting_info.creator.userid || '',
-            );
+            const minutesResponse =
+              await this.tencentMeetingApi.getSmartMeetingMinutes(
+                file.record_file_id,
+                meeting_info.creator.userid || '',
+              );
             ai_minutes = minutesResponse.meeting_minute?.minute || '';
             todo = minutesResponse.meeting_minute?.todo || '';
             this.logger.log(`获取会议纪要成功: ${file.record_file_id}`);
           } catch (error) {
-            this.logger.warn(`获取会议纪要失败: ${file.record_file_id}, 错误: ${error.message}`);
+            this.logger.warn(
+              `获取会议纪要失败: ${file.record_file_id}, 错误: ${error.message}`,
+            );
           }
-          
+
           const recordingResult =
             await this.recordingFileBitable.upsertRecordingFileRecord({
               record_file_id: file.record_file_id,

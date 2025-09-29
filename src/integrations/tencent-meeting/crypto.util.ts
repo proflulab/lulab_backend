@@ -6,17 +6,17 @@ import {
 
 /**
  * Verifies the signature for Tencent Meeting webhook requests
- * 
+ *
  * This function implements the signature verification algorithm specified in
  * Tencent Meeting documentation:
  * https://cloud.tencent.com/document/product/1095/51612
- * 
+ *
  * The verification process:
  * 1. Sort token, timestamp, nonce, and data lexicographically
  * 2. Concatenate them into a single string
  * 3. Compute SHA1 hash of the concatenated string
  * 4. Compare with the provided signature
- * 
+ *
  * @param token - The webhook token from Tencent Meeting configuration
  * @param timestamp - Timestamp from the request header
  * @param nonce - Random nonce from the request header
@@ -40,18 +40,18 @@ export function verifySignature(
 
 /**
  * Decrypts AES-256-CBC encrypted data for Tencent Meeting webhooks
- * 
+ *
  * This function implements the AES decryption algorithm specified in
  * Tencent Meeting documentation:
  * https://cloud.tencent.com/document/product/1095/54658
- * 
+ *
  * The decryption process:
  * 1. Decode the EncodingAESKey from Base64 (with "=" padding)
  * 2. Extract IV from first 16 bytes of the decoded key
  * 3. Decode the encrypted text from Base64
  * 4. Decrypt using AES-256-CBC with automatic PKCS#7 padding
  * 5. Return the decrypted UTF-8 string
- * 
+ *
  * @param encryptedText - Base64 encoded encrypted text
  * @param key - Base64 encoded encryption key (EncodingAESKey)
  * @returns Decrypted plaintext string
@@ -64,7 +64,7 @@ export async function aesDecrypt(
   try {
     // Decode the EncodingAESKey with "=" padding as per Tencent documentation
     const decodedKey = Buffer.from(key + '=', 'base64');
-    
+
     // Validate key length - must be 32 bytes for AES-256
     if (decodedKey.length !== 32) {
       throw new Error(
@@ -87,11 +87,11 @@ export async function aesDecrypt(
 
     // Enable automatic PKCS#7 padding removal
     decipher.setAutoPadding(true);
-    
+
     // Decrypt the data
     let decrypted = decipher.update(decodedText);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
-    
+
     // Convert to UTF-8 string
     return decrypted.toString('utf-8');
   } catch (error) {
@@ -102,15 +102,15 @@ export async function aesDecrypt(
 
 /**
  * Verifies webhook URL and decrypts the verification string for Tencent Meeting
- * 
+ *
  * This function performs the complete webhook URL verification process:
  * 1. Validates all required parameters are present
  * 2. Verifies the signature using verifySignature()
  * 3. Decrypts the check string using aesDecrypt()
- * 
+ *
  * Used during Tencent Meeting webhook URL verification process to confirm
  * that the webhook endpoint is valid and can receive encrypted data.
- * 
+ *
  * @param checkStr - Encrypted verification string from Tencent Meeting
  * @param timestamp - Timestamp from the request header
  * @param nonce - Random nonce from the request header
@@ -171,17 +171,17 @@ export async function verifyWebhookUrl(
 
 /**
  * Generates signature for Tencent Meeting API requests
- * 
+ *
  * This function creates a signature for authenticating API requests
  * to Tencent Meeting services. The signature is used in the Authorization
  * header for API authentication.
- * 
+ *
  * The signature generation process:
  * 1. Construct header string with key, nonce, and timestamp
  * 2. Create string to sign with HTTP method, headers, URI, and body
  * 3. Generate HMAC-SHA256 hash using secret key
  * 4. Encode the hash as Base64
- * 
+ *
  * @param secretKey - The secret key for HMAC signing
  * @param httpMethod - HTTP method (GET, POST, etc.)
  * @param secretId - The secret ID for API authentication
@@ -202,14 +202,14 @@ export function generateSignature(
 ): string {
   // Construct header string for signature
   const headerString = `X-TC-Key=${secretId}&X-TC-Nonce=${headerNonce}&X-TC-Timestamp=${headerTimestamp}`;
-  
+
   // Create string to sign with proper formatting
   const stringToSign = `${httpMethod}\n${headerString}\n${requestUri}\n${requestBody}`;
-  
+
   // Generate HMAC-SHA256 signature
   const hmac = createHmac('sha256', secretKey);
   const hash = hmac.update(stringToSign).digest('hex');
-  
+
   // Return Base64 encoded signature
   return Buffer.from(hash).toString('base64');
 }

@@ -12,7 +12,6 @@ import {
   UseInterceptors,
   ValidationPipe,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { ApiTags } from '@nestjs/swagger';
 import { TencentEventHandlerService } from '../services/tencent-event-handler.service';
 import { TencentMeetingConfigService } from '../services/tencent-config.service';

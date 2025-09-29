@@ -174,7 +174,8 @@ describe('TencentApiService', () => {
   describe('getSmartFullSummary', () => {
     it('should return smart full summary successfully', async () => {
       const mockResponse = {
-        ai_summary: '5Lya6K6u5Li76KaB6K6y6L+w5LqG5Zyo5aSE5xxxxxxxxxxxxxxxxxxx6c77yM6ICM5piv6KaB5Li75Yqo5Y676Kej5Yaz6Zeu6aKY44CC',
+        ai_summary:
+          '5Lya6K6u5Li76KaB6K6y6L+w5LqG5Zyo5aSE5xxxxxxxxxxxxxxxxxxx6c77yM6ICM5piv6KaB5Li75Yqo5Y676Kej5Yaz6Zeu6aKY44CC',
       };
 
       (global.fetch as jest.Mock).mockResolvedValueOnce(
@@ -200,7 +201,7 @@ describe('TencentApiService', () => {
           }) as unknown as Record<string, unknown>,
         }) as unknown as Record<string, unknown>,
       );
-      
+
       // 验证URL参数
       const calls = (global.fetch as jest.Mock).mock.calls as Array<
         [unknown, unknown?]
@@ -211,13 +212,14 @@ describe('TencentApiService', () => {
       expect(fetchCall).toContain('operator_id_type=1');
       expect(fetchCall).toContain('lang=zh');
       expect(fetchCall).toContain('pwd=test-password');
-      
+
       expect(result).toEqual(mockResponse);
     });
 
     it('should work with minimal parameters', async () => {
       const mockResponse = {
-        ai_summary: '5Lya6K6u5Li76KaB6K6y6L+w5LqG5Zyo5aSE5xxxxxxxxxxxxxxxxxxx6c77yM6ICM5piv6KaB5Li75Yqo5Y676Kej5Yaz6Zeu6aKY44CC',
+        ai_summary:
+          '5Lya6K6u5Li76KaB6K6y6L+w5LqG5Zyo5aSE5xxxxxxxxxxxxxxxxxxx6c77yM6ICM5piv6KaB5Li75Yqo5Y676Kej5Yaz6Zeu6aKY44CC',
       };
 
       (global.fetch as jest.Mock).mockResolvedValueOnce(
@@ -238,7 +240,7 @@ describe('TencentApiService', () => {
       expect(fetchCall).toContain('operator_id_type=1');
       expect(fetchCall).not.toContain('lang=');
       expect(fetchCall).not.toContain('pwd=');
-      
+
       expect(result).toEqual(mockResponse);
     });
 
