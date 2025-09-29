@@ -8,8 +8,6 @@ import {
   RecordingDetail,
   MeetingParticipantsResponse,
   RecordingTranscriptResponse,
-  SmartMinutesResponse,
-  SmartSummaryResponse,
   SmartTopicsResponse,
   SmartFullSummaryResponse,
   SmartMeetingMinutesResponse,
@@ -246,7 +244,7 @@ describe('Tencent Meeting Real API Integration Tests', () => {
       if (testFileId && testFileId !== 'test-recording-file-id') {
         try {
           const transcriptDetail: RecordingTranscriptResponse =
-            await apiService.getRecordingTranscriptDetails(
+            await apiService.getTranscript(
               testFileId,
               userId || '',
               1, // operatorIdType
@@ -301,90 +299,6 @@ describe('Tencent Meeting Real API Integration Tests', () => {
     it('should get smart minutes if available', async () => {
       const userId = configService.get<string>('USER_ID');
       const testFileId = TEST_CONFIG.TEST_RECORDING_FILE_ID;
-
-      if (testFileId && testFileId !== 'test-recording-file-id') {
-        try {
-          const smartMinutes: SmartMinutesResponse =
-            await apiService.getSmartMinutes(testFileId, userId || '');
-
-          console.log('🤖 AI会议纪要:', {
-            has_minutes: !!smartMinutes.meeting_minute,
-            minute_preview:
-              smartMinutes.meeting_minute?.minute?.substring(0, 100) + '...',
-            todo_preview:
-              smartMinutes.meeting_minute?.todo?.substring(0, 100) + '...',
-          });
-
-          expect(smartMinutes).toBeDefined();
-
-          if (smartMinutes.meeting_minute) {
-            expect(smartMinutes.meeting_minute.minute).toBeDefined();
-            expect(smartMinutes.meeting_minute.todo).toBeDefined();
-          }
-        } catch (error) {
-          console.error('❌ 获取AI会议纪要失败:', error.message);
-
-          // 处理各种API错误情况
-          if (
-            error.message.includes('没有智能分析结果') ||
-            error.message.includes('minutes') ||
-            error.message.includes('Empty response') ||
-            error.message.includes('Invalid JSON') ||
-            error.message.includes('Unexpected end of JSON input')
-          ) {
-            console.warn('⚠️  该录制文件可能没有AI会议纪要或API返回异常');
-            return; // 跳过测试而不是失败
-          } else if (error.message.includes('unregistered user')) {
-            console.warn('⚠️  用户未注册或无权限访问，跳过此测试');
-            return;
-          }
-
-          throw error;
-        }
-      } else {
-        console.warn('⚠️  未配置TEST_RECORDING_FILE_ID，跳过AI会议纪要测试');
-      }
-    }, 30000);
-
-    it('should get smart summary if available', async () => {
-      const userId = configService.get<string>('USER_ID');
-      const testFileId = TEST_CONFIG.TEST_RECORDING_FILE_ID;
-
-      if (testFileId && testFileId !== 'test-recording-file-id') {
-        try {
-          const smartSummary: SmartSummaryResponse =
-            await apiService.getSmartSummary(testFileId, userId || '');
-
-          console.log('📝 AI会议总结:', {
-            summary_preview: smartSummary.ai_summary?.substring(0, 150) + '...',
-          });
-
-          expect(smartSummary).toBeDefined();
-          expect(smartSummary.ai_summary).toBeDefined();
-        } catch (error) {
-          console.error('❌ 获取AI会议总结失败:', error.message);
-
-          // 处理各种API错误情况
-          if (
-            error.message.includes('没有智能分析结果') ||
-            error.message.includes('summary') ||
-            error.message.includes('Empty response') ||
-            error.message.includes('Invalid JSON') ||
-            error.message.includes('Unexpected end of JSON input')
-          ) {
-            console.warn('⚠️  该录制文件可能没有AI会议总结或API返回异常');
-            return; // 跳过测试而不是失败
-          } else if (error.message.includes('unregistered user')) {
-            console.warn('⚠️  用户未注册或无权限访问，跳过此测试');
-            return;
-          }
-
-          throw error;
-        }
-      } else {
-        console.warn('⚠️  未配置TEST_RECORDING_FILE_ID，跳过AI会议总结测试');
-      }
-    }, 30000);
 
     it('should get smart topics if available', async () => {
       const userId = configService.get<string>('USER_ID');
