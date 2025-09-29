@@ -262,19 +262,6 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
   }
 
   /**
-   * 获取客户端IP地址
-   */
-  private getClientIp(request: Request): string {
-    return (
-      (request.headers['x-forwarded-for'] as string) ||
-      (request.headers['x-real-ip'] as string) ||
-      request.connection.remoteAddress ||
-      request.socket.remoteAddress ||
-      'unknown'
-    );
-  }
-
-  /**
    * 格式化日志消息
    */
   private formatLogMessage(

@@ -129,41 +129,6 @@ export interface MeetingDetailResponse {
   };
 }
 
-export interface TranscriptWord {
-  wid: string;
-  start_time: number;
-  end_time: number;
-  text: string;
-}
-
-export interface TranscriptSentence {
-  sid: string;
-  start_time: number;
-  end_time: number;
-  words: TranscriptWord[];
-}
-
-export interface TranscriptParagraph {
-  pid: string;
-  start_time: number;
-  end_time: number;
-  sentences: TranscriptSentence[];
-}
-
-export interface TranscriptMinutes {
-  paragraphs: TranscriptParagraph[];
-}
-
-export interface RecordingTranscriptDetail {
-  minutes: TranscriptMinutes;
-  more: boolean;
-  error_info?: {
-    error_code: number;
-    new_error_code?: number;
-    message: string;
-  };
-}
-
 export interface MeetingMinute {
   minute: string;
   todo: string;
@@ -201,6 +166,86 @@ export interface AiTopic {
 
 export interface SmartTopicsResponse {
   ai_topic_list: AiTopic[];
+  error_info?: {
+    error_code: number;
+    new_error_code?: number;
+    message: string;
+  };
+}
+
+export interface SmartFullSummaryResponse {
+  ai_summary: string;
+  error_info?: {
+    error_code: number;
+    new_error_code?: number;
+    message: string;
+  };
+}
+
+export interface MeetingMinutes {
+  minute: string;
+  todo: string;
+}
+
+export interface SmartMinutesResponse {
+  meeting_minute: MeetingMinutes;
+  error_info?: {
+    error_code: number;
+    new_error_code?: number;
+    message: string;
+  };
+}
+
+export interface SmartMeetingMinutes {
+  minute: string;
+  todo: string;
+}
+
+export interface SmartMeetingMinutesResponse {
+  meeting_minute: SmartMeetingMinutes;
+  error_info?: {
+    error_code: number;
+    new_error_code?: number;
+    message: string;
+  };
+}
+
+export interface RecordingTranscriptWord {
+  wid: string;
+  start_time: number;
+  end_time: number;
+  text: string;
+}
+
+export interface RecordingTranscriptSentence {
+  sid: string;
+  start_time: number;
+  end_time: number;
+  words: RecordingTranscriptWord[];
+}
+
+export interface SpeakerInfo {
+  userid: string;
+  openId: string;
+  username: string;
+  ms_open_id: string;
+}
+
+export interface RecordingTranscriptParagraph {
+  pid: string;
+  start_time: number;
+  end_time: number;
+  sentences: RecordingTranscriptSentence[];
+  speaker_info: SpeakerInfo;
+}
+
+export interface RecordingTranscriptData {
+  paragraphs: RecordingTranscriptParagraph[];
+}
+
+export interface RecordingTranscriptResponse {
+  minutes: RecordingTranscriptData;
+  more: boolean;
   error_info?: {
     error_code: number;
     new_error_code?: number;

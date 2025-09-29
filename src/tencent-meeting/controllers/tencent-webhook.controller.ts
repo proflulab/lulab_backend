@@ -47,7 +47,6 @@ export class TencentWebhookController {
 
   constructor(
     private readonly tencentEventHandlerService: TencentEventHandlerService,
-    private readonly configService: ConfigService,
     private readonly tencentConfig: TencentMeetingConfigService,
   ) {}
 

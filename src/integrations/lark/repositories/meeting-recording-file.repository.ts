@@ -58,6 +58,8 @@ export class RecordingFileBitableRepository {
         ai_meeting_transcripts: recordingData.ai_meeting_transcripts,
       }),
       ...(recordingData.ai_minutes && { ai_minutes: recordingData.ai_minutes }),
+      ...(recordingData.todo && { todo: recordingData.todo }),
+      ...(recordingData.fullsummary && { fullsummary: recordingData.fullsummary }),
     };
 
     this.logger.log(
@@ -95,6 +97,8 @@ export class RecordingFileBitableRepository {
         ai_meeting_transcripts: recordingData.ai_meeting_transcripts,
       }),
       ...(recordingData.ai_minutes && { ai_minutes: recordingData.ai_minutes }),
+      ...(recordingData.todo && { todo: recordingData.todo }),
+      ...(recordingData.fullsummary && { fullsummary: recordingData.fullsummary }),
     };
 
     try {

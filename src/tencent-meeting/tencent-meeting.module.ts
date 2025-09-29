@@ -10,7 +10,6 @@
  */
 
 import { Module } from '@nestjs/common';
-import { HttpModule } from '@nestjs/axios';
 import { TencentWebhookController } from './controllers/tencent-webhook.controller';
 import { TencentMeetingService } from './services/tencent-meeting.service';
 import { TencentModule } from '../integrations/tencent-meeting/tencent.module';
@@ -21,11 +20,10 @@ import { MeetingStartedHandler } from './services/event-handlers/meeting-started
 import { MeetingEndedHandler } from './services/event-handlers/meeting-ended.handler';
 import { RecordingCompletedHandler } from './services/event-handlers/recording-completed.handler';
 import { MeetingParticipantJoinedHandler } from './services/event-handlers/meeting-participant-joined.handler';
-import { MeetingModule } from '../meeting/meeting.module';
 import { TencentMeetingConfigService } from './services/tencent-config.service';
 
 @Module({
-  imports: [HttpModule, LarkModule, MeetingModule, TencentModule],
+  imports: [LarkModule, TencentModule],
   controllers: [TencentWebhookController],
   providers: [
     TencentMeetingService,

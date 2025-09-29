@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { TencentMeetingService } from '@/tencent-meeting/services/tencent-meeting.service';
-import { TencentApiService } from '@/integrations/tencent-meeting/tencent-api.service';
+import { TencentApiService } from '@/integrations/tencent-meeting/api.service';
 import {
   RecordMeetingsResponse,
   MeetingDetailResponse,
