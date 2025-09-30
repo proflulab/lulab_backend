@@ -8,9 +8,13 @@ export class OpenaiService {
   private openai: OpenAI;
 
   constructor(private readonly configService: ConfigService) {
-    const apiKey = this.configService.get<string>('ARK_API_KEY') || 
-                   this.configService.get<string>('OPENAI_API_KEY') || '';
-    const baseURL = this.configService.get<string>('OPENAI_BASE_URL') || 'https://ark.cn-beijing.volces.com/api/v3';
+    const apiKey =
+      this.configService.get<string>('ARK_API_KEY') ||
+      this.configService.get<string>('OPENAI_API_KEY') ||
+      '';
+    const baseURL =
+      this.configService.get<string>('OPENAI_BASE_URL') ||
+      'https://ark.cn-beijing.volces.com/api/v3';
 
     if (!apiKey) {
       this.logger.warn('OpenAI API密钥未配置，OpenAI服务将不可用');
@@ -37,9 +41,16 @@ export class OpenaiService {
     },
   ): Promise<string> {
     try {
-      const configModel = this.configService.get<string>('OPENAI_MODEL') || '{TEMPLATE_ENDPOINT_ID}';
-      const configMaxTokens = parseInt(this.configService.get<string>('OPENAI_MAX_TOKENS') || '16000', 10);
-      const configTemperature = parseFloat(this.configService.get<string>('OPENAI_TEMPERATURE') || '0.7');
+      const configModel =
+        this.configService.get<string>('OPENAI_MODEL') ||
+        '{TEMPLATE_ENDPOINT_ID}';
+      const configMaxTokens = parseInt(
+        this.configService.get<string>('OPENAI_MAX_TOKENS') || '16000',
+        10,
+      );
+      const configTemperature = parseFloat(
+        this.configService.get<string>('OPENAI_TEMPERATURE') || '0.7',
+      );
 
       const completion = await this.openai.chat.completions.create({
         messages,
@@ -52,7 +63,8 @@ export class OpenaiService {
       this.logger.log(`OpenAI聊天完成，使用模型: ${model || configModel}`);
       return content || '';
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       this.logger.error(`OpenAI聊天完成失败: ${errorMessage}`);
       throw new Error(`OpenAI API调用失败: ${errorMessage}`);
     }
@@ -73,9 +85,16 @@ export class OpenaiService {
     },
   ): Promise<AsyncIterableIterator<string>> {
     try {
-      const configModel = this.configService.get<string>('OPENAI_MODEL') || '{TEMPLATE_ENDPOINT_ID}';
-      const configMaxTokens = parseInt(this.configService.get<string>('OPENAI_MAX_TOKENS') || '16000', 10);
-      const configTemperature = parseFloat(this.configService.get<string>('OPENAI_TEMPERATURE') || '0.7');
+      const configModel =
+        this.configService.get<string>('OPENAI_MODEL') ||
+        '{TEMPLATE_ENDPOINT_ID}';
+      const configMaxTokens = parseInt(
+        this.configService.get<string>('OPENAI_MAX_TOKENS') || '16000',
+        10,
+      );
+      const configTemperature = parseFloat(
+        this.configService.get<string>('OPENAI_TEMPERATURE') || '0.7',
+      );
 
       const stream = await this.openai.chat.completions.create({
         messages,
@@ -86,12 +105,13 @@ export class OpenaiService {
       });
 
       this.logger.log(`OpenAI流式聊天完成，使用模型: ${model || configModel}`);
-      
+
       // 将流转换为字符串迭代器
       const stringStream = this.convertStreamToStringIterator(stream);
       return stringStream;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       this.logger.error(`OpenAI流式聊天完成失败: ${errorMessage}`);
       throw new Error(`OpenAI API调用失败: ${errorMessage}`);
     }
@@ -100,7 +120,7 @@ export class OpenaiService {
   /**
    * 将OpenAI流转换为字符串迭代器
    */
-  private async* convertStreamToStringIterator(
+  private async *convertStreamToStringIterator(
     stream: AsyncIterable<OpenAI.Chat.ChatCompletionChunk>,
   ): AsyncIterableIterator<string> {
     for await (const part of stream) {

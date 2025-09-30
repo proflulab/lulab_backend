@@ -36,6 +36,20 @@ export class RecordingCompletedHandler extends BaseEventHandler {
     super();
   }
 
+  private getErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    if (typeof error === 'string') {
+      return error;
+    }
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return String(error);
+    }
+  }
+
   supports(event: string): boolean {
     return event === this.SUPPORTED_EVENT;
   }
@@ -99,9 +113,10 @@ export class RecordingCompletedHandler extends BaseEventHandler {
               );
             fullsummary = summaryResponse.ai_summary || '';
             this.logger.log(`获取智能摘要成功: ${file.record_file_id}`);
-          } catch (error) {
+          } catch (error: unknown) {
+            const errorMessage = this.getErrorMessage(error);
             this.logger.warn(
-              `获取智能摘要失败: ${file.record_file_id}, 错误: ${error.message}`,
+              `获取智能摘要失败: ${file.record_file_id}, 错误: ${errorMessage}`,
             );
           }
 
@@ -115,9 +130,10 @@ export class RecordingCompletedHandler extends BaseEventHandler {
             ai_minutes = minutesResponse.meeting_minute?.minute || '';
             todo = minutesResponse.meeting_minute?.todo || '';
             this.logger.log(`获取会议纪要成功: ${file.record_file_id}`);
-          } catch (error) {
+          } catch (error: unknown) {
+            const errorMessage = this.getErrorMessage(error);
             this.logger.warn(
-              `获取会议纪要失败: ${file.record_file_id}, 错误: ${error.message}`,
+              `获取会议纪要失败: ${file.record_file_id}, 错误: ${errorMessage}`,
             );
           }
 
@@ -129,37 +145,43 @@ export class RecordingCompletedHandler extends BaseEventHandler {
                 file.record_file_id,
                 meeting_info.creator.userid || '',
               );
-            
+
             if (transcriptResponse.minutes?.paragraphs) {
               // 格式化转写内容为指定格式
               const formattedLines: string[] = [];
-              
+
               for (const paragraph of transcriptResponse.minutes.paragraphs) {
-                const speakerName = paragraph.speaker_info?.username || '未知发言人';
-                
+                const speakerName =
+                  paragraph.speaker_info?.username || '未知发言人';
+
                 for (const sentence of paragraph.sentences) {
                   // 转换时间戳为分钟:秒格式
                   const startTime = sentence.start_time;
                   const minutes = Math.floor(startTime / 60000); // 转换为分钟
                   const seconds = Math.floor((startTime % 60000) / 1000); // 剩余的秒
-                  
+
                   // 获取句子文本（从words数组中提取）
                   const sentenceText = sentence.words
-                    .map(word => word.text)
+                    .map((word) => word.text)
                     .join('');
-                  
+
                   if (sentenceText.trim()) {
-                    formattedLines.push(`${speakerName}(${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}): ${sentenceText.trim()}`);
+                    formattedLines.push(
+                      `${speakerName}(${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}): ${sentenceText.trim()}`,
+                    );
                   }
                 }
               }
-              
+
               formattedTranscript = formattedLines.join('\n');
-              this.logger.log(`获取录音转写成功: ${file.record_file_id}, 共 ${formattedLines.length} 条记录`);
+              this.logger.log(
+                `获取录音转写成功: ${file.record_file_id}, 共 ${formattedLines.length} 条记录`,
+              );
             }
-          } catch (error) {
+          } catch (error: unknown) {
+            const errorMessage = this.getErrorMessage(error);
             this.logger.warn(
-              `获取录音转写失败: ${file.record_file_id}, 错误: ${error.message}`,
+              `获取录音转写失败: ${file.record_file_id}, 错误: ${errorMessage}`,
             );
           }
 
@@ -189,9 +211,10 @@ export class RecordingCompletedHandler extends BaseEventHandler {
             this.logger.log(
               `获取会议参与者成功: ${meeting_info.meeting_id}, 共 ${uniqueParticipants.length} 个唯一参与者`,
             );
-          } catch (error) {
+          } catch (error: unknown) {
+            const errorMessage = this.getErrorMessage(error);
             this.logger.warn(
-              `获取会议参与者失败: ${meeting_info.meeting_id}, 错误: ${error.message}`,
+              `获取会议参与者失败: ${meeting_info.meeting_id}, 错误: ${errorMessage}`,
             );
           }
 
@@ -204,7 +227,7 @@ export class RecordingCompletedHandler extends BaseEventHandler {
               fullsummary,
               todo,
               ai_minutes,
-              participants: uniqueParticipants.map(p => p.user_name),
+              participants: uniqueParticipants.map((p) => p.user_name),
               ai_meeting_transcripts: formattedTranscript,
             });
 
@@ -224,13 +247,14 @@ export class RecordingCompletedHandler extends BaseEventHandler {
                 phone_hase: participant.phone,
                 is_enterprise_user: participant.is_enterprise_user,
               });
-              
+
               this.logger.log(
                 `用户记录已创建/更新: ${participant.user_name} (${participant.uuid})`,
               );
-            } catch (error) {
+            } catch (error: unknown) {
+              const errorMessage = this.getErrorMessage(error);
               this.logger.warn(
-                `更新用户记录失败: ${participant.user_name} (${participant.uuid}), 错误: ${error.message}`,
+                `更新用户记录失败: ${participant.user_name} (${participant.uuid}), 错误: ${errorMessage}`,
               );
             }
           }

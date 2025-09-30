@@ -11,7 +11,6 @@
 
 import { Module } from '@nestjs/common';
 import { TencentWebhookController } from './controllers/tencent-webhook.controller';
-import { TencentMeetingService } from './services/tencent-meeting.service';
 import { TencentModule } from '../integrations/tencent-meeting/tencent.module';
 import { TencentEventHandlerService } from './services/tencent-event-handler.service';
 import { LarkModule } from '../integrations/lark/lark.module';
@@ -26,7 +25,6 @@ import { TencentMeetingConfigService } from './services/tencent-config.service';
   imports: [LarkModule, TencentModule],
   controllers: [TencentWebhookController],
   providers: [
-    TencentMeetingService,
     TencentEventHandlerService,
     TencentMeetingConfigService,
     EventHandlerFactory,
@@ -35,6 +33,6 @@ import { TencentMeetingConfigService } from './services/tencent-config.service';
     RecordingCompletedHandler,
     MeetingParticipantJoinedHandler,
   ],
-  exports: [TencentMeetingService],
+  exports: [],
 })
 export class TencentMeetingModule {}

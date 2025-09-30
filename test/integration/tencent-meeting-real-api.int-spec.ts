@@ -16,6 +16,20 @@ import {
 // 加载测试环境变量
 config({ path: '.env.test' });
 
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+};
+
 /**
  * 腾讯会议真实API集成测试
  *
@@ -116,18 +130,19 @@ describe('Tencent Meeting Real API Integration Tests', () => {
             record_files_count: firstMeeting.record_files?.length || 0,
           });
         }
-      } catch (error) {
-        console.error('❌ 获取会议记录失败:', error.message);
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error);
+        console.error('❌ 获取会议记录失败:', errorMessage);
 
         // 处理常见的API错误
-        if (error.message.includes('IP白名单错误')) {
+        if (errorMessage.includes('IP白名单错误')) {
           console.error('💡 请确保你的IP地址已添加到腾讯会议应用的白名单中');
-        } else if (error.message.includes('unregistered user')) {
+        } else if (errorMessage.includes('unregistered user')) {
           console.warn('⚠️  用户未注册或无权限访问，跳过此测试');
           return; // 跳过测试而不是失败
         } else if (
-          error.message.includes('Empty response') ||
-          error.message.includes('Invalid JSON')
+          errorMessage.includes('Empty response') ||
+          errorMessage.includes('Invalid JSON')
         ) {
           console.warn('⚠️  API返回空响应或无效JSON，可能是服务暂时不可用');
           return; // 跳过测试而不是失败
@@ -185,16 +200,17 @@ describe('Tencent Meeting Real API Integration Tests', () => {
         } else {
           console.warn('⚠️  没有找到会议记录，跳过会议详情测试');
         }
-      } catch (error) {
-        console.error('❌ 获取会议详情失败:', error.message);
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error);
+        console.error('❌ 获取会议详情失败:', errorMessage);
 
         // 处理常见的API错误
-        if (error.message.includes('unregistered user')) {
+        if (errorMessage.includes('unregistered user')) {
           console.warn('⚠️  用户未注册或无权限访问，跳过此测试');
           return; // 跳过测试而不是失败
         } else if (
-          error.message.includes('Empty response') ||
-          error.message.includes('Invalid JSON')
+          errorMessage.includes('Empty response') ||
+          errorMessage.includes('Invalid JSON')
         ) {
           console.warn('⚠️  API返回空响应或无效JSON，可能是服务暂时不可用');
           return; // 跳过测试而不是失败
@@ -228,8 +244,9 @@ describe('Tencent Meeting Real API Integration Tests', () => {
 
           expect(recordingDetail).toBeDefined();
           expect(recordingDetail.record_file_id).toBe(testFileId);
-        } catch (error) {
-          console.error('❌ 获取录制文件详情失败:', error.message);
+        } catch (error: unknown) {
+          const errorMessage = getErrorMessage(error);
+          console.error('❌ 获取录制文件详情失败:', errorMessage);
           throw error;
         }
       } else {
@@ -269,20 +286,21 @@ describe('Tencent Meeting Real API Integration Tests', () => {
               });
             });
           }
-        } catch (error) {
-          console.error('❌ 获取转录文本失败:', error.message);
+        } catch (error: unknown) {
+          const errorMessage = getErrorMessage(error);
+          console.error('❌ 获取转录文本失败:', errorMessage);
 
           // 处理各种API错误情况
           if (
-            error.message.includes('没有转录文本') ||
-            error.message.includes('transcript') ||
-            error.message.includes('Empty response') ||
-            error.message.includes('Invalid JSON') ||
-            error.message.includes('Unexpected end of JSON input')
+            errorMessage.includes('没有转录文本') ||
+            errorMessage.includes('transcript') ||
+            errorMessage.includes('Empty response') ||
+            errorMessage.includes('Invalid JSON') ||
+            errorMessage.includes('Unexpected end of JSON input')
           ) {
             console.warn('⚠️  该录制文件可能没有转录文本或API返回异常');
             return; // 跳过测试而不是失败
-          } else if (error.message.includes('unregistered user')) {
+          } else if (errorMessage.includes('unregistered user')) {
             console.warn('⚠️  用户未注册或无权限访问，跳过此测试');
             return;
           }
@@ -299,6 +317,52 @@ describe('Tencent Meeting Real API Integration Tests', () => {
     it('should get smart minutes if available', async () => {
       const userId = configService.get<string>('USER_ID');
       const testFileId = TEST_CONFIG.TEST_RECORDING_FILE_ID;
+
+      if (testFileId && testFileId !== 'test-recording-file-id') {
+        try {
+          const smartMinutes: SmartMeetingMinutesResponse =
+            await apiService.getSmartMeetingMinutes(
+              testFileId,
+              userId || '',
+              1,
+            );
+
+          console.log('🧠 基础AI会议纪要:', {
+            has_meeting_minute: !!smartMinutes.meeting_minute,
+            has_minute: !!smartMinutes.meeting_minute?.minute,
+            has_todo: !!smartMinutes.meeting_minute?.todo,
+          });
+
+          expect(smartMinutes).toBeDefined();
+          if (smartMinutes.meeting_minute) {
+            expect(smartMinutes.meeting_minute.minute).toBeDefined();
+          }
+        } catch (error: unknown) {
+          const errorMessage = getErrorMessage(error);
+          console.error('❌ 获取基础智能会议纪要失败:', errorMessage);
+
+          if (
+            errorMessage.includes('没有智能分析结果') ||
+            errorMessage.includes('minutes') ||
+            errorMessage.includes('Empty response') ||
+            errorMessage.includes('Invalid JSON') ||
+            errorMessage.includes('Unexpected end of JSON input')
+          ) {
+            console.warn('⚠️  该录制文件可能没有智能会议纪要或API返回异常');
+            return; // 跳过测试而不是失败
+          } else if (errorMessage.includes('unregistered user')) {
+            console.warn('⚠️  用户未注册或无权限访问，跳过此测试');
+            return;
+          }
+
+          throw error;
+        }
+      } else {
+        console.warn(
+          '⚠️  未配置TEST_RECORDING_FILE_ID，跳过基础智能会议纪要测试',
+        );
+      }
+    }, 30000);
 
     it('should get smart topics if available', async () => {
       const userId = configService.get<string>('USER_ID');
@@ -327,20 +391,21 @@ describe('Tencent Meeting Real API Integration Tests', () => {
               });
             });
           }
-        } catch (error) {
-          console.error('❌ 获取AI讨论主题失败:', error.message);
+        } catch (error: unknown) {
+          const errorMessage = getErrorMessage(error);
+          console.error('❌ 获取AI讨论主题失败:', errorMessage);
 
           // 处理各种API错误情况
           if (
-            error.message.includes('没有智能分析结果') ||
-            error.message.includes('topics') ||
-            error.message.includes('Empty response') ||
-            error.message.includes('Invalid JSON') ||
-            error.message.includes('Unexpected end of JSON input')
+            errorMessage.includes('没有智能分析结果') ||
+            errorMessage.includes('topics') ||
+            errorMessage.includes('Empty response') ||
+            errorMessage.includes('Invalid JSON') ||
+            errorMessage.includes('Unexpected end of JSON input')
           ) {
             console.warn('⚠️  该录制文件可能没有AI讨论主题或API返回异常');
             return; // 跳过测试而不是失败
-          } else if (error.message.includes('unregistered user')) {
+          } else if (errorMessage.includes('unregistered user')) {
             console.warn('⚠️  用户未注册或无权限访问，跳过此测试');
             return;
           }
@@ -402,21 +467,22 @@ describe('Tencent Meeting Real API Integration Tests', () => {
 
           expect(englishSummary).toBeDefined();
           expect(englishSummary.ai_summary).toBeDefined();
-        } catch (error) {
-          console.error('❌ 获取多语言完整总结失败:', error.message);
+        } catch (error: unknown) {
+          const errorMessage = getErrorMessage(error);
+          console.error('❌ 获取多语言完整总结失败:', errorMessage);
 
           // 处理各种API错误情况
           if (
-            error.message.includes('没有智能分析结果') ||
-            error.message.includes('fullsummary') ||
-            error.message.includes('暂无智能化数据') ||
-            error.message.includes('Empty response') ||
-            error.message.includes('Invalid JSON') ||
-            error.message.includes('Unexpected end of JSON input')
+            errorMessage.includes('没有智能分析结果') ||
+            errorMessage.includes('fullsummary') ||
+            errorMessage.includes('暂无智能化数据') ||
+            errorMessage.includes('Empty response') ||
+            errorMessage.includes('Invalid JSON') ||
+            errorMessage.includes('Unexpected end of JSON input')
           ) {
             console.warn('⚠️  该录制文件可能没有AI完整总结或API返回异常');
             return; // 跳过测试而不是失败
-          } else if (error.message.includes('unregistered user')) {
+          } else if (errorMessage.includes('unregistered user')) {
             console.warn('⚠️  用户未注册或无权限访问，跳过此测试');
             return;
           }
@@ -450,7 +516,8 @@ describe('Tencent Meeting Real API Integration Tests', () => {
           console.log('📋 按章节分类的AI会议纪要:', {
             has_meeting_minute: !!chapterMinutes.meeting_minute,
             has_minute: !!chapterMinutes.meeting_minute?.minute,
-            minute_preview: chapterMinutes.meeting_minute?.minute?.substring(0, 200) + '...',
+            minute_preview:
+              chapterMinutes.meeting_minute?.minute?.substring(0, 200) + '...',
             has_todo: !!chapterMinutes.meeting_minute?.todo,
           });
 
@@ -473,7 +540,8 @@ describe('Tencent Meeting Real API Integration Tests', () => {
           console.log('🏷️ 按主题分类的AI会议纪要:', {
             has_meeting_minute: !!topicMinutes.meeting_minute,
             has_minute: !!topicMinutes.meeting_minute?.minute,
-            minute_preview: topicMinutes.meeting_minute?.minute?.substring(0, 200) + '...',
+            minute_preview:
+              topicMinutes.meeting_minute?.minute?.substring(0, 200) + '...',
             has_todo: !!topicMinutes.meeting_minute?.todo,
           });
 
@@ -498,7 +566,8 @@ describe('Tencent Meeting Real API Integration Tests', () => {
           console.log('🗣️ 按发言人分类的AI会议纪要:', {
             has_meeting_minute: !!speakerMinutes.meeting_minute,
             has_minute: !!speakerMinutes.meeting_minute?.minute,
-            minute_preview: speakerMinutes.meeting_minute?.minute?.substring(0, 200) + '...',
+            minute_preview:
+              speakerMinutes.meeting_minute?.minute?.substring(0, 200) + '...',
             has_todo: !!speakerMinutes.meeting_minute?.todo,
           });
 
@@ -506,21 +575,22 @@ describe('Tencent Meeting Real API Integration Tests', () => {
           if (speakerMinutes.meeting_minute) {
             expect(speakerMinutes.meeting_minute.minute).toBeDefined();
           }
-        } catch (error) {
-          console.error('❌ 获取智能会议纪要失败:', error.message);
+        } catch (error: unknown) {
+          const errorMessage = getErrorMessage(error);
+          console.error('❌ 获取智能会议纪要失败:', errorMessage);
 
           // 处理各种API错误情况
           if (
-            error.message.includes('没有智能分析结果') ||
-            error.message.includes('minutes') ||
-            error.message.includes('暂无智能化数据') ||
-            error.message.includes('Empty response') ||
-            error.message.includes('Invalid JSON') ||
-            error.message.includes('Unexpected end of JSON input')
+            errorMessage.includes('没有智能分析结果') ||
+            errorMessage.includes('minutes') ||
+            errorMessage.includes('暂无智能化数据') ||
+            errorMessage.includes('Empty response') ||
+            errorMessage.includes('Invalid JSON') ||
+            errorMessage.includes('Unexpected end of JSON input')
           ) {
             console.warn('⚠️  该录制文件可能没有智能会议纪要或API返回异常');
             return; // 跳过测试而不是失败
-          } else if (error.message.includes('unregistered user')) {
+          } else if (errorMessage.includes('unregistered user')) {
             console.warn('⚠️  用户未注册或无权限访问，跳过此测试');
             return;
           }
@@ -557,7 +627,7 @@ describe('Tencent Meeting Real API Integration Tests', () => {
 
           // 测试基本参与者查询
           const participants: MeetingParticipantsResponse =
-            await apiService.getMeetingParticipants(
+            await apiService.getParticipants(
               meetingId,
               userId || '',
               null, // subMeetingId
@@ -578,7 +648,7 @@ describe('Tencent Meeting Real API Integration Tests', () => {
 
           // 测试带时间过滤的参与者查询
           const filteredParticipants: MeetingParticipantsResponse =
-            await apiService.getMeetingParticipants(
+            await apiService.getParticipants(
               meetingId,
               userId || '',
               null, // subMeetingId
@@ -618,7 +688,8 @@ describe('Tencent Meeting Real API Integration Tests', () => {
             filteredParticipants.participants &&
             filteredParticipants.participants.length > 0
           ) {
-            const firstFilteredParticipant = filteredParticipants.participants[0];
+            const firstFilteredParticipant =
+              filteredParticipants.participants[0];
             console.log('🎯 时间过滤后的第一个参与者:', {
               user_name: firstFilteredParticipant.user_name,
               join_time: firstFilteredParticipant.join_time,
@@ -630,16 +701,17 @@ describe('Tencent Meeting Real API Integration Tests', () => {
         } else {
           console.warn('⚠️  没有找到会议记录，跳过参与者查询测试');
         }
-      } catch (error) {
-        console.error('❌ 获取会议参与者失败:', error.message);
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error);
+        console.error('❌ 获取会议参与者失败:', errorMessage);
 
         // 处理常见的API错误
-        if (error.message.includes('unregistered user')) {
+        if (errorMessage.includes('unregistered user')) {
           console.warn('⚠️  用户未注册或无权限访问，跳过此测试');
           return; // 跳过测试而不是失败
         } else if (
-          error.message.includes('Empty response') ||
-          error.message.includes('Invalid JSON')
+          errorMessage.includes('Empty response') ||
+          errorMessage.includes('Invalid JSON')
         ) {
           console.warn('⚠️  API返回空响应或无效JSON，可能是服务暂时不可用');
           return; // 跳过测试而不是失败
@@ -672,7 +744,7 @@ describe('Tencent Meeting Real API Integration Tests', () => {
 
           // 测试分页查询
           const firstPage: MeetingParticipantsResponse =
-            await apiService.getMeetingParticipants(
+            await apiService.getParticipants(
               meetingId,
               userId || '',
               null, // subMeetingId
@@ -691,7 +763,7 @@ describe('Tencent Meeting Real API Integration Tests', () => {
           // 如果有更多参与者，测试第二页
           if (firstPage.has_remaining && firstPage.total_count > 5) {
             const secondPage: MeetingParticipantsResponse =
-              await apiService.getMeetingParticipants(
+              await apiService.getParticipants(
                 meetingId,
                 userId || '',
                 null, // subMeetingId
@@ -710,10 +782,11 @@ describe('Tencent Meeting Real API Integration Tests', () => {
         } else {
           console.warn('⚠️  没有找到会议记录，跳过分页测试');
         }
-      } catch (error) {
-        console.error('❌ 分页查询参与者失败:', error.message);
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error);
+        console.error('❌ 分页查询参与者失败:', errorMessage);
 
-        if (error.message.includes('unregistered user')) {
+        if (errorMessage.includes('unregistered user')) {
           console.warn('⚠️  用户未注册或无权限访问，跳过此测试');
           return;
         }
@@ -765,31 +838,32 @@ describe('Tencent Meeting Real API Integration Tests', () => {
       try {
         await apiService.getMeetingDetail(invalidMeetingId, userId || '');
         fail('应该抛出错误');
-      } catch (error) {
-        console.log('🎯 无效会议ID错误处理:', error.message);
-        expect(error.message).toBeDefined();
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error);
+        console.log('🎯 无效会议ID错误处理:', errorMessage);
+        expect(errorMessage).toBeDefined();
 
         // 验证错误信息是否合理 - 更宽松的验证逻辑
-        const errorMessage = error.message.toLowerCase();
+        const normalizedMessage = errorMessage.toLowerCase();
         const hasValidErrorMessage =
-          errorMessage.includes('会议') ||
-          errorMessage.includes('meeting') ||
-          errorMessage.includes('不存在') ||
-          errorMessage.includes('not found') ||
-          errorMessage.includes('invalid') ||
-          errorMessage.includes('error') ||
-          errorMessage.includes('unregistered') ||
-          errorMessage.includes('ip白名单') ||
-          errorMessage.includes('empty response') ||
-          errorMessage.includes('json');
+          normalizedMessage.includes('会议') ||
+          normalizedMessage.includes('meeting') ||
+          normalizedMessage.includes('不存在') ||
+          normalizedMessage.includes('not found') ||
+          normalizedMessage.includes('invalid') ||
+          normalizedMessage.includes('error') ||
+          normalizedMessage.includes('unregistered') ||
+          normalizedMessage.includes('ip白名单') ||
+          normalizedMessage.includes('empty response') ||
+          normalizedMessage.includes('json');
 
         // 如果是常见的API错误，认为测试通过
         if (hasValidErrorMessage) {
           expect(hasValidErrorMessage).toBeTruthy();
         } else {
           // 如果是未知错误，记录但不让测试失败
-          console.warn('⚠️  收到未预期的错误信息:', error.message);
-          expect(error.message).toBeDefined(); // 至少确保有错误信息
+          console.warn('⚠️  收到未预期的错误信息:', errorMessage);
+          expect(errorMessage).toBeDefined(); // 至少确保有错误信息
         }
       }
     }, 15000);

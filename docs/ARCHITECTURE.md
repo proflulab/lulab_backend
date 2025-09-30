@@ -98,7 +98,6 @@
   - MeetingEndedHandler：会议结束事件
   - RecordingCompletedHandler：录制完成事件
 - **服务层**：
-  - TencentMeetingService：业务服务封装
   - TencentEventHandlerService：Webhook 事件分发
   - TencentMeetingConfigService：配置管理
 - **控制器**：

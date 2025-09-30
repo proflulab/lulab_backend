@@ -93,9 +93,12 @@ export async function aesDecrypt(
     decrypted = Buffer.concat([decrypted, decipher.final()]);
 
     // Convert to UTF-8 string
-    return decrypted.toString('utf-8');
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
+    const plaintext = decrypted.toString('utf-8');
+    await Promise.resolve();
+    return plaintext;
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : JSON.stringify(error);
     throw new Error(`AES decryption failed: ${errorMessage}`);
   }
 }
