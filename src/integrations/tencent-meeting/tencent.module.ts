@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { TencentApiService } from './tencent-api.service';
+import { TencentApiService } from './api.service';
 
 @Module({
   imports: [ConfigModule],

@@ -1,32 +1,33 @@
 # Repository Guidelines
 
-This NestJS monorepo underpins multiple meeting and integration services. Use this guide to stay aligned with the core structure, tooling, and review expectations so CI stays green and releases remain predictable.
-
 ## Project Structure & Module Organization
-- `src/` holds domain modules (controllers, services, guards); keep features isolated by folder such as `src/auth/**` or `src/tencent-meeting/**`.
-- `libs/` provides reusable packages, including Lark integrations and shared utilities; prefer publishing cross-cutting logic here instead of duplicating it under `src/`.
-- `prisma/` manages database concerns (`schema.prisma`, `migrations/`, `seeds/`), while `test/` mirrors all suites (`unit/`, `integration/`, `system/`, `e2e/`); `docs/`, `scripts/`, and `dist/` round out documentation, tooling, and build outputs.
+- Keep feature code under `src/` by domain (e.g., `src/auth`, `src/tencent-meeting`) so controllers, services, and guards stay co-located.
+- Place reusable integrations and utilities in `libs/` and import them with `@libs/` instead of duplicating logic.
+- Manage database artifacts in `prisma/` (`schema.prisma`, `migrations/`, `seed.ts`) and mirror test coverage under `test/` (`unit/`, `integration/`, `system/`, `e2e/`).
+- Reserve `docs/`, `scripts/`, and `dist/` for documentation, tooling helpers, and build outputs respectively.
 
 ## Build, Test, and Development Commands
-- `pnpm start:dev` launches the API in watch mode; `pnpm start:prod` runs the compiled bundle from `dist/`.
-- `pnpm build` transpiles TypeScript; `pnpm lint` and `pnpm format` enforce ESLint and Prettier conventions.
-- `pnpm test`, `pnpm test:e2e`, `pnpm test:integration`, and `pnpm test:system` execute targeted suites; `pnpm test:ci` runs everything with coverage. DB workflows rely on `pnpm db:generate`, `pnpm db:push`, `pnpm db:migrate`, and related commands.
+- `pnpm start:dev` runs the API in watch mode with hot reload; `pnpm start:prod` executes the compiled bundle from `dist/`.
+- `pnpm build` transpiles TypeScript; run `pnpm lint` and `pnpm format` before pushing to satisfy ESLint and Prettier.
+- Use `pnpm db:generate`, `pnpm db:push`, and `pnpm db:seed` to evolve the Prisma schema and provision data locally.
 
 ## Coding Style & Naming Conventions
-- Code in TypeScript with 2-space indentation, `singleQuote: true`, and `trailingComma: all` via Prettier.
-- Use ESLint (`@typescript-eslint`) for linting; prefer explicit return types in public APIs when clarity matters.
-- Filenames stay kebab-case; classes/interfaces use PascalCase; variables camelCase. Suffix DTOs (`*.dto.ts`), exceptions, decorators, and shared types appropriately. Import with `@/` for `src` and `@libs/` for shared packages.
+- Write TypeScript with 2-space indentation, single quotes, and trailing commas; rely on Prettier for formatting.
+- Enforce `@typescript-eslint` rules via `pnpm lint`; ensure public APIs expose explicit return types when clarity matters.
+- Keep filenames kebab-case, class/interface names PascalCase, and variables camelCase; suffix DTOs, guards, and decorators appropriately.
+- Import local modules through `@/` for `src` paths and `@libs/` for shared packages.
 
 ## Testing Guidelines
-- Tests run on Jest with Supertest for e2e flows; configuration lives in `jest.config.ts`.
-- Naming: unit `src/**/*.spec.ts`, integration `test/integration/**/*.int-spec.ts`, e2e `test/e2e/**/*.e2e-spec.ts`, system `test/system/**/*.spec.ts`.
-- Maintain ≥80% coverage across branches/functions/lines/statements; before pushing, execute `pnpm lint && pnpm test:all` (or `pnpm test:ci`).
+- Jest drives all suites; execute `pnpm test` for unit coverage, `pnpm test:e2e` for end-to-end flows, `pnpm test:integration`, and `pnpm test:system` as needed.
+- Follow naming standards: `src/**/*.spec.ts`, `test/integration/**/*.int-spec.ts`, `test/e2e/**/*.e2e-spec.ts`, and `test/system/**/*.spec.ts`.
+- Maintain ≥80% coverage across statements, branches, functions, and lines; use `pnpm test:ci` for the full gated pipeline.
 
 ## Commit & Pull Request Guidelines
-- Follow Conventional Commits such as `feat(meeting): enable breakout sessions` or `fix(auth): refresh token expiry`.
-- PRs need scope summaries, linked issues, schema or `.env` updates, and supporting evidence (e.g., migration diff, Swagger screenshot, or logs). Confirm lint, tests, and coverage pass before requesting review.
+- Use Conventional Commits (e.g., `feat(meeting): enable breakout sessions`, `fix(auth): refresh token expiry`).
+- PRs should summarize scope, link issues, note schema or `.env` updates, and attach supporting evidence such as migration diffs or API snapshots.
+- Confirm `pnpm lint` and relevant test suites pass before requesting review, and highlight any risk or rollback considerations.
 
 ## Security & Configuration Tips
-- Never commit secrets; base local configs on `.env.example` and document new keys.
-- Provision databases with `pnpm db:generate && pnpm db:push` and `pnpm db:seed` when sample data helps.
-- Rotate `JWT_*` and third-party credentials regularly and restrict Tencent Meeting IP allowlists to required ranges.
+- Never commit secrets; base local configuration on `.env.example` and document new environment keys.
+- Rotate `JWT_*` and third-party credentials regularly and restrict Tencent Meeting allowlists to required IP ranges.
+- When schema changes occur, run `pnpm db:migrate && pnpm db:seed` to keep local environments aligned.

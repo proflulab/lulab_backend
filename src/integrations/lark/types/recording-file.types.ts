@@ -7,4 +7,6 @@ export interface RecordingFileData {
   meeting_summary?: string;
   ai_meeting_transcripts?: string;
   ai_minutes?: string;
+  todo?: string;
+  fullsummary?: string;
 }

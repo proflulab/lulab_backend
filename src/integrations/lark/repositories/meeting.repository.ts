@@ -7,7 +7,7 @@ import {
   BitableField,
   SearchFilter,
   SearchRecordResponse,
-} from '../types/lark.types';
+} from '../types/lark-bitable.types';
 import { larkConfig } from '../config/lark.config';
 import { MeetingData } from '../types';
 

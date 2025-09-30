@@ -6,10 +6,10 @@ import {
   RecordMeetingsResponse,
   MeetingParticipantsResponse,
   MeetingDetailResponse,
-  RecordingTranscriptDetail,
-  SmartMinutesResponse,
-  SmartSummaryResponse,
   SmartTopicsResponse,
+  SmartFullSummaryResponse,
+  SmartMeetingMinutesResponse,
+  RecordingTranscriptResponse,
 } from './types';
 
 /**
@@ -140,6 +140,7 @@ export class TencentApiService {
 
   /**
    * Retrieves detailed information about a recording file
+   * https://cloud.tencent.com/document/product/1095/51180
    * @param fileId - Unique identifier of the recording file
    * @param userId - User ID making the request
    * @returns Promise resolving to recording file details
@@ -155,6 +156,7 @@ export class TencentApiService {
 
   /**
    * Retrieves corporate meeting records within a specified time range
+   * https://cloud.tencent.com/document/product/1095/53224
    * Supports pagination and filtering by operator
    * @param startTime - Start timestamp (Unix timestamp in seconds)
    * @param endTime - End timestamp (Unix timestamp in seconds)
@@ -191,20 +193,46 @@ export class TencentApiService {
 
   /**
    * Retrieves detailed information about a specific meeting
+   * https://cloud.tencent.com/document/product/1095/93432#9bc6b875-6415-4cda-931e-0d987e4da5bf
    * @param meetingId - Unique meeting identifier
-   * @param userId - User ID making the request
-   * @param instanceId - Meeting instance ID (default '1')
+   * @param userId - User ID making the request (required if operatorId is not provided)
+   * @param instanceId - Meeting instance ID (default: 1)
+   * @param operatorId - Operator ID (optional, if provided takes precedence over userId)
+   * @param operatorIdType - Operator ID type (default: 1 for userid)
+   * @param subMeetingId - Sub-meeting ID for recurring meetings (optional)
    * @returns Promise resolving to meeting details
    */
   async getMeetingDetail(
     meetingId: string,
-    userId: string,
-    instanceId: string = '1',
+    userId?: string,
+    instanceId: number = 1,
+    operatorId?: string,
+    operatorIdType: number = 1,
+    subMeetingId?: string,
   ): Promise<MeetingDetailResponse> {
+    const queryParams: Record<string, unknown> = {
+      instanceid: instanceId,
+    };
+
+    // 根据文档，operator_id和userid二者必填一项，若两者都填，以operator_id字段为准
+    if (operatorId) {
+      queryParams.operator_id = operatorId;
+      queryParams.operator_id_type = operatorIdType;
+    } else if (userId) {
+      queryParams.userid = userId;
+    } else {
+      throw new Error('Either operatorId or userId must be provided');
+    }
+
+    // 添加子会议ID（用于周期性会议）
+    if (subMeetingId) {
+      queryParams.sub_meeting_id = subMeetingId;
+    }
+
     return this.sendRequest<MeetingDetailResponse>(
       'GET',
       `/v1/meetings/${meetingId}`,
-      { userid: userId, instanceid: instanceId },
+      queryParams,
     );
   }
 
@@ -220,7 +248,7 @@ export class TencentApiService {
    * @param endTime - Filter by participant join end time (Unix timestamp in seconds)
    * @returns Promise resolving to meeting participants list
    */
-  async getMeetingParticipants(
+  async getParticipants(
     meetingId: string,
     userId: string,
     subMeetingId?: string | null,
@@ -258,61 +286,6 @@ export class TencentApiService {
   }
 
   /**
-   * Retrieves transcript details for a recording file with pagination
-   * @param fileId - Unique identifier of the recording file
-   * @param userId - User ID making the request
-   * @param page - Page number for pagination
-   * @param pageSize - Number of transcript entries per page
-   * @returns Promise resolving to paginated transcript details
-   */
-  async getRecordingTranscriptDetail(
-    fileId: string,
-    userId: string,
-    page: number,
-    pageSize: number,
-  ): Promise<RecordingTranscriptDetail> {
-    return this.sendRequest<RecordingTranscriptDetail>(
-      'GET',
-      `/v1/recording/${fileId}/transcripts`,
-      { userid: userId, page, page_size: pageSize },
-    );
-  }
-
-  /**
-   * Retrieves AI-generated meeting minutes for a recording
-   * @param fileId - Unique identifier of the recording file
-   * @param userId - User ID making the request
-   * @returns Promise resolving to smart meeting minutes
-   */
-  async getSmartMinutes(
-    fileId: string,
-    userId: string,
-  ): Promise<SmartMinutesResponse> {
-    return this.sendRequest<SmartMinutesResponse>(
-      'GET',
-      `/v1/recording/${fileId}/minutes`,
-      { userid: userId },
-    );
-  }
-
-  /**
-   * Retrieves AI-generated meeting summary for a recording
-   * @param fileId - Unique identifier of the recording file
-   * @param userId - User ID making the request
-   * @returns Promise resolving to smart meeting summary
-   */
-  async getSmartSummary(
-    fileId: string,
-    userId: string,
-  ): Promise<SmartSummaryResponse> {
-    return this.sendRequest<SmartSummaryResponse>(
-      'GET',
-      `/v1/recording/${fileId}/summary`,
-      { userid: userId },
-    );
-  }
-
-  /**
    * Retrieves AI-generated discussion topics for a recording
    * https://cloud.tencent.com/document/product/1095/105660
    * @param fileId - Unique identifier of the recording file
@@ -327,6 +300,139 @@ export class TencentApiService {
       'GET',
       `/v1/recording/${fileId}/topics`,
       { userid: userId },
+    );
+  }
+
+  /**
+   * Retrieves AI-generated full summary for a recording
+   * https://cloud.tencent.com/document/product/1095/105661
+   * @param recordFileId - Unique identifier of the recording file
+   * @param operatorId - Operator ID making the request
+   * @param operatorIdType - Operator ID type (1: userid, 2: openid)
+   * @param lang - Translation type (default: 'default', options: 'zh', 'en', 'ja')
+   * @param pwd - Optional password for accessing the recording file
+   * @returns Promise resolving to smart full summary
+   */
+  async getSmartFullSummary(
+    recordFileId: string,
+    operatorId: string,
+    operatorIdType: number = 1,
+    lang?: string,
+    pwd?: string,
+  ): Promise<SmartFullSummaryResponse> {
+    const queryParams: Record<string, unknown> = {
+      record_file_id: recordFileId,
+      operator_id: operatorId,
+      operator_id_type: operatorIdType,
+    };
+
+    // Add optional parameters if provided
+    if (lang) {
+      queryParams.lang = lang;
+    }
+    if (pwd) {
+      queryParams.pwd = pwd;
+    }
+
+    return this.sendRequest<SmartFullSummaryResponse>(
+      'GET',
+      '/v1/smart/fullsummary',
+      queryParams,
+    );
+  }
+
+  /**
+   * Retrieves AI-generated meeting minutes for a recording
+   * https://cloud.tencent.com/document/product/1095/109458
+   * @param recordFileId - Unique identifier of the recording file
+   * @param operatorId - Operator ID making the request
+   * @param operatorIdType - Operator ID type (1: userid, 2: openid)
+   * @param minuteType - Meeting summary return category (1: by chapter, 2: by topic, 3: by speaker)
+   * @param textType - Return text type (1: plain text, 2: markdown)
+   * @param lang - Translation type (default: 'default', options: 'zh', 'en', 'ja')
+   * @param pwd - Optional password for accessing the recording file
+   * @param llm - Model selection (1: Hunyuan (default), 2: DeepSeek)
+   * @returns Promise resolving to smart meeting minutes
+   */
+  async getSmartMeetingMinutes(
+    recordFileId: string,
+    operatorId: string,
+    operatorIdType: number = 1,
+    minuteType?: number,
+    textType?: number,
+    lang?: string,
+    pwd?: string,
+    llm?: number,
+  ): Promise<SmartMeetingMinutesResponse> {
+    const queryParams: Record<string, unknown> = {
+      operator_id: operatorId,
+      operator_id_type: operatorIdType,
+    };
+
+    // Add optional parameters if provided
+    if (minuteType !== undefined) {
+      queryParams.minute_type = minuteType;
+    }
+    if (textType !== undefined) {
+      queryParams.text_type = textType;
+    }
+    if (lang) {
+      queryParams.lang = lang;
+    }
+    if (pwd) {
+      queryParams.pwd = pwd;
+    }
+    if (llm !== undefined) {
+      queryParams.llm = llm;
+    }
+
+    return this.sendRequest<SmartMeetingMinutesResponse>(
+      'GET',
+      `/v1/smart/minutes/${recordFileId}`,
+      queryParams,
+    );
+  }
+
+  /**
+   * Retrieves recording transcript details for a recording file
+   * https://cloud.tencent.com/document/product/1095/65111
+   * @param recordFileId - Unique identifier of the recording file
+   * @param operatorId - Operator ID making the request
+   * @param operatorIdType - Operator ID type (1: userid, 2: openid)
+   * @param page - Page number for pagination
+   * @param pageSize - Number of transcript entries per page
+   * @param pwd - Optional password for accessing the recording file
+   * @returns Promise resolving to recording transcript details
+   */
+  async getTranscript(
+    recordFileId: string,
+    operatorId: string,
+    operatorIdType: number = 1,
+    page?: number,
+    pageSize?: number,
+    pwd?: string,
+  ): Promise<RecordingTranscriptResponse> {
+    const queryParams: Record<string, unknown> = {
+      record_file_id: recordFileId,
+      operator_id: operatorId,
+      operator_id_type: operatorIdType,
+    };
+
+    // Add optional parameters if provided
+    if (page !== undefined) {
+      queryParams.page = page;
+    }
+    if (pageSize !== undefined) {
+      queryParams.page_size = pageSize;
+    }
+    if (pwd) {
+      queryParams.pwd = pwd;
+    }
+
+    return this.sendRequest<RecordingTranscriptResponse>(
+      'GET',
+      `/v1/records/transcripts/details`,
+      queryParams,
     );
   }
 }
