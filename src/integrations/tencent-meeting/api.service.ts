@@ -248,7 +248,7 @@ export class TencentApiService {
    * @param endTime - Filter by participant join end time (Unix timestamp in seconds)
    * @returns Promise resolving to meeting participants list
    */
-  async getMeetingParticipants(
+  async getParticipants(
     meetingId: string,
     userId: string,
     subMeetingId?: string | null,
