@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-01 06:58:19
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-01 14:03:18
+ * @LastEditTime: 2025-10-01 16:10:29
  * @FilePath: /lulab_backend/src/auth/auth.module.ts
  * @Description:
  *
@@ -17,7 +17,6 @@ import { AuthController } from './auth.controller';
 import { RegisterService } from './services/register.service';
 import { LoginService } from './services/login.service';
 import { PasswordService } from './services/password.service';
-import { ProfileService } from './services/profile.service';
 import { TokenService } from './services/token.service';
 import { AuthPolicyService } from './services/auth-policy.service';
 import { JwtStrategy, JWT_USER_LOOKUP, JWT_TOKEN_BLACKLIST } from '../security';
@@ -52,7 +51,6 @@ import { jwtConfig } from '@/configs/jwt.config';
     RegisterService,
     LoginService,
     PasswordService,
-    ProfileService,
     TokenService,
     AuthPolicyService,
     JwtStrategy,
@@ -67,7 +65,6 @@ import { jwtConfig } from '@/configs/jwt.config';
     RegisterService,
     LoginService,
     PasswordService,
-    ProfileService,
     TokenService,
     AuthPolicyService,
     TokenBlacklistService,

@@ -8,8 +8,8 @@ import {
   ApiHeader,
   ApiConsumes,
 } from '@nestjs/swagger';
-import { UpdateProfileDto } from '@/auth/dto/update-profile.dto';
-import { UserProfileResponseDto } from '@/auth/dto/user-profile-response.dto';
+import { UpdateProfileDto } from '@/user/dto/update-profile.dto';
+import { UserProfileResponseDto } from '@/user/dto/user-profile-response.dto';
 
 export const ApiGetUserProfileDocs = () =>
   applyDecorators(
