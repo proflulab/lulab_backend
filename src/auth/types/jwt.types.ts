@@ -16,6 +16,11 @@ export interface JwtPayload {
   exp?: number;
 }
 
+export enum TokenBlacklistScope {
+  AccessToken = 'access',
+  RefreshToken = 'refresh',
+}
+
 // Abstraction for JWT strategy to fetch and validate users without DB coupling
 export interface JwtUserLookup {
   // Return an AuthenticatedUser or null if not found/invalid
@@ -27,7 +32,10 @@ export const JWT_USER_LOOKUP = Symbol('JWT_USER_LOOKUP');
 
 // Optional token blacklist check used by JWT strategy
 export interface JwtTokenBlacklist {
-  isTokenBlacklisted(jti: string): Promise<boolean> | boolean;
+  isTokenBlacklisted(
+    jti: string,
+    scope?: TokenBlacklistScope,
+  ): Promise<boolean> | boolean;
 }
 
 // Injection token for providing a token blacklist implementation from the app layer

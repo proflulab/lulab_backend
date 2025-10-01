@@ -12,14 +12,19 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
+import type { ConfigType } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { RegisterService } from './services/register.service';
 import { LoginService } from './services/login.service';
 import { PasswordService } from './services/password.service';
 import { TokenService } from './services/token.service';
 import { AuthPolicyService } from './services/auth-policy.service';
-import { JwtStrategy, JWT_USER_LOOKUP, JWT_TOKEN_BLACKLIST } from './strategies/jwt.strategy';
+import {
+  JwtStrategy,
+  JWT_USER_LOOKUP,
+  JWT_TOKEN_BLACKLIST,
+} from './strategies/jwt.strategy';
 import { RedisModule } from '@/redis/redis.module';
 import { EmailModule } from '@/email/email.module';
 import { UserModule } from '@/user/user.module';
@@ -39,19 +44,13 @@ import { jwtConfig } from '@/configs/jwt.config';
     ConfigModule.forFeature(jwtConfig),
     JwtModule.registerAsync({
       imports: [ConfigModule.forFeature(jwtConfig)],
-      useFactory: (configService: ConfigService) => {
-        const jwtSecret = configService.get<string>('JWT_SECRET');
-        if (!jwtSecret) {
-          throw new Error('JWT_SECRET environment variable is required');
-        }
-        return {
-          secret: jwtSecret,
-          signOptions: {
-            expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '15m',
-          },
-        };
-      },
-      inject: [ConfigService],
+      useFactory: (config: ConfigType<typeof jwtConfig>) => ({
+        secret: config.accessSecret,
+        signOptions: {
+          expiresIn: config.accessExpiresIn,
+        },
+      }),
+      inject: [jwtConfig.KEY],
     }),
     EmailModule,
   ],

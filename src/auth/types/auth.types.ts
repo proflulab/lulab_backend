@@ -1,33 +1,13 @@
+import type { Request } from 'express';
 import { User, UserProfile } from '@prisma/client';
+import type {
+  AuthenticatedUser as JwtAuthenticatedUser,
+  JwtPayload as JwtPayloadBase,
+} from './jwt.types';
 
-// 认证用户信息接口
-export interface AuthenticatedUser {
-  id: string;
-  username?: string | null;
-  email: string;
-  phone?: string | null;
-  countryCode?: string | null;
-  profile?: {
-    name?: string | null;
-    avatar?: string | null;
-    bio?: string | null;
-    firstName?: string | null;
-    lastName?: string | null;
-    dateOfBirth?: Date | null;
-    gender?: string | null;
-    city?: string | null;
-    country?: string | null;
-  } | null;
-}
-
-// JWT载荷接口
-export interface JwtPayload {
-  sub: string;
-  username?: string;
-  email?: string;
-  iat?: number;
-  exp?: number;
-}
+// 复用 JWT 类型定义，避免多处维护
+export type AuthenticatedUser = JwtAuthenticatedUser;
+export type JwtPayload = JwtPayloadBase;
 
 // 登录用户信息接口（包含Prisma完整结构）
 export interface AuthUser extends User {
