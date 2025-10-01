@@ -2,12 +2,14 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-23 06:15:34
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-01 16:16:15
+ * @LastEditTime: 2025-10-02 03:25:07
  * @FilePath: /lulab_backend/src/user/services/profile.service.ts
- * @Description: 
+ * @Description: 用户资料服务
  * 
- * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved. 
  */
+
+
 import {
   Injectable,
   BadRequestException,

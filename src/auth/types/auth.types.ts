@@ -65,11 +65,6 @@ export interface AuthTokens {
   refreshToken: string;
 }
 
-// 登录类型枚举
-// 枚举已移动到 src/auth/enums 目录：
-// - LoginType: src/auth/enums/login-type.enum.ts
-// - VerificationType: src/auth/enums/verification-type.enum.ts
-
 // 会话信息接口
 export interface SessionInfo {
   sessionId: string;
