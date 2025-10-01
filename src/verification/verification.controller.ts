@@ -5,7 +5,7 @@
  * @LastEditTime: 2025-10-02 02:54:18
  * @FilePath: /lulab_backend/src/verification/verification.controller.ts
  * @Description: 验证服务控制器
- * 
+ *
  * Copyright (c) 2025 by 杨仕明 shiming.y@qq.com, All Rights Reserved.
  */
 

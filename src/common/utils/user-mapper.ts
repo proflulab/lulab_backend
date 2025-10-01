@@ -5,8 +5,8 @@
  * @LastEditTime: 2025-10-01 18:30:03
  * @FilePath: /lulab_backend/src/common/utils/user-mapper.ts
  * @Description: 用户响应格式化工具函数
- * 
- * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ *
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
 
 import { User, UserProfile } from '@prisma/client';

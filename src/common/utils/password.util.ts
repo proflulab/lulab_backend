@@ -5,8 +5,8 @@
  * @LastEditTime: 2025-10-01 16:18:23
  * @FilePath: /lulab_backend/src/common/utils/password.util.ts
  * @Description: 密码工具类
- * 
- * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ *
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
 
 import { BadRequestException } from '@nestjs/common';

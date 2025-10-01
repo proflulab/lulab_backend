@@ -5,10 +5,9 @@
  * @LastEditTime: 2025-10-02 03:25:07
  * @FilePath: /lulab_backend/src/user/services/profile.service.ts
  * @Description: 用户资料服务
- * 
- * Copyright (c) 2025 by LuLab-Team, All Rights Reserved. 
+ *
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
  */
-
 
 import {
   Injectable,
