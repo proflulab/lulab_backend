@@ -88,11 +88,11 @@ export class MeetingEndedHandler extends BaseEventHandler {
         meeting_code: meeting_info.meeting_code,
         start_time: meeting_info.start_time * 1000,
         end_time: meeting_info.end_time * 1000,
-        creator: [creatorRecordId || ''],
+        creator: creatorRecordId ? [creatorRecordId] : [],
       });
     } catch (error) {
       this.logger.error(
-        `处理会议开始事件失败: ${meeting_info.meeting_id}`,
+        `处理会议结束事件失败: ${meeting_info.meeting_id}`,
         error,
       );
       // 不抛出错误，避免影响主流程

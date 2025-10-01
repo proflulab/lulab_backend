@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-23 06:15:34
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-01 05:48:46
+ * @LastEditTime: 2025-10-02 03:04:50
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/decorators/tencent-webhook.decorators.ts
  * @Description: 腾讯会议Webhook装饰器
  *
@@ -25,7 +25,7 @@ export function ApiTencentUrlVerificationDocs() {
   return applyDecorators(
     ApiOperation({
       summary: '腾讯会议Webhook URL验证',
-      description: '用于腾讯会议webhook URL有效性验证，参数通过Header传递',
+      description: '用于腾讯会议webhook URL有效性验证',
       tags: ['Tencent Meeting'],
     }),
     ApiQuery({
