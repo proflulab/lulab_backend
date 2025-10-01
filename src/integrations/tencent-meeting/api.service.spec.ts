@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { TencentApiService } from './tencent-api.service';
+import { TencentApiService } from './api.service';
 
 type TMConfig = {
   secretId: string;
@@ -168,6 +168,92 @@ describe('TencentApiService', () => {
       >;
       const fetchCall = String(calls[0]?.[0]);
       expect(fetchCall).toContain('page_size=20');
+    });
+  });
+
+  describe('getSmartFullSummary', () => {
+    it('should return smart full summary successfully', async () => {
+      const mockResponse = {
+        ai_summary:
+          '5Lya6K6u5Li76KaB6K6y6L+w5LqG5Zyo5aSE5xxxxxxxxxxxxxxxxxxx6c77yM6ICM5piv6KaB5Li75Yqo5Y676Kej5Yaz6Zeu6aKY44CC',
+      };
+
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        jsonResponse(mockResponse),
+      );
+
+      const result = await service.getSmartFullSummary(
+        'test-record-file-id',
+        'test-operator-id',
+        1,
+        'zh',
+        'test-password',
+      );
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/smart/fullsummary'),
+        expect.objectContaining({
+          method: 'GET',
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'X-TC-Key': 'mock-secret-id',
+            'X-TC-Signature': 'mock-signature',
+          }) as unknown as Record<string, unknown>,
+        }) as unknown as Record<string, unknown>,
+      );
+
+      // 验证URL参数
+      const calls = (global.fetch as jest.Mock).mock.calls as Array<
+        [unknown, unknown?]
+      >;
+      const fetchCall = String(calls[0]?.[0]);
+      expect(fetchCall).toContain('record_file_id=test-record-file-id');
+      expect(fetchCall).toContain('operator_id=test-operator-id');
+      expect(fetchCall).toContain('operator_id_type=1');
+      expect(fetchCall).toContain('lang=zh');
+      expect(fetchCall).toContain('pwd=test-password');
+
+      expect(result).toEqual(mockResponse);
+    });
+
+    it('should work with minimal parameters', async () => {
+      const mockResponse = {
+        ai_summary:
+          '5Lya6K6u5Li76KaB6K6y6L+w5LqG5Zyo5aSE5xxxxxxxxxxxxxxxxxxx6c77yM6ICM5piv6KaB5Li75Yqo5Y676Kej5Yaz6Zeu6aKY44CC',
+      };
+
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        jsonResponse(mockResponse),
+      );
+
+      const result = await service.getSmartFullSummary(
+        'test-record-file-id',
+        'test-operator-id',
+      );
+
+      const calls = (global.fetch as jest.Mock).mock.calls as Array<
+        [unknown, unknown?]
+      >;
+      const fetchCall = String(calls[0]?.[0]);
+      expect(fetchCall).toContain('record_file_id=test-record-file-id');
+      expect(fetchCall).toContain('operator_id=test-operator-id');
+      expect(fetchCall).toContain('operator_id_type=1');
+      expect(fetchCall).not.toContain('lang=');
+      expect(fetchCall).not.toContain('pwd=');
+
+      expect(result).toEqual(mockResponse);
+    });
+
+    it('should handle API errors', async () => {
+      const mockError = {
+        error_info: { error_code: 108004051, message: '录制文件已经被删除' },
+      };
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        jsonResponse(mockError),
+      );
+      await expect(
+        service.getSmartFullSummary('test-record-file-id', 'test-operator-id'),
+      ).rejects.toThrow('录制文件已经被删除');
     });
   });
 });

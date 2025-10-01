@@ -17,6 +17,8 @@ import {
   MeetingUserBitableRepository,
   RecordingFileBitableRepository,
 } from '../../../integrations/lark/repositories';
+import { TencentApiService } from '../../../integrations/tencent-meeting/api.service';
+import { MeetingParticipantDetail } from '../../../integrations/tencent-meeting/types';
 
 /**
  * 录制完成事件处理器
@@ -29,8 +31,23 @@ export class RecordingCompletedHandler extends BaseEventHandler {
     private readonly MeetingBitable: MeetingBitableRepository,
     private readonly meetingUserBitable: MeetingUserBitableRepository,
     private readonly recordingFileBitable: RecordingFileBitableRepository,
+    private readonly tencentMeetingApi: TencentApiService,
   ) {
     super();
+  }
+
+  private getErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    if (typeof error === 'string') {
+      return error;
+    }
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return String(error);
+    }
   }
 
   supports(event: string): boolean {
@@ -81,18 +98,165 @@ export class RecordingCompletedHandler extends BaseEventHandler {
       for (const file of recording_files) {
         try {
           const meetIds: string[] = meetingRecordId ? [meetingRecordId] : [];
+
+          // 获取智能摘要、待办事项和会议纪要
+          let fullsummary = '';
+          let todo = '';
+          let ai_minutes = '';
+
+          try {
+            // 获取智能全文摘要
+            const summaryResponse =
+              await this.tencentMeetingApi.getSmartFullSummary(
+                file.record_file_id,
+                meeting_info.creator.userid || '',
+              );
+            fullsummary = summaryResponse.ai_summary || '';
+            this.logger.log(`获取智能摘要成功: ${file.record_file_id}`);
+          } catch (error: unknown) {
+            const errorMessage = this.getErrorMessage(error);
+            this.logger.warn(
+              `获取智能摘要失败: ${file.record_file_id}, 错误: ${errorMessage}`,
+            );
+          }
+
+          try {
+            // 获取智能会议纪要（包含待办事项）
+            const minutesResponse =
+              await this.tencentMeetingApi.getSmartMeetingMinutes(
+                file.record_file_id,
+                meeting_info.creator.userid || '',
+              );
+            ai_minutes = minutesResponse.meeting_minute?.minute || '';
+            todo = minutesResponse.meeting_minute?.todo || '';
+            this.logger.log(`获取会议纪要成功: ${file.record_file_id}`);
+          } catch (error: unknown) {
+            const errorMessage = this.getErrorMessage(error);
+            this.logger.warn(
+              `获取会议纪要失败: ${file.record_file_id}, 错误: ${errorMessage}`,
+            );
+          }
+
+          // 获取录音转写内容
+          let formattedTranscript = '';
+          try {
+            const transcriptResponse =
+              await this.tencentMeetingApi.getTranscript(
+                file.record_file_id,
+                meeting_info.creator.userid || '',
+              );
+
+            if (transcriptResponse.minutes?.paragraphs) {
+              // 格式化转写内容为指定格式
+              const formattedLines: string[] = [];
+
+              for (const paragraph of transcriptResponse.minutes.paragraphs) {
+                const speakerName =
+                  paragraph.speaker_info?.username || '未知发言人';
+
+                for (const sentence of paragraph.sentences) {
+                  // 转换时间戳为分钟:秒格式
+                  const startTime = sentence.start_time;
+                  const minutes = Math.floor(startTime / 60000); // 转换为分钟
+                  const seconds = Math.floor((startTime % 60000) / 1000); // 剩余的秒
+
+                  // 获取句子文本（从words数组中提取）
+                  const sentenceText = sentence.words
+                    .map((word) => word.text)
+                    .join('');
+
+                  if (sentenceText.trim()) {
+                    formattedLines.push(
+                      `${speakerName}(${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}): ${sentenceText.trim()}`,
+                    );
+                  }
+                }
+              }
+
+              formattedTranscript = formattedLines.join('\n');
+              this.logger.log(
+                `获取录音转写成功: ${file.record_file_id}, 共 ${formattedLines.length} 条记录`,
+              );
+            }
+          } catch (error: unknown) {
+            const errorMessage = this.getErrorMessage(error);
+            this.logger.warn(
+              `获取录音转写失败: ${file.record_file_id}, 错误: ${errorMessage}`,
+            );
+          }
+
+          // 获取会议参与者列表并根据 uuid 去重
+          let uniqueParticipants: MeetingParticipantDetail[] = [];
+
+          try {
+            const participantsResponse =
+              await this.tencentMeetingApi.getParticipants(
+                meeting_info.meeting_id,
+                meeting_info.creator.userid || '',
+                meeting_info.sub_meeting_id,
+              );
+
+            // 根据 uuid 去重
+            const seenUuids = new Set<string>();
+            uniqueParticipants = participantsResponse.participants.filter(
+              (participant) => {
+                if (seenUuids.has(participant.uuid)) {
+                  return false;
+                }
+                seenUuids.add(participant.uuid);
+                return true;
+              },
+            );
+
+            this.logger.log(
+              `获取会议参与者成功: ${meeting_info.meeting_id}, 共 ${uniqueParticipants.length} 个唯一参与者`,
+            );
+          } catch (error: unknown) {
+            const errorMessage = this.getErrorMessage(error);
+            this.logger.warn(
+              `获取会议参与者失败: ${meeting_info.meeting_id}, 错误: ${errorMessage}`,
+            );
+          }
+
           const recordingResult =
             await this.recordingFileBitable.upsertRecordingFileRecord({
               record_file_id: file.record_file_id,
               meet: meetIds,
               start_time: meeting_info.start_time * 1000,
               end_time: meeting_info.end_time * 1000,
+              fullsummary,
+              todo,
+              ai_minutes,
+              participants: uniqueParticipants.map((p) => p.user_name),
+              ai_meeting_transcripts: formattedTranscript,
             });
 
           if (recordingResult.data?.record) {
             this.logger.log(
               `录制文件记录已创建/更新: ${file.record_file_id} (记录ID: ${recordingResult.data.record.record_id})`,
             );
+          }
+
+          // 更新用户表
+          for (const participant of uniqueParticipants) {
+            try {
+              await this.meetingUserBitable.upsertMeetingUserRecord({
+                userid: participant.userid,
+                uuid: participant.uuid,
+                user_name: participant.user_name,
+                phone_hase: participant.phone,
+                is_enterprise_user: participant.is_enterprise_user,
+              });
+
+              this.logger.log(
+                `用户记录已创建/更新: ${participant.user_name} (${participant.uuid})`,
+              );
+            } catch (error: unknown) {
+              const errorMessage = this.getErrorMessage(error);
+              this.logger.warn(
+                `更新用户记录失败: ${participant.user_name} (${participant.uuid}), 错误: ${errorMessage}`,
+              );
+            }
           }
         } catch (error: unknown) {
           this.logger.error(

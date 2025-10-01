@@ -12,7 +12,6 @@ import {
   UseInterceptors,
   ValidationPipe,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { ApiTags } from '@nestjs/swagger';
 import { TencentEventHandlerService } from '../services/tencent-event-handler.service';
 import { TencentMeetingConfigService } from '../services/tencent-config.service';
@@ -47,7 +46,6 @@ export class TencentWebhookController {
 
   constructor(
     private readonly tencentEventHandlerService: TencentEventHandlerService,
-    private readonly configService: ConfigService,
     private readonly tencentConfig: TencentMeetingConfigService,
   ) {}
 

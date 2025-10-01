@@ -27,6 +27,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { AppResolver } from './app.resolver';
 import { ScheduleModule } from '@nestjs/schedule';
+import { OpenaiModule } from './integrations/openai/openai.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     TencentMeetingModule,
     LarkMeetingModule,
     VerificationModule,
+    OpenaiModule,
   ],
   controllers: [AppController],
   providers: [
