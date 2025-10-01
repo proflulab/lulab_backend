@@ -6,7 +6,7 @@ import { ConfigModule } from '@nestjs/config';
  * Helper function to create a NestJS test application
  * with common configuration and setup
  */
-export async function createTestApp(moduleImports: unknown[] = []): Promise<{
+export async function createTestApp(moduleImports: any[] = []): Promise<{
   app: INestApplication;
   module: TestingModule;
 }> {

@@ -2,11 +2,11 @@ import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { VerificationService } from '@/verification/verification.service';
 import { CodeType } from '@/verification/enums';
-import { UserRepository } from '../repositories/user.repository';
+import { UserRepository } from '@/user/repositories/user.repository';
 import { AuthPolicyService } from './auth-policy.service';
 import { EmailService } from '@/email/email.service';
 import { buildPasswordResetNotificationEmail } from '../../common/email-templates';
-import { hashPassword, validatePassword } from './utils/password.util';
+import { hashPassword, validatePassword } from '@/common/utils/password.util';
 import { LoginType } from '@/auth/enums';
 
 @Injectable()

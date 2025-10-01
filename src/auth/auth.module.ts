@@ -22,7 +22,8 @@ import { AuthPolicyService } from './services/auth-policy.service';
 import { JwtStrategy, JWT_USER_LOOKUP, JWT_TOKEN_BLACKLIST } from '../security';
 import { RedisModule } from '@/redis/redis.module';
 import { EmailModule } from '@/email/email.module';
-import { UserRepository } from './repositories/user.repository';
+import { UserModule } from '@/user/user.module';
+import { VerificationModule } from '@/verification/verification.module';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository';
 import { LoginLogRepository } from './repositories/login-log.repository';
 import { JwtUserLookupService } from './services/jwt-user-lookup.service';
@@ -32,16 +33,24 @@ import { jwtConfig } from '@/configs/jwt.config';
 @Module({
   imports: [
     RedisModule,
+    UserModule,
+    VerificationModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     ConfigModule.forFeature(jwtConfig),
     JwtModule.registerAsync({
       imports: [ConfigModule.forFeature(jwtConfig)],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET')!,
-        signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '15m',
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const jwtSecret = configService.get<string>('JWT_SECRET');
+        if (!jwtSecret) {
+          throw new Error('JWT_SECRET environment variable is required');
+        }
+        return {
+          secret: jwtSecret,
+          signOptions: {
+            expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '15m',
+          },
+        };
+      },
       inject: [ConfigService],
     }),
     EmailModule,
@@ -54,7 +63,6 @@ import { jwtConfig } from '@/configs/jwt.config';
     TokenService,
     AuthPolicyService,
     JwtStrategy,
-    UserRepository,
     RefreshTokenRepository,
     LoginLogRepository,
     { provide: JWT_USER_LOOKUP, useClass: JwtUserLookupService },

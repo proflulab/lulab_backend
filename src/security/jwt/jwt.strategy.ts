@@ -37,11 +37,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     @Inject(JWT_TOKEN_BLACKLIST)
     private readonly blacklist?: JwtTokenBlacklist,
   ) {
-    const jwtConfigValue = configService.get(jwtConfig.KEY);
+    const jwtSecret = configService.get<string>('JWT_SECRET');
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET environment variable is required');
+    }
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: jwtConfigValue?.accessSecret,
+      secretOrKey: jwtSecret,
     });
   }
 

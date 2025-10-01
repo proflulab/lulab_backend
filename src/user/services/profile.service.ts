@@ -14,10 +14,10 @@ import {
   ConflictException,
   Logger,
 } from '@nestjs/common';
-import { UserRepository } from '@/auth/repositories/user.repository';
+import { UserRepository } from '../repositories/user.repository';
 import { UserProfileResponseDto } from '@/user/dto/user-profile-response.dto';
 import { UpdateProfileDto } from '@/user/dto/update-profile.dto';
-import { formatUserResponse } from '@/user/utils/user-mapper';
+import { formatUserResponse } from '@/common/utils';
 
 @Injectable()
 export class ProfileService {

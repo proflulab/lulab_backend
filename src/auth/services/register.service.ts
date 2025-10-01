@@ -5,11 +5,11 @@ import { RegisterDto } from '../dto/register.dto';
 import { AuthResponseDto } from '../dto/auth-response.dto';
 import { AuthType } from '@/auth/enums';
 import { CodeType } from '@/verification/enums';
-import { UserRepository } from '../repositories/user.repository';
+import { UserRepository } from '@/user/repositories/user.repository';
 import { TokenService } from './token.service';
 import { AuthPolicyService } from './auth-policy.service';
-import { formatUserResponse } from './utils/user-mapper';
-import { hashPassword, validatePassword } from './utils/password.util';
+import { formatUserResponse } from '@/common/utils';
+import { hashPassword, validatePassword } from '@/common/utils/password.util';
 
 @Injectable()
 export class RegisterService {

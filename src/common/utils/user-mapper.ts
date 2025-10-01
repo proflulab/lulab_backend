@@ -2,13 +2,12 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-01 16:16:47
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-01 16:18:06
- * @FilePath: /lulab_backend/src/auth/services/utils/user-mapper.ts
- * @Description: 
+ * @LastEditTime: 2025-10-01 18:30:03
+ * @FilePath: /lulab_backend/src/common/utils/user-mapper.ts
+ * @Description: 用户响应格式化工具函数
  * 
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
  */
-
 
 import { User, UserProfile } from '@prisma/client';
 import { UserProfileResponseDto } from '@/user/dto/user-profile-response.dto';
