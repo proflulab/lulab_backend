@@ -7,7 +7,7 @@ import {
   MeetingUserBitableRepository,
   RecordingFileBitableRepository,
 } from './repositories';
-import { larkConfig } from './config/lark.config';
+import { larkConfig } from '../../configs/lark.config';
 
 @Module({
   imports: [ConfigModule.forFeature(larkConfig)],

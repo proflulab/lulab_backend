@@ -1,20 +1,40 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
-import { config } from 'dotenv';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TencentApiService } from '@/integrations/tencent-meeting/api.service';
+import { tencentMeetingConfig } from '@/configs/tencent-mtg.config';
+import { config } from 'dotenv';
 import {
   RecordMeetingsResponse,
   MeetingDetailResponse,
   RecordingDetail,
-  MeetingParticipantsResponse,
-  RecordingTranscriptResponse,
   SmartTopicsResponse,
   SmartFullSummaryResponse,
   SmartMeetingMinutesResponse,
+  RecordingTranscriptResponse,
+  MeetingParticipantsResponse,
 } from '@/integrations/tencent-meeting/types';
 
 // 加载测试环境变量
 config({ path: '.env.test' });
+
+// API错误类型定义
+const API_ERROR_TYPES = {
+  IP_WHITELIST: 'IP_WHITELIST',
+  UNREGISTERED_USER: 'UNREGISTERED_USER',
+  EMPTY_RESPONSE: 'EMPTY_RESPONSE',
+  INVALID_JSON: 'INVALID_JSON',
+  NO_TRANSCRIPT: 'NO_TRANSCRIPT',
+  NO_AI_ANALYSIS: 'NO_AI_ANALYSIS',
+  UNKNOWN: 'UNKNOWN',
+} as const;
+
+type ApiErrorType = (typeof API_ERROR_TYPES)[keyof typeof API_ERROR_TYPES];
+
+interface ApiError {
+  type: ApiErrorType;
+  message: string;
+  originalError: unknown;
+}
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) {
@@ -28,6 +48,56 @@ const getErrorMessage = (error: unknown): string => {
   } catch {
     return String(error);
   }
+};
+
+const classifyApiError = (error: unknown): ApiError => {
+  const message = getErrorMessage(error).toLowerCase();
+
+  if (message.includes('ip白名单') || message.includes('ip whitelist')) {
+    return {
+      type: API_ERROR_TYPES.IP_WHITELIST,
+      message: getErrorMessage(error),
+      originalError: error,
+    };
+  }
+  if (message.includes('unregistered user') || message.includes('未注册')) {
+    return {
+      type: API_ERROR_TYPES.UNREGISTERED_USER,
+      message: getErrorMessage(error),
+      originalError: error,
+    };
+  }
+  if (message.includes('empty response') || message.includes('invalid json')) {
+    return {
+      type: API_ERROR_TYPES.EMPTY_RESPONSE,
+      message: getErrorMessage(error),
+      originalError: error,
+    };
+  }
+  if (message.includes('转录') || message.includes('transcript')) {
+    return {
+      type: API_ERROR_TYPES.NO_TRANSCRIPT,
+      message: getErrorMessage(error),
+      originalError: error,
+    };
+  }
+  if (
+    message.includes('智能分析') ||
+    message.includes('ai') ||
+    message.includes('summary')
+  ) {
+    return {
+      type: API_ERROR_TYPES.NO_AI_ANALYSIS,
+      message: getErrorMessage(error),
+      originalError: error,
+    };
+  }
+
+  return {
+    type: API_ERROR_TYPES.UNKNOWN,
+    message: getErrorMessage(error),
+    originalError: error,
+  };
 };
 
 /**
@@ -56,15 +126,20 @@ describe('Tencent Meeting Real API Integration Tests', () => {
     // 分页大小
     PAGE_SIZE: 10,
     // 测试用的会议ID（需要在腾讯会议中存在）
-    TEST_MEETING_ID: process.env.TEST_MEETING_ID || 'test-meeting-id',
+    TEST_MEETING_ID: process.env.TEST_MEETING_ID,
     // 测试用的录制文件ID
-    TEST_RECORDING_FILE_ID:
-      process.env.TEST_RECORDING_FILE_ID || 'test-recording-file-id',
+    TEST_RECORDING_FILE_ID: process.env.TEST_RECORDING_FILE_ID,
   };
 
   beforeAll(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
-      providers: [ConfigService, TencentApiService],
+      imports: [
+        ConfigModule.forRoot({
+          load: [tencentMeetingConfig],
+          isGlobal: true,
+        }),
+      ],
+      providers: [TencentApiService],
     }).compile();
 
     apiService = moduleRef.get(TencentApiService);
@@ -87,6 +162,24 @@ describe('Tencent Meeting Real API Integration Tests', () => {
       console.warn('⚠️  缺少必要的腾讯会议配置:', missingConfigs);
       console.warn('请确保在 .env.test 文件中配置以下变量:');
       missingConfigs.forEach((config) => console.warn(`  - ${config}`));
+    }
+
+    // 配置预检查
+    const hasRealMeetingId =
+      TEST_CONFIG.TEST_MEETING_ID &&
+      !TEST_CONFIG.TEST_MEETING_ID.startsWith('test-');
+    const hasRealRecordingId =
+      TEST_CONFIG.TEST_RECORDING_FILE_ID &&
+      !TEST_CONFIG.TEST_RECORDING_FILE_ID.startsWith('test-');
+
+    if (!hasRealMeetingId) {
+      console.warn('⚠️  未配置真实的会议ID，部分测试将被跳过');
+      console.warn('💡 请在 .env.test 文件中设置 TEST_MEETING_ID');
+    }
+
+    if (!hasRealRecordingId) {
+      console.warn('⚠️  未配置真实的录制文件ID，AI相关测试将被跳过');
+      console.warn('💡 请在 .env.test 文件中设置 TEST_RECORDING_FILE_ID');
     }
   });
 
@@ -131,24 +224,26 @@ describe('Tencent Meeting Real API Integration Tests', () => {
           });
         }
       } catch (error: unknown) {
-        const errorMessage = getErrorMessage(error);
-        console.error('❌ 获取会议记录失败:', errorMessage);
+        const apiError = classifyApiError(error);
+        console.error('❌ 获取会议记录失败:', apiError.message);
 
         // 处理常见的API错误
-        if (errorMessage.includes('IP白名单错误')) {
-          console.error('💡 请确保你的IP地址已添加到腾讯会议应用的白名单中');
-        } else if (errorMessage.includes('unregistered user')) {
-          console.warn('⚠️  用户未注册或无权限访问，跳过此测试');
-          return; // 跳过测试而不是失败
-        } else if (
-          errorMessage.includes('Empty response') ||
-          errorMessage.includes('Invalid JSON')
-        ) {
-          console.warn('⚠️  API返回空响应或无效JSON，可能是服务暂时不可用');
-          return; // 跳过测试而不是失败
-        }
+        switch (apiError.type) {
+          case API_ERROR_TYPES.IP_WHITELIST:
+            console.error('💡 请确保你的IP地址已添加到腾讯会议应用的白名单中');
+            throw error; // IP白名单是配置问题，应该让测试失败
 
-        throw error;
+          case API_ERROR_TYPES.UNREGISTERED_USER:
+            console.warn('⚠️  用户未注册或无权限访问，跳过此测试');
+            return; // 跳过测试而不是失败
+
+          case API_ERROR_TYPES.EMPTY_RESPONSE:
+            console.warn('⚠️  API返回空响应或无效JSON，可能是服务暂时不可用');
+            return; // 跳过测试而不是失败
+
+          default:
+            throw error; // 未知错误应该让测试失败
+        }
       }
     }, 30000); // 30秒超时
 
@@ -458,9 +553,8 @@ describe('Tencent Meeting Real API Integration Tests', () => {
             has_summary: !!englishSummary.ai_summary,
             summary_length: englishSummary.ai_summary?.length || 0,
             summary_preview: englishSummary.ai_summary
-              ? Buffer.from(chineseSummary.ai_summary, 'base64')
+              ? Buffer.from(englishSummary.ai_summary, 'base64')
                   .toString('utf-8')
-                  .substring(0, 200)
                   .substring(0, 200) + '...'
               : '无内容',
           });

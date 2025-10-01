@@ -4,5 +4,5 @@ export * from './services';
 export * from './repositories';
 export * from './types';
 export * from './exceptions';
-export * from './config';
+export * from '../../configs';
 export * from './validators';

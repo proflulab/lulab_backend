@@ -1,6 +1,12 @@
-import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  Logger,
+  Inject,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
+import { ConfigType } from '@nestjs/config';
+import { jwtConfig } from '../../configs/jwt.config';
 import { UserRepository } from '../repositories/user.repository';
 import { RefreshTokenRepository } from '../repositories/refresh-token.repository';
 import { randomUUID } from 'node:crypto';
@@ -41,18 +47,14 @@ export class TokenService {
     private readonly jwtService: JwtService,
     private readonly userRepo: UserRepository,
     private readonly refreshTokenRepo: RefreshTokenRepository,
-    private readonly configService: ConfigService,
+    @Inject(jwtConfig.KEY)
+    private readonly config: ConfigType<typeof jwtConfig>,
     private readonly tokenBlacklist: TokenBlacklistService,
   ) {
-    this.accessSecret =
-      this.configService.get<string>('JWT_SECRET') || 'your-secret-key';
-    this.refreshSecret =
-      this.configService.get<string>('JWT_REFRESH_SECRET') ||
-      'your-refresh-secret-key';
-    this.accessExpiresIn =
-      this.configService.get<string>('JWT_EXPIRES_IN') || '15m';
-    this.refreshExpiresIn =
-      this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d';
+    this.accessSecret = this.config.accessSecret;
+    this.refreshSecret = this.config.refreshSecret;
+    this.accessExpiresIn = this.config.accessExpiresIn;
+    this.refreshExpiresIn = this.config.refreshExpiresIn;
   }
 
   /**

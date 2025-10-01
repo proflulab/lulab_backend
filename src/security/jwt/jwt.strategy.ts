@@ -1,3 +1,14 @@
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-09-23 06:15:34
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-10-01 15:47:57
+ * @FilePath: /lulab_backend/src/security/jwt/jwt.strategy.ts
+ * @Description:
+ *
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
+ */
+
 import {
   Injectable,
   Inject,
@@ -7,6 +18,7 @@ import {
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
+import { jwtConfig } from '../../configs/jwt.config';
 import type { JwtPayload, AuthenticatedUser } from '../types';
 import {
   JWT_USER_LOOKUP,
@@ -25,10 +37,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     @Inject(JWT_TOKEN_BLACKLIST)
     private readonly blacklist?: JwtTokenBlacklist,
   ) {
+    const jwtConfigValue = configService.get(jwtConfig.KEY);
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'your-secret-key',
+      secretOrKey: jwtConfigValue?.accessSecret,
     });
   }
 

@@ -1,20 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, Logger, Inject } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
 import OpenAI from 'openai';
+import { openaiConfig } from '../../configs/openai.config';
 
 @Injectable()
 export class OpenaiService {
   private readonly logger = new Logger(OpenaiService.name);
   private openai: OpenAI;
 
-  constructor(private readonly configService: ConfigService) {
-    const apiKey =
-      this.configService.get<string>('ARK_API_KEY') ||
-      this.configService.get<string>('OPENAI_API_KEY') ||
-      '';
-    const baseURL =
-      this.configService.get<string>('OPENAI_BASE_URL') ||
-      'https://ark.cn-beijing.volces.com/api/v3';
+  constructor(
+    @Inject(openaiConfig.KEY)
+    private readonly config: ConfigType<typeof openaiConfig>,
+  ) {
+    const apiKey = this.config.apiKey.ark || this.config.apiKey.openai || '';
+    const baseURL = this.config.baseURL;
 
     if (!apiKey) {
       this.logger.warn('OpenAI API密钥未配置，OpenAI服务将不可用');
@@ -41,16 +40,9 @@ export class OpenaiService {
     },
   ): Promise<string> {
     try {
-      const configModel =
-        this.configService.get<string>('OPENAI_MODEL') ||
-        '{TEMPLATE_ENDPOINT_ID}';
-      const configMaxTokens = parseInt(
-        this.configService.get<string>('OPENAI_MAX_TOKENS') || '16000',
-        10,
-      );
-      const configTemperature = parseFloat(
-        this.configService.get<string>('OPENAI_TEMPERATURE') || '0.7',
-      );
+      const configModel = this.config.model;
+      const configMaxTokens = this.config.maxTokens;
+      const configTemperature = this.config.temperature;
 
       const completion = await this.openai.chat.completions.create({
         messages,
@@ -85,16 +77,9 @@ export class OpenaiService {
     },
   ): Promise<AsyncIterableIterator<string>> {
     try {
-      const configModel =
-        this.configService.get<string>('OPENAI_MODEL') ||
-        '{TEMPLATE_ENDPOINT_ID}';
-      const configMaxTokens = parseInt(
-        this.configService.get<string>('OPENAI_MAX_TOKENS') || '16000',
-        10,
-      );
-      const configTemperature = parseFloat(
-        this.configService.get<string>('OPENAI_TEMPERATURE') || '0.7',
-      );
+      const configModel = this.config.model;
+      const configMaxTokens = this.config.maxTokens;
+      const configTemperature = this.config.temperature;
 
       const stream = await this.openai.chat.completions.create({
         messages,

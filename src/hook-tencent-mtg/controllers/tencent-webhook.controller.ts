@@ -1,3 +1,13 @@
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-10-01 01:08:34
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-10-01 05:41:35
+ * @FilePath: /lulab_backend/src/hook-tencent-mtg/controllers/tencent-webhook.controller.ts
+ * @Description: 腾讯会议Webhook控制器
+ *
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
+ */
 import {
   Controller,
   Get,
@@ -11,27 +21,27 @@ import {
   BadRequestException,
   UseInterceptors,
   ValidationPipe,
+  Inject,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { ConfigType } from '@nestjs/config';
 import { TencentEventHandlerService } from '../services/tencent-event-handler.service';
-import { TencentMeetingConfigService } from '../services/tencent-config.service';
 import { TencentWebhookEventBodyDto } from '../dto/tencent-webhook-body.dto';
 import { WebhookLoggingInterceptor } from '../interceptors/webhook-logging.interceptor';
 import {
   ApiTencentUrlVerificationDocs,
   ApiTencentEventReceiverDocs,
 } from '../decorators/tencent-webhook.decorators';
+import { TencentMeetingEvent } from '../types/tencent-webhook-events.types';
 import {
   verifySignature,
   aesDecrypt,
   verifyWebhookUrl,
-} from '../../integrations/tencent-meeting';
-import { TencentMeetingEvent } from '../types/tencent-webhook-events.types';
-import {
   WebhookSignatureVerificationException,
   WebhookDecryptionException,
 } from '../../integrations/tencent-meeting';
 import { Public } from '../../security';
+import { tencentMeetingConfig } from '../../configs/tencent-mtg.config';
 
 /**
  * Tencent Meeting Webhook Controller
@@ -46,13 +56,14 @@ export class TencentWebhookController {
 
   constructor(
     private readonly tencentEventHandlerService: TencentEventHandlerService,
-    private readonly tencentConfig: TencentMeetingConfigService,
+    @Inject(tencentMeetingConfig.KEY)
+    private readonly tencentConfig: ConfigType<typeof tencentMeetingConfig>,
   ) {}
 
   /**
    * 获取并验证腾讯会议配置
    */
-  // Config is now provided by TencentMeetingConfigService
+  // Config is now provided by tencentMeetingConfig directly
 
   /**
    * Tencent Meeting Webhook URL verification endpoint (GET)
@@ -84,7 +95,7 @@ export class TencentWebhookController {
       const decodedNonce = decodeURIComponent(nonce);
       const decodedSignature = decodeURIComponent(signature);
 
-      const { token, encodingAesKey } = this.tencentConfig.getWebhookConfig();
+      const { token, encodingAesKey } = this.tencentConfig.webhook;
       return await verifyWebhookUrl(
         decodedCheckStr,
         decodedTimestamp,
@@ -145,7 +156,7 @@ export class TencentWebhookController {
         const encryptedData = body.data;
 
         // Verify signature using the encrypted data
-        const { token, encodingAesKey } = this.tencentConfig.getWebhookConfig();
+        const { token, encodingAesKey } = this.tencentConfig.webhook;
         const isValid = verifySignature(
           token,
           timestamp,
@@ -159,7 +170,9 @@ export class TencentWebhookController {
             token,
             timestamp,
             nonce,
-            signature,
+            signature: signature
+              ? signature.slice(-6).padStart(signature.length, '*')
+              : undefined,
           });
           throw new WebhookSignatureVerificationException('TENCENT_MEETING');
         }

@@ -1,5 +1,6 @@
 import { MailerService } from './mailer.service';
-import type { ConfigService } from '@nestjs/config';
+import type { ConfigType } from '@nestjs/config';
+import { emailConfig } from '@/configs/email.config';
 import * as nodemailer from 'nodemailer';
 
 jest.mock('nodemailer', () => ({
@@ -29,12 +30,19 @@ function makeTransporter(options?: { verifyCbError?: Error | null }) {
   return t;
 }
 
-function makeConfig(map: Record<string, unknown>): ConfigService {
+function makeConfig(
+  map: Partial<ConfigType<typeof emailConfig>>,
+): ConfigType<typeof emailConfig> {
   return {
-    get: jest.fn((key: string, defaultValue?: unknown) =>
-      key in map ? map[key] : defaultValue,
-    ),
-  } as unknown as ConfigService;
+    smtp: {
+      host: map.smtp?.host ?? 'smtp.gmail.com',
+      port: map.smtp?.port ?? 587,
+      secure: map.smtp?.secure ?? false,
+      user: map.smtp?.user ?? '',
+      pass: map.smtp?.pass ?? '',
+      from: map.smtp?.from ?? '',
+    },
+  };
 }
 
 describe('MailerService', () => {
@@ -45,7 +53,16 @@ describe('MailerService', () => {
   });
 
   it('skips transporter when SMTP creds missing; send/verify are no-ops', async () => {
-    const config = makeConfig({});
+    const config = makeConfig({
+      smtp: {
+        user: '',
+        pass: '',
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        from: '',
+      },
+    });
     const svc = new MailerService(config);
 
     // No transporter -> send returns null, verify returns false
@@ -60,15 +77,16 @@ describe('MailerService', () => {
     const transporter = makeTransporter();
     createTransport.mockReturnValue(transporter);
 
-    const cfgMap: Record<string, unknown> = {
-      SMTP_USER: 'user@test.com',
-      SMTP_PASS: 'secret',
-      SMTP_HOST: 'smtp.test.com',
-      SMTP_PORT: 2525,
-      SMTP_SECURE: false,
-      SMTP_FROM: 'noreply@test.com',
-    };
-    const config = makeConfig(cfgMap);
+    const config = makeConfig({
+      smtp: {
+        user: 'user@test.com',
+        pass: 'secret',
+        host: 'smtp.test.com',
+        port: 2525,
+        secure: false,
+        from: 'noreply@test.com',
+      },
+    });
     const svc = new MailerService(config);
 
     // explicit from has highest precedence
@@ -93,9 +111,19 @@ describe('MailerService', () => {
     );
 
     // when SMTP_FROM not set, falls back to SMTP_USER
-    cfgMap.SMTP_FROM = undefined;
+    const configWithoutFrom = makeConfig({
+      smtp: {
+        user: 'user@test.com',
+        pass: 'secret',
+        host: 'smtp.test.com',
+        port: 2525,
+        secure: false,
+        from: 'user@test.com', // 模拟配置中的回退逻辑
+      },
+    });
+    const svcWithoutFrom = new MailerService(configWithoutFrom);
     transporter.sendMail.mockResolvedValueOnce({ messageId: 'mid-3' });
-    const r3 = await svc.send({ to: 'z@z.com', subject: 'C' });
+    const r3 = await svcWithoutFrom.send({ to: 'z@z.com', subject: 'C' });
     expect(r3).toEqual({ messageId: 'mid-3' });
     expect(transporter.sendMail).toHaveBeenCalledWith(
       expect.objectContaining({ from: 'user@test.com' }),
@@ -117,7 +145,16 @@ describe('MailerService', () => {
     // make promise-style verify resolve
     transporter.verify = jest.fn(() => Promise.resolve(true));
     createTransport.mockReturnValue(transporter);
-    const config = makeConfig({ SMTP_USER: 'u', SMTP_PASS: 'p' });
+    const config = makeConfig({
+      smtp: {
+        user: 'u',
+        pass: 'p',
+        host: 'smtp.test.com',
+        port: 587,
+        secure: false,
+        from: 'test@test.com',
+      },
+    });
     const svc = new MailerService(config);
 
     await expect(svc.verify()).resolves.toBe(true);
@@ -136,7 +173,16 @@ describe('MailerService', () => {
       return Promise.reject(new Error('bad'));
     });
     createTransport.mockReturnValue(transporter);
-    const config = makeConfig({ SMTP_USER: 'u', SMTP_PASS: 'p' });
+    const config = makeConfig({
+      smtp: {
+        user: 'u',
+        pass: 'p',
+        host: 'smtp.test.com',
+        port: 587,
+        secure: false,
+        from: 'test@test.com',
+      },
+    });
     const svc = new MailerService(config);
 
     await expect(svc.verify()).resolves.toBe(false);
@@ -145,7 +191,16 @@ describe('MailerService', () => {
   it('logs warning when transporter.verify callback reports config error', () => {
     const transporter = makeTransporter({ verifyCbError: new Error('config') });
     createTransport.mockReturnValue(transporter);
-    const config = makeConfig({ SMTP_USER: 'u', SMTP_PASS: 'p' });
+    const config = makeConfig({
+      smtp: {
+        user: 'u',
+        pass: 'p',
+        host: 'smtp.test.com',
+        port: 587,
+        secure: false,
+        from: 'test@test.com',
+      },
+    });
     // constructor triggers callback branch
     // no assertions needed; execution covers warning branch
 

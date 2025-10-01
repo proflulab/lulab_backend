@@ -20,7 +20,7 @@ import { UserModule } from './user/user.module';
 import { JwtAuthGuard } from './security';
 import { PrismaModule } from './prisma/prisma.module';
 import { MeetingModule } from './meeting/meeting.module';
-import { TencentMeetingModule } from './tencent-meeting/tencent-meeting.module';
+import { TencentMeetingModule } from './hook-tencent-mtg/tencent-meeting.module';
 import { LarkMeetingModule } from './lark-meeting/lark-meeting.module';
 import { VerificationModule } from '@/verification/verification.module';
 import { GraphQLModule } from '@nestjs/graphql';

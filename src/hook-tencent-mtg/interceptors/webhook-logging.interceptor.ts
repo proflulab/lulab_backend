@@ -1,3 +1,12 @@
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-10-01 01:08:34
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-10-01 05:35:24
+ * @FilePath: /lulab_backend/src/hook-tencent-mtg/interceptors/webhook-logging.interceptor.ts
+ * @Description: 腾讯会议Webhook日志拦截器，记录所有Webhook请求的详细信息
+ */
+
 import {
   Injectable,
   NestInterceptor,

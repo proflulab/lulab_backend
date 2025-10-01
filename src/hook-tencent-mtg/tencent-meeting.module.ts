@@ -2,14 +2,15 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-01-03 10:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-09-03 02:41:47
- * @FilePath: /lulab_backend/src/tencent-meeting/tencent-meeting.module.ts
- * @Description: 腾讯会议模块
+ * @LastEditTime: 2025-10-01 06:26:26
+ * @FilePath: /lulab_backend/src/hook-tencent-mtg/tencent-meeting.module.ts
+ * @Description: 腾讯会议模块，处理腾讯会议相关的Webhook事件
  *
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
 
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TencentWebhookController } from './controllers/tencent-webhook.controller';
 import { TencentModule } from '../integrations/tencent-meeting/tencent.module';
 import { TencentEventHandlerService } from './services/tencent-event-handler.service';
@@ -19,20 +20,22 @@ import { MeetingStartedHandler } from './services/event-handlers/meeting-started
 import { MeetingEndedHandler } from './services/event-handlers/meeting-ended.handler';
 import { RecordingCompletedHandler } from './services/event-handlers/recording-completed.handler';
 import { MeetingParticipantJoinedHandler } from './services/event-handlers/meeting-participant-joined.handler';
-import { TencentMeetingConfigService } from './services/tencent-config.service';
+import { tencentMeetingConfig } from '../configs/tencent-mtg.config';
 
 @Module({
-  imports: [LarkModule, TencentModule],
+  imports: [
+    ConfigModule.forFeature(tencentMeetingConfig),
+    LarkModule,
+    TencentModule,
+  ],
   controllers: [TencentWebhookController],
   providers: [
     TencentEventHandlerService,
-    TencentMeetingConfigService,
     EventHandlerFactory,
     MeetingStartedHandler,
     MeetingEndedHandler,
     RecordingCompletedHandler,
     MeetingParticipantJoinedHandler,
   ],
-  exports: [],
 })
 export class TencentMeetingModule {}
