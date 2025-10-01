@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-01 01:08:34
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-01 05:41:35
+ * @LastEditTime: 2025-10-01 19:25:24
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/controllers/tencent-webhook.controller.ts
  * @Description: 腾讯会议Webhook控制器
  *
@@ -40,7 +40,7 @@ import {
   WebhookSignatureVerificationException,
   WebhookDecryptionException,
 } from '../../integrations/tencent-meeting';
-import { Public } from '../../security';
+import { Public } from '@/auth/decorators/public.decorator';
 import { tencentMeetingConfig } from '../../configs/tencent-mtg.config';
 
 /**

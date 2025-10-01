@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-01 06:58:19
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-01 16:10:29
+ * @LastEditTime: 2025-10-01 19:13:48
  * @FilePath: /lulab_backend/src/auth/auth.module.ts
  * @Description:
  *
@@ -19,7 +19,7 @@ import { LoginService } from './services/login.service';
 import { PasswordService } from './services/password.service';
 import { TokenService } from './services/token.service';
 import { AuthPolicyService } from './services/auth-policy.service';
-import { JwtStrategy, JWT_USER_LOOKUP, JWT_TOKEN_BLACKLIST } from '../security';
+import { JwtStrategy, JWT_USER_LOOKUP, JWT_TOKEN_BLACKLIST } from './strategies/jwt.strategy';
 import { RedisModule } from '@/redis/redis.module';
 import { EmailModule } from '@/email/email.module';
 import { UserModule } from '@/user/user.module';

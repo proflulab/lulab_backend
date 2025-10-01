@@ -6,7 +6,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import type { Observable } from 'rxjs';
-import type { AuthenticatedUser } from '../types';
+import type { AuthenticatedUser } from '../types/jwt.types';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {

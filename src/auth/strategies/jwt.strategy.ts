@@ -2,9 +2,9 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-23 06:15:34
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-01 15:47:57
- * @FilePath: /lulab_backend/src/security/jwt/jwt.strategy.ts
- * @Description:
+ * @LastEditTime: 2025-10-01 19:26:58
+ * @FilePath: /lulab_backend/src/auth/strategies/jwt.strategy.ts
+ * @Description: JWT 策略，用于验证和解析 JWT 令牌
  *
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
@@ -18,14 +18,14 @@ import {
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { jwtConfig } from '../../configs/jwt.config';
-import type { JwtPayload, AuthenticatedUser } from '../types';
 import {
   JWT_USER_LOOKUP,
   type JwtUserLookup,
   JWT_TOKEN_BLACKLIST,
   type JwtTokenBlacklist,
-} from '../types';
+  type JwtPayload,
+  type AuthenticatedUser,
+} from '../../auth/types/jwt.types';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -65,3 +65,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return authUser;
   }
 }
+
+// Export the symbols for use in other modules
+export { JWT_USER_LOOKUP, JWT_TOKEN_BLACKLIST };

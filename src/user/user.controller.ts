@@ -1,3 +1,13 @@
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-09-23 06:15:34
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-10-01 19:24:59
+ * @FilePath: /lulab_backend/src/user/user.controller.ts
+ * @Description: 
+ * 
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ */
 import {
   Controller,
   Get,
@@ -9,7 +19,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { ProfileService } from './services/profile.service';
-import { User, CurrentUser } from '../security';
+import { User, CurrentUser } from '@/auth/decorators/user.decorator';
 import { UpdateProfileDto } from '@/user/dto/update-profile.dto';
 import { UserProfileResponseDto } from '@/user/dto/user-profile-response.dto';
 import {
