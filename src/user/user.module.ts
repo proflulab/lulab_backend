@@ -5,8 +5,8 @@
  * @LastEditTime: 2025-10-02 18:12:50
  * @FilePath: /lulab_backend/src/user/user.module.ts
  * @Description: 用户模块
- * 
- * Copyright (c) 2025 by LuLab-Team, All Rights Reserved. 
+ *
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
  */
 
 import { Module } from '@nestjs/common';

@@ -1,12 +1,12 @@
 /*
  * @Author: 杨仕明 shiming.y@qq.com
- * @Date: 2025-09-23 06:15:34
+ * @Date: 2025-10-02 21:14:03
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-01 19:25:07
- * @FilePath: /lulab_backend/src/email/email.controller.ts
- * @Description: 邮件控制器
+ * @LastEditTime: 2025-10-03 04:51:36
+ * @FilePath: /lulab_backend/src/mail/mail.controller.ts
+ * @Description:
  *
- * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
  */
 
 import {
@@ -17,26 +17,25 @@ import {
   HttpStatus,
   HttpException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
-import { EmailService } from './email.service';
+import { ApiTags } from '@nestjs/swagger';
+import { MailService } from './mail.service';
 import { SendEmailDto } from './dto/send-email.dto';
 import { Public } from '@/auth/decorators/public.decorator';
+import {
+  ApiSendEmailDocs,
+  ApiVerifyConnectionDocs,
+} from './decorators/mail.decorators';
 
-@ApiTags('Email')
-@Controller('email')
-export class EmailController {
-  constructor(private readonly emailService: EmailService) {}
+@ApiTags('Mail')
+@Controller('mail')
+export class MailController {
+  constructor(private readonly mailService: MailService) {}
 
   @Post('send')
-  @Public()
-  @ApiOperation({ summary: '发送邮件', description: '发送邮件到指定收件人' })
-  @ApiBody({ type: SendEmailDto })
-  @ApiResponse({ status: 200, description: '邮件发送成功' })
-  @ApiResponse({ status: 400, description: '邮件发送失败' })
-  @ApiResponse({ status: 500, description: '服务器内部错误' })
+  @ApiSendEmailDocs()
   async sendEmail(@Body() sendEmailDto: SendEmailDto) {
     try {
-      const result = await this.emailService.sendEmail(sendEmailDto);
+      const result = await this.mailService.sendEmail(sendEmailDto);
 
       if (result.success) {
         return {
@@ -70,15 +69,10 @@ export class EmailController {
 
   @Get('verify')
   @Public()
-  @ApiOperation({
-    summary: '验证SMTP连接',
-    description: '验证邮件服务器连接状态',
-  })
-  @ApiResponse({ status: 200, description: 'SMTP连接验证结果' })
-  @ApiResponse({ status: 500, description: '验证连接时发生错误' })
+  @ApiVerifyConnectionDocs()
   async verifyConnection() {
     try {
-      const isConnected = await this.emailService.verifyConnection();
+      const isConnected = await this.mailService.verifyConnection();
 
       return {
         statusCode: HttpStatus.OK,
@@ -97,5 +91,13 @@ export class EmailController {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  @Post('send-later')
+  async sendLater(
+    @Body('email') email: string,
+    @Body('delay') delay: number, // 毫秒
+  ) {
+    return this.mailService.sendMailLater(email, delay);
   }
 }

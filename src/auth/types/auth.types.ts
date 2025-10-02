@@ -5,10 +5,9 @@
  * @LastEditTime: 2025-10-02 04:51:49
  * @FilePath: /lulab_backend/src/auth/types/auth.types.ts
  * @Description: 认证相关类型定义
- * 
- * Copyright (c) 2025 by LuLab-Team, All Rights Reserved. 
+ *
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
  */
-
 
 // 刷新令牌接口
 export interface RefreshToken {

@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-01 06:58:19
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-01 19:13:48
+ * @LastEditTime: 2025-10-03 04:03:51
  * @FilePath: /lulab_backend/src/auth/auth.module.ts
  * @Description:
  *
@@ -26,7 +26,7 @@ import {
   JWT_TOKEN_BLACKLIST,
 } from './strategies/jwt.strategy';
 import { RedisModule } from '@/redis/redis.module';
-import { EmailModule } from '@/email/email.module';
+import { MailModule } from '@/mail/mail.module';
 import { UserModule } from '@/user/user.module';
 import { VerificationModule } from '@/verification/verification.module';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository';
@@ -52,7 +52,7 @@ import { jwtConfig } from '@/configs/jwt.config';
       }),
       inject: [jwtConfig.KEY],
     }),
-    EmailModule,
+    MailModule,
   ],
   controllers: [AuthController],
   providers: [

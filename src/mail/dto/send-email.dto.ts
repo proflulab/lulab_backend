@@ -2,8 +2,8 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-06-27 05:01:10
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-07-28 13:35:49
- * @FilePath: /lulab_backend/src/dto/send-email.dto.ts
+ * @LastEditTime: 2025-10-03 03:31:10
+ * @FilePath: /lulab_backend/src/mail/dto/send-email.dto.ts
  * @Description:
  *
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
