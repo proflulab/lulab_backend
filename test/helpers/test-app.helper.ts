@@ -1,12 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ModuleMetadata } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 /**
  * Helper function to create a NestJS test application
  * with common configuration and setup
  */
-export async function createTestApp(moduleImports: unknown[] = []): Promise<{
+export async function createTestApp(
+  moduleImports: NonNullable<ModuleMetadata['imports']> = [],
+): Promise<{
   app: INestApplication;
   module: TestingModule;
 }> {

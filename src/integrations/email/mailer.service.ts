@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, Logger, Inject } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
+import { emailConfig } from '@/configs';
 import * as nodemailer from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 
@@ -18,13 +19,15 @@ export class MailerService {
   private readonly logger = new Logger(MailerService.name);
   private transporter?: nodemailer.Transporter<SMTPTransport.SentMessageInfo>;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    @Inject(emailConfig.KEY)
+    private config: ConfigType<typeof emailConfig>,
+  ) {
     this.createTransporter();
   }
 
   private createTransporter() {
-    const smtpUser = this.configService.get<string>('SMTP_USER');
-    const smtpPass = this.configService.get<string>('SMTP_PASS');
+    const { user: smtpUser, pass: smtpPass } = this.config.smtp;
 
     if (!smtpUser || !smtpPass) {
       this.logger.warn(
@@ -33,17 +36,17 @@ export class MailerService {
       return;
     }
 
-    const emailConfig = {
-      host: this.configService.get<string>('SMTP_HOST', 'smtp.gmail.com'),
-      port: this.configService.get<number>('SMTP_PORT', 587),
-      secure: this.configService.get<boolean>('SMTP_SECURE', false),
+    const transporterConfig = {
+      host: this.config.smtp.host,
+      port: this.config.smtp.port,
+      secure: this.config.smtp.secure,
       auth: {
         user: smtpUser,
         pass: smtpPass,
       },
     };
 
-    this.transporter = nodemailer.createTransport(emailConfig);
+    this.transporter = nodemailer.createTransport(transporterConfig);
 
     this.transporter.verify((error: Error | null) => {
       if (error) {
@@ -64,10 +67,7 @@ export class MailerService {
       return null;
     }
 
-    const defaultFrom =
-      options.from ||
-      this.configService.get<string>('SMTP_FROM') ||
-      this.configService.get<string>('SMTP_USER');
+    const defaultFrom = options.from || this.config.smtp.from;
 
     const mailOptions: nodemailer.SendMailOptions = {
       from: defaultFrom,

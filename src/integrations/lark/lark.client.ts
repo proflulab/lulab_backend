@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import * as lark from '@larksuiteoapi/node-sdk';
 import { LarkClientConfig } from './types/lark-bitable.types';
-import { larkConfig } from './config/lark.config';
+import { larkConfig } from '../../configs/lark.config';
 
 @Injectable()
 export class LarkClient {

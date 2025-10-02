@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-06 05:06:37
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-07-06 05:12:42
+ * @LastEditTime: 2025-10-01 19:24:04
  * @FilePath: /lulab_backend/src/app.module.ts
  * @Description:
  *
@@ -17,10 +17,10 @@ import { AppService } from './app.service';
 import { EmailModule } from './email/email.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
-import { JwtAuthGuard } from './security';
+import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 import { PrismaModule } from './prisma/prisma.module';
 import { MeetingModule } from './meeting/meeting.module';
-import { TencentMeetingModule } from './tencent-meeting/tencent-meeting.module';
+import { TencentMeetingModule } from './hook-tencent-mtg/tencent-meeting.module';
 import { LarkMeetingModule } from './lark-meeting/lark-meeting.module';
 import { VerificationModule } from '@/verification/verification.module';
 import { GraphQLModule } from '@nestjs/graphql';

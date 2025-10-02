@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { TencentApiService } from './api.service';
+import { tencentMeetingConfig } from '@/configs';
 
 type TMConfig = {
   secretId: string;
@@ -23,6 +24,20 @@ const mockConfigService = {
   }),
 };
 
+const mockTencentMeetingConfig = {
+  webhook: {
+    token: 'mock-token',
+    encodingAesKey: 'mock-encoding-aes-key',
+  },
+  api: {
+    secretId: 'mock-secret-id',
+    secretKey: 'mock-secret-key',
+    appId: 'mock-app-id',
+    sdkId: 'mock-sdk-id',
+    userId: 'mock-user-id',
+  },
+};
+
 global.fetch = jest.fn();
 
 jest.mock('./crypto.util', () => ({
@@ -41,6 +56,10 @@ describe('TencentApiService', () => {
       providers: [
         TencentApiService,
         { provide: ConfigService, useValue: mockConfigService },
+        {
+          provide: tencentMeetingConfig.KEY,
+          useValue: mockTencentMeetingConfig,
+        },
       ],
     }).compile();
 

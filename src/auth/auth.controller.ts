@@ -22,7 +22,7 @@ import { RegisterService } from './services/register.service';
 import { LoginService } from './services/login.service';
 import { PasswordService } from './services/password.service';
 import { TokenService } from './services/token.service';
-import { Public } from '../security';
+import { Public } from '@/auth/decorators/public.decorator';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -30,7 +30,7 @@ import { LogoutDto } from './dto/logout.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { TokenBlacklistService } from './services/token-blacklist.service';
-import { User, CurrentUser } from '../security';
+import { User, CurrentUser } from '@/auth/decorators/user.decorator';
 
 @ApiTags('Auth')
 @Controller({
