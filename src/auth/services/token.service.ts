@@ -24,29 +24,7 @@ import { RefreshTokenRepository } from '@/auth/repositories/refresh-token.reposi
 import { randomUUID } from 'node:crypto';
 import { TokenBlacklistService } from './token-blacklist.service';
 import { TokenBlacklistScope } from '@/auth/types/jwt.types';
-
-export interface TokenGenerationContext {
-  deviceInfo?: string;
-  deviceId?: string;
-  userAgent?: string;
-  ip?: string;
-}
-
-export interface LogoutOptions {
-  refreshToken?: string;
-  deviceId?: string;
-  revokeAllDevices?: boolean;
-  userAgent?: string;
-  ip?: string;
-}
-
-export interface LogoutResult {
-  accessTokenRevoked: boolean;
-  refreshTokenRevoked: boolean;
-  allDevicesLoggedOut?: boolean;
-  revokedTokensCount?: number;
-  message: string;
-}
+import { TokenGenerationContext, LogoutOptions, LogoutResult } from '@/auth/types';
 
 @Injectable()
 export class TokenService {

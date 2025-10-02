@@ -44,3 +44,29 @@ export interface RevokeRefreshTokenOptions {
   revokedAt?: Date;
   replacedBy?: string;
 }
+
+// 令牌生成上下文接口
+export interface TokenGenerationContext {
+  deviceInfo?: string;
+  deviceId?: string;
+  userAgent?: string;
+  ip?: string;
+}
+
+// 登出选项接口
+export interface LogoutOptions {
+  refreshToken?: string;
+  deviceId?: string;
+  revokeAllDevices?: boolean;
+  userAgent?: string;
+  ip?: string;
+}
+
+// 登出结果接口
+export interface LogoutResult {
+  accessTokenRevoked: boolean;
+  refreshTokenRevoked: boolean;
+  allDevicesLoggedOut?: boolean;
+  revokedTokensCount?: number;
+  message: string;
+}
