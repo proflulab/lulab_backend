@@ -66,7 +66,7 @@ export class MailController {
       );
     }
   }
-  
+
   @Get('verify')
   @Public()
   @ApiVerifyConnectionDocs()

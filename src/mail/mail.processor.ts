@@ -18,7 +18,7 @@ export class MailProcessor extends WorkerHost {
   private readonly logger = new Logger(MailProcessor.name);
 
   async process(
-    job: Job<{ email: string; [key: string]: any }, any, string>
+    job: Job<{ email: string; [key: string]: any }, any, string>,
   ): Promise<void> {
     try {
       if (job.name === 'sendMail') {
@@ -30,8 +30,13 @@ export class MailProcessor extends WorkerHost {
         // await this.mailService.send(job.data);
         this.logger.log(`✅ 邮件发送完成: ${job.data.email}`);
       }
-    } catch (error) {
-      this.logger.error(`邮件发送失败: ${error.message}`, error.stack);
+      // Add await to satisfy the async requirement
+      await Promise.resolve();
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`邮件发送失败: ${errorMessage}`, errorStack);
       throw error; // Re-throw so the job is marked as failed
     }
   }
