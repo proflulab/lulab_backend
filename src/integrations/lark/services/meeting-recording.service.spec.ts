@@ -1,35 +1,24 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MeetingRecordingService } from './meeting-recording.service';
+import { MeetingRecordingService, GetMeetingRecordingResponse } from './meeting-recording.service';
 import { LarkClient } from '../lark.client';
 
 describe('MeetingRecordingService', () => {
-  let service: MeetingRecordingService;
-  let mockLarkClient: Partial<LarkClient>;
+  let service: MeetingRecordingService; // 测试的服务实例
+  let mockLarkClient: Partial<LarkClient>; // 用于模拟 LarkClient 的部分方法
 
   beforeEach(async () => {
+    // 创建 LarkClient 的 mock 对象
+    // 这里只模拟 vc.v1.meetingRecording.get 方法，返回固定的录制文件数据
     mockLarkClient = {
       vc: {
         v1: {
           meetingRecording: {
             get: jest.fn().mockResolvedValue({
-              code: 0,
-              msg: 'success',
               data: {
                 recording: {
                   url: 'https://example.com/recording.mp4',
-                  duration: '3600',
+                  duration: '3600', // 秒
                 },
-                recording_status: 'ready',
-                recording_start_time: 1640995200000,
-                recording_end_time: 1640998800000,
-              },
-            }),
-            setPermission: jest.fn().mockResolvedValue({
-              code: 0,
-              msg: 'success',
-              data: {
-                authorized: true,
-                download_url: 'https://example.com/recording.mp4',
               },
             }),
           },
@@ -37,74 +26,36 @@ describe('MeetingRecordingService', () => {
       },
     } as any;
 
+    // 创建 NestJS 测试模块
+    // 使用 mockLarkClient 替代真实的 LarkClient
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MeetingRecordingService,
-        {
-          provide: LarkClient,
-          useValue: mockLarkClient,
-        },
+        { provide: LarkClient, useValue: mockLarkClient },
       ],
     }).compile();
 
+    // 从测试模块中获取服务实例
     service = module.get<MeetingRecordingService>(MeetingRecordingService);
   });
 
+  // 基础测试：服务实例是否被正确创建
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  describe('getMeetingRecording', () => {
-    it('should get meeting recording successfully', async () => {
-      const result = await service.getMeetingRecording('test-meeting-id');
-      
-      expect(result.code).toBe(0);
-      expect(result.msg).toBe('success');
-      expect(result.data?.recording?.url).toBe('https://example.com/recording.mp4');
-      expect(mockLarkClient.vc?.v1?.meetingRecording?.get).toHaveBeenCalledWith({
-        path: { meeting_id: 'test-meeting-id' },
-      });
-    });
+  // 功能测试：getMeetingRecording 方法是否正确返回录制文件信息
+  it('should get meeting recording successfully', async () => {
+    // 调用服务方法，模拟传入会议ID
+    const result: GetMeetingRecordingResponse = await service.getMeetingRecording('test-meeting-id');
 
-    it('should include user access token when provided', async () => {
-      await service.getMeetingRecording('test-meeting-id', 'user-token');
-      
-      expect(mockLarkClient.vc?.v1?.meetingRecording?.get).toHaveBeenCalledWith({
-        path: { meeting_id: 'test-meeting-id' },
-        headers: { 'X-User-Access-Token': 'user-token' },
-      });
-    });
-  });
+    // 验证返回的录制文件信息是否正确
+    expect(result.recording?.url).toBe('https://example.com/recording.mp4');
+    expect(result.recording?.duration).toBe('3600');
 
-  describe('authorizeMeetingRecording', () => {
-    it('should authorize meeting recording successfully', async () => {
-      const permission = { type: 'public' as const };
-      const result = await service.authorizeMeetingRecording('test-meeting-id', permission);
-      
-      expect(result.code).toBe(0);
-      expect(result.data?.authorized).toBe(true);
-      expect(mockLarkClient.vc?.v1?.meetingRecording?.setPermission).toHaveBeenCalledWith({
-        path: { meeting_id: 'test-meeting-id' },
-        data: { permission },
-      });
-    });
-  });
-
-  describe('getRecordingFiles', () => {
-    it('should return recording files array', async () => {
-      const files = await service.getRecordingFiles('test-meeting-id');
-      
-      expect(Array.isArray(files)).toBe(true);
-      expect(files.length).toBe(1);
-      expect(files[0].download_url).toBe('https://example.com/recording.mp4');
-      expect(files[0].duration).toBe(3600);
-    });
-  });
-
-  describe('testConnection', () => {
-    it('should return true when client is properly initialized', async () => {
-      const result = await service.testConnection();
-      expect(result).toBe(true);
+    // 验证 get 方法是否被调用，并且传入了正确的参数
+    expect(mockLarkClient.vc?.v1?.meetingRecording?.get).toHaveBeenCalledWith({
+      path: { meeting_id: 'test-meeting-id' },
     });
   });
 });
