@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-03 03:50:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-03 03:53:11
+ * @LastEditTime: 2025-10-03 04:50:00
  * @FilePath: /lulab_backend/src/mail/decorators/mail.decorators.ts
  * @Description: Mail module Swagger decorators
  *
@@ -26,7 +26,7 @@ export const ApiSendEmailDocs = () =>
       summary: '发送邮件',
       description:
         '发送邮件到指定收件人，支持纯文本和HTML格式，可添加抄送和密送收件人。',
-      tags: ['Email'],
+      tags: ['Mail'],
     }),
     ApiConsumes('application/json'),
     ApiProduces('application/json'),
@@ -126,7 +126,7 @@ export const ApiVerifyConnectionDocs = () =>
     ApiOperation({
       summary: '验证SMTP连接',
       description: '验证邮件服务器SMTP连接状态，检查邮件服务是否可用。',
-      tags: ['Email'],
+      tags: ['Mail'],
     }),
     ApiProduces('application/json'),
     ApiResponse({

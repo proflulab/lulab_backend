@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-03 03:37:31
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-03 03:37:45
+ * @LastEditTime: 2025-10-03 04:42:44
  * @FilePath: /lulab_backend/src/mail/mail.processor.ts
  * @Description:
  *
@@ -11,14 +11,28 @@
 
 import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
+import { Logger } from '@nestjs/common';
 
 @Processor('mail')
 export class MailProcessor extends WorkerHost {
-  async process(job: Job<any, any, string>): Promise<any> {
-    if (job.name === 'sendMail') {
-      console.log(`📨 正在发送邮件给: ${job.data.email}`);
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // 模拟耗时
-      console.log(`✅ 邮件发送完成: ${job.data.email}`);
+  private readonly logger = new Logger(MailProcessor.name);
+
+  async process(
+    job: Job<{ email: string; [key: string]: any }, any, string>
+  ): Promise<void> {
+    try {
+      if (job.name === 'sendMail') {
+        if (!job.data?.email) {
+          throw new Error('Email address is required in job data');
+        }
+        this.logger.log(`📨 正在发送邮件给: ${job.data.email}`);
+        // TODO: Implement actual mail sending logic here
+        // await this.mailService.send(job.data);
+        this.logger.log(`✅ 邮件发送完成: ${job.data.email}`);
+      }
+    } catch (error) {
+      this.logger.error(`邮件发送失败: ${error.message}`, error.stack);
+      throw error; // Re-throw so the job is marked as failed
     }
   }
 

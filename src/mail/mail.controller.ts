@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-02 21:14:03
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-03 04:09:11
+ * @LastEditTime: 2025-10-03 04:51:36
  * @FilePath: /lulab_backend/src/mail/mail.controller.ts
  * @Description:
  *
@@ -32,7 +32,6 @@ export class MailController {
   constructor(private readonly mailService: MailService) {}
 
   @Post('send')
-  @Public()
   @ApiSendEmailDocs()
   async sendEmail(@Body() sendEmailDto: SendEmailDto) {
     try {
@@ -67,7 +66,7 @@ export class MailController {
       );
     }
   }
-
+  
   @Get('verify')
   @Public()
   @ApiVerifyConnectionDocs()
@@ -95,7 +94,6 @@ export class MailController {
   }
 
   @Post('send-later')
-  @Public()
   async sendLater(
     @Body('email') email: string,
     @Body('delay') delay: number, // 毫秒
