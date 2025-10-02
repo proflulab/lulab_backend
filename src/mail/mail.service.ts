@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-06 05:58:54
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-03 03:53:57
+ * @LastEditTime: 2025-10-03 04:01:01
  * @FilePath: /lulab_backend/src/mail/mail.service.ts
  * @Description:
  *
@@ -16,6 +16,8 @@ import {
   buildWelcomeEmail,
   buildVerificationEmail,
 } from '../common/email-templates';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 export interface EmailOptions {
   to: string;
@@ -28,7 +30,10 @@ export interface EmailOptions {
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
-  constructor(private readonly mailer: MailerService) {}
+  constructor(
+    private readonly mailer: MailerService,
+    @InjectQueue('mail') private mailQueue: Queue,
+  ) {}
 
   async sendEmail(
     sendEmailDto: SendEmailDto,
@@ -115,5 +120,14 @@ export class MailService {
   async sendWelcomeEmail(email: string, username: string): Promise<void> {
     const { subject, html } = buildWelcomeEmail(username);
     await this.sendSimpleEmail({ to: email, subject, html });
+  }
+
+  async sendMailLater(email: string, delayMs: number) {
+    await this.mailQueue.add(
+      'sendMail',
+      { email },
+      { delay: delayMs }, // 设置延迟
+    );
+    return `已将发送 ${email} 的任务加入队列，延迟 ${delayMs / 1000} 秒执行`;
   }
 }

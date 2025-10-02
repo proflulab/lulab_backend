@@ -14,13 +14,14 @@ import { MailerModule } from '../integrations/email';
 import { MailService } from './mail.service';
 import { MailController } from './mail.controller';
 import { BullModule } from '@nestjs/bullmq';
+import { MailProcessor } from './mail.processor';
 
 @Module({
   imports: [MailerModule,BullModule.registerQueue({
       name: 'mail', // 队列名称
     }),],
   controllers: [MailController],
-  providers: [MailService],
+  providers: [MailService, MailProcessor], // 注册MailProcessor
   exports: [MailService], // 导出服务以便其他模块使用
 })
 export class MailModule {}

@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-02 21:14:03
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-03 03:48:09
+ * @LastEditTime: 2025-10-03 04:09:11
  * @FilePath: /lulab_backend/src/mail/mail.controller.ts
  * @Description: 
  * 
@@ -26,8 +26,8 @@ import {
   ApiVerifyConnectionDocs,
 } from './decorators/mail.decorators';
 
-@ApiTags('Email')
-@Controller('email')
+@ApiTags('Mail')
+@Controller('mail')
 export class MailController {
   constructor(private readonly mailService: MailService) {}
 
@@ -92,5 +92,14 @@ export class MailController {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  @Post('send-later')
+  @Public()
+  async sendLater(
+    @Body('email') email: string,
+    @Body('delay') delay: number, // 毫秒
+  ) {
+    return this.mailService.sendMailLater(email, delay);
   }
 }
