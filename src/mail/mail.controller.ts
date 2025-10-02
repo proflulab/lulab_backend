@@ -4,9 +4,9 @@
  * @LastEditors: 杨仕明 shiming.y@qq.com
  * @LastEditTime: 2025-10-03 04:09:11
  * @FilePath: /lulab_backend/src/mail/mail.controller.ts
- * @Description: 
- * 
- * Copyright (c) 2025 by LuLab-Team, All Rights Reserved. 
+ * @Description:
+ *
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
  */
 
 import {

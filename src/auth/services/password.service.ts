@@ -4,9 +4,9 @@
  * @LastEditors: 杨仕明 shiming.y@qq.com
  * @LastEditTime: 2025-10-03 04:04:19
  * @FilePath: /lulab_backend/src/auth/services/password.service.ts
- * @Description: 
- * 
- * Copyright (c) 2025 by LuLab-Team, All Rights Reserved. 
+ * @Description:
+ *
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
  */
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ResetPasswordDto } from '../dto/reset-password.dto';

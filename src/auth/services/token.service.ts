@@ -24,7 +24,11 @@ import { RefreshTokenRepository } from '@/auth/repositories/refresh-token.reposi
 import { randomUUID } from 'node:crypto';
 import { TokenBlacklistService } from './token-blacklist.service';
 import { TokenBlacklistScope } from '@/auth/types/jwt.types';
-import { TokenGenerationContext, LogoutOptions, LogoutResult } from '@/auth/types';
+import {
+  TokenGenerationContext,
+  LogoutOptions,
+  LogoutResult,
+} from '@/auth/types';
 
 @Injectable()
 export class TokenService {

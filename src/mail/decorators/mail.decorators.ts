@@ -5,8 +5,8 @@
  * @LastEditTime: 2025-10-03 03:53:11
  * @FilePath: /lulab_backend/src/mail/decorators/mail.decorators.ts
  * @Description: Mail module Swagger decorators
- * 
- * Copyright (c) 2025 by LuLab-Team, All Rights Reserved. 
+ *
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
  */
 
 import { applyDecorators } from '@nestjs/common';
@@ -24,7 +24,8 @@ export const ApiSendEmailDocs = () =>
   applyDecorators(
     ApiOperation({
       summary: '发送邮件',
-      description: '发送邮件到指定收件人，支持纯文本和HTML格式，可添加抄送和密送收件人。',
+      description:
+        '发送邮件到指定收件人，支持纯文本和HTML格式，可添加抄送和密送收件人。',
       tags: ['Email'],
     }),
     ApiConsumes('application/json'),
