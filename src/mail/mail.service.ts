@@ -2,8 +2,8 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-06 05:58:54
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-08-03 20:28:15
- * @FilePath: /lulab_backend/src/email/email.service.ts
+ * @LastEditTime: 2025-10-03 03:53:57
+ * @FilePath: /lulab_backend/src/mail/mail.service.ts
  * @Description:
  *
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
@@ -26,8 +26,8 @@ export interface EmailOptions {
 }
 
 @Injectable()
-export class EmailService {
-  private readonly logger = new Logger(EmailService.name);
+export class MailService {
+  private readonly logger = new Logger(MailService.name);
   constructor(private readonly mailer: MailerService) {}
 
   async sendEmail(

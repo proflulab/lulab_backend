@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { VerificationService } from '@/verification/verification.service';
-import { EmailService } from '@/email/email.service';
+import { MailService } from '@/mail/mail.service';
 import { RegisterDto } from '../dto/register.dto';
 import { AuthResponseDto } from '../dto/auth-response.dto';
 import { AuthType } from '@/auth/enums';
@@ -18,7 +18,7 @@ export class RegisterService {
   constructor(
     private readonly userRepo: UserRepository,
     private readonly verificationService: VerificationService,
-    private readonly emailService: EmailService,
+    private readonly mailService: MailService,
     private readonly tokenService: TokenService,
     private readonly authPolicy: AuthPolicyService,
   ) {}
@@ -74,7 +74,7 @@ export class RegisterService {
 
     if (email) {
       try {
-        await this.emailService.sendWelcomeEmail(email, username || 'User');
+        await this.mailService.sendWelcomeEmail(email, username || 'User');
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);

@@ -1,10 +1,20 @@
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-10-02 21:14:03
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-10-03 04:04:19
+ * @FilePath: /lulab_backend/src/auth/services/password.service.ts
+ * @Description: 
+ * 
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved. 
+ */
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { VerificationService } from '@/verification/verification.service';
 import { CodeType } from '@/verification/enums';
 import { UserRepository } from '@/user/repositories/user.repository';
 import { AuthPolicyService } from './auth-policy.service';
-import { EmailService } from '@/email/email.service';
+import { MailService } from '@/mail/mail.service';
 import { buildPasswordResetNotificationEmail } from '../../common/email-templates';
 import { hashPassword, validatePassword } from '@/common/utils/password.util';
 import { LoginType } from '@/auth/enums';
@@ -17,7 +27,7 @@ export class PasswordService {
     private readonly userRepo: UserRepository,
     private readonly verificationService: VerificationService,
     private readonly authPolicy: AuthPolicyService,
-    private readonly emailService: EmailService,
+    private readonly mailService: MailService,
   ) {}
 
   async resetPassword(
@@ -69,7 +79,7 @@ export class PasswordService {
           new Date(),
         );
 
-        await this.emailService.sendSimpleEmail({
+        await this.mailService.sendSimpleEmail({
           to: user.email,
           subject,
           html,
