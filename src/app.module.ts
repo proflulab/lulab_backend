@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-06 05:06:37
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-03 03:43:37
+ * @LastEditTime: 2025-10-03 06:34:37
  * @FilePath: /lulab_backend/src/app.module.ts
  * @Description:
  *
@@ -30,6 +30,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { OpenaiModule } from './integrations/openai/openai.module';
 import { BullModule } from '@nestjs/bullmq';
 import { redisConfig } from './configs';
+import { TasksModule } from './task/tasks.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { redisConfig } from './configs';
         db: redisConfig().db,
       },
     }),
+    TasksModule,
     ScheduleModule.forRoot(),
     PrismaModule,
     MailModule,
