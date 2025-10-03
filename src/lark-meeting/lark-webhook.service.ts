@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-29 19:04:19
  * @LastEditors: Luckymingxuan <songmingxuan936@gmail.com>
- * @LastEditTime: 2025-10-03 14:50:31
+ * @LastEditTime: 2025-10-03 16:01:40
  * @FilePath: \lulab_backend\src\lark-meeting\lark-webhook.service.ts
  * @Description:
  *
@@ -68,9 +68,10 @@ export class LarkWebhookHandler {
         // );
 
         // 调用实例方法获取录制文件信息-测试后续还需要更改
-        const recordingInfo = await this.recordingService.getMeetingRecording(
-          '7556236982563061764',
-        );
+        const recordingInfo =
+          await this.recordingService.getMeetingRecordingInfo(
+            '7556236982563061764',
+          );
         // 处理录制文件信息，例如记录日志或存数据库
         this.logger.log(`录制文件信息: ${JSON.stringify(recordingInfo)}`);
 

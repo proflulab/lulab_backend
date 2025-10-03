@@ -24,10 +24,10 @@ export class MeetingRecordingService {
   constructor(private readonly larkClient: LarkClient) {}
 
   /**
-   * 获取会议录制文件信息（无需 TenantToken）
+   * 获取飞书会议录制文件信息
    * @param meetingId 会议ID
    */
-  async getMeetingRecording(
+  async getMeetingRecordingInfo(
     meetingId: string,
   ): Promise<GetMeetingRecordingResponse> {
     try {
