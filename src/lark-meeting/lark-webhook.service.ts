@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-29 19:04:19
  * @LastEditors: Luckymingxuan <songmingxuan936@gmail.com>
- * @LastEditTime: 2025-10-03 16:01:40
+ * @LastEditTime: 2025-10-03 17:03:02
  * @FilePath: \lulab_backend\src\lark-meeting\lark-webhook.service.ts
  * @Description:
  *
@@ -61,20 +61,13 @@ export class LarkWebhookHandler {
     this.eventDispatcher.register({
       // 企业会议结束事件: 发生在会议结束时，包含企业内所有会议结束事件。参考
       'vc.meeting.all_meeting_ended_v1': async (data) => {
-        // // data 已经是 SDK 解密/解析后的对象（若启用了加密）
-        // this.logger.log(
-        //   '[handler] vc.meeting.all_meeting_ended_v1 -> ' +
-        //     JSON.stringify(data),
-        // );
+        // data 已经是 SDK 解密/解析后的对象（若启用了加密）
+        this.logger.log(
+          '[handler] vc.meeting.all_meeting_ended_v1 -> ' +
+            JSON.stringify(data),
+        );
 
-        // 调用实例方法获取录制文件信息-测试后续还需要更改
-        const recordingInfo =
-          await this.recordingService.getMeetingRecordingInfo(
-            '7556236982563061764',
-          );
-        // 处理录制文件信息，例如记录日志或存数据库
-        this.logger.log(`录制文件信息: ${JSON.stringify(recordingInfo)}`);
-
+        await this.getLarkMeetingRecordFlow(data);
         // // 在这里做你需要的业务处理，例如写入 DB、推送通知等
         // return 'success';
       },
@@ -112,6 +105,38 @@ export class LarkWebhookHandler {
     } catch (err: any) {
       this.logger.error('调用 SDK adaptExpress 失败', err?.stack || err);
       // adaptExpress 里通常会直接在 res 上返回，但若抛出异常，这里记录并把异常向上抛以便 controller 可以处理
+      throw err;
+    }
+  }
+
+  /**
+   * 解析会议结束事件的 data，并获取飞书会议录制信息
+   * @param data vc.meeting.all_meeting_ended_v1 事件 payload
+   */
+  async getLarkMeetingRecordFlow(data: any): Promise<void> {
+    try {
+      // 实际返回体里的会议 ID 在 data.meeting.id
+      const meetingId = data?.meeting?.id;
+      if (!meetingId) {
+        this.logger.warn('会议 ID 未找到，无法获取录制信息');
+        return;
+      }
+
+      this.logger.log(`解析到会议 ID: ${meetingId}`);
+
+      // const recordingInfo = await this.recordingService.getMeetingRecordingInfo(meetingId);
+      // this.logger.log(`录制文件信息: ${JSON.stringify(recordingInfo)}`);
+
+      // 测试代码
+      // // 调用实例方法获取录制文件信息-测试后续还需要更改
+      // const recordingInfo =
+      //   await this.recordingService.getMeetingRecordingInfo(
+      //     '7556236982563061764',
+      //   );
+      // // 处理录制文件信息，例如记录日志或存数据库
+      // this.logger.log(`录制文件信息: ${JSON.stringify(recordingInfo)}`);
+    } catch (err: any) {
+      this.logger.error('getLarkMeetingRecordFlow 执行失败', err?.stack || err);
       throw err;
     }
   }
