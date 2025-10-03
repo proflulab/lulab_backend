@@ -17,11 +17,13 @@ import {
   ApiProduces,
   ApiConsumes,
   ApiHeader,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { SendEmailDto } from '@/mail/dto/send-email.dto';
 
 export const ApiSendEmailDocs = () =>
   applyDecorators(
+    ApiBearerAuth(),
     ApiOperation({
       summary: '发送邮件',
       description:
@@ -123,6 +125,7 @@ export const ApiSendEmailDocs = () =>
 
 export const ApiVerifyConnectionDocs = () =>
   applyDecorators(
+    ApiBearerAuth(),
     ApiOperation({
       summary: '验证SMTP连接',
       description: '验证邮件服务器SMTP连接状态，检查邮件服务是否可用。',

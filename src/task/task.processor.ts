@@ -38,6 +38,40 @@ export class TaskProcessor extends WorkerHost {
 
     // —— 在这里编写你真实的业务逻辑 ——
     // 举例：调用第三方 API、发送邮件、生成报表等
+
+    // TODO: 示例任务实现
+    // 根据 job.name 或 payload.type 分流到不同的业务逻辑
+    switch (job.name) {
+      case 'sendEmail':
+        // TODO: 调用邮件服务发送邮件
+        // await this.emailService.sendEmail(job.data.to, job.data.subject, job.data.body);
+        break;
+
+      case 'syncData':
+        // TODO: 同步数据到第三方系统
+        // await this.dataSyncService.sync(job.data.table, job.data.filters);
+        break;
+
+      case 'generateReport':
+        // TODO: 生成报表并上传到云存储
+        // const report = await this.reportService.generate(job.data.reportType, job.data.dateRange);
+        // await this.fileService.upload(report, job.data.destination);
+        break;
+
+      case 'processMeetingRecording':
+        // TODO: 处理会议录制文件
+        // await this.meetingService.processRecording(job.data.meetingId, job.data.recordingUrl);
+        break;
+
+      case 'cleanupExpiredData':
+        // TODO: 清理过期数据
+        // await this.cleanupService.removeExpiredData(job.data.retentionDays);
+        break;
+
+      default:
+        this.logger.warn(`Unknown job type: ${job.name}`);
+    }
+
     // 模拟：sleep 500ms
     await new Promise((r) => setTimeout(r, 500));
 
