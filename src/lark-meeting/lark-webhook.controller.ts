@@ -4,9 +4,9 @@
  * @LastEditors: Luckymingxuan <songmingxuan936@gmail.com>
  * @LastEditTime: 2025-09-22 21:17:30
  * @FilePath: \lulab_backend\src\feishu-meeting\feishu-webhook.controller.ts
- * @Description: 
- * 
- * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ * @Description:
+ *
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
 
 import {
@@ -21,7 +21,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { LarkWebhookHandler } from './lark-webhook.service';
 import { Public } from '../security';
-import type { Request, Response } from 'express'; 
+import type { Request, Response } from 'express';
 
 @ApiTags('Webhooks')
 @Controller('webhooks/feishu')
@@ -32,23 +32,28 @@ export class LarkWebhookController {
 
   constructor(private readonly larkWebhookHandler: LarkWebhookHandler) {}
 
-
   /**
    * 入口：接收飞书发送的 Webhook 请求（POST）
-   * 
+   *
    * 为什么不用 @Body()：
    *   - 飞书的 SDK 自带解密和解析逻辑
    *   - 我们必须把原始的 req/res 对象传给 SDK，才能正确处理加密事件和 challenge
-   * 
+   *
    * 参数：
    *   @Req() req  - express 的请求对象，包含 headers、body 等
    *   @Res() res  - express 的响应对象，用于返回 HTTP 响应
    */
   @Post()
   @HttpCode(HttpStatus.OK) // 默认返回 200 OK
-  @ApiOperation({ summary: '飞书Webhook', description: '接收飞书的Webhook事件' })
+  @ApiOperation({
+    summary: '飞书Webhook',
+    description: '接收飞书的Webhook事件',
+  })
   @ApiResponse({ status: 200, description: 'Webhook处理成功' })
-  async handleFeishuWebhook(@Req() req: Request, @Res() res: Response): Promise<void> {
+  async handleFeishuWebhook(
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<void> {
     this.logger.log('收到飞书 Webhook 请求(Controller)');
 
     try {
@@ -67,7 +72,10 @@ export class LarkWebhookController {
       }
     } catch (err: any) {
       // 捕获异常并打印日志
-      this.logger.error('处理 webhook 失败 (controller 捕获)', err?.stack || err);
+      this.logger.error(
+        '处理 webhook 失败 (controller 捕获)',
+        err?.stack || err,
+      );
       // 如果还没响应，返回 500
       if (!res.headersSent) {
         res.status(500).send('error');

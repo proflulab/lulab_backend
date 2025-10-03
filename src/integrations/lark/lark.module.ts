@@ -1,3 +1,13 @@
+/*
+ * @Author: Luckymingxuan <songmingxuan936@gmail.com>
+ * @Date: 2025-10-01 21:24:41
+ * @LastEditors: Luckymingxuan <songmingxuan936@gmail.com>
+ * @LastEditTime: 2025-10-03 11:56:38
+ * @FilePath: \lulab_backend\src\integrations\lark\lark.module.ts
+ * @Description: 
+ * 
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ */
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LarkClient } from './lark.client';
@@ -18,6 +28,7 @@ import { larkConfig } from './config/lark.config';
     MeetingBitableRepository,
     MeetingUserBitableRepository,
     RecordingFileBitableRepository,
+    MeetingRecordingService,
   ],
   exports: [
     LarkClient,
@@ -26,6 +37,7 @@ import { larkConfig } from './config/lark.config';
     MeetingBitableRepository,
     MeetingUserBitableRepository,
     RecordingFileBitableRepository,
+    MeetingRecordingService,
   ],
 })
 export class LarkModule {}

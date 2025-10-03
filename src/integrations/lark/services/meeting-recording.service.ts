@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { LarkClient } from '../lark.client'; // 你自己的 LarkClient
+import * as lark from '@larksuiteoapi/node-sdk';
 
 /**
  * 飞书会议录制文件信息接口
@@ -16,7 +17,6 @@ export interface GetMeetingRecordingResponse {
   recording?: MeetingRecordingFile;
 }
 
-
 @Injectable()
 export class MeetingRecordingService {
   private readonly logger = new Logger(MeetingRecordingService.name);
@@ -27,15 +27,17 @@ export class MeetingRecordingService {
    * 获取会议录制文件信息（无需 TenantToken）
    * @param meetingId 会议ID
    */
-  async getMeetingRecording(meetingId: string): Promise<GetMeetingRecordingResponse> {
+  async getMeetingRecording(
+    meetingId: string,
+  ): Promise<GetMeetingRecordingResponse> {
     try {
+      // 直接调用 VC 接口，SDK 自动管理 token
       const response = await this.larkClient.vc.v1.meetingRecording.get({
         path: { meeting_id: meetingId },
       });
 
-      this.logger.debug(`Meeting recording retrieved for ${meetingId}`);
+      // this.logger.debug(`Meeting recording retrieved for ${meetingId}`);
 
-      // return response.data;
       // 给默认值，确保返回值不为 undefined
       return response.data ?? {};
     } catch (error: any) {
