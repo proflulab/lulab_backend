@@ -123,11 +123,7 @@ export class TasksService {
       }
       const job = await this.queue.add(
         'cron',
-        (dto.payload ??
-          (existing.payload as Record<string, unknown>)) as Record<
-          string,
-          unknown
-        >,
+        dto.payload ?? (existing.payload as Record<string, unknown>),
         {
           repeat: { cron: dto.cron, tz: 'Asia/Shanghai' },
           removeOnComplete: { age: 3600, count: 1000 },
@@ -135,8 +131,8 @@ export class TasksService {
         } as JobsOptions,
       );
 
-      const repeatKey = (job.opts.repeat?.key ??
-        (job as { repeatJobKey?: string }).repeatJobKey) as string | undefined;
+      const repeatKey =
+        job.opts.repeat?.key ?? (job as { repeatJobKey?: string }).repeatJobKey;
 
       return this.prisma.scheduledTask.update({
         where: { id },
