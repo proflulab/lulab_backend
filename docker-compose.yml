@@ -10,17 +10,30 @@ services:
     networks:
       - lulab_network
   redis:
-    image: redis:7-alpine
+    image: redis:8.2.1-alpine
     restart: always
+    # ⚠️ 如果无需对外暴露，建议去掉下面一行，改用不暴露端口：
     ports:
       - '6379:6379'
+    # 若只允许本机访问，可以这样：
+    # ports:
+    #   - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      REDIS_DATABASES: ${REDIS_DATABASES}
-      REDIS_MAXMEMORY: ${REDIS_MAXMEMORY}
-      REDIS_APPENDONLY: ${REDIS_APPENDONLY}
+    command:
+      [
+      "redis-server",
+      "--appendonly","yes",
+      "--requirepass","${REDIS_PASSWORD}",
+      "--databases","${REDIS_DATABASES:-16}",
+      "--maxmemory","${REDIS_MAXMEMORY:-256mb}",
+      "--maxmemory-policy","allkeys-lru"
+    ]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     networks:
       - lulab_network
 

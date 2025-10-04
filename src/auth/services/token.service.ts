@@ -1,33 +1,34 @@
-import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-10-01 21:54:50
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-10-02 04:05:29
+ * @FilePath: /lulab_backend/src/auth/services/token.service.ts
+ * @Description:
+ *
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
+ */
+
+import {
+  Injectable,
+  UnauthorizedException,
+  Logger,
+  Inject,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import { UserRepository } from '../repositories/user.repository';
-import { RefreshTokenRepository } from '../repositories/refresh-token.repository';
+import { ConfigType } from '@nestjs/config';
+import { jwtConfig } from '@/configs/jwt.config';
+import { UserRepository } from '@/user/repositories/user.repository';
+import { RefreshTokenRepository } from '@/auth/repositories/refresh-token.repository';
 import { randomUUID } from 'node:crypto';
 import { TokenBlacklistService } from './token-blacklist.service';
-
-export interface TokenGenerationContext {
-  deviceInfo?: string;
-  deviceId?: string;
-  userAgent?: string;
-  ip?: string;
-}
-
-export interface LogoutOptions {
-  refreshToken?: string;
-  deviceId?: string;
-  revokeAllDevices?: boolean;
-  userAgent?: string;
-  ip?: string;
-}
-
-export interface LogoutResult {
-  accessTokenRevoked: boolean;
-  refreshTokenRevoked: boolean;
-  allDevicesLoggedOut?: boolean;
-  revokedTokensCount?: number;
-  message: string;
-}
+import { TokenBlacklistScope } from '@/auth/types/jwt.types';
+import {
+  TokenGenerationContext,
+  LogoutOptions,
+  LogoutResult,
+} from '@/auth/types';
 
 @Injectable()
 export class TokenService {
@@ -41,18 +42,14 @@ export class TokenService {
     private readonly jwtService: JwtService,
     private readonly userRepo: UserRepository,
     private readonly refreshTokenRepo: RefreshTokenRepository,
-    private readonly configService: ConfigService,
+    @Inject(jwtConfig.KEY)
+    private readonly config: ConfigType<typeof jwtConfig>,
     private readonly tokenBlacklist: TokenBlacklistService,
   ) {
-    this.accessSecret =
-      this.configService.get<string>('JWT_SECRET') || 'your-secret-key';
-    this.refreshSecret =
-      this.configService.get<string>('JWT_REFRESH_SECRET') ||
-      'your-refresh-secret-key';
-    this.accessExpiresIn =
-      this.configService.get<string>('JWT_EXPIRES_IN') || '15m';
-    this.refreshExpiresIn =
-      this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d';
+    this.accessSecret = this.config.accessSecret;
+    this.refreshSecret = this.config.refreshSecret;
+    this.accessExpiresIn = this.config.accessExpiresIn;
+    this.refreshExpiresIn = this.config.refreshExpiresIn;
   }
 
   /**
@@ -126,7 +123,7 @@ export class TokenService {
       });
     } catch (error) {
       this.logger.error('Failed to store refresh token', error);
-      // 继续执行，因为令牌本身是有效的
+      throw new InternalServerErrorException('生成刷新令牌失败');
     }
 
     return { accessToken, refreshToken };
@@ -150,7 +147,10 @@ export class TokenService {
       }
 
       // 检查令牌是否在黑名单中
-      const revoked = await this.tokenBlacklist.isTokenBlacklisted(payload.jti);
+      const revoked = await this.tokenBlacklist.isTokenBlacklisted(
+        payload.jti,
+        TokenBlacklistScope.RefreshToken,
+      );
       if (revoked) {
         throw new UnauthorizedException('刷新令牌已被撤销');
       }
@@ -221,8 +221,7 @@ export class TokenService {
           'Failed to store new refresh token during rotation',
           error,
         );
-        // 如果存储失败，仍然返回旧的刷新令牌，但记录错误
-        return { accessToken, refreshToken };
+        throw new InternalServerErrorException('刷新令牌轮换失败');
       }
 
       // 标记旧令牌被替换，实现防重放攻击
@@ -236,7 +235,10 @@ export class TokenService {
 
       // 将旧刷新令牌加入黑名单，确保只能使用一次
       try {
-        await this.tokenBlacklist.add(refreshToken);
+        await this.tokenBlacklist.add(
+          refreshToken,
+          TokenBlacklistScope.RefreshToken,
+        );
       } catch (error) {
         this.logger.error('Failed to blacklist old refresh token', error);
       }
@@ -264,7 +266,10 @@ export class TokenService {
 
     try {
       // 1. 撤销访问令牌（加入黑名单）
-      const accessTokenResult = await this.tokenBlacklist.add(accessToken);
+      const accessTokenResult = await this.tokenBlacklist.add(
+        accessToken,
+        TokenBlacklistScope.AccessToken,
+      );
       result.accessTokenRevoked = accessTokenResult.added;
 
       // 2. 处理刷新令牌
@@ -286,14 +291,20 @@ export class TokenService {
             result.refreshTokenRevoked = !!revokedToken;
 
             // 同时将刷新令牌加入黑名单
-            await this.tokenBlacklist.add(options.refreshToken);
+            await this.tokenBlacklist.add(
+              options.refreshToken,
+              TokenBlacklistScope.RefreshToken,
+            );
           }
         } catch (error) {
           this.logger.warn('Failed to verify/revoke refresh token', error);
           // 尽力撤销，即使验证失败也要尝试撤销
           try {
             await this.refreshTokenRepo.revokeToken(options.refreshToken);
-            await this.tokenBlacklist.add(options.refreshToken);
+            await this.tokenBlacklist.add(
+              options.refreshToken,
+              TokenBlacklistScope.RefreshToken,
+            );
             result.refreshTokenRevoked = true;
           } catch {
             // 忽略错误
@@ -301,24 +312,23 @@ export class TokenService {
         }
       }
 
-      // 3. 处理设备级别的撤销
-      if (options.deviceId && !options.revokeAllDevices) {
+      // 3. 根据选项撤销刷新令牌
+      if (options.revokeAllDevices) {
+        const revokedCount =
+          await this.refreshTokenRepo.revokeAllTokensByUserId(userId);
+        result.allDevicesLoggedOut = true;
+        result.revokedTokensCount = revokedCount;
+      } else if (options.deviceId) {
         const revokedCount = await this.refreshTokenRepo.revokeTokensByDeviceId(
           userId,
           options.deviceId,
         );
         result.revokedTokensCount = revokedCount;
+      } else if (options.refreshToken) {
+        result.revokedTokensCount = result.refreshTokenRevoked ? 1 : 0;
       }
 
-      // 4. 处理所有设备登出
-      if (options.revokeAllDevices || !options.refreshToken) {
-        const revokedCount =
-          await this.refreshTokenRepo.revokeAllTokensByUserId(userId);
-        result.allDevicesLoggedOut = true;
-        result.revokedTokensCount = revokedCount;
-      }
-
-      // 5. 生成成功消息
+      // 4. 生成成功消息
       if (result.allDevicesLoggedOut) {
         result.message = `退出登录成功，已撤销所有设备的 ${result.revokedTokensCount} 个令牌`;
       } else if (result.revokedTokensCount && result.revokedTokensCount > 0) {

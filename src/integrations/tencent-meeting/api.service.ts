@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, Inject } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
+import { tencentMeetingConfig } from '@/configs/tencent-mtg.config';
 import { generateSignature } from './crypto.util';
 import {
   RecordingDetail,
@@ -21,21 +22,22 @@ import {
 export class TencentApiService {
   private readonly BASE_URL = 'https://api.meeting.qq.com';
 
-  constructor(private configService: ConfigService) {}
+  constructor(
+    @Inject(tencentMeetingConfig.KEY)
+    private config: ConfigType<typeof tencentMeetingConfig>,
+  ) {}
 
   /**
-   * Retrieves Tencent Meeting API configuration from environment variables
+   * Retrieves Tencent Meeting API configuration from injected config
    * @returns Configuration object containing API credentials and settings
    */
   private getConfig() {
     return {
-      secretId:
-        this.configService.get<string>('TENCENT_MEETING_SECRET_ID') || '',
-      secretKey:
-        this.configService.get<string>('TENCENT_MEETING_SECRET_KEY') || '',
-      appId: this.configService.get<string>('TENCENT_MEETING_APP_ID') || '',
-      sdkId: this.configService.get<string>('TENCENT_MEETING_SDK_ID') || '',
-      userId: this.configService.get<string>('USER_ID') || '',
+      secretId: this.config.api.secretId,
+      secretKey: this.config.api.secretKey,
+      appId: this.config.api.appId,
+      sdkId: this.config.api.sdkId,
+      userId: this.config.api.userId,
     };
   }
 

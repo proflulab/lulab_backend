@@ -12,8 +12,8 @@ import { CodeType } from '@/verification/enums';
 import * as bcrypt from 'bcryptjs';
 import { TokenService } from './token.service';
 import { AuthPolicyService } from './auth-policy.service';
-import { UserRepository } from '../repositories/user.repository';
-import { formatUserResponse } from './utils/user-mapper';
+import { UserRepository } from '@/user/repositories/user.repository';
+import { formatUserResponse } from '@/common/utils';
 
 @Injectable()
 export class LoginService {

@@ -1,5 +1,17 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-09-23 06:15:34
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-10-01 14:35:09
+ * @FilePath: /lulab_backend/src/redis/redis.service.ts
+ * @Description:
+ *
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
+ */
+
+import { Injectable, Logger, OnModuleDestroy, Inject } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
+import { redisConfig } from '@/configs';
 import Redis, { Redis as RedisClient } from 'ioredis';
 
 @Injectable()
@@ -7,29 +19,25 @@ export class RedisService implements OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
   private client?: RedisClient;
 
-  constructor(private readonly config: ConfigService) {
-    const redisUrl = this.config.get<string>('REDIS_URL');
-
-    if (redisUrl) {
-      // 如果存在 REDIS_URL，优先使用 URL 连接
-      this.client = new Redis(redisUrl, {
+  constructor(
+    @Inject(redisConfig.KEY)
+    private readonly config: ConfigType<typeof redisConfig>,
+  ) {
+    if (this.config.url) {
+      // 如果存在 url，优先使用 URL 连接
+      this.client = new Redis(this.config.url, {
         lazyConnect: false,
         enableAutoPipelining: true,
         maxRetriesPerRequest: 2,
       });
     } else {
-      // 如果没有 REDIS_URL，使用独立的配置参数构建连接
-      const host = this.config.get<string>('REDIS_HOST') || 'localhost';
-      const port = this.config.get<number>('REDIS_PORT') || 6379;
-      const password = this.config.get<string>('REDIS_PASSWORD');
-      const db = this.config.get<number>('REDIS_DB') || 0;
-
-      if (host && port) {
+      // 如果没有 url，使用独立的配置参数构建连接
+      if (this.config.host && this.config.port) {
         this.client = new Redis({
-          host,
-          port,
-          password: password || undefined,
-          db,
+          host: this.config.host,
+          port: this.config.port,
+          password: this.config.password || undefined,
+          db: this.config.db,
           lazyConnect: false,
           enableAutoPipelining: true,
           maxRetriesPerRequest: 2,

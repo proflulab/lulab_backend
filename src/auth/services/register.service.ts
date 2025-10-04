@@ -1,15 +1,15 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { VerificationService } from '@/verification/verification.service';
-import { EmailService } from '@/email/email.service';
+import { MailService } from '@/mail/mail.service';
 import { RegisterDto } from '../dto/register.dto';
 import { AuthResponseDto } from '../dto/auth-response.dto';
 import { AuthType } from '@/auth/enums';
 import { CodeType } from '@/verification/enums';
-import { UserRepository } from '../repositories/user.repository';
+import { UserRepository } from '@/user/repositories/user.repository';
 import { TokenService } from './token.service';
 import { AuthPolicyService } from './auth-policy.service';
-import { formatUserResponse } from './utils/user-mapper';
-import { hashPassword, validatePassword } from './utils/password.util';
+import { formatUserResponse } from '@/common/utils';
+import { hashPassword, validatePassword } from '@/common/utils/password.util';
 
 @Injectable()
 export class RegisterService {
@@ -18,7 +18,7 @@ export class RegisterService {
   constructor(
     private readonly userRepo: UserRepository,
     private readonly verificationService: VerificationService,
-    private readonly emailService: EmailService,
+    private readonly mailService: MailService,
     private readonly tokenService: TokenService,
     private readonly authPolicy: AuthPolicyService,
   ) {}
@@ -74,7 +74,7 @@ export class RegisterService {
 
     if (email) {
       try {
-        await this.emailService.sendWelcomeEmail(email, username || 'User');
+        await this.mailService.sendWelcomeEmail(email, username || 'User');
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);

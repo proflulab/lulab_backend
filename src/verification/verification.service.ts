@@ -5,7 +5,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { VerificationRepository } from './repositories/verification.repository';
-import { EmailService } from '@/email/email.service';
+import { MailService } from '@/mail/mail.service';
 import { AliyunSmsService } from '../integrations/aliyun/aliyun-sms.service';
 import { CodeType } from '@/verification/enums';
 import { VerificationCodeType } from '@prisma/client';
@@ -19,7 +19,7 @@ import {
 export class VerificationService {
   constructor(
     private readonly repo: VerificationRepository,
-    private readonly emailService: EmailService,
+    private readonly mailService: MailService,
     private readonly aliyunSmsService: AliyunSmsService,
   ) {}
 
@@ -131,7 +131,7 @@ export class VerificationService {
       [CodeType.RESET_PASSWORD]: 'reset_password',
     } as const;
 
-    await this.emailService.sendVerificationCode(email, code, typeMap[type]);
+    await this.mailService.sendVerificationCode(email, code, typeMap[type]);
   }
 
   private async sendSmsCode(

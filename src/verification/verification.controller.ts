@@ -1,3 +1,14 @@
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-09-23 06:15:34
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-10-02 02:54:18
+ * @FilePath: /lulab_backend/src/verification/verification.controller.ts
+ * @Description: 验证服务控制器
+ *
+ * Copyright (c) 2025 by 杨仕明 shiming.y@qq.com, All Rights Reserved.
+ */
+
 import {
   Body,
   Controller,
@@ -10,7 +21,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { VerificationService } from './verification.service';
 import { SendCodeDto } from './dto/send-code.dto';
 import { VerifyCodeDto } from './dto/verify-code.dto';
-import { Public } from '../security';
+import { Public } from '@/auth/decorators/public.decorator';
 import {
   ApiSendCodeDocs,
   ApiVerifyCodeDocs,
