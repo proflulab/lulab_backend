@@ -2,9 +2,9 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-09-13 03:27:25
- * @FilePath: /lulab_backend/src/tencent-meeting/services/event-handlers/recording-completed.handler.ts
- * @Description:
+ * @LastEditTime: 2025-10-03 15:47:58
+ * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/event-handlers/recording-completed.handler.ts
+ * @Description: 录制完成事件处理器
  *
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
@@ -16,9 +16,9 @@ import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
   RecordingFileBitableRepository,
-} from '../../../integrations/lark/repositories';
-import { TencentApiService } from '../../../integrations/tencent-meeting/api.service';
-import { MeetingParticipantDetail } from '../../../integrations/tencent-meeting/types';
+} from '@/integrations/lark/repositories';
+import { TencentApiService } from '@/integrations/tencent-meeting/api.service';
+import { MeetingParticipantDetail } from '@/integrations/tencent-meeting/types';
 
 /**
  * 录制完成事件处理器
@@ -265,6 +265,11 @@ export class RecordingCompletedHandler extends BaseEventHandler {
           );
           // 不抛出错误，避免影响主流程
         }
+
+
+
+        
+
       }
     } else {
       this.logger.log(`该会议没有录制文件 [${index}]: ${meeting_info.subject}`);
