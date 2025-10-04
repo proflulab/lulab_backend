@@ -1,9 +1,9 @@
 /*
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-29 19:45:09
- * @LastEditors: Luckymingxuan <songmingxuan936@gmail.com>
- * @LastEditTime: 2025-09-22 21:17:30
- * @FilePath: \lulab_backend\src\feishu-meeting\feishu-webhook.controller.ts
+ * @LastEditors: Mingxuan 159552597+Luckymingxuan@users.noreply.github.com
+ * @LastEditTime: 2025-10-04 16:39:41
+ * @FilePath: \lulab_backend\src\lark-meeting\lark-webhook.controller.ts
  * @Description:
  *
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
@@ -20,7 +20,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { LarkWebhookHandler } from './lark-webhook.service';
-import { Public } from '../security';
+import { Public } from '@/auth/decorators/public.decorator';
 import type { Request, Response } from 'express';
 
 @ApiTags('Webhooks')
