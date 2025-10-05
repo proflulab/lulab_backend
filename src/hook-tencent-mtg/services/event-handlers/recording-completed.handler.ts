@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-03 15:47:58
+ * @LastEditTime: 2025-10-05 00:18:15
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/event-handlers/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -16,9 +16,11 @@ import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
   RecordingFileBitableRepository,
+  NumberRecordBitableRepository,
 } from '@/integrations/lark/repositories';
 import { TencentApiService } from '@/integrations/tencent-meeting/api.service';
 import { MeetingParticipantDetail } from '@/integrations/tencent-meeting/types';
+import { OpenaiService } from '@/integrations/openai/openai.service';
 
 /**
  * 录制完成事件处理器
@@ -31,7 +33,9 @@ export class RecordingCompletedHandler extends BaseEventHandler {
     private readonly MeetingBitable: MeetingBitableRepository,
     private readonly meetingUserBitable: MeetingUserBitableRepository,
     private readonly recordingFileBitable: RecordingFileBitableRepository,
+    private readonly numberRecordBitable: NumberRecordBitableRepository,
     private readonly tencentMeetingApi: TencentApiService,
+    private readonly openaiService: OpenaiService,
   ) {
     super();
   }
@@ -258,6 +262,72 @@ export class RecordingCompletedHandler extends BaseEventHandler {
               );
             }
           }
+
+          // 对参会者逐个进行会议总结
+          this.logger.log(
+            `开始对参会者进行个性化会议总结 [${index}]: 共 ${uniqueParticipants.length} 个参与者`,
+          );
+
+          for (const participant of uniqueParticipants) {
+            try {
+              // 构建参会者的会议总结提示词
+              const participantSummaryPrompt = `
+你是专业的会议总结助手，请为参会者提供个性化的会议总结。
+
+会议信息：
+- 会议主题：${meeting_info.subject}
+- 会议时间：${new Date(meeting_info.start_time * 1000).toLocaleString()} - ${new Date(meeting_info.end_time * 1000).toLocaleString()}
+- 参会者：${participant.user_name}
+
+会议内容：
+${ai_minutes || '暂无会议纪要'}
+
+待办事项：
+${todo || '暂无待办事项'}
+
+录音转写：
+${formattedTranscript || '暂无录音转写'}
+
+请为参会者「${participant.user_name}」生成一份个性化的会议总结，包含：
+1. 会议要点回顾
+2. 与该参会者相关的重要讨论
+3. 该参会者需要关注的待办事项
+4. 后续行动建议
+
+请用中文回答，保持简洁专业。
+              `.trim();
+
+              // 调用OpenAI生成个性化总结
+              const participantSummary = await this.openaiService.ask(
+                participantSummaryPrompt,
+                '你是专业的会议总结助手，擅长为参会者提供个性化、实用的会议总结。',
+              );
+
+              this.logger.log(
+                `生成参会者总结成功: ${participant.user_name} (${participant.uuid})`,
+              );
+
+              // 保存参会者总结到number_record表
+              await this.numberRecordBitable.upsertNumberRecord({
+                meet_participant: [
+                  participant.uuid,
+                  participant.user_name,
+                ].filter(Boolean),
+                participant_summary: participantSummary,
+                meet_data: [meetingRecordId ?? ''],
+              });
+
+              this.logger.log(
+                `参会者总结记录已保存: ${participant.user_name} (${participant.uuid})`,
+              );
+            } catch (error: unknown) {
+              const errorMessage = this.getErrorMessage(error);
+              this.logger.warn(
+                `生成参会者总结失败: ${participant.user_name} (${participant.uuid}), 错误: ${errorMessage}`,
+              );
+              // 不抛出错误，避免影响主流程
+            }
+          }
         } catch (error: unknown) {
           this.logger.error(
             `处理录制文件失败: ${file.record_file_id}`,
@@ -265,11 +335,6 @@ export class RecordingCompletedHandler extends BaseEventHandler {
           );
           // 不抛出错误，避免影响主流程
         }
-
-
-
-        
-
       }
     } else {
       this.logger.log(`该会议没有录制文件 [${index}]: ${meeting_info.subject}`);

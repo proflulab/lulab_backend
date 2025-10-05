@@ -21,12 +21,14 @@ import { MeetingEndedHandler } from './services/event-handlers/meeting-ended.han
 import { RecordingCompletedHandler } from './services/event-handlers/recording-completed.handler';
 import { MeetingParticipantJoinedHandler } from './services/event-handlers/meeting-participant-joined.handler';
 import { tencentMeetingConfig } from '../configs/tencent-mtg.config';
+import { OpenaiModule } from '../integrations/openai/openai.module';
 
 @Module({
   imports: [
     ConfigModule.forFeature(tencentMeetingConfig),
     LarkModule,
     TencentModule,
+    OpenaiModule,
   ],
   controllers: [TencentWebhookController],
   providers: [
