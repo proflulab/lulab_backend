@@ -7,7 +7,7 @@ import {
   BitableField,
   SearchFilter,
 } from '../types/lark-bitable.types';
-import { larkConfig } from '../../../configs/lark.config';
+import { larkConfig } from '@/configs';
 import { RecordingFileData } from '../types';
 
 /**

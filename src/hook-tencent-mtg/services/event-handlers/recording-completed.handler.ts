@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-05 00:18:15
+ * @LastEditTime: 2025-10-06 07:35:33
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/event-handlers/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -115,7 +115,10 @@ export class RecordingCompletedHandler extends BaseEventHandler {
                 file.record_file_id,
                 meeting_info.creator.userid || '',
               );
-            fullsummary = summaryResponse.ai_summary || '';
+            fullsummary =
+              Buffer.from(summaryResponse.ai_summary, 'base64').toString(
+                'utf-8',
+              ) || '';
             this.logger.log(`获取智能摘要成功: ${file.record_file_id}`);
           } catch (error: unknown) {
             const errorMessage = this.getErrorMessage(error);
@@ -143,6 +146,8 @@ export class RecordingCompletedHandler extends BaseEventHandler {
 
           // 获取录音转写内容
           let formattedTranscript = '';
+          const uniqueUsernames = new Set<string>(); // 用于存储所有唯一的用户名
+
           try {
             const transcriptResponse =
               await this.tencentMeetingApi.getTranscript(
@@ -151,35 +156,50 @@ export class RecordingCompletedHandler extends BaseEventHandler {
               );
 
             if (transcriptResponse.minutes?.paragraphs) {
-              // 格式化转写内容为指定格式
+              // 提取所有唯一的用户名
+              for (const paragraph of transcriptResponse.minutes.paragraphs) {
+                const speakerName =
+                  paragraph.speaker_info?.username || '未知发言人';
+                uniqueUsernames.add(speakerName);
+              }
+
+              // 格式化转写内容为指定格式 - 将每个段落的所有句子组合成段落
               const formattedLines: string[] = [];
 
               for (const paragraph of transcriptResponse.minutes.paragraphs) {
                 const speakerName =
                   paragraph.speaker_info?.username || '未知发言人';
-
-                for (const sentence of paragraph.sentences) {
-                  // 转换时间戳为分钟:秒格式
-                  const startTime = sentence.start_time;
-                  const minutes = Math.floor(startTime / 60000); // 转换为分钟
+                
+                // 转换第一个句子的时间戳为小时:分钟:秒格式
+                const firstSentence = paragraph.sentences[0];
+                if (firstSentence) {
+                  const startTime = firstSentence.start_time;
+                  const hours = Math.floor(startTime / 3600000); // 转换为小时
+                  const minutes = Math.floor((startTime % 3600000) / 60000); // 剩余的分钟
                   const seconds = Math.floor((startTime % 60000) / 1000); // 剩余的秒
+                  const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
-                  // 获取句子文本（从words数组中提取）
-                  const sentenceText = sentence.words
-                    .map((word) => word.text)
-                    .join('');
+                  // 将段落中的所有句子组合成一个段落文本
+                  const paragraphText = paragraph.sentences
+                    .map((sentence) => 
+                      sentence.words
+                        .map((word) => word.text)
+                        .join('')
+                    )
+                    .join('')
+                    .trim();
 
-                  if (sentenceText.trim()) {
+                  if (paragraphText) {
                     formattedLines.push(
-                      `${speakerName}(${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}): ${sentenceText.trim()}`,
+                      `${speakerName}(${timeString})：${paragraphText}`,
                     );
                   }
                 }
               }
 
-              formattedTranscript = formattedLines.join('\n');
+              formattedTranscript = formattedLines.join('\n\n');
               this.logger.log(
-                `获取录音转写成功: ${file.record_file_id}, 共 ${formattedLines.length} 条记录`,
+                `获取录音转写成功: ${file.record_file_id}, 共 ${formattedLines.length} 条记录, 提取到 ${uniqueUsernames.size} 个唯一用户名`,
               );
             }
           } catch (error: unknown) {
@@ -202,15 +222,21 @@ export class RecordingCompletedHandler extends BaseEventHandler {
 
             // 根据 uuid 去重
             const seenUuids = new Set<string>();
-            uniqueParticipants = participantsResponse.participants.filter(
-              (participant) => {
+            uniqueParticipants = participantsResponse.participants
+              .filter((participant) => {
                 if (seenUuids.has(participant.uuid)) {
                   return false;
                 }
                 seenUuids.add(participant.uuid);
                 return true;
-              },
-            );
+              })
+              .map((participant) => ({
+                ...participant,
+                user_name: Buffer.from(
+                  participant.user_name,
+                  'base64',
+                ).toString('utf-8'),
+              }));
 
             this.logger.log(
               `获取会议参与者成功: ${meeting_info.meeting_id}, 共 ${uniqueParticipants.length} 个唯一参与者`,
@@ -231,7 +257,9 @@ export class RecordingCompletedHandler extends BaseEventHandler {
               fullsummary,
               todo,
               ai_minutes,
-              participants: uniqueParticipants.map((p) => p.user_name),
+              participants: uniqueParticipants
+                .map((p) => p.user_name)
+                .toString(),
               ai_meeting_transcripts: formattedTranscript,
             });
 
@@ -268,7 +296,7 @@ export class RecordingCompletedHandler extends BaseEventHandler {
             `开始对参会者进行个性化会议总结 [${index}]: 共 ${uniqueParticipants.length} 个参与者`,
           );
 
-          for (const participant of uniqueParticipants) {
+          for (const participant of uniqueUsernames) {
             try {
               // 构建参会者的会议总结提示词
               const participantSummaryPrompt = `
@@ -277,7 +305,7 @@ export class RecordingCompletedHandler extends BaseEventHandler {
 会议信息：
 - 会议主题：${meeting_info.subject}
 - 会议时间：${new Date(meeting_info.start_time * 1000).toLocaleString()} - ${new Date(meeting_info.end_time * 1000).toLocaleString()}
-- 参会者：${participant.user_name}
+- 参会者：${participant}
 
 会议内容：
 ${ai_minutes || '暂无会议纪要'}
@@ -288,7 +316,7 @@ ${todo || '暂无待办事项'}
 录音转写：
 ${formattedTranscript || '暂无录音转写'}
 
-请为参会者「${participant.user_name}」生成一份个性化的会议总结，包含：
+请为参会者「${participant}」生成一份个性化的会议总结，包含：
 1. 会议要点回顾
 2. 与该参会者相关的重要讨论
 3. 该参会者需要关注的待办事项
@@ -304,26 +332,23 @@ ${formattedTranscript || '暂无录音转写'}
               );
 
               this.logger.log(
-                `生成参会者总结成功: ${participant.user_name} (${participant.uuid})`,
+                `生成参会者总结成功: ${participant}`,
               );
 
               // 保存参会者总结到number_record表
               await this.numberRecordBitable.upsertNumberRecord({
-                meet_participant: [
-                  participant.uuid,
-                  participant.user_name,
-                ].filter(Boolean),
+                meet_participant: [],
                 participant_summary: participantSummary,
-                meet_data: [meetingRecordId ?? ''],
+                record_file: [recordingResult.data?.record.record_id ?? ''],
               });
 
               this.logger.log(
-                `参会者总结记录已保存: ${participant.user_name} (${participant.uuid})`,
+                `参会者总结记录已保存: ${participant}`,
               );
             } catch (error: unknown) {
               const errorMessage = this.getErrorMessage(error);
               this.logger.warn(
-                `生成参会者总结失败: ${participant.user_name} (${participant.uuid}), 错误: ${errorMessage}`,
+                `生成参会者总结失败: ${participant}, 错误: ${errorMessage}`,
               );
               // 不抛出错误，避免影响主流程
             }

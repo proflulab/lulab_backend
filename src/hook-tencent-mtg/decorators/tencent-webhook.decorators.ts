@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-23 06:15:34
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-02 03:04:50
+ * @LastEditTime: 2025-10-06 00:53:39
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/decorators/tencent-webhook.decorators.ts
  * @Description: 腾讯会议Webhook装饰器
  *
@@ -36,17 +36,18 @@ export function ApiTencentUrlVerificationDocs() {
     }),
     ApiHeader({
       name: 'timestamp',
-      description: '时间戳（Header参数）',
+      description: '时间戳，与 nonce 结合使用，用于签名校验。',
       required: true,
     }),
     ApiHeader({
       name: 'nonce',
-      description: '随机数（Header参数）',
+      description: '随机数，与timestamp 结合使用，用于签名校验。',
       required: true,
     }),
     ApiHeader({
       name: 'signature',
-      description: '签名（Header参数）',
+      description:
+        '加密签名，signature 的计算结合开发者填写的 token、timestamp、nonce、消息体，签名计算方法请参见-https://cloud.tencent.com/document/product/1095/51612',
       required: true,
     }),
     ApiResponse({
@@ -76,29 +77,20 @@ export function ApiTencentEventReceiverDocs() {
       tags: ['Tencent Meeting'],
     }),
     ApiHeader({
-      name: 'Wechatwork-Signature',
-      description: '腾讯会议签名',
+      name: 'timestamp',
+      description: '时间戳，与 nonce 结合使用，用于签名校验。',
       required: true,
     }),
-    ApiQuery({
-      name: 'msg_signature',
-      description: '消息签名（URL验证时使用）',
-      required: false,
-    }),
-    ApiQuery({
-      name: 'timestamp',
-      description: '时间戳',
-      required: false,
-    }),
-    ApiQuery({
+    ApiHeader({
       name: 'nonce',
-      description: '随机数',
-      required: false,
+      description: '随机数，与timestamp 结合使用，用于签名校验。',
+      required: true,
     }),
-    ApiQuery({
-      name: 'echostr',
-      description: '验证字符串（URL验证时使用）',
-      required: false,
+    ApiHeader({
+      name: 'signature',
+      description:
+        '加密签名，signature 的计算结合开发者填写的 token、timestamp、nonce、消息体，签名计算方法请参见-https://cloud.tencent.com/document/product/1095/51612',
+      required: true,
     }),
     ApiResponse({
       status: 200,

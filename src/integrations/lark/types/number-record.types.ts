@@ -5,7 +5,7 @@
 export interface NumberRecordData {
   meet_participant: string[];
   participant_summary: string;
-  meet_data: string[];
+  record_file: string[];
 }
 
 /**
@@ -14,5 +14,5 @@ export interface NumberRecordData {
 export interface UpdateNumberRecordData {
   meet_participant?: string[];
   participant_summary?: string;
-  meet_data?: string[];
+  record_file?: string[];
 }

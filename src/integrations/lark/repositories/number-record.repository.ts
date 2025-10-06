@@ -1,3 +1,13 @@
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-10-04 22:34:39
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-10-06 07:34:37
+ * @FilePath: /lulab_backend/src/integrations/lark/repositories/number-record.repository.ts
+ * @Description: 
+ * 
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved. 
+ */
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { BitableService } from '../services/bitable.service';
@@ -44,7 +54,7 @@ export class NumberRecordBitableRepository {
     const fields: BitableField = {
       meet_participant: recordData.meet_participant,
       participant_summary: recordData.participant_summary,
-      meet_data: recordData.meet_data,
+      record_file: recordData.record_file,
     };
 
     this.logger.log(
@@ -68,7 +78,7 @@ export class NumberRecordBitableRepository {
     const fields: BitableField = {
       meet_participant: recordData.meet_participant,
       participant_summary: recordData.participant_summary,
-      meet_data: recordData.meet_data,
+      record_file: recordData.record_file,
     };
 
     try {
@@ -166,7 +176,7 @@ export class NumberRecordBitableRepository {
       ...(updateData.participant_summary && {
         participant_summary: updateData.participant_summary,
       }),
-      ...(updateData.meet_data && { meet_data: updateData.meet_data }),
+      ...(updateData.record_file && { record_file: updateData.record_file }),
     };
 
     try {
