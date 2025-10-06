@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-06 07:35:33
+ * @LastEditTime: 2025-10-07 01:50:25
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/event-handlers/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -169,7 +169,7 @@ export class RecordingCompletedHandler extends BaseEventHandler {
               for (const paragraph of transcriptResponse.minutes.paragraphs) {
                 const speakerName =
                   paragraph.speaker_info?.username || '未知发言人';
-                
+
                 // 转换第一个句子的时间戳为小时:分钟:秒格式
                 const firstSentence = paragraph.sentences[0];
                 if (firstSentence) {
@@ -181,10 +181,8 @@ export class RecordingCompletedHandler extends BaseEventHandler {
 
                   // 将段落中的所有句子组合成一个段落文本
                   const paragraphText = paragraph.sentences
-                    .map((sentence) => 
-                      sentence.words
-                        .map((word) => word.text)
-                        .join('')
+                    .map((sentence) =>
+                      sentence.words.map((word) => word.text).join(''),
                     )
                     .join('')
                     .trim();
@@ -296,8 +294,55 @@ export class RecordingCompletedHandler extends BaseEventHandler {
             `开始对参会者进行个性化会议总结 [${index}]: 共 ${uniqueParticipants.length} 个参与者`,
           );
 
-          for (const participant of uniqueUsernames) {
+          for (const username of uniqueUsernames) {
             try {
+              // 根据username的值匹配uniqueParticipants的user_name来获取uuid
+              const participant = uniqueParticipants.find(
+                (p) => p.user_name === username,
+              );
+
+              let participantRecordIds: string[] = [];
+
+              if (participant) {
+                try {
+                  // 通过uuid请求获取记录id
+                  const searchResult =
+                    await this.meetingUserBitable.searchMeetingUserByUuid(
+                      participant.uuid,
+                    );
+
+                  // 解析搜索结果获取记录ID
+                  const searchData = searchResult as {
+                    data?: { items?: Array<{ record_id: string }> };
+                  };
+
+                  if (
+                    searchData.data?.items &&
+                    searchData.data.items.length > 0
+                  ) {
+                    participantRecordIds = searchData.data.items.map(
+                      (item) => item.record_id,
+                    );
+                    this.logger.log(
+                      `找到参会者记录: ${username} (uuid: ${participant.uuid}), 记录ID: ${participantRecordIds.join(', ')}`,
+                    );
+                  } else {
+                    this.logger.warn(
+                      `未找到参会者记录: ${username} (uuid: ${participant.uuid})`,
+                    );
+                  }
+                } catch (error: unknown) {
+                  const errorMessage = this.getErrorMessage(error);
+                  this.logger.warn(
+                    `搜索参会者记录失败: ${username}, 错误: ${errorMessage}`,
+                  );
+                }
+              } else {
+                this.logger.warn(
+                  `在会议参与者中未找到匹配的用户: ${username}`,
+                );
+              }
+
               // 构建参会者的会议总结提示词
               const participantSummaryPrompt = `
 你是专业的会议总结助手，请为参会者提供个性化的会议总结。
@@ -305,7 +350,7 @@ export class RecordingCompletedHandler extends BaseEventHandler {
 会议信息：
 - 会议主题：${meeting_info.subject}
 - 会议时间：${new Date(meeting_info.start_time * 1000).toLocaleString()} - ${new Date(meeting_info.end_time * 1000).toLocaleString()}
-- 参会者：${participant}
+- 参会者：${username}
 
 会议内容：
 ${ai_minutes || '暂无会议纪要'}
@@ -316,7 +361,7 @@ ${todo || '暂无待办事项'}
 录音转写：
 ${formattedTranscript || '暂无录音转写'}
 
-请为参会者「${participant}」生成一份个性化的会议总结，包含：
+请为参会者「${username}」生成一份个性化的会议总结，包含：
 1. 会议要点回顾
 2. 与该参会者相关的重要讨论
 3. 该参会者需要关注的待办事项
@@ -331,24 +376,20 @@ ${formattedTranscript || '暂无录音转写'}
                 '你是专业的会议总结助手，擅长为参会者提供个性化、实用的会议总结。',
               );
 
-              this.logger.log(
-                `生成参会者总结成功: ${participant}`,
-              );
+              this.logger.log(`生成参会者总结成功: ${username}`);
 
-              // 保存参会者总结到number_record表
+              // 保存参会者总结到number_record表，填入记录id
               await this.numberRecordBitable.upsertNumberRecord({
-                meet_participant: [],
+                meet_participant: participantRecordIds,
                 participant_summary: participantSummary,
                 record_file: [recordingResult.data?.record.record_id ?? ''],
               });
 
-              this.logger.log(
-                `参会者总结记录已保存: ${participant}`,
-              );
+              this.logger.log(`参会者总结记录已保存: ${username}`);
             } catch (error: unknown) {
               const errorMessage = this.getErrorMessage(error);
               this.logger.warn(
-                `生成参会者总结失败: ${participant}, 错误: ${errorMessage}`,
+                `生成参会者总结失败: ${username}, 错误: ${errorMessage}`,
               );
               // 不抛出错误，避免影响主流程
             }
