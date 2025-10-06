@@ -6,31 +6,42 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NumberRecordBitableRepository } from './number-record.repository';
 import { BitableService } from '../services/bitable.service';
 import { larkConfig } from '../../../configs/lark.config';
-import { ConfigModule } from '@nestjs/config';
-
-// Mock BitableService
-const mockBitableService = {
-  createRecord: jest.fn(),
-  upsertRecord: jest.fn(),
-  searchRecords: jest.fn(),
-  updateRecord: jest.fn(),
-};
+import { ConfigModule, ConfigType } from '@nestjs/config';
 
 // Mock config
-const mockConfig = {
+const mockConfig: ConfigType<typeof larkConfig> = {
+  appId: 'test-app-id',
+  appSecret: 'test-app-secret',
+  logLevel: 'info' as const,
+  baseUrl: 'https://example.com',
   bitable: {
     appToken: 'test-app-token',
     tableIds: {
+      meeting: 'test-meeting-table-id',
+      meetingUser: 'test-meeting-user-table-id',
+      recordingFile: 'test-recording-file-table-id',
       numberRecord: 'test-number-record-table-id',
     },
+  },
+  event: {
+    encryptKey: 'test-encrypt-key',
+    verificationToken: 'test-verification-token',
   },
 };
 
 describe('NumberRecordBitableRepository', () => {
   let repository: NumberRecordBitableRepository;
   let bitableService: jest.Mocked<BitableService>;
+  let mockBitableService: jest.Mocked<BitableService>;
 
   beforeEach(async () => {
+    mockBitableService = {
+      createRecord: jest.fn(),
+      upsertRecord: jest.fn(),
+      searchRecords: jest.fn(),
+      updateRecord: jest.fn(),
+    } as unknown as jest.Mocked<BitableService>;
+
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({
@@ -64,12 +75,37 @@ describe('NumberRecordBitableRepository', () => {
     expect(repository).toBeDefined();
   });
 
+  describe('constructor', () => {
+    it('should throw when required config is missing', () => {
+      const invalidConfig: ConfigType<typeof larkConfig> = {
+        ...mockConfig,
+        bitable: {
+          appToken: '',
+          tableIds: {
+            ...mockConfig.bitable.tableIds,
+            numberRecord: '',
+          },
+        },
+      };
+
+      expect(
+        () =>
+          new NumberRecordBitableRepository(
+            mockBitableService,
+            invalidConfig,
+          ),
+      ).toThrow(
+        'LARK_BITABLE_APP_TOKEN and LARK_TABLE_NUMBER_RECORD must be configured in environment variables',
+      );
+    });
+  });
+
   describe('createNumberRecord', () => {
     it('should create a new number record', async () => {
       const mockRecordData = {
         meet_participant: ['user123', '张三'],
         participant_summary: '这是参会者的个性化会议总结',
-        meet_data: ['会议主题: 项目讨论', '会议时间: 2024-01-01 10:00:00'],
+        record_file: ['https://example.com/records/rec123.mp3'],
       };
 
       const mockResponse = {
@@ -97,7 +133,7 @@ describe('NumberRecordBitableRepository', () => {
         {
           meet_participant: mockRecordData.meet_participant,
           participant_summary: mockRecordData.participant_summary,
-          meet_data: mockRecordData.meet_data,
+          record_file: mockRecordData.record_file,
         },
       );
       expect(result).toEqual(mockResponse);
@@ -109,7 +145,7 @@ describe('NumberRecordBitableRepository', () => {
       const mockRecordData = {
         meet_participant: ['user456', '李四'],
         participant_summary: '这是另一个参会者的个性化会议总结',
-        meet_data: ['会议主题: 技术评审', '会议时间: 2024-01-02 14:00:00'],
+        record_file: ['https://example.com/records/rec456.mp3'],
       };
 
       const mockUpsertResult = {
@@ -135,7 +171,7 @@ describe('NumberRecordBitableRepository', () => {
         {
           meet_participant: mockRecordData.meet_participant,
           participant_summary: mockRecordData.participant_summary,
-          meet_data: mockRecordData.meet_data,
+          record_file: mockRecordData.record_file,
         },
         {
           matchFields: ['meet_participant'],
@@ -155,6 +191,21 @@ describe('NumberRecordBitableRepository', () => {
         },
       });
     });
+
+    it('should rethrow errors from the service', async () => {
+      const mockRecordData = {
+        meet_participant: ['user456', '李四'],
+        participant_summary: '这是另一个参会者的个性化会议总结',
+        record_file: ['https://example.com/records/rec456.mp3'],
+      };
+
+      const error = new Error('upsert failed');
+      bitableService.upsertRecord.mockRejectedValue(error);
+
+      await expect(
+        repository.upsertNumberRecord(mockRecordData),
+      ).rejects.toThrow(error);
+    });
   });
 
   describe('searchNumberRecordByParticipants', () => {
@@ -170,7 +221,7 @@ describe('NumberRecordBitableRepository', () => {
               fields: {
                 meet_participant: participants,
                 participant_summary: '测试总结',
-                meet_data: ['测试数据'],
+                record_file: ['https://example.com/records/rec789.mp3'],
               },
               created_by: { id: 'user789', name: 'Test User' },
               created_time: Date.now(),
@@ -206,13 +257,26 @@ describe('NumberRecordBitableRepository', () => {
       );
       expect(result).toEqual(mockSearchResult);
     });
+
+    it('should rethrow errors from the service', async () => {
+      const participants = ['user789', '王五'];
+      const error = new Error('search failed');
+
+      bitableService.searchRecords.mockRejectedValue(error);
+
+      await expect(
+        repository.searchNumberRecordByParticipants(participants),
+      ).rejects.toThrow(error);
+    });
   });
 
   describe('updateNumberRecordById', () => {
     it('should update a number record by ID', async () => {
       const recordId = 'rec123';
       const updateData = {
+        meet_participant: ['user123', '张三'],
         participant_summary: '更新的参会者总结',
+        record_file: ['https://example.com/records/updated-rec123.mp3'],
       };
 
       const mockUpdateResult = {
@@ -242,10 +306,47 @@ describe('NumberRecordBitableRepository', () => {
         'test-number-record-table-id',
         recordId,
         {
+          meet_participant: updateData.meet_participant,
           participant_summary: updateData.participant_summary,
+          record_file: updateData.record_file,
         },
       );
       expect(result).toEqual(mockUpdateResult);
+    });
+
+    it('should rethrow errors from the service', async () => {
+      const recordId = 'rec123';
+      const error = new Error('update failed');
+
+      bitableService.updateRecord.mockRejectedValue(error);
+
+      await expect(
+        repository.updateNumberRecordById(recordId, {}),
+      ).rejects.toThrow(error);
+    });
+
+    it('should omit undefined fields when updating', async () => {
+      const recordId = 'rec999';
+      const updateData = {
+        participant_summary: '仅更新总结',
+      };
+
+      bitableService.updateRecord.mockResolvedValue({
+        code: 0,
+        msg: 'success',
+        data: { record: { record_id: recordId, fields: updateData } },
+      } as never);
+
+      await repository.updateNumberRecordById(recordId, updateData);
+
+      expect(bitableService.updateRecord).toHaveBeenCalledWith(
+        'test-app-token',
+        'test-number-record-table-id',
+        recordId,
+        {
+          participant_summary: updateData.participant_summary,
+        },
+      );
     });
   });
 });
