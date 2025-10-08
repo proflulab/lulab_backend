@@ -61,6 +61,9 @@ export class MeetingBitableRepository {
       ...(meetingData.participants && {
         participants: meetingData.participants,
       }),
+      ...(meetingData.meeting_type && {
+        meeting_type: meetingData.meeting_type,
+      }),
     };
 
     this.logger.log(
@@ -99,6 +102,9 @@ export class MeetingBitableRepository {
       ...(meetingData.creator && { creator: meetingData.creator }),
       ...(meetingData.participants && {
         participants: meetingData.participants,
+      }),
+      ...(meetingData.meeting_type && {
+        meeting_type: meetingData.meeting_type,
       }),
     };
 

@@ -27,7 +27,7 @@ services:
       "--requirepass","${REDIS_PASSWORD}",
       "--databases","${REDIS_DATABASES:-16}",
       "--maxmemory","${REDIS_MAXMEMORY:-256mb}",
-      "--maxmemory-policy","allkeys-lru"
+      "--maxmemory-policy","noeviction"
     ]
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
