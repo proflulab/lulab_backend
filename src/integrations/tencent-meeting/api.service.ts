@@ -254,6 +254,7 @@ export class TencentApiService {
     meetingId: string,
     userId: string,
     subMeetingId?: string | null,
+    // operatorIdType: number = 1,
     pos?: number,
     size?: number,
     startTime?: number,
@@ -261,8 +262,11 @@ export class TencentApiService {
   ): Promise<MeetingParticipantsResponse> {
     const queryParams: Record<string, unknown> = {
       userid: userId,
-      sub_meeting_id: subMeetingId ?? undefined,
     };
+
+    if (subMeetingId !== undefined) {
+      queryParams.sub_meeting_id = subMeetingId;
+    }
 
     // Add pagination parameters if provided
     if (pos !== undefined) {

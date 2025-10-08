@@ -6,3 +6,4 @@
 export * from './meeting.repository';
 export * from './meeting-user.repository';
 export * from './meeting-recording-file.repository';
+export * from './number-record.repository';
