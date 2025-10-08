@@ -50,6 +50,7 @@
     "@alicloud/tea-typescript": "^1.8.0",
     "@alicloud/tea-util": "^1.4.10",
     "@apollo/server": "^4.12.2",
+    "@as-integrations/express5": "^1.1.2",
     "@larksuiteoapi/node-sdk": "^1.55.0",
     "@nestjs/apollo": "^13.1.0",
     "@nestjs/axios": "^4.0.0",
