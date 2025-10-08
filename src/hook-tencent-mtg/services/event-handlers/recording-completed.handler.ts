@@ -338,9 +338,7 @@ export class RecordingCompletedHandler extends BaseEventHandler {
                   );
                 }
               } else {
-                this.logger.warn(
-                  `在会议参与者中未找到匹配的用户: ${username}`,
-                );
+                this.logger.warn(`在会议参与者中未找到匹配的用户: ${username}`);
               }
 
               // 构建参会者的会议总结提示词

@@ -32,10 +32,9 @@ const mockConfig: ConfigType<typeof larkConfig> = {
 describe('NumberRecordBitableRepository', () => {
   let repository: NumberRecordBitableRepository;
   let bitableService: jest.Mocked<BitableService>;
-  let mockBitableService: jest.Mocked<BitableService>;
 
   beforeEach(async () => {
-    mockBitableService = {
+    const mockBitableService = {
       createRecord: jest.fn(),
       upsertRecord: jest.fn(),
       searchRecords: jest.fn(),
@@ -88,12 +87,16 @@ describe('NumberRecordBitableRepository', () => {
         },
       };
 
+      const mockBitableService = {
+        createRecord: jest.fn(),
+        upsertRecord: jest.fn(),
+        searchRecords: jest.fn(),
+        updateRecord: jest.fn(),
+      } as unknown as BitableService;
+
       expect(
         () =>
-          new NumberRecordBitableRepository(
-            mockBitableService,
-            invalidConfig,
-          ),
+          new NumberRecordBitableRepository(mockBitableService, invalidConfig),
       ).toThrow(
         'LARK_BITABLE_APP_TOKEN and LARK_TABLE_NUMBER_RECORD must be configured in environment variables',
       );
@@ -127,7 +130,7 @@ describe('NumberRecordBitableRepository', () => {
 
       const result = await repository.createNumberRecord(mockRecordData);
 
-      expect(bitableService.createRecord).toHaveBeenCalledWith(
+      expect(bitableService['createRecord']).toHaveBeenCalledWith(
         'test-app-token',
         'test-number-record-table-id',
         {
@@ -165,7 +168,7 @@ describe('NumberRecordBitableRepository', () => {
 
       const result = await repository.upsertNumberRecord(mockRecordData);
 
-      expect(bitableService.upsertRecord).toHaveBeenCalledWith(
+      expect(bitableService['upsertRecord']).toHaveBeenCalledWith(
         'test-app-token',
         'test-number-record-table-id',
         {
@@ -239,7 +242,7 @@ describe('NumberRecordBitableRepository', () => {
       const result =
         await repository.searchNumberRecordByParticipants(participants);
 
-      expect(bitableService.searchRecords).toHaveBeenCalledWith(
+      expect(bitableService['searchRecords']).toHaveBeenCalledWith(
         'test-app-token',
         'test-number-record-table-id',
         {
@@ -301,7 +304,7 @@ describe('NumberRecordBitableRepository', () => {
         updateData,
       );
 
-      expect(bitableService.updateRecord).toHaveBeenCalledWith(
+      expect(bitableService['updateRecord']).toHaveBeenCalledWith(
         'test-app-token',
         'test-number-record-table-id',
         recordId,
@@ -339,7 +342,7 @@ describe('NumberRecordBitableRepository', () => {
 
       await repository.updateNumberRecordById(recordId, updateData);
 
-      expect(bitableService.updateRecord).toHaveBeenCalledWith(
+      expect(bitableService['updateRecord']).toHaveBeenCalledWith(
         'test-app-token',
         'test-number-record-table-id',
         recordId,
