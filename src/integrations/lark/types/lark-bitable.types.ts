@@ -173,33 +173,6 @@ export interface SearchRecordIteratorOptions {
   user_id_type?: 'user_id' | 'union_id' | 'open_id';
 }
 
-// 列出记录请求/响应（兼容list接口）
-export interface ListRecordRequest {
-  app_token: string;
-  table_id: string;
-  view_id?: string;
-  field_names?: string;
-  filter?: string;
-  sort?: string;
-  page_size?: number;
-  page_token?: string;
-  text_field_as_array?: boolean;
-  user_id_type?: 'user_id' | 'union_id' | 'open_id';
-  display_formula_ref?: boolean;
-  automatic_fields?: boolean;
-}
-
-export interface ListRecordResponse {
-  code: number;
-  msg: string;
-  data?: {
-    items: LarkRecord[];
-    has_more: boolean;
-    page_token?: string;
-    total?: number;
-  };
-}
-
 // 删除记录请求/响应
 export interface DeleteRecordRequest {
   app_token: string;
