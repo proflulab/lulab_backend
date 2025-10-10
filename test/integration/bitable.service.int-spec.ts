@@ -587,7 +587,7 @@ describe('BitableService (Integration Tests)', () => {
       });
 
       const records: any[] = [];
-      for await (const record of service.listRecordsIterator(
+      for await (const record of service.searchRecordsIterator(
         appToken,
         tableId,
         {

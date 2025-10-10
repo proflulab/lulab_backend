@@ -208,6 +208,26 @@ export class TencentMeetingEventUtils {
   }
 
   /**
+   * 获取会议类型的描述文本
+   */
+  static getMeetingTypeDescription(meetingType: TencentMeetingType): string {
+    switch (meetingType) {
+      case TencentMeetingType.ONE_TIME:
+        return '一次性会议';
+      case TencentMeetingType.RECURRING:
+        return '周期性会议';
+      case TencentMeetingType.WECHAT_EXCLUSIVE:
+        return '微信专属会议';
+      case TencentMeetingType.ROOMS_SCREEN_SHARE:
+        return 'Rooms投屏会议';
+      case TencentMeetingType.PERSONAL_MEETING_ID:
+        return '个人会议号会议';
+      default:
+        return '未知会议类型';
+    }
+  }
+
+  /**
    * 获取终端设备类型的描述文本
    */
   static getInstanceTypeDescription(instanceType: TencentInstanceType): string {
