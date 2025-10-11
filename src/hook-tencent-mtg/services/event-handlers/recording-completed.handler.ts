@@ -255,9 +255,7 @@ export class RecordingCompletedHandler extends BaseEventHandler {
               fullsummary,
               todo,
               ai_minutes,
-              participants: uniqueParticipants
-                .map((p) => p.user_name)
-                .toString(),
+              participants: uniqueParticipants.map((p) => p.user_name),
               ai_meeting_transcripts: formattedTranscript,
             });
 

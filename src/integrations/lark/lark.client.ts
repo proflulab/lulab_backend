@@ -34,6 +34,7 @@ export class LarkClient {
   public readonly tenant: lark.Client['tenant'];
   public readonly wiki: lark.Client['wiki'];
   public readonly vc: lark.Client['vc'];
+  public readonly minutes: lark.Client['minutes'];
 
   constructor(
     @Inject(larkConfig.KEY) private readonly cfg: ConfigType<typeof larkConfig>,
@@ -80,6 +81,7 @@ export class LarkClient {
     this.tenant = this.client.tenant;
     this.wiki = this.client.wiki;
     this.vc = this.client.vc;
+    this.minutes = this.client.minutes;
 
     this.logger.log('Lark client initialized successfully');
   }
@@ -97,5 +99,9 @@ export class LarkClient {
       this.logger.error('Lark connection test failed', error);
       return false;
     }
+  }
+
+  getClient(): lark.Client {
+    return this.client;
   }
 }
