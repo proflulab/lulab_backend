@@ -1,5 +1,18 @@
+/*
+ * @Author: Mingxuan 159552597+Luckymingxuan@users.noreply.github.com
+ * @Date: 2025-10-03 15:11:09
+ * @LastEditors: Mingxuan 159552597+Luckymingxuan@users.noreply.github.com
+ * @LastEditTime: 2025-10-11 14:54:49
+ * @FilePath: \lulab_backend\src\integrations\lark\services\meeting-recording.service.spec.ts
+ * @Description:
+ *
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
+ */
 import { Test, TestingModule } from '@nestjs/testing';
-import { MeetingRecordingService, GetMeetingRecordingResponse } from './meeting-recording.service';
+import {
+  MeetingRecordingService,
+  GetMeetingRecordingResponse,
+} from './meeting-recording.service';
 import { LarkClient } from '../lark.client';
 
 describe('MeetingRecordingService', () => {
@@ -47,7 +60,8 @@ describe('MeetingRecordingService', () => {
   // 功能测试：getMeetingRecording 方法是否正确返回录制文件信息
   it('should get meeting recording successfully', async () => {
     // 调用服务方法，模拟传入会议ID
-    const result: GetMeetingRecordingResponse = await service.getMeetingRecording('test-meeting-id');
+    const result: GetMeetingRecordingResponse =
+      await service.getMeetingRecordingInfo('test-meeting-id');
 
     // 验证返回的录制文件信息是否正确
     expect(result.recording?.url).toBe('https://example.com/recording.mp4');
