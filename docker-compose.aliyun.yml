@@ -1,6 +1,6 @@
 services:
   nest-app:
-    build: .
+    image: registry.cn-hangzhou.aliyuncs.com/lulab_docker/lulab_backend:dev1.0.0
     ports:
       - '3000:3000'
     env_file:
@@ -27,7 +27,7 @@ services:
       "--requirepass","${REDIS_PASSWORD}",
       "--databases","${REDIS_DATABASES:-16}",
       "--maxmemory","${REDIS_MAXMEMORY:-256mb}",
-      "--maxmemory-policy","noeviction"
+      "--maxmemory-policy","allkeys-lru"
     ]
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]

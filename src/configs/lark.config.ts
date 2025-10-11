@@ -1,3 +1,14 @@
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-10-02 21:14:03
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-10-04 23:15:45
+ * @FilePath: /lulab_backend/src/configs/lark.config.ts
+ * @Description:
+ *
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
+ */
+
 import { registerAs, ConfigType } from '@nestjs/config';
 
 export const larkConfig = registerAs('lark', () => ({
@@ -12,10 +23,15 @@ export const larkConfig = registerAs('lark', () => ({
   bitable: {
     appToken: process.env.LARK_BITABLE_APP_TOKEN ?? '',
     tableIds: {
-      meeting: process.env.LARK_TABLE_MEETING ?? '',
-      meetingUser: process.env.LARK_TABLE_MEETING_USER ?? '',
-      recordingFile: process.env.LARK_TABLE_MEETING_RECORD_FILE ?? '',
+      meeting: process.env.LARK_TABLE_MEETING_RECORD ?? '',
+      meetingUser: process.env.LARK_TABLE_MEETING_USE ?? '',
+      recordingFile: process.env.LARK_TABLE_MEETING_RECORDING ?? '',
+      numberRecord: process.env.LARK_TABLE_PERSONAL_MEETING_SUMMARY ?? '',
     },
+  },
+  event: {
+    encryptKey: process.env.LARK_EVENT_ENCRYPT_KEY ?? '',
+    verificationToken: process.env.LARK_EVENT_VERIFICATION_TOKEN ?? '',
   },
 }));
 

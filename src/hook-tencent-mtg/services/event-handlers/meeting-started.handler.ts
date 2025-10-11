@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { BaseEventHandler } from './base-event.handler';
-import { TencentEventPayload } from '../../types/tencent-webhook-events.types';
+import {
+  TencentEventPayload,
+  TencentMeetingEventUtils,
+} from '../../types/tencent-webhook-events.types';
 import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
@@ -29,8 +32,12 @@ export class MeetingStartedHandler extends BaseEventHandler {
     const { creator } = meeting_info;
 
     // 记录会议信息
+    const meetingTypeDescription =
+      TencentMeetingEventUtils.getMeetingTypeDescription(
+        meeting_info.meeting_type,
+      );
     this.logger.log(
-      `会议开始 [${index}]: ${meeting_info.subject} (${meeting_info.meeting_code})`,
+      `会议开始 [${index}]: ${meeting_info.subject} (${meeting_info.meeting_code}) - ${meetingTypeDescription}`,
     );
 
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
@@ -89,10 +96,11 @@ export class MeetingStartedHandler extends BaseEventHandler {
         start_time: meeting_info.start_time * 1000,
         end_time: meeting_info.end_time * 1000,
         creator: [creatorRecordId || ''],
+        meeting_type: [meetingTypeDescription || ''],
       });
     } catch (error) {
       this.logger.error(
-        `处理会议开始事件失败: ${meeting_info.meeting_id}`,
+        `处理会议开始事件失败: ${meeting_info.meeting_id} (${meetingTypeDescription})`,
         error,
       );
       // 不抛出错误，避免影响主流程
