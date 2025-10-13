@@ -11,6 +11,7 @@
 
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import type { JwtModuleOptions, JwtSignOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule } from '@nestjs/config';
 import type { ConfigType } from '@nestjs/config';
@@ -44,10 +45,10 @@ import { jwtConfig } from '@/configs/jwt.config';
     ConfigModule.forFeature(jwtConfig),
     JwtModule.registerAsync({
       imports: [ConfigModule.forFeature(jwtConfig)],
-      useFactory: (config: ConfigType<typeof jwtConfig>) => ({
+      useFactory: (config: ConfigType<typeof jwtConfig>): JwtModuleOptions => ({
         secret: config.accessSecret,
         signOptions: {
-          expiresIn: config.accessExpiresIn,
+          expiresIn: config.accessExpiresIn as unknown as JwtSignOptions['expiresIn'],
         },
       }),
       inject: [jwtConfig.KEY],

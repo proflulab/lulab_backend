@@ -51,6 +51,27 @@ export class BitableService {
   }
 
   /**
+   * List fields of a table (for debugging/schema inspection)
+   */
+  async listTableFields(appToken: string, tableId: string): Promise<any> {
+    try {
+      this.logger.debug(
+        `Listing Bitable fields in app: ${appToken}, table: ${tableId}`,
+      );
+      const response = await this.larkClient.bitable.v1.appTableField.list({
+        path: {
+          app_token: appToken,
+          table_id: tableId,
+        },
+      });
+      return response;
+    } catch (error) {
+      this.logger.error('Failed to list Bitable table fields', error);
+      throw error;
+    }
+  }
+
+  /**
    * Create a simple record with common field types
    */
   async createRecord(
