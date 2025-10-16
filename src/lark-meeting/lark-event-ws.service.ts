@@ -4,6 +4,8 @@ import { LarkMeetingRecordingService } from './lark-meeting-recording.service';
 import { MinuteTranscriptService } from './lark-minute-transript.service';
 import { LarkMeetingDetailService } from './lark-meeting-detail.service';
 import { LarkMeetingWriterService } from './lark-meeting-writer.service';
+import { LarkMeetingCacheService } from './lark-meeting-cache.service';
+import { parseMeetingMetaFromEvent } from './lark-meeting-normalizer';
 
 interface MeetingEndedEvent {
   event: {
@@ -14,35 +16,14 @@ interface MeetingEndedEvent {
 @Injectable()
 export class LarkEventWsService implements OnModuleInit {
   private wsClient: Lark.WSClient;
-  private processingMinuteTokens = new Set<string>();
-  // 临时缓存：按会议ID保存最近一次会议元数据（topic/meeting_no/start_time/end_time）
-  private lastMeetingMetaById = new Map<
-    string,
-    {
-      topic?: string;
-      meetingNo?: string | number;
-      startTime?: string | number;
-      endTime?: string | number;
-    }
-  >();
-  // 临时缓存：按会议ID保存会议详情字段
-  private lastMeetingDetailById = new Map<
-    string,
-    {
-      meeting_end_time?: string | number;
-      meeting_id?: string;
-      meeting_instance_id?: string;
-      meeting_start_time?: string | number;
-      organizer?: any;
-      user_id?: string;
-    }
-  >();
+  // 缓存服务替代内部集合
 
   constructor(
     private readonly larkMeetingRecordingService: LarkMeetingRecordingService,
     private readonly minuteTranscriptService: MinuteTranscriptService,
     private readonly larkMeetingDetailService: LarkMeetingDetailService,
     private readonly larkMeetingWriterService: LarkMeetingWriterService,
+    private readonly larkMeetingCacheService: LarkMeetingCacheService,
   ) {}
 
   onModuleInit() {
@@ -86,37 +67,10 @@ export class LarkEventWsService implements OnModuleInit {
           }
           console.log('解析到会议ID：', meetingId);
 
-          // 解析并临时存储会议元数据
-          const topic =
-            plainData?.meeting?.topic ??
-            plainData?.event?.meeting?.topic ??
-            plainData?.event?.topic;
-          const meetingNo =
-            plainData?.meeting?.meeting_no ??
-            plainData?.event?.meeting_no ??
-            plainData?.event?.meeting?.meeting_no;
-          const startTime =
-            plainData?.meeting?.start_time ??
-            plainData?.event?.meeting?.start_time ??
-            plainData?.event?.start_time;
-          const endTime =
-            plainData?.meeting?.end_time ??
-            plainData?.event?.meeting?.end_time ??
-            plainData?.event?.end_time;
-
-          this.lastMeetingMetaById.set(meetingId, {
-            topic,
-            meetingNo,
-            startTime,
-            endTime,
-          });
-          console.log('已缓存会议元数据：', {
-            meetingId,
-            topic,
-            meetingNo,
-            startTime,
-            endTime,
-          });
+          // 解析并临时存储会议元数据（抽取为工具函数）
+          const { topic, meetingNo, startTime, endTime } = parseMeetingMetaFromEvent(plainData);
+          this.larkMeetingCacheService.setMeetingMeta(meetingId, { topic, meetingNo, startTime, endTime });
+          console.log('已缓存会议元数据：', { meetingId, topic, meetingNo, startTime, endTime });
 
           // 使用 start_time / end_time 调用会议明细查询，尝试获取并缓存更多字段
           try {
@@ -199,7 +153,7 @@ export class LarkEventWsService implements OnModuleInit {
                 organizer?: any;
                 user_id?: string;
               };
-              this.lastMeetingDetailById.set(meetingId, detail);
+              this.larkMeetingCacheService.setMeetingDetail(meetingId, detail);
               console.log('已缓存会议详情：', { meetingId, ...detail });
             } else {
               console.log('在会议明细列表中未找到匹配会议，跳过详情缓存', {
@@ -212,8 +166,8 @@ export class LarkEventWsService implements OnModuleInit {
 
           // 映射变量并写入表格（subject/meeting_code/start_time/end_time/platform）
           try {
-            const meta = this.lastMeetingMetaById.get(meetingId);
-            const detail = this.lastMeetingDetailById.get(meetingId);
+            const meta = this.larkMeetingCacheService.getMeetingMeta(meetingId);
+            const detail = this.larkMeetingCacheService.getMeetingDetail(meetingId);
 
             const subject = meta?.topic;
             const rawMeetingCode =
@@ -230,22 +184,33 @@ export class LarkEventWsService implements OnModuleInit {
               | string
               | undefined;
 
-            // 安全解析时间为 number，仅在有效数字时返回，否则为 undefined
-            const toNumberIfValid = (v: unknown): number | undefined => {
+            // 统一转换为毫秒级时间戳：
+            // - 若输入为“秒”时间戳（< 1e11），乘以 1000
+            // - 若输入为“毫秒”时间戳（>= 1e11），直接取整
+            // - 若为可解析的日期字符串，使用 Date.parse 得到毫秒
+            const toMsTimestamp = (v: unknown): number | undefined => {
+              if (v instanceof Date) {
+                return v.getTime();
+              }
               if (typeof v === 'number') {
-                return Number.isFinite(v) ? v : undefined;
+                if (!Number.isFinite(v)) return undefined;
+                return v < 1e11 ? Math.floor(v * 1000) : Math.floor(v);
               }
               if (typeof v === 'string') {
                 const s = v.trim();
                 if (s === '') return undefined;
-                const n = Number(s);
-                return Number.isFinite(n) ? n : undefined;
+                const num = Number(s);
+                if (Number.isFinite(num)) {
+                  return num < 1e11 ? Math.floor(num * 1000) : Math.floor(num);
+                }
+                const parsed = Date.parse(s);
+                return Number.isFinite(parsed) ? parsed : undefined;
               }
               return undefined;
             };
 
-            const start_time = toNumberIfValid(start_time_raw);
-            const end_time = toNumberIfValid(end_time_raw);
+            const start_time = toMsTimestamp(start_time_raw);
+            const end_time = toMsTimestamp(end_time_raw);
 
             const platform = '飞书会议';
 
@@ -289,11 +254,11 @@ export class LarkEventWsService implements OnModuleInit {
           }
           console.log('获取到 minuteToken:', minuteToken);
           // 防重复：同一个 minuteToken 只处理一次
-          if (this.processingMinuteTokens.has(minuteToken)) {
+          if (this.larkMeetingCacheService.isProcessingMinuteToken(minuteToken)) {
             console.warn('检测到重复的 minuteToken, 跳过处理:', minuteToken);
             return;
           }
-          this.processingMinuteTokens.add(minuteToken);
+          this.larkMeetingCacheService.markProcessingMinuteToken(minuteToken);
           try {
             // 延时 3 分钟后再请求纪要转写
             await new Promise((resolve) => setTimeout(resolve, 3 * 60 * 1000));
@@ -302,7 +267,7 @@ export class LarkEventWsService implements OnModuleInit {
               'txt',
             );
           } finally {
-            this.processingMinuteTokens.delete(minuteToken);
+            this.larkMeetingCacheService.clearProcessingMinuteToken(minuteToken);
           }
         } catch (error) {
           console.error('处理会议结束事件出错：', error);

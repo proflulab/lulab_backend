@@ -7,6 +7,7 @@ import { MinuteTranscriptService } from './lark-minute-transript.service';
 import { LarkModule } from '../integrations/lark/lark.module';
 import { LarkMeetingDetailService } from './lark-meeting-detail.service';
 import { LarkMeetingWriterService } from './lark-meeting-writer.service';
+import { LarkMeetingCacheService } from './lark-meeting-cache.service';
 
 @Module({
   imports: [LarkModule],
@@ -18,12 +19,14 @@ import { LarkMeetingWriterService } from './lark-meeting-writer.service';
     MinuteTranscriptService,
     LarkMeetingDetailService,
     LarkMeetingWriterService,
+    LarkMeetingCacheService,
   ],
   exports: [
     LarkWebhookHandler,
     MinuteTranscriptService,
     LarkMeetingDetailService,
     LarkMeetingWriterService,
+    LarkMeetingCacheService,
   ],
 })
 export class LarkMeetingModule {}
