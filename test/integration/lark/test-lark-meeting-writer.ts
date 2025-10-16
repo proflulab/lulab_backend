@@ -294,13 +294,22 @@ async function main() {
     console.error("❌ 获取表字段信息失败：", err);
   }
 
-  // 按照飞书官方调试台的请求体格式构造请求
+  // 按照实际表字段构造请求体（基于获取到的字段信息）
   const requestBody = {
     "records": [
     {
       "fields": {
-        "meeting_id": "12355",
-        "sub_meeting_id": "35666"
+        "meeting_id": "2212355",
+        "platform": "feishu",
+        "subject": "测试会议",
+        "sub_meeting_id": "123456", 
+        "meeting_code": "123456",
+        "start_time": 1692000000000,
+        "end_time": 1692003600000,
+        // 注意：operator 和 creator 是双向关联字段，需要提供记录ID而不是字符串
+        // 暂时注释掉关联字段，先测试基础字段
+        // "operator": ["recXXXXXX"],  // 需要实际的记录ID
+        // "creator": ["recYYYYYY"],   // 需要实际的记录ID
       }
     }
    ]
