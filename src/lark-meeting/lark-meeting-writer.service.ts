@@ -13,6 +13,7 @@ import { MeetingBitableRepository } from '@lark/repositories';
 import { MeetingData } from '@lark/types';
 import * as https from 'https';
 import { URL } from 'url';
+import { LarkMeetingCacheService } from './lark-meeting-cache.service';
 
 // 类型辅助与安全解析
 const isRecord = (v: unknown): v is Record<string, unknown> =>
@@ -55,7 +56,10 @@ export interface MeetingDetailInput {
 export class LarkMeetingWriterService {
   private readonly logger = new Logger(LarkMeetingWriterService.name);
 
-  constructor(private readonly meetingRepo: MeetingBitableRepository) {}
+  constructor(
+    private readonly meetingRepo: MeetingBitableRepository,
+    private readonly larkMeetingCacheService: LarkMeetingCacheService,
+  ) {}
 
   private getDomainEnv(): string {
     return (process.env.LARK_DOMAIN || '').toLowerCase();
@@ -240,6 +244,29 @@ export class LarkMeetingWriterService {
     return String(value);
   }
 
+  // 将缓存中的 organizer 转为写入字段值（operator/creator），默认使用 JSON 字符串表示原始变量
+  private buildOperatorCreatorFromDetail(
+    detail?: MeetingDetailInput,
+  ): string[] {
+    if (!detail) return [];
+    const org = detail.organizer;
+    if (org !== undefined) {
+      if (typeof org === 'string') return [org];
+      // 优先提取可识别的 user_id，否则直接序列化整个变量
+      if (isRecord(org)) {
+        const orgRec = org; // 已通过类型保护，orgRec: Record<string, unknown>
+        const idVal = orgRec['id'];
+        const idRec = isRecord(idVal) ? idVal : undefined;
+        const candidateId =
+          getString(idRec?.['user_id']) ?? getString(orgRec['user_id']);
+        if (candidateId) return [candidateId];
+      }
+      return [safeStringify(org)];
+    }
+    if (detail.user_id) return [String(detail.user_id)];
+    return [];
+  }
+
   /**
    * 通用写入：直接依据 MeetingData 写入（upsert）
    */
@@ -248,10 +275,22 @@ export class LarkMeetingWriterService {
       meeting_id: data.meeting_id,
     });
 
+    // 若缓存中存在 organizer，则自动补充 operator/creator 字段（除非调用方已显式传入）
+    const cachedDetail = this.larkMeetingCacheService.getMeetingDetail(
+      data.meeting_id,
+    ) as MeetingDetailInput | undefined;
+    const autoOpCreator = this.buildOperatorCreatorFromDetail(cachedDetail);
+
     // 统一平台字段为 feishu，保持与既有表结构兼容
     const payload: MeetingData = {
       ...data,
       platform: 'feishu',
+      ...(autoOpCreator.length > 0 && {
+        operator: data.operator ?? autoOpCreator,
+      }),
+      ...(autoOpCreator.length > 0 && {
+        creator: data.creator ?? autoOpCreator,
+      }),
     };
 
     try {
@@ -290,19 +329,10 @@ export class LarkMeetingWriterService {
       this.toString(meta?.meetingNo) ??
       this.toString(detail?.meeting_id);
 
-    // operator：尽量收集事件中的操作者/组织者ID
-    const operator: string[] = [];
-    if (detail?.user_id) operator.push(detail.user_id);
-    const organizerVal = detail?.organizer;
-    const orgRec = isRecord(organizerVal) ? organizerVal : {};
-    const orgIdRec = isRecord(orgRec.id) ? orgRec.id : {};
-    const organizerId =
-      getString(orgIdRec.user_id) ?? getString(orgRec.user_id);
-    if (organizerId) operator.push(String(organizerId));
+    // 直接使用 organizer 变量作为 operator/creator 的值（转为字符串数组）
+    const opCreator = this.buildOperatorCreatorFromDetail(detail);
 
-    // creator：如需使用请在表结构支持后再启用
-
-    // participants：兼容传入的多种形式
+    // participants：兼容传入的多种形式（当前不写入，保持表结构一致）
     const participants: string[] = [];
     if (detail?.participants && Array.isArray(detail.participants)) {
       for (const p of detail.participants) {
@@ -311,7 +341,7 @@ export class LarkMeetingWriterService {
       }
     }
 
-    // meeting_type：支持单值或数组
+    // meeting_type：支持单值或数组（当前不写入，保持表结构一致）
     const meetingTypeArray: string[] = [];
     if (detail?.meeting_type) {
       const mt = detail.meeting_type;
@@ -326,12 +356,8 @@ export class LarkMeetingWriterService {
       ...(meetingCode && { meeting_code: meetingCode }),
       ...(startTime !== undefined && { start_time: startTime }),
       ...(endTime !== undefined && { end_time: endTime }),
-      // 注意：operator/creator 是双向关联，需传递记录ID，此处不直接写入
-      // ...(operator.length > 0 && { operator }),
-      // ...(creator.length > 0 && { creator }),
-      // participants/meeting_type 字段在当前表结构中不存在，避免写入
-      // ...(participants.length > 0 && { participants }),
-      // ...(meetingTypeArray.length > 0 && { meeting_type: meetingTypeArray }),
+      ...(opCreator.length > 0 && { operator: opCreator }),
+      ...(opCreator.length > 0 && { creator: opCreator }),
       // 尝试映射子会议ID
       ...(detail?.meeting_instance_id && {
         sub_meeting_id: String(detail.meeting_instance_id),
