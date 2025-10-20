@@ -1,6 +1,10 @@
-// 会议事件解析工具：统一从不同事件结构中提取会议元数据
-// 保持与 LarkEventWsService 内部使用的字段一致，方便直接解构与缓存
-
+/**
+ * 会议事件解析工具（Normalizer）
+ * 用途：
+ * - 从不同事件结构中统一提取会议元数据（topic、meeting_no、start_time、end_time）
+ * - 类型安全地处理 unknown 输入，避免不安全的可选链访问
+ * - 与 LarkEventWsService 使用的字段保持一致，便于直接缓存与映射
+ */
 export type MeetingMeta = {
   topic?: string;
   meetingNo?: string;

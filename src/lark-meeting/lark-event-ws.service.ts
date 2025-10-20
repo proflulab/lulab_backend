@@ -1,3 +1,12 @@
+/**
+ * LarkEventWsService（飞书 WS 事件服务）
+ * 用途：
+ * - 接入并监听飞书/Lark WS 事件（当前关注 vc.meeting.all_meeting_ended_v1）
+ * - 解析事件数据，统一抽取会议元数据并写入缓存
+ * - 调用详情查询服务补齐字段，缓存 detail
+ * - 通过 writer + 仓储层实现 Bitable 幂等写入，配合缓存做一次性去重
+ * - 拉取会议录制的 minute_token，并触发纪要转写（带防重复与延迟）
+ */
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as Lark from '@larksuiteoapi/node-sdk';
 import { LarkMeetingRecordingService } from './lark-meeting-recording.service';

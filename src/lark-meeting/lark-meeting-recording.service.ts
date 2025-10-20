@@ -1,4 +1,10 @@
-// 写入会议记录服务
+/**
+ * LarkMeetingRecordingService（会议录制/纪要令牌获取服务）
+ * 用途：
+ * - 轮询飞书/Lark 接口获取会议录制信息（meetingRecording）
+ * - 从返回的录制链接中解析 minute_token，用于纪要转写
+ * - 控制最大重试次数与间隔，避免过度请求
+ */
 import { Injectable } from '@nestjs/common';
 import * as Lark from '@larksuiteoapi/node-sdk';
 

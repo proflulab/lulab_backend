@@ -1,3 +1,11 @@
+/**
+ * LarkMeetingCacheService（会议缓存服务）
+ * 用途：
+ * - 缓存会议元数据（meta）与会议详情（detail），便于事件处理链路复用
+ * - 维护 minuteToken 处理状态，避免重复转写纪要
+ * - 维护 meetingId 写入标记，避免重复写入 Bitable
+ * - 提供 set/get/clear 方法，内存级生命周期
+ */
 import { Injectable, Logger } from '@nestjs/common';
 
 export interface MeetingMetaCache {

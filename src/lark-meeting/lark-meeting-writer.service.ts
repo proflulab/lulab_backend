@@ -1,3 +1,13 @@
+/**
+ * LarkMeetingWriterService（会议写入服务）
+ * 用途：
+ * - 将飞书/Lark 会议数据写入或更新 Bitable（会议记录表）
+ * - 提供通用 upsertMeeting 与基于事件缓存的 upsertFromEvent 两种入口
+ * - 通过 MeetingBitableRepository 实现幂等写入（meeting_id/sub_meeting_id 作为匹配键）
+ * - 统一 platform 字段为 'feishu'，并保留日志与错误处理逻辑
+ * 说明：
+ * - 文件中包含获取 tenant token 与 HTTP 请求的辅助方法，属于历史/备用实现；当前 upsert 走仓储层
+ */
 import { Injectable, Logger } from '@nestjs/common';
 import { MeetingBitableRepository } from '@lark/repositories';
 import { MeetingData } from '@lark/types';

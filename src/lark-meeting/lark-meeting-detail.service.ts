@@ -1,4 +1,10 @@
-// 会议详情服务
+/**
+ * LarkMeetingDetailService（会议详情查询服务）
+ * 用途：
+ * - 封装对飞书/Lark vc.v1.meetingList 的调用
+ * - 支持一次性查询（getMeetingList）与分页迭代（iterateMeetingList）
+ * - 统一时间戳参数格式，返回原始数据中的 data 字段
+ */
 import { Injectable, Logger } from '@nestjs/common';
 import { LarkClient } from '@lark/lark.client';
 
