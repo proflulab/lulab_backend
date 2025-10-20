@@ -16,7 +16,8 @@ const appSecret = process.env.LARK_APP_SECRET || '';
 const appToken = process.env.LARK_BITABLE_APP_TOKEN || '';
 const domainEnv = (process.env.LARK_DOMAIN || '').toLowerCase();
 // 兼容不同 SDK 版本的域名常量（有的版本是 Feishu，有的是 FeiShu；海外域名常量可能不存在）
-const FeishuDomain: any = (lark.Domain as any)?.Feishu ?? (lark.Domain as any)?.FeiShu;
+const FeishuDomain: any =
+  (lark.Domain as any)?.Feishu ?? (lark.Domain as any)?.FeiShu;
 const getOptionalDomain = () => {
   if (domainEnv === 'feishu' && FeishuDomain) return FeishuDomain;
   // 其余情况不显式设置，使用 SDK 默认域
@@ -56,8 +57,15 @@ function upsertEnvVar(filePath: string, key: string, value: string) {
 /**
  * 调用 /open-apis/auth/v3/tenant_access_token/internal 接口获取 tenant_access_token
  */
-async function fetchTenantAccessTokenInternal(appId: string, appSecret: string, domainEnv: string): Promise<{ tenant_access_token: string; expire: number }> {
-  const host = (domainEnv === 'feishu') ? 'https://open.feishu.cn' : 'https://open.larksuite.com';
+async function fetchTenantAccessTokenInternal(
+  appId: string,
+  appSecret: string,
+  domainEnv: string,
+): Promise<{ tenant_access_token: string; expire: number }> {
+  const host =
+    domainEnv === 'feishu'
+      ? 'https://open.feishu.cn'
+      : 'https://open.larksuite.com';
   const urlStr = `${host}/open-apis/auth/v3/tenant_access_token/internal`;
 
   const body = {
@@ -107,11 +115,15 @@ async function fetchTenantAccessTokenInternal(appId: string, appSecret: string, 
   const resp = await postJson(urlStr, body);
 
   if (resp.status !== 200) {
-    throw new Error(`获取 tenant_access_token failed, status=${resp.status}, body=${JSON.stringify(resp.data)}`);
+    throw new Error(
+      `获取 tenant_access_token failed, status=${resp.status}, body=${JSON.stringify(resp.data)}`,
+    );
   }
   const respData = resp.data;
   if (respData.code !== 0 || !respData.tenant_access_token) {
-    throw new Error(`获取 tenant_access_token 返回异常: ${JSON.stringify(respData)}`);
+    throw new Error(
+      `获取 tenant_access_token 返回异常: ${JSON.stringify(respData)}`,
+    );
   }
   return {
     tenant_access_token: respData.tenant_access_token,
@@ -120,54 +132,71 @@ async function fetchTenantAccessTokenInternal(appId: string, appSecret: string, 
 }
 
 // 以与官方调试台一致的方式，直接 POST JSON 到 bitable batch_create 接口
-async function postJsonWithAuth(urlInput: string, payload: any, tenantToken: string) {
-  return new Promise<{ status: number; data: any; raw: string }>((resolve, reject) => {
-    try {
-      const u = new URL(urlInput);
-      const data = JSON.stringify(payload);
-      const req = https.request(
-        {
-          protocol: u.protocol,
-          hostname: u.hostname,
-          path: u.pathname + u.search,
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Content-Length': Buffer.byteLength(data).toString(),
-            Authorization: `Bearer ${tenantToken}`,
+async function postJsonWithAuth(
+  urlInput: string,
+  payload: any,
+  tenantToken: string,
+) {
+  return new Promise<{ status: number; data: any; raw: string }>(
+    (resolve, reject) => {
+      try {
+        const u = new URL(urlInput);
+        const data = JSON.stringify(payload);
+        const req = https.request(
+          {
+            protocol: u.protocol,
+            hostname: u.hostname,
+            path: u.pathname + u.search,
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json; charset=utf-8',
+              'Content-Length': Buffer.byteLength(data).toString(),
+              Authorization: `Bearer ${tenantToken}`,
+            },
           },
-        },
-        (res) => {
-          let raw = '';
-          res.setEncoding('utf8');
-          res.on('data', (chunk) => (raw += chunk));
-          res.on('end', () => {
-            let parsed: any;
-            try {
-              parsed = raw ? JSON.parse(raw) : {};
-            } catch {
-              return resolve({ status: res.statusCode || 0, data: raw, raw });
-            }
-            resolve({ status: res.statusCode || 0, data: parsed, raw });
-          });
-        },
-      );
-      req.on('error', (err) => reject(err));
-      req.write(data);
-      req.end();
-    } catch (err) {
-      reject(err);
-    }
-  });
+          (res) => {
+            let raw = '';
+            res.setEncoding('utf8');
+            res.on('data', (chunk) => (raw += chunk));
+            res.on('end', () => {
+              let parsed: any;
+              try {
+                parsed = raw ? JSON.parse(raw) : {};
+              } catch {
+                return resolve({ status: res.statusCode || 0, data: raw, raw });
+              }
+              resolve({ status: res.statusCode || 0, data: parsed, raw });
+            });
+          },
+        );
+        req.on('error', (err) => reject(err));
+        req.write(data);
+        req.end();
+      } catch (err) {
+        reject(err);
+      }
+    },
+  );
 }
 
-async function bitableBatchCreateViaHttp(appToken: string, tableId: string, domainEnv: string, tenantToken: string, body: any) {
-  const host = domainEnv === 'feishu' ? 'https://open.feishu.cn' : 'https://open.larksuite.com';
+async function bitableBatchCreateViaHttp(
+  appToken: string,
+  tableId: string,
+  domainEnv: string,
+  tenantToken: string,
+  body: any,
+) {
+  const host =
+    domainEnv === 'feishu'
+      ? 'https://open.feishu.cn'
+      : 'https://open.larksuite.com';
   const urlStr = `${host}/open-apis/bitable/v1/apps/${encodeURIComponent(appToken)}/tables/${encodeURIComponent(tableId)}/records/batch_create`;
 
   const resp = await postJsonWithAuth(urlStr, body, tenantToken);
   if (resp.status !== 200) {
-    throw new Error(`batch_create 请求失败, status=${resp.status}, body=${typeof resp.data === 'string' ? resp.data : JSON.stringify(resp.data)}`);
+    throw new Error(
+      `batch_create 请求失败, status=${resp.status}, body=${typeof resp.data === 'string' ? resp.data : JSON.stringify(resp.data)}`,
+    );
   }
   return resp.data;
 }
@@ -204,10 +233,15 @@ async function main() {
   if (!tenantToken) {
     console.log('未提供租户令牌，从 open API 获取 tenant_access_token …');
     try {
-      const result = await fetchTenantAccessTokenInternal(appId, appSecret, domainEnv);
+      const result = await fetchTenantAccessTokenInternal(
+        appId,
+        appSecret,
+        domainEnv,
+      );
       tenantToken = result.tenant_access_token;
       console.log('获取到 tenant_access_token，expire(s):', result.expire);
-      const writeFlag = (process.env.WRITE_TENANT_TOKEN_TO_ENV || '').toLowerCase() === 'true';
+      const writeFlag =
+        (process.env.WRITE_TENANT_TOKEN_TO_ENV || '').toLowerCase() === 'true';
       const envPath = ENV_PATH;
       if (writeFlag) {
         upsertEnvVar(envPath, 'LARK_TENANT_ACCESS_TOKEN', tenantToken);
@@ -220,7 +254,8 @@ async function main() {
     console.log('使用已有租户令牌（来自环境变量）');
   }
 
-  const mask = (v: string) => (v ? `${v.slice(0, 4)}...${v.slice(-4)}` : '(empty)');
+  const mask = (v: string) =>
+    v ? `${v.slice(0, 4)}...${v.slice(-4)}` : '(empty)';
   console.log('配置（打码）:', {
     appId: mask(appId),
     appSecret: mask(appSecret),
@@ -238,19 +273,26 @@ async function main() {
 
   // 快速校验常见取值错误
   if (appToken && !appToken.startsWith('app')) {
-    console.warn('提示：当前 app_token 非常见格式（通常以 "app" 开头），请确认是否填写正确。');
+    console.warn(
+      '提示：当前 app_token 非常见格式（通常以 "app" 开头），请确认是否填写正确。',
+    );
   }
   if (!isLikelyTableId(tableId)) {
     console.error('表 ID 看起来不正确（通常以 "tbl" 开头）。');
     console.error('请按以下方式获取并填写正确的表 ID：');
-    console.error('1) 在多维表格页面 URL 中直接获取 table_id（feishu.cn/base/... 链接中包含）。');
+    console.error(
+      '1) 在多维表格页面 URL 中直接获取 table_id（feishu.cn/base/... 链接中包含）。',
+    );
     console.error('2) 或使用相关 API 列出数据表以获取 table_id。');
-    console.error('3) 将其写入 .env.test 的 LARK_BITABLE_TABLE_ID（或 LARK_TABLE_ID）后重试。');
+    console.error(
+      '3) 将其写入 .env.test 的 LARK_BITABLE_TABLE_ID（或 LARK_TABLE_ID）后重试。',
+    );
     process.exit(1);
   }
 
   // 额外打印租户Token（仅调试用）。设置环境变量 DEBUG_PRINT_TENANT_TOKEN=true 可打印完整Token
-  const debugPrintFull = (process.env.DEBUG_PRINT_TENANT_TOKEN || '').toLowerCase() === 'true';
+  const debugPrintFull =
+    (process.env.DEBUG_PRINT_TENANT_TOKEN || '').toLowerCase() === 'true';
   if (debugPrintFull) {
     console.log('tenantToken(完整)：', tenantToken || '(empty)');
   } else {
@@ -258,9 +300,12 @@ async function main() {
   }
 
   // ===== 调试辅助：列出表字段信息 =====
-  console.log("📋 开始获取表字段信息...");
+  console.log('📋 开始获取表字段信息...');
   try {
-    const host = domainEnv === 'feishu' ? 'https://open.feishu.cn' : 'https://open.larksuite.com';
+    const host =
+      domainEnv === 'feishu'
+        ? 'https://open.feishu.cn'
+        : 'https://open.larksuite.com';
     const url = `${host}/open-apis/bitable/v1/apps/${encodeURIComponent(appToken)}/tables/${encodeURIComponent(tableId)}/fields`;
 
     const u = new URL(url);
@@ -281,46 +326,55 @@ async function main() {
         res.on('end', () => {
           try {
             const data = JSON.parse(raw);
-            console.log("📋 表字段信息：", JSON.stringify(data, null, 2));
+            console.log('📋 表字段信息：', JSON.stringify(data, null, 2));
           } catch (e) {
-            console.log("📋 原始响应：", raw);
+            console.log('📋 原始响应：', raw);
           }
         });
       },
     );
-    req.on('error', (err) => console.error("❌ 获取表字段信息失败：", err));
+    req.on('error', (err) => console.error('❌ 获取表字段信息失败：', err));
     req.end();
   } catch (err: any) {
-    console.error("❌ 获取表字段信息失败：", err);
+    console.error('❌ 获取表字段信息失败：', err);
   }
 
   // 按照实际表字段构造请求体（基于获取到的字段信息）
   const requestBody = {
-    "records": [
-    {
-      "fields": {
-        "meeting_id": "2212355",
-        "platform": "feishu",
-        "subject": "测试会议",
-        "sub_meeting_id": "123456", 
-        "meeting_code": "123456",
-        "start_time": 1692000000000,
-        "end_time": 1692003600000,
-        // 注意：operator 和 creator 是双向关联字段，需要提供记录ID而不是字符串
-        // 暂时注释掉关联字段，先测试基础字段
-        // "operator": ["recXXXXXX"],  // 需要实际的记录ID
-        // "creator": ["recYYYYYY"],   // 需要实际的记录ID
-      }
-    }
-   ]
+    records: [
+      {
+        fields: {
+          meeting_id: '2212355',
+          platform: 'feishu',
+          subject: '测试会议',
+          sub_meeting_id: '123456',
+          meeting_code: '123456',
+          start_time: 1692000000000,
+          end_time: 1692003600000,
+          // 注意：operator 和 creator 是双向关联字段，需要提供记录ID而不是字符串
+          // 暂时注释掉关联字段，先测试基础字段
+          // "operator": ["recXXXXXX"],  // 需要实际的记录ID
+          // "creator": ["recYYYYYY"],   // 需要实际的记录ID
+        },
+      },
+    ],
   };
 
   try {
-    if (!tenantToken) throw new Error("缺少租户 token，无法调用 batch_create");
-    const res = await bitableBatchCreateViaHttp(appToken, tableId, domainEnv, tenantToken, requestBody);
-    console.log("✅ batchCreate 成功：", JSON.stringify(res, null, 2));
+    if (!tenantToken) throw new Error('缺少租户 token，无法调用 batch_create');
+    const res = await bitableBatchCreateViaHttp(
+      appToken,
+      tableId,
+      domainEnv,
+      tenantToken,
+      requestBody,
+    );
+    console.log('✅ batchCreate 成功：', JSON.stringify(res, null, 2));
   } catch (err: any) {
-    console.error("❌ batchCreate 失败：", JSON.stringify(err?.response?.data ?? err, null, 2));
+    console.error(
+      '❌ batchCreate 失败：',
+      JSON.stringify(err?.response?.data ?? err, null, 2),
+    );
   }
 
   // 给日志一个缓冲时间，避免进程过快退出导致日志未刷出

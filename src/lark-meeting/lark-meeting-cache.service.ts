@@ -30,6 +30,8 @@ export class LarkMeetingCacheService {
     string,
     MeetingDetailCache
   >();
+  // 写入去重标记：避免对同一个 meetingId 重复写入
+  private readonly writtenMeetingIds = new Set<string>();
 
   // ===== Minute token 处理集合 =====
   isProcessingMinuteToken(token: string): boolean {
@@ -42,6 +44,19 @@ export class LarkMeetingCacheService {
 
   clearProcessingMinuteToken(token: string): void {
     this.processingMinuteTokens.delete(token);
+  }
+
+  // ===== 会议写入去重 =====
+  isMeetingWritten(meetingId: string): boolean {
+    return this.writtenMeetingIds.has(meetingId);
+  }
+
+  markMeetingWritten(meetingId: string): void {
+    this.writtenMeetingIds.add(meetingId);
+  }
+
+  clearMeetingWritten(meetingId: string): void {
+    this.writtenMeetingIds.delete(meetingId);
   }
 
   // ===== 会议元数据缓存 =====

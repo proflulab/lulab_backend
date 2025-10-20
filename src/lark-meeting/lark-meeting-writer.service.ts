@@ -234,73 +234,26 @@ export class LarkMeetingWriterService {
    * 通用写入：直接依据 MeetingData 写入（upsert）
    */
   async upsertMeeting(data: MeetingData) {
-    this.logger.debug('Upserting meeting record to Bitable (HTTP)', {
+    this.logger.debug('Upserting meeting record to Bitable (repo)', {
       meeting_id: data.meeting_id,
     });
 
-    const appToken = this.getAppToken();
-    const tableId = this.getTableId();
-    let tenantToken =
-      process.env.LARK_TENANT_ACCESS_TOKEN ||
-      process.env.LARK_TENANT_TOKEN ||
-      '';
-
-    // 基本校验与日志
-    this.logger.debug('Bitable config (masked)', {
-      appToken: this.mask(appToken),
-      tableId: this.mask(tableId),
-    });
-    if (!appToken) throw new Error('缺少 LARK_BITABLE_APP_TOKEN');
-    if (!tableId)
-      throw new Error(
-        '缺少表ID (LARK_BITABLE_TABLE_ID / LARK_TABLE_ID / LARK_TABLE_MEETING_RECORD / LARK_TABLE_MEETING)',
-      );
-
-    // 获取租户 token
-    if (!tenantToken) {
-      tenantToken = await this.fetchTenantAccessTokenInternal();
-    }
-
-    // 仅使用已验证存在的字段，避免使用不存在/类型不匹配的字段
-    const fields: Record<string, unknown> = {};
-    if (data.meeting_id) fields.meeting_id = data.meeting_id;
-    fields.platform = 'feishu';
-    if ('sub_meeting_id' in data) {
-      const v = (data as { sub_meeting_id?: unknown }).sub_meeting_id;
-      if (v !== undefined) fields.sub_meeting_id = v;
-    }
-    if (data.subject) fields.subject = data.subject;
-    if (data.meeting_code) fields.meeting_code = data.meeting_code;
-    if (
-      'start_time' in data &&
-      (data as { start_time?: unknown }).start_time !== undefined
-    ) {
-      fields.start_time = (data as { start_time?: unknown }).start_time;
-    }
-    if (
-      'end_time' in data &&
-      (data as { end_time?: unknown }).end_time !== undefined
-    ) {
-      fields.end_time = (data as { end_time?: unknown }).end_time;
-    }
-
-    const body = { records: [{ fields }] };
+    // 统一平台字段为 feishu，保持与既有表结构兼容
+    const payload: MeetingData = {
+      ...data,
+      platform: 'feishu',
+    };
 
     try {
-      const res = await this.bitableBatchCreateViaHttp(
-        appToken,
-        tableId,
-        body,
-        tenantToken,
-      );
-      this.logger.debug('batch_create success', res);
+      const res = await this.meetingRepo.upsertMeetingRecord(payload);
+      const recordId = res?.data?.record?.record_id;
+      this.logger.debug('upsertMeeting success', {
+        record_id: recordId,
+        meeting_id: data.meeting_id,
+      });
       return res;
     } catch (err: unknown) {
-      const errObj = isRecord(err) ? err : {};
-      const respObj = isRecord(errObj.response) ? errObj.response : {};
-      const payloadForLog =
-        isRecord(respObj) && 'data' in respObj ? respObj.data : err;
-      this.logger.error('batch_create failed', payloadForLog);
+      this.logger.error('upsertMeeting failed', err);
       throw err instanceof Error ? err : new Error(safeStringify(err));
     }
   }

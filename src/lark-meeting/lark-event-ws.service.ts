@@ -345,22 +345,27 @@ export class LarkEventWsService implements OnModuleInit {
               platform,
             });
 
-            await this.larkMeetingWriterService.upsertMeeting({
-              platform,
-              meeting_id: meetingId,
-              ...(subject && { subject }),
-              ...(meeting_code && { meeting_code }),
-              ...(start_time !== undefined && { start_time }),
-              ...(end_time !== undefined && { end_time }),
-            });
-            console.log('已写入会议记录到 Bitable：', {
-              meeting_id: meetingId,
-              subject,
-              meeting_code,
-              start_time,
-              end_time,
-              platform,
-            });
+            if (this.larkMeetingCacheService.isMeetingWritten(meetingId)) {
+              console.warn('检测到重复的会议写入, 跳过', { meetingId });
+            } else {
+              await this.larkMeetingWriterService.upsertMeeting({
+                platform,
+                meeting_id: meetingId,
+                ...(subject && { subject }),
+                ...(meeting_code && { meeting_code }),
+                ...(start_time !== undefined && { start_time }),
+                ...(end_time !== undefined && { end_time }),
+              });
+              this.larkMeetingCacheService.markMeetingWritten(meetingId);
+              console.log('已写入会议记录到 Bitable：', {
+                meeting_id: meetingId,
+                subject,
+                meeting_code,
+                start_time,
+                end_time,
+                platform,
+              });
+            }
           } catch (e) {
             const errMsg =
               e instanceof Error
