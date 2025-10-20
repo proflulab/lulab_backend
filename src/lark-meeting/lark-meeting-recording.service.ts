@@ -65,19 +65,65 @@ export class LarkMeetingRecordingService {
             `[Lark Recording] 第${attempt}次获取到空录制数据，准备重试...`,
           );
         }
-      } catch (error: any) {
-        const status = error?.response?.status;
-        const code = error?.response?.data?.code;
-        const msg = error?.response?.data?.msg;
-        if (
+      } catch (error: unknown) {
+        const isRecord = (v: unknown): v is Record<string, unknown> =>
+          typeof v === 'object' && v !== null;
+
+        let errObj: Record<string, unknown> = {};
+        if (isRecord(error)) {
+          errObj = error;
+        }
+
+        let resp: Record<string, unknown> = {};
+        const respUnknown = errObj.response;
+        if (isRecord(respUnknown)) {
+          resp = respUnknown;
+        }
+
+        const status =
+          typeof resp.status === 'number' ? resp.status : undefined;
+
+        let data: Record<string, unknown> = {};
+        const dataUnknown = resp.data;
+        if (isRecord(dataUnknown)) {
+          data = dataUnknown;
+        }
+
+        const codeRaw = data.code;
+        const msgRaw = data.msg;
+
+        const codeNum =
+          typeof codeRaw === 'number'
+            ? codeRaw
+            : typeof codeRaw === 'string' && /^\d+$/.test(codeRaw)
+              ? Number(codeRaw)
+              : undefined;
+        const msgStr = typeof msgRaw === 'string' ? msgRaw : undefined;
+        const codeForLog =
+          typeof codeRaw === 'number' || typeof codeRaw === 'string'
+            ? codeRaw
+            : 'unknown';
+
+        const isRetryable =
           status === 400 &&
-          (code === 124002 || (msg && /processing/i.test(msg)))
-        ) {
+          ((codeNum !== undefined && codeNum === 124002) ||
+            codeRaw === '124002' ||
+            (msgStr && /processing/i.test(msgStr)));
+
+        if (isRetryable) {
           console.warn(
-            `[Lark Recording] 第${attempt}次：录制文件仍在处理(code=${code ?? 'unknown'}), ${attempt < maxAttempts ? '等待后重试' : '已达到最大重试次数'}`,
+            `[Lark Recording] 第${attempt}次：录制文件仍在处理(code=${codeForLog}), ${attempt < maxAttempts ? '等待后重试' : '已达到最大重试次数'}`,
           );
         } else {
-          console.error('[Lark Recording] 获取录制失败(非可重试错误):', error);
+          const errMsg =
+            error instanceof Error
+              ? error.message
+              : isRecord(error) &&
+                  'message' in error &&
+                  typeof (error as { message?: unknown }).message === 'string'
+                ? (error as { message: string }).message
+                : '[Unknown Error]';
+          console.error('[Lark Recording] 获取录制失败(非可重试错误):', errMsg);
           return undefined;
         }
       }

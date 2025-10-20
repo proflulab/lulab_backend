@@ -13,6 +13,47 @@ interface MeetingEndedEvent {
   };
 }
 
+// 类型辅助与安全解析
+const safeJsonParse = (input: string): unknown => {
+  try {
+    return JSON.parse(input);
+  } catch {
+    return input;
+  }
+};
+
+const isObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null;
+
+const asRecord = (v: unknown): Record<string, unknown> =>
+  isObject(v) ? v : {};
+
+const getString = (v: unknown): string | undefined => {
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number') return String(v);
+  return undefined;
+};
+
+const getNumOrStr = (v: unknown): number | string | undefined => {
+  if (typeof v === 'number' || typeof v === 'string') return v;
+  return undefined;
+};
+
+const safeStringify = (v: unknown): string => {
+  try {
+    return JSON.stringify(v);
+  } catch {
+    return '[Unserializable]';
+  }
+};
+
+// 使用接口的类型守卫，避免未使用声明且提供更严格判断
+const isMeetingEndedEventInput = (v: unknown): v is MeetingEndedEvent => {
+  const obj = asRecord(v);
+  const evt = asRecord(obj.event);
+  return typeof evt.meeting_id === 'string';
+};
+
 @Injectable()
 export class LarkEventWsService implements OnModuleInit {
   private wsClient: Lark.WSClient;
@@ -46,112 +87,184 @@ export class LarkEventWsService implements OnModuleInit {
 
     // Step 4: 注册事件
     dispatcher.register({
-      'vc.meeting.all_meeting_ended_v1': async (data) => {
+      'vc.meeting.all_meeting_ended_v1': async (data: unknown) => {
         try {
-          const plainData =
-            typeof data === 'string'
-              ? JSON.parse(data)
-              : JSON.parse(JSON.stringify(data));
-          console.log('收到会议结束事件(JSON)：', JSON.stringify(plainData));
+          // Step A: 解析事件入参并安全 JSON 解析
+          const raw: unknown =
+            typeof data === 'string' ? safeJsonParse(data) : data;
+          console.log('收到会议结束事件(JSON)：', safeStringify(raw));
 
+          const root = asRecord(raw);
+          const meetingObj = asRecord(root.meeting);
+          const eventObj = asRecord(root.event);
+          const eventMeetingObj = asRecord(eventObj.meeting);
+
+          // Step B: 提取会议ID（优先 root.meeting.id，其次 event.meeting_id）
           const meetingId =
-            plainData?.meeting?.id ||
-            plainData?.event?.meeting_id ||
-            plainData?.event?.meeting?.id;
+            getString(meetingObj.id) ??
+            (isMeetingEndedEventInput(root)
+              ? getString(asRecord(root.event).meeting_id)
+              : undefined) ??
+            getString(eventMeetingObj.id);
           if (!meetingId) {
             console.warn('会议ID未找到,跳过处理', {
-              keys: Object.keys(plainData || {}),
-              meeting: plainData?.meeting,
+              keys: Object.keys(root),
+              meeting: meetingObj,
             });
             return;
           }
           console.log('解析到会议ID：', meetingId);
 
+          // Step C: 解析会议元数据并缓存
           // 解析并临时存储会议元数据（抽取为工具函数）
-          const { topic, meetingNo, startTime, endTime } = parseMeetingMetaFromEvent(plainData);
-          this.larkMeetingCacheService.setMeetingMeta(meetingId, { topic, meetingNo, startTime, endTime });
-          console.log('已缓存会议元数据：', { meetingId, topic, meetingNo, startTime, endTime });
+          const { topic, meetingNo, startTime, endTime } =
+            parseMeetingMetaFromEvent(root);
+          this.larkMeetingCacheService.setMeetingMeta(meetingId, {
+            topic,
+            meetingNo,
+            startTime,
+            endTime,
+          });
+          console.log('已缓存会议元数据：', {
+            meetingId,
+            topic,
+            meetingNo,
+            startTime,
+            endTime,
+          });
 
           // 使用 start_time / end_time 调用会议明细查询，尝试获取并缓存更多字段
           try {
-            const queryStart = startTime ?? Math.floor(Date.now() / 1000);
-            const queryEnd = endTime ?? Math.floor(Date.now() / 1000);
-            console.log('查询会议列表参数：', { start_time: queryStart, end_time: queryEnd });
-            const meetingListData = await this.larkMeetingDetailService.getMeetingList({
+            // Step D: 根据时间范围查询会议列表，获取更多详情字段
+            const toSeconds = (v: unknown): number => {
+              if (typeof v === 'number' && Number.isFinite(v)) {
+                return Math.floor(v);
+              }
+              if (typeof v === 'string') {
+                const n = Number(v);
+                if (Number.isFinite(n)) return Math.floor(n);
+              }
+              return Math.floor(Date.now() / 1000);
+            };
+            const queryStart = toSeconds(startTime);
+            const queryEnd = toSeconds(endTime);
+            console.log('查询会议列表参数：', {
               start_time: queryStart,
               end_time: queryEnd,
-              page_size: 50,
             });
+            const meetingListDataUnknown: unknown =
+              await this.larkMeetingDetailService.getMeetingList({
+                start_time: queryStart,
+                end_time: queryEnd,
+                page_size: 50,
+              });
 
-            const items: any[] = Array.isArray(meetingListData?.items)
-              ? meetingListData.items
-              : Array.isArray(meetingListData?.meeting_list)
-              ? meetingListData.meeting_list
-              : Array.isArray(meetingListData?.list)
-              ? meetingListData.list
-              : [];
+            const mld = asRecord(meetingListDataUnknown);
+            const itemsUnknown = Array.isArray(mld.items)
+              ? mld.items
+              : Array.isArray(mld.meeting_list)
+                ? mld.meeting_list
+                : Array.isArray(mld.list)
+                  ? mld.list
+                  : [];
+            const items = (itemsUnknown as unknown[]).map((it) => asRecord(it));
 
             console.log('会议列表返回条数：', items.length);
+            // Step E: 打印样例字段以便排查
             if (items.length > 0) {
               const sample = items[0];
               console.log('会议列表样例字段：', {
-                meeting_id: sample?.meeting_id,
-                id: sample?.id,
-                meeting_id_nested: sample?.meeting?.id,
-                meeting_instance_id: sample?.meeting_instance_id,
-                meeting_no: sample?.meeting_no ?? sample?.meeting?.meeting_no,
-                start_time: sample?.meeting_start_time ?? sample?.start_time ?? sample?.meeting?.start_time,
-                end_time: sample?.meeting_end_time ?? sample?.end_time ?? sample?.meeting?.end_time,
+                meeting_id: getString(sample.meeting_id),
+                id: getString(sample.id),
+                meeting_id_nested: getString(asRecord(sample.meeting).id),
+                meeting_instance_id: getString(sample.meeting_instance_id),
+                meeting_no:
+                  getString(sample.meeting_no) ??
+                  getString(asRecord(sample.meeting).meeting_no),
+                start_time:
+                  getNumOrStr(sample.meeting_start_time) ??
+                  getNumOrStr(sample.start_time) ??
+                  getNumOrStr(asRecord(sample.meeting).start_time),
+                end_time:
+                  getNumOrStr(sample.meeting_end_time) ??
+                  getNumOrStr(sample.end_time) ??
+                  getNumOrStr(asRecord(sample.meeting).end_time),
               });
             }
 
-            const normalize = (v: any) => (v === undefined || v === null ? undefined : String(v));
+            const normalize = (v: unknown): string | undefined => {
+              if (typeof v === 'string') return v;
+              if (
+                typeof v === 'number' ||
+                typeof v === 'bigint' ||
+                typeof v === 'boolean'
+              ) {
+                return String(v);
+              }
+              return undefined;
+            };
             const targetIds = [
               normalize(meetingId),
-              normalize(plainData?.event?.meeting_id),
-              normalize(plainData?.meeting?.id),
+              normalize(eventObj.meeting_id),
+              normalize(meetingObj.id),
               normalize(meetingNo),
-              normalize(plainData?.meeting?.instance_id),
-            ].filter(Boolean);
+              normalize(meetingObj.instance_id),
+            ].filter(Boolean) as string[];
 
             const matched = items.find((it) => {
+              const itMeeting = asRecord(it.meeting);
               const candidates = [
-                normalize(it?.meeting_id),
-                normalize(it?.id),
-                normalize(it?.meeting?.id),
-                normalize(it?.meeting?.meeting_id),
-                normalize(it?.meeting_instance_id),
-                normalize(it?.meeting_no),
-                normalize(it?.meeting?.meeting_no),
-              ].filter(Boolean);
-              return candidates.some((cid) => targetIds.includes(cid as string));
+                normalize(it.meeting_id),
+                normalize(it.id),
+                normalize(itMeeting.id),
+                normalize(itMeeting.meeting_id),
+                normalize(it.meeting_instance_id),
+                normalize(it.meeting_no),
+                normalize(itMeeting.meeting_no),
+              ].filter(Boolean) as string[];
+              return candidates.some((cid) => targetIds.includes(cid));
             });
 
+            // Step G: 缓存匹配到的会议详情（组织者、时间等）
             if (matched) {
-              const detail = {
-                meeting_end_time:
-                  matched?.meeting_end_time ?? matched?.end_time ?? matched?.meeting?.end_time,
-                meeting_id:
-                  matched?.meeting_id ?? matched?.id ?? meetingId,
-                meeting_instance_id:
-                  matched?.meeting_instance_id ?? matched?.instance_id ?? matched?.meeting?.instance_id,
-                meeting_start_time:
-                  matched?.meeting_start_time ?? matched?.start_time ?? matched?.meeting?.start_time,
-                meeting_no: matched?.meeting_no ?? matched?.meeting?.meeting_no,
-                organizer: matched?.organizer ?? matched?.meeting?.organizer,
-                user_id:
-                  matched?.user_id ??
-                  matched?.organizer?.id?.user_id ??
-                  plainData?.operator?.id?.user_id ??
-                  plainData?.event?.operator?.id?.user_id,
-              } as {
-                meeting_end_time?: string | number;
+              const itMeeting = asRecord(matched.meeting);
+              const organizer = matched.organizer ?? itMeeting.organizer;
+              const detail: {
+                meeting_end_time?: number | string;
                 meeting_id?: string;
                 meeting_instance_id?: string;
-                meeting_start_time?: string | number;
-                meeting_no?: string | number;
-                organizer?: any;
+                meeting_start_time?: number | string;
+                meeting_no?: number | string;
+                organizer?: unknown;
                 user_id?: string;
+              } = {
+                meeting_end_time:
+                  getNumOrStr(matched.meeting_end_time) ??
+                  getNumOrStr(matched.end_time) ??
+                  getNumOrStr(itMeeting.end_time),
+                meeting_id:
+                  getString(matched.meeting_id) ??
+                  getString(matched.id) ??
+                  meetingId,
+                meeting_instance_id:
+                  getString(matched.meeting_instance_id) ??
+                  getString(matched.instance_id) ??
+                  getString(itMeeting.instance_id),
+                meeting_start_time:
+                  getNumOrStr(matched.meeting_start_time) ??
+                  getNumOrStr(matched.start_time) ??
+                  getNumOrStr(itMeeting.start_time),
+                meeting_no:
+                  getNumOrStr(matched.meeting_no) ??
+                  getNumOrStr(itMeeting.meeting_no),
+                organizer,
+                user_id:
+                  getString(
+                    asRecord(asRecord(asRecord(organizer).id).user_id),
+                  ) ??
+                  getString(
+                    asRecord(asRecord(asRecord(eventObj.operator).id).user_id),
+                  ),
               };
               this.larkMeetingCacheService.setMeetingDetail(meetingId, detail);
               console.log('已缓存会议详情：', { meetingId, ...detail });
@@ -161,28 +274,36 @@ export class LarkEventWsService implements OnModuleInit {
               });
             }
           } catch (e) {
-            console.warn('查询会议明细失败，跳过详情缓存：', e?.message || e);
+            const errMsg =
+              e instanceof Error
+                ? e.message
+                : typeof e === 'object' &&
+                    e !== null &&
+                    'message' in e &&
+                    typeof (e as Record<string, unknown>).message === 'string'
+                  ? ((e as Record<string, unknown>).message as string)
+                  : String(e);
+            console.warn('查询会议明细失败，跳过详情缓存：', errMsg);
           }
 
           // 映射变量并写入表格（subject/meeting_code/start_time/end_time/platform）
           try {
             const meta = this.larkMeetingCacheService.getMeetingMeta(meetingId);
-            const detail = this.larkMeetingCacheService.getMeetingDetail(meetingId);
+            const detail =
+              this.larkMeetingCacheService.getMeetingDetail(meetingId);
 
             const subject = meta?.topic;
-            const rawMeetingCode =
-              (detail as any)?.meeting_no ?? meta?.meetingNo ?? detail?.meeting_id ?? meetingId;
-            const meeting_code = rawMeetingCode !== undefined ? String(rawMeetingCode) : undefined;
+            const rawMeetingCode: unknown =
+              detail?.meeting_no ??
+              meta?.meetingNo ??
+              detail?.meeting_id ??
+              meetingId;
+            const meeting_code =
+              getString(rawMeetingCode) ?? String(rawMeetingCode);
 
             // 使用前面解析出的临时变量 startTime / endTime，不再读取 detail 的 meeting_* 字段
-            const start_time_raw = (startTime ?? meta?.startTime) as
-              | number
-              | string
-              | undefined;
-            const end_time_raw = (endTime ?? meta?.endTime) as
-              | number
-              | string
-              | undefined;
+            const start_time_raw: unknown = startTime ?? meta?.startTime;
+            const end_time_raw: unknown = endTime ?? meta?.endTime;
 
             // 统一转换为毫秒级时间戳：
             // - 若输入为“秒”时间戳（< 1e11），乘以 1000
@@ -241,7 +362,16 @@ export class LarkEventWsService implements OnModuleInit {
               platform,
             });
           } catch (e) {
-            console.warn('写入会议记录到 Bitable 失败：', e?.message || e);
+            const errMsg =
+              e instanceof Error
+                ? e.message
+                : typeof e === 'object' &&
+                    e !== null &&
+                    'message' in e &&
+                    typeof (e as Record<string, unknown>).message === 'string'
+                  ? ((e as Record<string, unknown>).message as string)
+                  : String(e);
+            console.warn('写入会议记录到 Bitable 失败：', errMsg);
           }
 
           const minuteToken =
@@ -254,7 +384,9 @@ export class LarkEventWsService implements OnModuleInit {
           }
           console.log('获取到 minuteToken:', minuteToken);
           // 防重复：同一个 minuteToken 只处理一次
-          if (this.larkMeetingCacheService.isProcessingMinuteToken(minuteToken)) {
+          if (
+            this.larkMeetingCacheService.isProcessingMinuteToken(minuteToken)
+          ) {
             console.warn('检测到重复的 minuteToken, 跳过处理:', minuteToken);
             return;
           }
@@ -267,9 +399,13 @@ export class LarkEventWsService implements OnModuleInit {
               'txt',
             );
           } finally {
-            this.larkMeetingCacheService.clearProcessingMinuteToken(minuteToken);
+            // Step L: 清理 minuteToken 处理标记
+            this.larkMeetingCacheService.clearProcessingMinuteToken(
+              minuteToken,
+            );
           }
         } catch (error) {
+          // Step Z: 捕获并记录事件处理中的意外错误
           console.error('处理会议结束事件出错：', error);
         }
       },
@@ -277,7 +413,7 @@ export class LarkEventWsService implements OnModuleInit {
 
     // Step 5: 启动 WSClient 并注册事件分发器（加上 try/catch 便于定位启动失败）
     try {
-      this.wsClient.start({
+      void this.wsClient.start({
         eventDispatcher: dispatcher,
       });
       console.log('✅ Lark WSClient 已启动并监听事件');

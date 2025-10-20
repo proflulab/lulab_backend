@@ -4,6 +4,24 @@ import { MeetingData } from '@lark/types';
 import * as https from 'https';
 import { URL } from 'url';
 
+// 类型辅助与安全解析
+const isRecord = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null;
+
+const safeStringify = (v: unknown): string => {
+  try {
+    return typeof v === 'string' ? v : JSON.stringify(v);
+  } catch {
+    return '[Unserializable]';
+  }
+};
+
+const getString = (v: unknown): string | undefined => {
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number') return String(v);
+  return undefined;
+};
+
 export interface MeetingMetaInput {
   topic?: string;
   meetingNo?: string | number;
@@ -17,7 +35,7 @@ export interface MeetingDetailInput {
   meeting_instance_id?: string;
   meeting_start_time?: string | number;
   meeting_no?: string | number;
-  organizer?: any;
+  organizer?: unknown;
   user_id?: string;
   participants?: Array<{ id?: string; name?: string } | string>;
   meeting_type?: string | string[];
@@ -27,9 +45,7 @@ export interface MeetingDetailInput {
 export class LarkMeetingWriterService {
   private readonly logger = new Logger(LarkMeetingWriterService.name);
 
-  constructor(
-    private readonly meetingRepo: MeetingBitableRepository,
-  ) {}
+  constructor(private readonly meetingRepo: MeetingBitableRepository) {}
 
   private getDomainEnv(): string {
     return (process.env.LARK_DOMAIN || '').toLowerCase();
@@ -71,101 +87,133 @@ export class LarkMeetingWriterService {
       app_secret: appSecret,
     };
 
-    const resp = await new Promise<{ status: number; data: any }>((resolve, reject) => {
-      try {
-        const u = new URL(urlStr);
-        const data = JSON.stringify(body);
-        const req = https.request(
-          {
-            protocol: u.protocol,
-            hostname: u.hostname,
-            path: u.pathname + u.search,
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json; charset=utf-8',
-              'Content-Length': Buffer.byteLength(data).toString(),
+    const resp = await new Promise<{ status: number; data: unknown }>(
+      (resolve, reject) => {
+        try {
+          const u = new URL(urlStr);
+          const data = JSON.stringify(body);
+          const req = https.request(
+            {
+              protocol: u.protocol,
+              hostname: u.hostname,
+              path: u.pathname + u.search,
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                'Content-Length': Buffer.byteLength(data).toString(),
+              },
             },
-          },
-          (res) => {
-            let raw = '';
-            res.setEncoding('utf8');
-            res.on('data', (chunk) => (raw += chunk));
-            res.on('end', () => {
-              let parsed: any;
-              try {
-                parsed = raw ? JSON.parse(raw) : {};
-              } catch (e) {
-                return resolve({ status: res.statusCode || 0, data: raw });
-              }
-              resolve({ status: res.statusCode || 0, data: parsed });
-            });
-          },
-        );
-        req.on('error', (err) => reject(err));
-        req.write(data);
-        req.end();
-      } catch (err) {
-        reject(err);
-      }
-    });
+            (res) => {
+              let raw = '';
+              res.setEncoding('utf8');
+              res.on('data', (chunk) => (raw += chunk));
+              res.on('end', () => {
+                let parsed: unknown;
+                try {
+                  parsed = raw ? JSON.parse(raw) : {};
+                } catch {
+                  return resolve({ status: res.statusCode || 0, data: raw });
+                }
+                resolve({ status: res.statusCode || 0, data: parsed });
+              });
+            },
+          );
+          req.on('error', (err) =>
+            reject(err instanceof Error ? err : new Error(safeStringify(err))),
+          );
+          req.write(data);
+          req.end();
+        } catch (err) {
+          reject(err instanceof Error ? err : new Error(safeStringify(err)));
+        }
+      },
+    );
 
     if (resp.status !== 200) {
-      throw new Error(`获取 tenant_access_token 失败, status=${resp.status}, body=${JSON.stringify(resp.data)}`);
+      throw new Error(
+        `获取 tenant_access_token 失败, status=${resp.status}, body=${safeStringify(resp.data)}`,
+      );
     }
-    const respData = resp.data;
-    if (respData.code !== 0 || !respData.tenant_access_token) {
-      throw new Error(`获取 tenant_access_token 返回异常: ${JSON.stringify(respData)}`);
+    const respData = isRecord(resp.data) ? resp.data : {};
+    const code = typeof respData.code === 'number' ? respData.code : undefined;
+    const tenantAccessToken =
+      typeof respData.tenant_access_token === 'string'
+        ? respData.tenant_access_token
+        : undefined;
+    if (code !== 0 || !tenantAccessToken) {
+      throw new Error(
+        `获取 tenant_access_token 返回异常: ${safeStringify(resp.data)}`,
+      );
     }
-    return respData.tenant_access_token as string;
+    return tenantAccessToken;
   }
 
-  private async postJsonWithAuth(urlInput: string, payload: any, tenantToken: string) {
-    return new Promise<{ status: number; data: any; raw: string }>((resolve, reject) => {
-      try {
-        const u = new URL(urlInput);
-        const data = JSON.stringify(payload);
-        const req = https.request(
-          {
-            protocol: u.protocol,
-            hostname: u.hostname,
-            path: u.pathname + u.search,
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json; charset=utf-8',
-              'Content-Length': Buffer.byteLength(data).toString(),
-              Authorization: `Bearer ${tenantToken}`,
+  private async postJsonWithAuth(
+    urlInput: string,
+    payload: unknown,
+    tenantToken: string,
+  ) {
+    return new Promise<{ status: number; data: unknown; raw: string }>(
+      (resolve, reject) => {
+        try {
+          const u = new URL(urlInput);
+          const data = JSON.stringify(payload);
+          const req = https.request(
+            {
+              protocol: u.protocol,
+              hostname: u.hostname,
+              path: u.pathname + u.search,
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                'Content-Length': Buffer.byteLength(data).toString(),
+                Authorization: `Bearer ${tenantToken}`,
+              },
             },
-          },
-          (res) => {
-            let raw = '';
-            res.setEncoding('utf8');
-            res.on('data', (chunk) => (raw += chunk));
-            res.on('end', () => {
-              let parsed: any;
-              try {
-                parsed = raw ? JSON.parse(raw) : {};
-              } catch {
-                return resolve({ status: res.statusCode || 0, data: raw, raw });
-              }
-              resolve({ status: res.statusCode || 0, data: parsed, raw });
-            });
-          },
-        );
-        req.on('error', (err) => reject(err));
-        req.write(data);
-        req.end();
-      } catch (err) {
-        reject(err);
-      }
-    });
+            (res) => {
+              let raw = '';
+              res.setEncoding('utf8');
+              res.on('data', (chunk) => (raw += chunk));
+              res.on('end', () => {
+                let parsed: unknown;
+                try {
+                  parsed = raw ? JSON.parse(raw) : {};
+                } catch {
+                  return resolve({
+                    status: res.statusCode || 0,
+                    data: raw,
+                    raw,
+                  });
+                }
+                resolve({ status: res.statusCode || 0, data: parsed, raw });
+              });
+            },
+          );
+          req.on('error', (err) =>
+            reject(err instanceof Error ? err : new Error(safeStringify(err))),
+          );
+          req.write(data);
+          req.end();
+        } catch (err) {
+          reject(err instanceof Error ? err : new Error(safeStringify(err)));
+        }
+      },
+    );
   }
 
-  private async bitableBatchCreateViaHttp(appToken: string, tableId: string, body: any, tenantToken: string) {
+  private async bitableBatchCreateViaHttp(
+    appToken: string,
+    tableId: string,
+    body: unknown,
+    tenantToken: string,
+  ) {
     const host = this.getHost();
     const urlStr = `${host}/open-apis/bitable/v1/apps/${encodeURIComponent(appToken)}/tables/${encodeURIComponent(tableId)}/records/batch_create`;
     const resp = await this.postJsonWithAuth(urlStr, body, tenantToken);
     if (resp.status !== 200) {
-      throw new Error(`batch_create 请求失败, status=${resp.status}, body=${typeof resp.data === 'string' ? resp.data : JSON.stringify(resp.data)}`);
+      throw new Error(
+        `batch_create 请求失败, status=${resp.status}, body=${safeStringify(resp.data)}`,
+      );
     }
     return resp.data;
   }
@@ -192,7 +240,10 @@ export class LarkMeetingWriterService {
 
     const appToken = this.getAppToken();
     const tableId = this.getTableId();
-    let tenantToken = process.env.LARK_TENANT_ACCESS_TOKEN || process.env.LARK_TENANT_TOKEN || '';
+    let tenantToken =
+      process.env.LARK_TENANT_ACCESS_TOKEN ||
+      process.env.LARK_TENANT_TOKEN ||
+      '';
 
     // 基本校验与日志
     this.logger.debug('Bitable config (masked)', {
@@ -200,7 +251,10 @@ export class LarkMeetingWriterService {
       tableId: this.mask(tableId),
     });
     if (!appToken) throw new Error('缺少 LARK_BITABLE_APP_TOKEN');
-    if (!tableId) throw new Error('缺少表ID (LARK_BITABLE_TABLE_ID / LARK_TABLE_ID / LARK_TABLE_MEETING_RECORD / LARK_TABLE_MEETING)');
+    if (!tableId)
+      throw new Error(
+        '缺少表ID (LARK_BITABLE_TABLE_ID / LARK_TABLE_ID / LARK_TABLE_MEETING_RECORD / LARK_TABLE_MEETING)',
+      );
 
     // 获取租户 token
     if (!tenantToken) {
@@ -208,24 +262,46 @@ export class LarkMeetingWriterService {
     }
 
     // 仅使用已验证存在的字段，避免使用不存在/类型不匹配的字段
-    const fields: Record<string, any> = {};
+    const fields: Record<string, unknown> = {};
     if (data.meeting_id) fields.meeting_id = data.meeting_id;
     fields.platform = 'feishu';
-    if ((data as any).sub_meeting_id) fields.sub_meeting_id = (data as any).sub_meeting_id;
+    if ('sub_meeting_id' in data) {
+      const v = (data as { sub_meeting_id?: unknown }).sub_meeting_id;
+      if (v !== undefined) fields.sub_meeting_id = v;
+    }
     if (data.subject) fields.subject = data.subject;
     if (data.meeting_code) fields.meeting_code = data.meeting_code;
-    if (typeof (data as any).start_time !== 'undefined') fields.start_time = (data as any).start_time;
-    if (typeof (data as any).end_time !== 'undefined') fields.end_time = (data as any).end_time;
+    if (
+      'start_time' in data &&
+      (data as { start_time?: unknown }).start_time !== undefined
+    ) {
+      fields.start_time = (data as { start_time?: unknown }).start_time;
+    }
+    if (
+      'end_time' in data &&
+      (data as { end_time?: unknown }).end_time !== undefined
+    ) {
+      fields.end_time = (data as { end_time?: unknown }).end_time;
+    }
 
     const body = { records: [{ fields }] };
 
     try {
-      const res = await this.bitableBatchCreateViaHttp(appToken, tableId, body, tenantToken);
+      const res = await this.bitableBatchCreateViaHttp(
+        appToken,
+        tableId,
+        body,
+        tenantToken,
+      );
       this.logger.debug('batch_create success', res);
       return res;
-    } catch (err: any) {
-      this.logger.error('batch_create failed', err?.response?.data ?? err);
-      throw err;
+    } catch (err: unknown) {
+      const errObj = isRecord(err) ? err : {};
+      const respObj = isRecord(errObj.response) ? errObj.response : {};
+      const payloadForLog =
+        isRecord(respObj) && 'data' in respObj ? respObj.data : err;
+      this.logger.error('batch_create failed', payloadForLog);
+      throw err instanceof Error ? err : new Error(safeStringify(err));
     }
   }
 
@@ -254,11 +330,14 @@ export class LarkMeetingWriterService {
     // operator：尽量收集事件中的操作者/组织者ID
     const operator: string[] = [];
     if (detail?.user_id) operator.push(detail.user_id);
-    const organizerId = detail?.organizer?.id?.user_id || detail?.organizer?.user_id;
+    const organizerVal = detail?.organizer;
+    const orgRec = isRecord(organizerVal) ? organizerVal : {};
+    const orgIdRec = isRecord(orgRec.id) ? orgRec.id : {};
+    const organizerId =
+      getString(orgIdRec.user_id) ?? getString(orgRec.user_id);
     if (organizerId) operator.push(String(organizerId));
 
-    // creator：如有可用字段则填充（目前与 operator 等价处理）
-    const creator: string[] = organizerId ? [String(organizerId)] : [];
+    // creator：如需使用请在表结构支持后再启用
 
     // participants：兼容传入的多种形式
     const participants: string[] = [];
@@ -291,7 +370,9 @@ export class LarkMeetingWriterService {
       // ...(participants.length > 0 && { participants }),
       // ...(meetingTypeArray.length > 0 && { meeting_type: meetingTypeArray }),
       // 尝试映射子会议ID
-      ...(detail?.meeting_instance_id && { sub_meeting_id: String(detail.meeting_instance_id) }),
+      ...(detail?.meeting_instance_id && {
+        sub_meeting_id: String(detail.meeting_instance_id),
+      }),
     };
 
     return this.upsertMeeting(record);
