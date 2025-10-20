@@ -15,26 +15,43 @@ export type MeetingMeta = {
  * - data.event.meeting.xxx
  * - data.event.xxx
  */
-export function parseMeetingMetaFromEvent(plainData: any): MeetingMeta {
+export function parseMeetingMetaFromEvent(plainData: unknown): MeetingMeta {
+  const asRecord = (v: unknown): Record<string, unknown> =>
+    typeof v === 'object' && v !== null ? (v as Record<string, unknown>) : {};
+  const getString = (v: unknown): string | undefined => {
+    if (typeof v === 'string') return v;
+    if (typeof v === 'number') return String(v);
+    return undefined;
+  };
+  const getNumOrStr = (v: unknown): number | string | undefined => {
+    if (typeof v === 'number' || typeof v === 'string') return v;
+    return undefined;
+  };
+
+  const root = asRecord(plainData);
+  const meeting = asRecord(root.meeting);
+  const eventObj = asRecord(root.event);
+  const eventMeeting = asRecord(eventObj.meeting);
+
   const topic =
-    plainData?.meeting?.topic ??
-    plainData?.event?.meeting?.topic ??
-    plainData?.event?.topic;
+    getString(meeting.topic) ??
+    getString(eventMeeting.topic) ??
+    getString(eventObj.topic);
 
   const meetingNo =
-    plainData?.meeting?.meeting_no ??
-    plainData?.event?.meeting_no ??
-    plainData?.event?.meeting?.meeting_no;
+    getString(meeting.meeting_no) ??
+    getString(eventObj.meeting_no) ??
+    getString(eventMeeting.meeting_no);
 
   const startTime =
-    plainData?.meeting?.start_time ??
-    plainData?.event?.meeting?.start_time ??
-    plainData?.event?.start_time;
+    getNumOrStr(meeting.start_time) ??
+    getNumOrStr(eventMeeting.start_time) ??
+    getNumOrStr(eventObj.start_time);
 
   const endTime =
-    plainData?.meeting?.end_time ??
-    plainData?.event?.meeting?.end_time ??
-    plainData?.event?.end_time;
+    getNumOrStr(meeting.end_time) ??
+    getNumOrStr(eventMeeting.end_time) ??
+    getNumOrStr(eventObj.end_time);
 
   return { topic, meetingNo, startTime, endTime };
 }

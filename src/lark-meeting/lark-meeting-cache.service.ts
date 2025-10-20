@@ -26,7 +26,10 @@ export class LarkMeetingCacheService {
   // 会议元数据缓存
   private readonly lastMeetingMetaById = new Map<string, MeetingMetaCache>();
   // 会议详情缓存
-  private readonly lastMeetingDetailById = new Map<string, MeetingDetailCache>();
+  private readonly lastMeetingDetailById = new Map<
+    string,
+    MeetingDetailCache
+  >();
 
   // ===== Minute token 处理集合 =====
   isProcessingMinuteToken(token: string): boolean {

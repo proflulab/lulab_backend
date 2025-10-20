@@ -49,8 +49,10 @@ export class TokenService {
   ) {
     this.accessSecret = this.config.accessSecret;
     this.refreshSecret = this.config.refreshSecret;
-    this.accessExpiresIn = this.config.accessExpiresIn as JwtSignOptions['expiresIn'];
-    this.refreshExpiresIn = this.config.refreshExpiresIn as JwtSignOptions['expiresIn'];
+    this.accessExpiresIn = this.config
+      .accessExpiresIn as JwtSignOptions['expiresIn'];
+    this.refreshExpiresIn = this.config
+      .refreshExpiresIn as JwtSignOptions['expiresIn'];
   }
 
   /**
@@ -102,7 +104,8 @@ export class TokenService {
     let expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // fallback
     try {
       const refreshExp =
-        this.refreshExpiresIn ?? ('7d' as unknown as JwtSignOptions['expiresIn']);
+        this.refreshExpiresIn ??
+        ('7d' as unknown as JwtSignOptions['expiresIn']);
       const durationMs =
         typeof refreshExp === 'number'
           ? refreshExp * 1000
@@ -175,31 +178,26 @@ export class TokenService {
 
       // 生成新的访问令牌
       const payload: { sub: string } = { sub: user.id };
-      const accessToken = this.jwtService.sign(
-        payload,
-        {
-          secret: this.accessSecret,
-          expiresIn: this.accessExpiresIn,
-          jwtid: randomUUID(),
-        },
-      );
+      const accessToken = this.jwtService.sign(payload, {
+        secret: this.accessSecret,
+        expiresIn: this.accessExpiresIn,
+        jwtid: randomUUID(),
+      });
 
       // 生成新的刷新令牌（令牌轮换）
       const newRefreshJti = randomUUID();
-      const newRefreshToken = this.jwtService.sign(
-        payload,
-        {
-          secret: this.refreshSecret,
-          expiresIn: this.refreshExpiresIn,
-          jwtid: newRefreshJti,
-        },
-      );
+      const newRefreshToken = this.jwtService.sign(payload, {
+        secret: this.refreshSecret,
+        expiresIn: this.refreshExpiresIn,
+        jwtid: newRefreshJti,
+      });
 
       // 计算新的刷新令牌过期时间
       let newExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // fallback
       try {
         const refreshExp =
-          this.refreshExpiresIn ?? ('7d' as unknown as JwtSignOptions['expiresIn']);
+          this.refreshExpiresIn ??
+          ('7d' as unknown as JwtSignOptions['expiresIn']);
         const durationMs =
           typeof refreshExp === 'number'
             ? refreshExp * 1000

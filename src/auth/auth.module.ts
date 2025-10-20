@@ -48,7 +48,8 @@ import { jwtConfig } from '@/configs/jwt.config';
       useFactory: (config: ConfigType<typeof jwtConfig>): JwtModuleOptions => ({
         secret: config.accessSecret,
         signOptions: {
-          expiresIn: config.accessExpiresIn as unknown as JwtSignOptions['expiresIn'],
+          expiresIn:
+            config.accessExpiresIn as unknown as JwtSignOptions['expiresIn'],
         },
       }),
       inject: [jwtConfig.KEY],
