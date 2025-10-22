@@ -9,12 +9,21 @@ const baseConfig = {
 // Step 2: 构建 WSClient 客户端 Build client
 const wsClient = new Lark.WSClient(baseConfig);
 
+// 安全字符串化辅助
+const safeStringify = (value: unknown): string => {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+};
+
 // Step 3: 启动长连接 Establish persistent connection
-wsClient.start({
+void wsClient.start({
   // Step 4: 注册事件 Register event
   eventDispatcher: new Lark.EventDispatcher({}).register({
     // 监听“所有会议结束事件”
-    'vc.meeting.all_meeting_ended_v1': async (data) => {
+    'vc.meeting.all_meeting_ended_v1': (data) => {
       try {
         // 将事件数据转换为 JSON 字符串
         const jsonStr = JSON.stringify(data, null, 2);
@@ -26,7 +35,7 @@ wsClient.start({
         // const operatorId = data.operator.id.user_id;
         // ...其他逻辑处理
       } catch (error) {
-        console.error('处理会议结束事件出错：', error);
+        console.error(`处理会议结束事件出错：${safeStringify(error)}`);
       }
     },
   }),

@@ -1,7 +1,7 @@
 // node-sdk使用说明：https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/server-side-sdk/nodejs-sdk/preparation-before-development
 // 以下示例遵循官方Demo：直接使用 Node SDK 的 Client 和 batchCreate API
 
-import * as lark from '@larksuiteoapi/node-sdk';
+// 已移除未使用的 @larksuiteoapi/node-sdk 导入
 import * as dotenv from 'dotenv';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import * as https from 'https';
@@ -16,13 +16,7 @@ const appSecret = process.env.LARK_APP_SECRET || '';
 const appToken = process.env.LARK_BITABLE_APP_TOKEN || '';
 const domainEnv = (process.env.LARK_DOMAIN || '').toLowerCase();
 // 兼容不同 SDK 版本的域名常量（有的版本是 Feishu，有的是 FeiShu；海外域名常量可能不存在）
-const FeishuDomain: any =
-  (lark.Domain as any)?.Feishu ?? (lark.Domain as any)?.FeiShu;
-const getOptionalDomain = () => {
-  if (domainEnv === 'feishu' && FeishuDomain) return FeishuDomain;
-  // 其余情况不显式设置，使用 SDK 默认域
-  return undefined;
-};
+// 已移除 SDK 域名常量兼容逻辑，直接使用 LARK_DOMAIN 选择 host
 const tableId =
   process.env.LARK_BITABLE_TABLE_ID ||
   process.env.LARK_TABLE_ID ||
@@ -32,6 +26,27 @@ const tableId =
 // 可选：如果你已有租户Token，优先使用该环境变量
 const tenantTokenFromEnv =
   process.env.LARK_TENANT_ACCESS_TOKEN || process.env.LARK_TENANT_TOKEN || '';
+
+// 类型与日志辅助工具
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function hasResponseData(
+  value: unknown,
+): value is { response: { data: unknown } } {
+  if (!isRecord(value)) return false;
+  const response = value.response;
+  return isRecord(response) && 'data' in response;
+}
+
+function safeStringify(value: unknown): string {
+  try {
+    return typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+}
 
 // 可选：将生成的 Token 写入指定环境文件，方便后续复用
 function upsertEnvVar(filePath: string, key: string, value: string) {
@@ -73,8 +88,8 @@ async function fetchTenantAccessTokenInternal(
     app_secret: appSecret,
   };
 
-  const postJson = (urlInput: string, payload: any) =>
-    new Promise<{ status: number; data: any }>((resolve, reject) => {
+  const postJson = (urlInput: string, payload: unknown) =>
+    new Promise<{ status: number; data: unknown }>((resolve, reject) => {
       try {
         const u = new URL(urlInput);
         const data = JSON.stringify(payload);
@@ -86,29 +101,31 @@ async function fetchTenantAccessTokenInternal(
             method: 'POST',
             headers: {
               'Content-Type': 'application/json; charset=utf-8',
-              'Content-Length': Buffer.byteLength(data).toString(),
+              'Content-Length': String(Buffer.byteLength(data)),
             },
           },
           (res) => {
             let raw = '';
             res.setEncoding('utf8');
-            res.on('data', (chunk) => (raw += chunk));
+            res.on('data', (chunk: string) => (raw += chunk));
             res.on('end', () => {
-              let parsed: any;
+              let parsed: unknown;
               try {
                 parsed = raw ? JSON.parse(raw) : {};
-              } catch (e) {
+              } catch {
                 return resolve({ status: res.statusCode || 0, data: raw });
               }
               resolve({ status: res.statusCode || 0, data: parsed });
             });
           },
         );
-        req.on('error', (err) => reject(err));
+        req.on('error', (err) =>
+          reject(err instanceof Error ? err : new Error(safeStringify(err))),
+        );
         req.write(data);
         req.end();
       } catch (err) {
-        reject(err);
+        reject(err instanceof Error ? err : new Error(safeStringify(err)));
       }
     });
 
@@ -116,28 +133,34 @@ async function fetchTenantAccessTokenInternal(
 
   if (resp.status !== 200) {
     throw new Error(
-      `获取 tenant_access_token failed, status=${resp.status}, body=${JSON.stringify(resp.data)}`,
+      `获取 tenant_access_token failed, status=${resp.status}, body=${safeStringify(resp.data)}`,
     );
   }
-  const respData = resp.data;
-  if (respData.code !== 0 || !respData.tenant_access_token) {
+  const dataObj = isRecord(resp.data) ? resp.data : {};
+  const code = typeof dataObj.code === 'number' ? dataObj.code : undefined;
+  const token =
+    typeof dataObj.tenant_access_token === 'string'
+      ? dataObj.tenant_access_token
+      : '';
+  const expire = typeof dataObj.expire === 'number' ? dataObj.expire : 0;
+  if (code !== 0 || !token) {
     throw new Error(
-      `获取 tenant_access_token 返回异常: ${JSON.stringify(respData)}`,
+      `获取 tenant_access_token 返回异常: ${safeStringify(resp.data)}`,
     );
   }
   return {
-    tenant_access_token: respData.tenant_access_token,
-    expire: respData.expire,
+    tenant_access_token: token,
+    expire,
   };
 }
 
 // 以与官方调试台一致的方式，直接 POST JSON 到 bitable batch_create 接口
 async function postJsonWithAuth(
   urlInput: string,
-  payload: any,
+  payload: unknown,
   tenantToken: string,
 ) {
-  return new Promise<{ status: number; data: any; raw: string }>(
+  return new Promise<{ status: number; data: unknown; raw: string }>(
     (resolve, reject) => {
       try {
         const u = new URL(urlInput);
@@ -150,16 +173,16 @@ async function postJsonWithAuth(
             method: 'POST',
             headers: {
               'Content-Type': 'application/json; charset=utf-8',
-              'Content-Length': Buffer.byteLength(data).toString(),
+              'Content-Length': String(Buffer.byteLength(data)),
               Authorization: `Bearer ${tenantToken}`,
             },
           },
           (res) => {
             let raw = '';
             res.setEncoding('utf8');
-            res.on('data', (chunk) => (raw += chunk));
+            res.on('data', (chunk: string) => (raw += chunk));
             res.on('end', () => {
-              let parsed: any;
+              let parsed: unknown;
               try {
                 parsed = raw ? JSON.parse(raw) : {};
               } catch {
@@ -169,11 +192,13 @@ async function postJsonWithAuth(
             });
           },
         );
-        req.on('error', (err) => reject(err));
+        req.on('error', (err) =>
+          reject(err instanceof Error ? err : new Error(safeStringify(err))),
+        );
         req.write(data);
         req.end();
       } catch (err) {
-        reject(err);
+        reject(err instanceof Error ? err : new Error(safeStringify(err)));
       }
     },
   );
@@ -184,7 +209,7 @@ async function bitableBatchCreateViaHttp(
   tableId: string,
   domainEnv: string,
   tenantToken: string,
-  body: any,
+  body: unknown,
 ) {
   const host =
     domainEnv === 'feishu'
@@ -195,23 +220,14 @@ async function bitableBatchCreateViaHttp(
   const resp = await postJsonWithAuth(urlStr, body, tenantToken);
   if (resp.status !== 200) {
     throw new Error(
-      `batch_create 请求失败, status=${resp.status}, body=${typeof resp.data === 'string' ? resp.data : JSON.stringify(resp.data)}`,
+      `batch_create 请求失败, status=${resp.status}, body=${safeStringify(resp.data)}`,
     );
   }
   return resp.data;
 }
 
 // 开发者复制该Demo后，需要修改Demo里面的"app id", "app secret"为自己应用的appId, appSecret
-const clientConfig: any = {
-  appId,
-  appSecret,
-  // disableTokenCache为true时，SDK不会主动拉取并缓存token，这时需要在发起请求时，调用lark.withTenantToken("token")手动传递
-  // disableTokenCache为false时，SDK会自动管理租户token的获取与刷新，无需使用lark.withTenantToken("token")手动传递token
-  disableTokenCache: true,
-};
-const optionalDomain = getOptionalDomain();
-if (optionalDomain) clientConfig.domain = optionalDomain;
-const client = new lark.Client(clientConfig);
+// 已移除 SDK Client 初始化，改用直连 Open API 的 HTTPS 请求
 
 function isLikelyTableId(id: string) {
   return typeof id === 'string' && id.startsWith('tbl') && id.length > 8;
@@ -322,21 +338,23 @@ async function main() {
       (res) => {
         let raw = '';
         res.setEncoding('utf8');
-        res.on('data', (chunk) => (raw += chunk));
+        res.on('data', (chunk: string) => (raw += chunk));
         res.on('end', () => {
           try {
-            const data = JSON.parse(raw);
+            const data: unknown = JSON.parse(raw);
             console.log('📋 表字段信息：', JSON.stringify(data, null, 2));
-          } catch (e) {
+          } catch {
             console.log('📋 原始响应：', raw);
           }
         });
       },
     );
-    req.on('error', (err) => console.error('❌ 获取表字段信息失败：', err));
+    req.on('error', (err) =>
+      console.error('❌ 获取表字段信息失败：', safeStringify(err)),
+    );
     req.end();
-  } catch (err: any) {
-    console.error('❌ 获取表字段信息失败：', err);
+  } catch (err: unknown) {
+    console.error('❌ 获取表字段信息失败：', safeStringify(err));
   }
 
   // 按照实际表字段构造请求体（基于获取到的字段信息）
@@ -370,11 +388,9 @@ async function main() {
       requestBody,
     );
     console.log('✅ batchCreate 成功：', JSON.stringify(res, null, 2));
-  } catch (err: any) {
-    console.error(
-      '❌ batchCreate 失败：',
-      JSON.stringify(err?.response?.data ?? err, null, 2),
-    );
+  } catch (err: unknown) {
+    const payload = hasResponseData(err) ? err.response.data : err;
+    console.error('❌ batchCreate 失败：', safeStringify(payload));
   }
 
   // 给日志一个缓冲时间，避免进程过快退出导致日志未刷出
@@ -382,7 +398,7 @@ async function main() {
   console.log('示例脚本执行完成');
 }
 
-main().catch((e) => {
-  console.error('脚本执行异常：', e);
+main().catch((err: unknown) => {
+  console.error('脚本执行异常：', safeStringify(err));
   process.exit(1);
 });

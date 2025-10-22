@@ -4,45 +4,30 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
 import { LarkClient } from '../../../src/integrations/lark/lark.client';
 import { RecordingFileBitableRepository } from '../../../src/integrations/lark/repositories/meeting-recording-file.repository';
 import { RecordingFileData } from '@/integrations/lark/types';
 import { BitableService } from '../../../src/integrations/lark/services/bitable.service';
-import { Readable } from 'stream';
+
+// 类型守卫与安全日志
+const isRecord = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null;
+
+const hasResponseData = (v: unknown): v is { response: { data?: unknown } } =>
+  isRecord(v) &&
+  'response' in v &&
+  isRecord((v as { response?: unknown }).response);
+
+const safeStringify = (value: unknown): string => {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+};
 
 async function bootstrap() {
-  const configService = new ConfigService({
-    LARK_APP_ID: 'cli_a8481aa2befd901c',
-    LARK_APP_SECRET: 'Jx47tRCaTY2S2chIe1XBbgldPxuIhIiz',
-  });
-
-  const moduleRef: TestingModule = await Test.createTestingModule({
-    providers: [
-      {
-        provide: LarkClient,
-        useFactory: () =>
-          new LarkClient(configService, {
-            appId: 'cli_a8481aa2befd901c',
-            appSecret: 'Jx47tRCaTY2S2chIe1XBbgldPxuIhIiz',
-            logLevel: 'info' as const,
-            baseUrl: 'https://open.feishu.cn',
-            bitable: {
-              appToken: 'O6CPbzuVza3X4ysfwJacDyabnJe',
-              tableIds: {
-                meeting: '',
-                meetingUser: '',
-                recordingFile: 'tblJbqecW2952dVW',
-              },
-            },
-          }),
-      },
-    ],
-  }).compile();
-
-  const client = moduleRef.get<LarkClient>(LarkClient);
-
-  // 初始化 BitableService 和 RecordingFileRepository
+  // 配置对象符合 LarkConfig 形状
   const cfg = {
     appId: 'cli_a8481aa2befd901c',
     appSecret: 'Jx47tRCaTY2S2chIe1XBbgldPxuIhIiz',
@@ -54,11 +39,28 @@ async function bootstrap() {
         meeting: '',
         meetingUser: '',
         recordingFile: 'tblJbqecW2952dVW',
+        numberRecord: '',
       },
+    },
+    event: {
+      encryptKey: '',
+      verificationToken: '',
     },
   };
 
-  const bitableService = new BitableService(client as any);
+  const moduleRef: TestingModule = await Test.createTestingModule({
+    providers: [
+      {
+        provide: LarkClient,
+        useFactory: () => new LarkClient(cfg),
+      },
+    ],
+  }).compile();
+
+  const client = moduleRef.get<LarkClient>(LarkClient);
+
+  // 初始化 BitableService 和 RecordingFileRepository
+  const bitableService = new BitableService(client);
   const recordingFileRepository = new RecordingFileBitableRepository(
     bitableService,
     cfg,
@@ -91,9 +93,17 @@ async function bootstrap() {
     const writeStream = fs.createWriteStream(filePath);
     let fileContent = '';
 
-    for await (const chunk of stream) {
-      fileContent += chunk.toString();
-      writeStream.write(chunk);
+    for await (const chunk of stream as AsyncIterable<unknown>) {
+      let text: string;
+      if (typeof chunk === 'string') {
+        text = chunk;
+      } else if (chunk instanceof Uint8Array || Buffer.isBuffer(chunk)) {
+        text = Buffer.from(chunk).toString('utf8');
+      } else {
+        text = String(chunk);
+      }
+      fileContent += text;
+      writeStream.write(text);
     }
     writeStream.end();
 
@@ -109,12 +119,10 @@ async function bootstrap() {
     console.log('写入 Bitable 成功:', createResult);
 
     console.log(`妙记文字记录已保存到: ${filePath}`);
-  } catch (e: any) {
-    console.error(
-      '导出妙记文字记录失败：',
-      JSON.stringify(e.response?.data || e, null, 4),
-    );
+  } catch (e: unknown) {
+    const payload = hasResponseData(e) ? e.response.data : e;
+    console.error(`导出妙记文字记录失败：${safeStringify(payload)}`);
   }
 }
 
-bootstrap();
+void bootstrap();

@@ -1,9 +1,29 @@
 // Node SDK 使用说明：https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/server-side-sdk/preparation-before-development
 // 飞书导出妙记文字记录接口文档：https://open.feishu.cn/document/minutes-v1/minute-transcript/get?appId=cli_a8481aa2befd901c
 
-import * as fs from 'fs';
 import * as path from 'path';
 import * as lark from '@larksuiteoapi/node-sdk';
+
+// 类型辅助与安全日志
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function hasResponseData(
+  value: unknown,
+): value is { response: { data: unknown } } {
+  if (!isRecord(value)) return false;
+  const response = (value as { response?: unknown }).response;
+  return isRecord(response) && 'data' in response;
+}
+
+function safeStringify(value: unknown): string {
+  try {
+    return typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+}
 
 // Step 1: 创建客户端
 const client = new lark.Client({
@@ -39,13 +59,11 @@ async function exportMinuteTranscript() {
     await res.writeFile(filePath);
 
     console.log(`妙记文字记录已保存到: ${filePath}`);
-  } catch (e: any) {
-    console.error(
-      '导出妙记文字记录失败：',
-      JSON.stringify(e.response?.data || e, null, 4),
-    );
+  } catch (err: unknown) {
+    const payload = hasResponseData(err) ? err.response.data : err;
+    console.error('导出妙记文字记录失败：', safeStringify(payload));
   }
 }
 
 // Step 3: 执行函数
-exportMinuteTranscript();
+void exportMinuteTranscript();

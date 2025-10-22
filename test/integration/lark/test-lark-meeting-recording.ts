@@ -41,11 +41,9 @@ async function getMeetingRecording(): Promise<string | undefined> {
     console.log('minute_token：', minute_token);
 
     return minute_token;
-  } catch (e: any) {
-    console.error(
-      '获取会议录制失败：',
-      JSON.stringify(e.response?.data || e, null, 4),
-    );
+  } catch (err: unknown) {
+    const payload = hasResponseData(err) ? (err.response?.data ?? err) : err;
+    console.error('获取会议录制失败：', JSON.stringify(payload, null, 4));
   }
 }
 
@@ -55,3 +53,10 @@ getMeetingRecording().then((token) => {
     console.log('其他逻辑可以使用 minute_token:', token);
   }
 });
+
+// 类型守卫：安全判断对象结构，避免对 any 访问成员
+const isRecord = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null;
+
+const hasResponseData = (x: unknown): x is { response?: { data?: unknown } } =>
+  isRecord(x) && 'response' in x;
