@@ -227,8 +227,9 @@ model PlatformUser {
   lastSeenAt DateTime? // 最后出现时间
 
   // 关联关系
-  participations MeetingParticipation[] // 参会记录
-  hostedMeetings Meetings[]             @relation("HostedMeetings") // 主持的会议
+  participations       MeetingParticipation[] // 参会记录
+  hostedMeetings       Meetings[]             @relation("HostedMeetings") // 主持的会议
+  participantSummaries ParticipantSummary[] // 参与者会议总结
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -350,3 +351,46 @@ model MeetingSummary {
   @@index([reviewedBy]) // 审核者查询优化
   @@map("meeting_summaries")
 }
+
+
+// 参与者会议总结表
+model ParticipantSummary {
+  id String @id @default(cuid())
+
+  // 平台用户ID（关联到 PlatformUser）
+  platformUserId String
+  platformUser   PlatformUser @relation(fields: [platformUserId], references: [id], onDelete: Restrict)
+
+  // 录制文件路径，如 "2025/11/05recv1GetJ4smCsm"
+  recordFile String @db.VarChar(500)
+
+  // 参会人信息
+  meetParticipant String @db.VarChar(100)
+
+  // 参会人的会议总结
+  participantSummary String @db.Text
+
+  // 会议录制ID，如 "1986040434423877633"
+  recordFileId String @db.VarChar(100)
+
+  // 会议开始时间
+  meetStartTime DateTime
+
+  // 整个会议的总结
+  meetingSummary String @db.Text
+
+  // 软删除
+  deletedAt DateTime? // 软删除时间戳
+
+  // 创建时间
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([platformUserId])
+  @@index([recordFileId])
+  @@index([meetStartTime])
+  @@index([createdAt])
+  @@index([deletedAt]) // 软删除查询优化
+  @@map("participant_summaries")
+}
+
