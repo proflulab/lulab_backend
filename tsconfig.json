@@ -22,5 +22,12 @@
       "@common/*": ["src/common/*"],
       "@lark/*": ["src/integrations/lark/*"]
     }
-  }
+  },
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ],
+  "exclude": [
+    "documentation/**/*"
+  ]
 }

@@ -1,3 +1,16 @@
+/**
+ * MinuteTranscriptService（纪要转写服务）
+ *
+ * 职责：
+ * - 通过 Lark Minutes API 获取指定 `minuteToken` 的纪要转写文件（支持 txt/srt）
+ * - 以可读流的方式下载内容并写入本地 `transcripts/` 目录
+ * - 将转写文本写入到 Bitable 的录制文件表（只保存文本，不包含参与者）
+ *
+ * 设计要点：
+ * - 使用 `LarkClient.getClient()` 取得原生 SDK 客户端，以获取响应流
+ * - 通过文件存在性检查避免重复拉取与写入
+ * - 上层调用方可按需在后续流程补充 `participants` 字段
+ */
 import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';

@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { LarkClient } from '../lark.client'; // 你自己的 LarkClient
-import * as lark from '@larksuiteoapi/node-sdk';
 
 /**
  * 飞书会议录制文件信息接口

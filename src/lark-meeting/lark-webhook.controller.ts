@@ -70,12 +70,9 @@ export class LarkWebhookController {
       if (!res.headersSent) {
         res.status(200).send('ok');
       }
-    } catch (err: any) {
-      // 捕获异常并打印日志
-      this.logger.error(
-        '处理 webhook 失败 (controller 捕获)',
-        err?.stack || err,
-      );
+    } catch (err: unknown) {
+      const details = err instanceof Error ? err.stack ?? err.message : String(err);
+      this.logger.error('处理 webhook 失败 (controller 捕获)', details);
       // 如果还没响应，返回 500
       if (!res.headersSent) {
         res.status(500).send('error');
