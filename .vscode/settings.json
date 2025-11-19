@@ -35,5 +35,6 @@
   },
   "fileheader.configObj": {
     "prohibitAutoAdd": [ "json", "md"] // 禁止.json .md文件，自动添加头部注释
-}
+},
+"kiroAgent.configureMCP": "Disabled"
 }

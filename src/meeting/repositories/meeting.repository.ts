@@ -52,6 +52,31 @@ export class MeetingRepository {
   }
 
   /**
+   * 创建会议记录（原子：存在则更新，不存在则新增）
+   * 判定字段组合：platform + platformMeetingId（复合唯一约束）
+   */
+  async upsertMeetingRecord(data: CreateMeetingRecordData) {
+    const { platform, platformMeetingId, ...updateData } = data;
+
+    return this.prisma.meetings.upsert({
+      where: {
+        platform_platformMeetingId: {
+          platform,
+          platformMeetingId,
+        },
+      },
+      // 保留原有ID等关键信息，不更新复合唯一约束字段
+      update: updateData,
+      create: {
+        ...data,
+      },
+      include: {
+        files: true,
+      },
+    });
+  }
+
+  /**
    * 更新会议记录
    */
   async updateMeetingRecord(id: string, data: UpdateMeetingRecordData) {

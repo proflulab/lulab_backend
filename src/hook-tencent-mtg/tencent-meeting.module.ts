@@ -22,6 +22,7 @@ import { RecordingCompletedHandler } from './services/event-handlers/recording-c
 import { MeetingParticipantJoinedHandler } from './services/event-handlers/meeting-participant-joined.handler';
 import { tencentMeetingConfig } from '../configs/tencent-mtg.config';
 import { OpenaiModule } from '../integrations/openai/openai.module';
+import { MeetingModule } from '@/meeting/meeting.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { OpenaiModule } from '../integrations/openai/openai.module';
     LarkModule,
     TencentModule,
     OpenaiModule,
+    MeetingModule,
   ],
   controllers: [TencentWebhookController],
   providers: [

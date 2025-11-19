@@ -1,10 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { BaseEventHandler } from './base-event.handler';
-import { TencentEventPayload } from '../../types/tencent-webhook-events.types';
+import {
+  TencentEventPayload,
+  TencentMeetingEventUtils,
+  TencentMeetingType,
+} from '../../types/tencent-webhook-events.types';
 import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
 } from '../../../integrations/lark/repositories';
+import { MeetingRepository } from '@/meeting/repositories/meeting.repository';
+import { MeetingPlatform, MeetingType, ProcessingStatus } from '@prisma/client';
 
 /**
  * 会议结束事件处理器
@@ -16,6 +22,7 @@ export class MeetingEndedHandler extends BaseEventHandler {
   constructor(
     private readonly MeetingBitable: MeetingBitableRepository,
     private readonly meetingUserBitable: MeetingUserBitableRepository,
+    private readonly meetingRepository: MeetingRepository,
   ) {
     super();
   }
@@ -94,6 +101,51 @@ export class MeetingEndedHandler extends BaseEventHandler {
       this.logger.error(
         `处理会议结束事件失败: ${meeting_info.meeting_id}`,
         error,
+      );
+      // 不抛出错误，避免影响主流程
+    }
+
+    // 同步写入本地数据库（upsert 会议记录）
+    try {
+      const actualStartMs =
+        (TencentMeetingEventUtils.getActualStartTime(meeting_info) || 0) * 1000;
+      const actualEndMs =
+        (TencentMeetingEventUtils.getActualEndTime(meeting_info) || 0) * 1000;
+      const durationSeconds = Math.max(
+        0,
+        Math.round((actualEndMs - actualStartMs) / 1000),
+      );
+
+      const prismaMeetingType: MeetingType | undefined =
+        meeting_info.meeting_type === TencentMeetingType.RECURRING
+          ? MeetingType.RECURRING
+          : MeetingType.SCHEDULED;
+
+      await this.meetingRepository.upsertMeetingRecord({
+        platform: MeetingPlatform.TENCENT_MEETING,
+        platformMeetingId: meeting_info.meeting_id,
+        title: meeting_info.subject,
+        meetingCode: meeting_info.meeting_code,
+        type: prismaMeetingType,
+        hostUserId: creator.userid,
+        hostUserName: creator.user_name,
+        startTime: new Date(actualStartMs),
+        endTime: new Date(actualEndMs),
+        durationSeconds,
+        hasRecording: false,
+        recordingStatus: ProcessingStatus.PENDING,
+        processingStatus: ProcessingStatus.PENDING,
+        metadata: {
+          subMeetingId: meeting_info.sub_meeting_id,
+          rawMeetingInfo: meeting_info,
+          operator,
+          source: 'meeting.end',
+        },
+      });
+    } catch (error) {
+      this.logger.error(
+        `本地数据库 upsert 会议记录失败: ${meeting_info.meeting_id}`,
+        error instanceof Error ? error.stack : undefined,
       );
       // 不抛出错误，避免影响主流程
     }
