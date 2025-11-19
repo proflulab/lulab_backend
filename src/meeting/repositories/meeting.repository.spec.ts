@@ -5,6 +5,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MeetingRepository } from './meeting.repository';
 import { PrismaService } from '../../prisma/prisma.service';
+import { MeetingFileRepository } from './meeting-file.repository';
 import {
   MeetingPlatform,
   FileType,
@@ -14,8 +15,6 @@ import {
 import type {
   CreateMeetingRecordData,
   UpdateMeetingRecordData,
-  CreateMeetingFileData,
-  UpdateMeetingFileData,
   GetMeetingRecordsParams,
 } from '@/meeting/types/meeting.types';
 
@@ -100,6 +99,7 @@ describe('MeetingRepository', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MeetingRepository,
+        MeetingFileRepository,
         {
           provide: PrismaService,
           useValue: mockPrismaService,
@@ -318,65 +318,7 @@ describe('MeetingRepository', () => {
     });
   });
 
-  describe('createMeetingFile', () => {
-    it('should create a new meeting file', async () => {
-      const createFileData: CreateMeetingFileData = {
-        meetingRecordId: 'meeting-123',
-        fileName: 'new-recording.mp3',
-        fileType: FileType.AUDIO,
-        storageType: 'LOCAL',
-        downloadUrl: 'https://example.com/new-recording.mp3',
-        content: 'file content',
-        mimeType: 'audio/mpeg',
-        processingStatus: ProcessingStatus.PENDING,
-      };
 
-      const createdFile = {
-        ...createFileData,
-        id: 'new-file-id',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      prisma.meetingFile.create.mockResolvedValue(createdFile);
-
-      const result = await repository.createMeetingFile(createFileData);
-
-      expect(prisma.meetingFile.create).toHaveBeenCalledWith({
-        data: createFileData,
-      });
-      expect(result).toEqual(createdFile);
-    });
-  });
-
-  describe('updateMeetingFile', () => {
-    it('should update meeting file successfully', async () => {
-      const updateFileData: UpdateMeetingFileData = {
-        fileName: 'updated-recording.mp3',
-        processingStatus: ProcessingStatus.COMPLETED,
-        metadata: { updated: true },
-      };
-
-      const updatedFile = {
-        ...mockMeetingFile,
-        ...updateFileData,
-        updatedAt: new Date(),
-      };
-
-      prisma.meetingFile.update.mockResolvedValue(updatedFile);
-
-      const result = await repository.updateMeetingFile(
-        'file-123',
-        updateFileData,
-      );
-
-      expect(prisma.meetingFile.update).toHaveBeenCalledWith({
-        where: { id: 'file-123' },
-        data: updateFileData,
-      });
-      expect(result).toEqual(updatedFile);
-    });
-  });
 
   describe('deleteMeetingRecord', () => {
     it('should delete meeting record successfully', async () => {

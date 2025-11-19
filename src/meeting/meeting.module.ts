@@ -13,13 +13,14 @@ import { Module } from '@nestjs/common';
 import { MeetingController } from './meeting.controller';
 import { MeetingService } from './meeting.service';
 import { MeetingRepository } from './repositories/meeting.repository';
+import { MeetingFileRepository } from './repositories/meeting-file.repository';
 import { HttpModule } from '@nestjs/axios';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   imports: [HttpModule, PrismaModule],
   controllers: [MeetingController],
-  providers: [MeetingService, MeetingRepository],
-  exports: [MeetingService, MeetingRepository],
+  providers: [MeetingService, MeetingRepository, MeetingFileRepository],
+  exports: [MeetingService, MeetingRepository, MeetingFileRepository],
 })
 export class MeetingModule {}

@@ -3,8 +3,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type {
   CreateMeetingRecordData,
   UpdateMeetingRecordData,
-  CreateMeetingFileData,
-  UpdateMeetingFileData,
   GetMeetingRecordsParams,
 } from '@/meeting/types/meeting.types';
 import { MeetingPlatform } from '@prisma/client';
@@ -81,25 +79,6 @@ export class MeetingRepository {
    */
   async updateMeetingRecord(id: string, data: UpdateMeetingRecordData) {
     return this.prisma.meetings.update({
-      where: { id },
-      data,
-    });
-  }
-
-  /**
-   * 创建会议文件
-   */
-  async createMeetingFile(data: CreateMeetingFileData) {
-    return this.prisma.meetingFile.create({
-      data,
-    });
-  }
-
-  /**
-   * 更新会议文件
-   */
-  async updateMeetingFile(id: string, data: UpdateMeetingFileData) {
-    return this.prisma.meetingFile.update({
       where: { id },
       data,
     });

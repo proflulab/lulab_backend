@@ -129,47 +129,6 @@ describe('MeetingRepository Integration', () => {
     expect(updated.recordingStatus).toBe(ProcessingStatus.PROCESSING);
   });
 
-  it('creates and updates a meeting file', async () => {
-    const data: CreateMeetingRecordData = {
-      platform: MeetingPlatform.TENCENT_MEETING,
-      platformMeetingId: 'int-meeting-4',
-      title: 'File Test',
-      meetingCode: 'FILE123',
-      type: MeetingType.SCHEDULED,
-      hostUserId: 'host-4',
-      hostUserName: 'Host Four',
-      startTime: new Date('2025-01-04T10:00:00Z'),
-      endTime: new Date('2025-01-04T11:00:00Z'),
-      durationSeconds: 3600,
-      hasRecording: true,
-      recordingStatus: ProcessingStatus.PENDING,
-      processingStatus: ProcessingStatus.PENDING,
-      metadata: {},
-    };
-    const meeting = await repository.createMeetingRecord(data);
-
-    const fileData: CreateMeetingFileData = {
-      meetingRecordId: meeting.id,
-      fileName: 'recording.mp3',
-      fileType: FileType.AUDIO,
-      storageType: StorageType.LOCAL,
-      downloadUrl: 'https://example.com/recording.mp3',
-      content: 'content',
-      mimeType: 'audio/mpeg',
-      processingStatus: ProcessingStatus.PENDING,
-    };
-
-    const file = await repository.createMeetingFile(fileData);
-    const updatedFile = await repository.updateMeetingFile(file.id, {
-      fileName: 'recording-updated.mp3',
-      processingStatus: ProcessingStatus.COMPLETED,
-      metadata: { quality: 'high' },
-    });
-
-    expect(updatedFile.fileName).toBe('recording-updated.mp3');
-    expect(updatedFile.processingStatus).toBe(ProcessingStatus.COMPLETED);
-  });
-
   it('deletes a meeting record', async () => {
     const data: CreateMeetingRecordData = {
       platform: MeetingPlatform.TENCENT_MEETING,
