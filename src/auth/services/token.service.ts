@@ -17,7 +17,6 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import type { JwtSignOptions } from '@nestjs/jwt';
 import { ConfigType } from '@nestjs/config';
 import { jwtConfig } from '@/configs/jwt.config';
 import { UserRepository } from '@/user/repositories/user.repository';
@@ -36,8 +35,8 @@ export class TokenService {
   private readonly logger = new Logger(TokenService.name);
   private readonly accessSecret: string;
   private readonly refreshSecret: string;
-  private readonly accessExpiresIn: JwtSignOptions['expiresIn'];
-  private readonly refreshExpiresIn: JwtSignOptions['expiresIn'];
+  private readonly accessExpiresIn: string;
+  private readonly refreshExpiresIn: string;
 
   constructor(
     private readonly jwtService: JwtService,
@@ -49,10 +48,8 @@ export class TokenService {
   ) {
     this.accessSecret = this.config.accessSecret;
     this.refreshSecret = this.config.refreshSecret;
-    this.accessExpiresIn = this.config
-      .accessExpiresIn as JwtSignOptions['expiresIn'];
-    this.refreshExpiresIn = this.config
-      .refreshExpiresIn as JwtSignOptions['expiresIn'];
+    this.accessExpiresIn = this.config.accessExpiresIn;
+    this.refreshExpiresIn = this.config.refreshExpiresIn;
   }
 
   /**
@@ -84,7 +81,7 @@ export class TokenService {
     accessToken: string;
     refreshToken: string;
   }> {
-    const payload: { sub: string } = { sub: userId };
+    const payload = { sub: userId };
     const refreshJti = randomUUID();
     const accessJti = randomUUID();
 
@@ -103,13 +100,7 @@ export class TokenService {
     // 计算刷新令牌过期时间
     let expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // fallback
     try {
-      const refreshExp =
-        this.refreshExpiresIn ??
-        ('7d' as unknown as JwtSignOptions['expiresIn']);
-      const durationMs =
-        typeof refreshExp === 'number'
-          ? refreshExp * 1000
-          : this.parseDurationToMs(refreshExp as unknown as string);
+      const durationMs = this.parseDurationToMs(this.refreshExpiresIn || '7d');
       expiresAt = new Date(Date.now() + durationMs);
     } catch (err) {
       this.logger.warn(
@@ -144,20 +135,20 @@ export class TokenService {
   ): Promise<{ accessToken: string; refreshToken: string }> {
     try {
       // 首先验证JWT的签名和过期时间
-      const decoded = this.jwtService.verify<{ sub: string; jti?: string }>(
+      const payload = this.jwtService.verify<{ sub: string; jti?: string }>(
         refreshToken,
         {
           secret: this.refreshSecret,
         },
       );
 
-      if (!decoded.jti) {
+      if (!payload.jti) {
         throw new UnauthorizedException('刷新令牌格式错误');
       }
 
       // 检查令牌是否在黑名单中
       const revoked = await this.tokenBlacklist.isTokenBlacklisted(
-        decoded.jti,
+        payload.jti,
         TokenBlacklistScope.RefreshToken,
       );
       if (revoked) {
@@ -165,43 +156,44 @@ export class TokenService {
       }
 
       // 检查数据库中的令牌是否有效
-      const oldTokenRecord = await this.refreshTokenRepo.findByJti(decoded.jti);
+      const oldTokenRecord = await this.refreshTokenRepo.findByJti(payload.jti);
       if (!oldTokenRecord || oldTokenRecord.revokedAt) {
         throw new UnauthorizedException('刷新令牌无效或已过期');
       }
 
       // 验证用户是否存在
-      const user = await this.userRepo.getUserById(decoded.sub);
+      const user = await this.userRepo.getUserById(payload.sub);
       if (!user) {
         throw new UnauthorizedException('用户不存在');
       }
 
       // 生成新的访问令牌
-      const payload: { sub: string } = { sub: user.id };
-      const accessToken = this.jwtService.sign(payload, {
-        secret: this.accessSecret,
-        expiresIn: this.accessExpiresIn,
-        jwtid: randomUUID(),
-      });
+      const accessToken = this.jwtService.sign(
+        { sub: user.id },
+        {
+          secret: this.accessSecret,
+          expiresIn: this.accessExpiresIn,
+          jwtid: randomUUID(),
+        },
+      );
 
       // 生成新的刷新令牌（令牌轮换）
       const newRefreshJti = randomUUID();
-      const newRefreshToken = this.jwtService.sign(payload, {
-        secret: this.refreshSecret,
-        expiresIn: this.refreshExpiresIn,
-        jwtid: newRefreshJti,
-      });
+      const newRefreshToken = this.jwtService.sign(
+        { sub: user.id },
+        {
+          secret: this.refreshSecret,
+          expiresIn: this.refreshExpiresIn,
+          jwtid: newRefreshJti,
+        },
+      );
 
       // 计算新的刷新令牌过期时间
       let newExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // fallback
       try {
-        const refreshExp =
-          this.refreshExpiresIn ??
-          ('7d' as unknown as JwtSignOptions['expiresIn']);
-        const durationMs =
-          typeof refreshExp === 'number'
-            ? refreshExp * 1000
-            : this.parseDurationToMs(refreshExp as unknown as string);
+        const durationMs = this.parseDurationToMs(
+          this.refreshExpiresIn || '7d',
+        );
         newExpiresAt = new Date(Date.now() + durationMs);
       } catch (err) {
         this.logger.warn(
@@ -234,7 +226,7 @@ export class TokenService {
 
       // 标记旧令牌被替换，实现防重放攻击
       try {
-        await this.refreshTokenRepo.revokeTokenByJti(decoded.jti, {
+        await this.refreshTokenRepo.revokeTokenByJti(payload.jti, {
           replacedBy: newRefreshJti,
         });
       } catch (error) {
