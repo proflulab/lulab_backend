@@ -100,8 +100,4 @@ export class LarkClient {
       return false;
     }
   }
-
-  getClient(): lark.Client {
-    return this.client;
-  }
 }

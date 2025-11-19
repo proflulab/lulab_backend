@@ -41,8 +41,7 @@ export class MinuteTranscriptService {
       return;
     }
 
-    const sdkClient = this.larkClient.getClient();
-    const response = await sdkClient.minutes.v1.minuteTranscript.get({
+    const response = await this.larkClient.minutes.v1.minuteTranscript.get({
       path: {
         minute_token: minuteToken,
       },
