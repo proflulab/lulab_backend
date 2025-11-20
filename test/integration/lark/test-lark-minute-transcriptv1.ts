@@ -78,8 +78,7 @@ async function bootstrap() {
     const fileName = `minute_transcript.${ext}`;
     const filePath = path.join(__dirname, fileName);
 
-    const sdkClient = client.getClient();
-    const res = await sdkClient.minutes.v1.minuteTranscript.get({
+    const res = await client.minutes.v1.minuteTranscript.get({
       path: { minute_token: minuteToken },
       params: {
         need_speaker: true,
@@ -89,19 +88,15 @@ async function bootstrap() {
     });
 
     // 使用 getReadableStream() 读取文件内容，同时写入文件和缓存内容
-    const stream = res.getReadableStream();
+    const stream = res.getReadableStream() as AsyncIterable<
+      Uint8Array | Buffer | string
+    >;
     const writeStream = fs.createWriteStream(filePath);
     let fileContent = '';
 
-    for await (const chunk of stream as AsyncIterable<unknown>) {
-      let text: string;
-      if (typeof chunk === 'string') {
-        text = chunk;
-      } else if (chunk instanceof Uint8Array || Buffer.isBuffer(chunk)) {
-        text = Buffer.from(chunk).toString('utf8');
-      } else {
-        text = String(chunk);
-      }
+    for await (const chunk of stream) {
+      const text =
+        typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf8');
       fileContent += text;
       writeStream.write(text);
     }

@@ -27,7 +27,10 @@ export class LarkWebhookHandler {
   private readonly eventDispatcher: lark.EventDispatcher;
 
   // SDK 返回的 Express 中间件，用于直接处理 req/res
-  private readonly expressAdapter: any;
+  private readonly expressAdapter: (
+    req: Request,
+    res: Response,
+  ) => Promise<void>;
 
   // 这里保存 handler 的返回值
   private lastEventData: any;
@@ -102,10 +105,11 @@ export class LarkWebhookHandler {
       await this.expressAdapter(req, res);
 
       this.logger.log('飞书 Webhook 处理完成(SDK 已完成分发)');
-    } catch (err: any) {
-      this.logger.error('调用 SDK adaptExpress 失败', err?.stack || err);
-      // adaptExpress 里通常会直接在 res 上返回，但若抛出异常，这里记录并把异常向上抛以便 controller 可以处理
-      throw err;
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? (err.stack ?? err.message) : String(err);
+      this.logger.error('调用 SDK adaptExpress 失败', msg);
+      throw err as Error;
     }
   }
 
@@ -113,10 +117,13 @@ export class LarkWebhookHandler {
    * 解析会议结束事件的 data，并获取飞书会议录制信息
    * @param data vc.meeting.all_meeting_ended_v1 事件 payload
    */
-  async getLarkMeetingRecordFlow(data: any): Promise<void> {
+  async getLarkMeetingRecordFlow(data: unknown): Promise<void> {
     try {
-      // 实际返回体里的会议 ID 在 data.meeting.id
-      const meetingId = data?.meeting?.id;
+      const payload =
+        typeof data === 'object' && data !== null
+          ? (data as { meeting?: { id?: string } })
+          : {};
+      const meetingId = payload.meeting?.id;
       if (!meetingId) {
         this.logger.warn('会议 ID 未找到，无法获取录制信息');
         return;
@@ -124,8 +131,9 @@ export class LarkWebhookHandler {
 
       this.logger.log(`解析到会议 ID: ${meetingId}`);
 
-      // const recordingInfo = await this.recordingService.getMeetingRecordingInfo(meetingId);
-      // this.logger.log(`录制文件信息: ${JSON.stringify(recordingInfo)}`);
+      const recordingInfo =
+        await this.recordingService.getMeetingRecordingInfo(meetingId);
+      this.logger.log(`录制文件信息: ${JSON.stringify(recordingInfo)}`);
 
       // 测试代码
       // // 调用实例方法获取录制文件信息-测试后续还需要更改
@@ -135,9 +143,11 @@ export class LarkWebhookHandler {
       //   );
       // // 处理录制文件信息，例如记录日志或存数据库
       // this.logger.log(`录制文件信息: ${JSON.stringify(recordingInfo)}`);
-    } catch (err: any) {
-      this.logger.error('getLarkMeetingRecordFlow 执行失败', err?.stack || err);
-      throw err;
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? (err.stack ?? err.message) : String(err);
+      this.logger.error('getLarkMeetingRecordFlow 执行失败', msg);
+      throw err as Error;
     }
   }
 }

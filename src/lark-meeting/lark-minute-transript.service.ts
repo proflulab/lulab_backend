@@ -58,8 +58,12 @@ export class MinuteTranscriptService {
     // Get readable stream from response
     const transcriptStream = response.getReadableStream();
     const chunks: Buffer[] = [];
-    for await (const chunk of transcriptStream) {
-      chunks.push(chunk);
+    for await (const chunk of transcriptStream as AsyncIterable<
+      Uint8Array | Buffer | string
+    >) {
+      const buf =
+        typeof chunk === 'string' ? Buffer.from(chunk) : Buffer.from(chunk);
+      chunks.push(buf);
     }
     const fileContent = Buffer.concat(chunks);
 

@@ -48,7 +48,7 @@ async function getMeetingRecording(): Promise<string | undefined> {
 }
 
 // Step 3: 执行函数
-getMeetingRecording().then((token) => {
+void getMeetingRecording().then((token) => {
   if (token) {
     console.log('其他逻辑可以使用 minute_token:', token);
   }

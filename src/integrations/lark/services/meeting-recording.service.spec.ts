@@ -22,22 +22,31 @@ describe('MeetingRecordingService', () => {
   beforeEach(async () => {
     // 创建 LarkClient 的 mock 对象
     // 这里只模拟 vc.v1.meetingRecording.get 方法，返回固定的录制文件数据
+    type MeetingRecordingGet = (args: {
+      path: { meeting_id: string };
+    }) => Promise<{
+      data: GetMeetingRecordingResponse;
+    }>;
+
+    const getMock: MeetingRecordingGet = async () =>
+      Promise.resolve({
+        data: {
+          recording: {
+            url: 'https://example.com/recording.mp4',
+            duration: '3600',
+          },
+        },
+      });
+
     mockLarkClient = {
       vc: {
         v1: {
           meetingRecording: {
-            get: jest.fn().mockResolvedValue({
-              data: {
-                recording: {
-                  url: 'https://example.com/recording.mp4',
-                  duration: '3600', // 秒
-                },
-              },
-            }),
+            get: getMock,
           },
         },
       },
-    } as any;
+    } as Partial<LarkClient>;
 
     // 创建 NestJS 测试模块
     // 使用 mockLarkClient 替代真实的 LarkClient

@@ -71,7 +71,8 @@ export class LarkWebhookController {
         res.status(200).send('ok');
       }
     } catch (err: unknown) {
-      const details = err instanceof Error ? err.stack ?? err.message : String(err);
+      const details =
+        err instanceof Error ? (err.stack ?? err.message) : String(err);
       this.logger.error('处理 webhook 失败 (controller 捕获)', details);
       // 如果还没响应，返回 500
       if (!res.headersSent) {
