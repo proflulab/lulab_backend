@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { LarkWebhookHandler } from './service/lark-webhook.service';
-import { LarkWebhookController } from './lark-webhook.controller';
+import { LarkWebhookController } from './controllers/webhook.controller';
 import { LarkEventWsService } from './service/lark-event-ws.service';
 import { LarkMeetingRecordingService } from './service/lark-meeting-recording.service';
 import { MinuteTranscriptService } from './service/lark-minute-transript.service';

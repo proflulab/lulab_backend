@@ -1,9 +1,9 @@
 /*
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-29 19:45:09
- * @LastEditors: Mingxuan 159552597+Luckymingxuan@users.noreply.github.com
- * @LastEditTime: 2025-10-04 16:39:41
- * @FilePath: \lulab_backend\src\lark-meeting\lark-webhook.controller.ts
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-11-22 23:12:30
+ * @FilePath: /lulab_backend/src/lark-meeting/controllers/webhook.controller.ts
  * @Description:
  *
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
@@ -19,12 +19,12 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { LarkWebhookHandler } from './service/lark-webhook.service';
+import { LarkWebhookHandler } from '../service/lark-webhook.service';
 import { Public } from '@/auth/decorators/public.decorator';
 import type { Request, Response } from 'express';
 
 @ApiTags('Webhooks')
-@Controller('webhooks/feishu')
+@Controller('webhooks/lark')
 @Public()
 export class LarkWebhookController {
   // Nest 自带的日志工具，方便打印调试信息
