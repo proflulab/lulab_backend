@@ -9,8 +9,8 @@
  * - 文件中包含获取 tenant token 与 HTTP 请求的辅助方法，属于历史/备用实现；当前 upsert 走仓储层
  */
 import { Injectable, Logger } from '@nestjs/common';
-import { MeetingBitableRepository } from '@lark/repositories';
-import { MeetingData } from '@lark/types';
+import { MeetingBitableRepository } from '@/integrations/lark/repositories';
+import { MeetingData } from '@/integrations/lark/types';
 import * as https from 'https';
 import { URL } from 'url';
 import { LarkMeetingCacheService } from './lark-meeting-cache.service';

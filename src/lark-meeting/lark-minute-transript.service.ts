@@ -14,9 +14,9 @@
 import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
-import { LarkClient } from '@lark/lark.client';
-import { RecordingFileBitableRepository } from '@lark/repositories/meeting-recording-file.repository';
-import { RecordingFileData } from '@lark/types/recording-file.types';
+import { LarkClient } from '@/integrations/lark/lark.client';
+import { RecordingFileBitableRepository } from '@/integrations/lark/repositories/meeting-recording-file.repository';
+import { RecordingFileData } from '@/integrations/lark/types/recording-file.types';
 
 @Injectable()
 export class MinuteTranscriptService {

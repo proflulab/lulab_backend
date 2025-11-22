@@ -6,7 +6,7 @@
  * - 统一时间戳参数格式，返回原始数据中的 data 字段
  */
 import { Injectable, Logger } from '@nestjs/common';
-import { LarkClient } from '@lark/lark.client';
+import { LarkClient } from '@/integrations/lark/lark.client';
 
 export interface MeetingListParams {
   start_time: string | number | Date;
