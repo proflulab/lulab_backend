@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-02 21:14:03
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-04 23:15:45
+ * @LastEditTime: 2025-11-22 11:08:35
  * @FilePath: /lulab_backend/src/configs/lark.config.ts
  * @Description:
  *
@@ -23,22 +23,6 @@ export const larkConfig = registerAs('lark', () => ({
   bitable: {
     appToken: process.env.LARK_BITABLE_APP_TOKEN ?? '',
     tableIds: {
-      // meeting:
-      //   process.env.LARK_TABLE_MEETING_RECORD ??
-      //   process.env.LARK_TABLE_MEETING ??
-      //   '',
-      // meetingUser:
-      //   process.env.LARK_TABLE_MEETING_USE ??
-      //   process.env.LARK_TABLE_MEETING_USER ??
-      //   '',
-      // recordingFile:
-      //   process.env.LARK_TABLE_MEETING_RECORDING ??
-      //   process.env.LARK_TABLE_MEETING_RECORD_FILE ??
-      //   '',
-      // numberRecord:
-      //   process.env.LARK_TABLE_NUMBER_RECORD ??
-      //   process.env.LARK_TABLE_PERSONAL_MEETING_SUMMARY ??
-      //   '',
       meeting: process.env.LARK_TABLE_MEETING_RECORD ?? '',
       meetingUser: process.env.LARK_TABLE_MEETING_USE ?? '',
       recordingFile: process.env.LARK_TABLE_MEETING_RECORDING ?? '',
