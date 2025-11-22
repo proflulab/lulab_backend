@@ -19,7 +19,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { LarkWebhookHandler } from './lark-webhook.service';
+import { LarkWebhookHandler } from './service/lark-webhook.service';
 import { Public } from '@/auth/decorators/public.decorator';
 import type { Request, Response } from 'express';
 

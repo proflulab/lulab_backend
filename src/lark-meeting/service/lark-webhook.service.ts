@@ -13,7 +13,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as lark from '@larksuiteoapi/node-sdk';
 import type { Request, Response } from 'express';
-import { MeetingRecordingService } from '../integrations/lark/services/meeting-recording.service';
+import { MeetingRecordingService } from '../../integrations/lark/services/meeting-recording.service';
 
 /**
  * 飞书 Webhook处理服务

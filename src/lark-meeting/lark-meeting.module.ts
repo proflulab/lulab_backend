@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
-import { LarkWebhookHandler } from './lark-webhook.service';
+import { LarkWebhookHandler } from './service/lark-webhook.service';
 import { LarkWebhookController } from './lark-webhook.controller';
-import { LarkEventWsService } from './lark-event-ws.service';
-import { LarkMeetingRecordingService } from './lark-meeting-recording.service';
-import { MinuteTranscriptService } from './lark-minute-transript.service';
+import { LarkEventWsService } from './service/lark-event-ws.service';
+import { LarkMeetingRecordingService } from './service/lark-meeting-recording.service';
+import { MinuteTranscriptService } from './service/lark-minute-transript.service';
 import { LarkModule } from '../integrations/lark/lark.module';
-import { LarkMeetingDetailService } from './lark-meeting-detail.service';
-import { LarkMeetingWriterService } from './lark-meeting-writer.service';
-import { LarkMeetingCacheService } from './lark-meeting-cache.service';
+import { LarkMeetingDetailService } from './service/lark-meeting-detail.service';
+import { LarkMeetingWriterService } from './service/lark-meeting-writer.service';
+import { LarkMeetingCacheService } from './service/lark-meeting-cache.service';
 
 @Module({
   imports: [LarkModule],

@@ -14,7 +14,7 @@ import { MinuteTranscriptService } from './lark-minute-transript.service';
 import { LarkMeetingDetailService } from './lark-meeting-detail.service';
 import { LarkMeetingWriterService } from './lark-meeting-writer.service';
 import { LarkMeetingCacheService } from './lark-meeting-cache.service';
-import { parseMeetingMetaFromEvent } from './lark-meeting-normalizer';
+import { parseMeetingMetaFromEvent } from '../lark-meeting-normalizer';
 
 interface MeetingEndedEvent {
   event: {
