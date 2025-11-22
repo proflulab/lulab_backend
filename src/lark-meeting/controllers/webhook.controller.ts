@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-11-22 23:46:35
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-11-23 00:03:58
+ * @LastEditTime: 2025-11-23 01:24:49
  * @FilePath: /lulab_backend/src/lark-meeting/controllers/webhook.controller.ts
  * @Description:
  *
@@ -22,6 +22,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Public } from '@/auth/decorators/public.decorator';
 import { EventDispatcher } from '@larksuiteoapi/node-sdk';
 import { createLarkAdapter } from '../adapter/lark-event-adapter';
+import { MeetingEndedEventData } from '../types/lark-meeting.types';
 import { Response, Request } from 'express';
 
 @ApiTags('Webhooks')
@@ -59,8 +60,9 @@ const eventDispatcher = new EventDispatcher({
   encryptKey: process.env.LARK_EVENT_ENCRYPT_KEY || '',
   verificationToken: process.env.LARK_EVENT_VERIFICATION_TOKEN || '',
 }).register({
-  'vc.meeting.all_meeting_ended_v1': (data: Record<string, unknown>) => {
+  'vc.meeting.all_meeting_ended_v1': (data: MeetingEndedEventData) => {
     console.log('收到会议结束事件:', data);
+
     return 'success';
   },
   // 添加通用事件处理

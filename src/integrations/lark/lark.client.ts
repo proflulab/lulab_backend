@@ -83,7 +83,10 @@ export class LarkClient {
     this.wiki = this.client.wiki;
     this.vc = this.client.vc;
     this.minutes = this.client.minutes;
-    this.wsClient = this.wsClient;
+    this.wsClient = new lark.WSClient({
+      appId: config.appId,
+      appSecret: config.appSecret,
+    });
 
     this.logger.log('Lark client initialized successfully');
   }
