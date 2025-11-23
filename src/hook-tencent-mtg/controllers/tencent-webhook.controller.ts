@@ -2,12 +2,13 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-01 01:08:34
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-01 19:25:24
+ * @LastEditTime: 2025-11-23 21:25:11
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/controllers/tencent-webhook.controller.ts
  * @Description: 腾讯会议Webhook控制器
  *
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
+
 import {
   Controller,
   Get,
@@ -25,23 +26,23 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ConfigType } from '@nestjs/config';
+import { tencentMeetingConfig } from '@/configs/tencent-mtg.config';
+import { Public } from '@/auth/decorators/public.decorator';
 import { TencentEventHandlerService } from '../services/tencent-event-handler.service';
 import { TencentWebhookEventBodyDto } from '../dto/tencent-webhook-body.dto';
 import { WebhookLoggingInterceptor } from '../interceptors/webhook-logging.interceptor';
+import { TencentMeetingEvent } from '../types/tencent-webhook-events.types';
 import {
   ApiTencentUrlVerificationDocs,
   ApiTencentEventReceiverDocs,
 } from '../decorators/tencent-webhook.decorators';
-import { TencentMeetingEvent } from '../types/tencent-webhook-events.types';
 import {
   verifySignature,
   aesDecrypt,
   verifyWebhookUrl,
   WebhookSignatureVerificationException,
   WebhookDecryptionException,
-} from '../../integrations/tencent-meeting';
-import { Public } from '@/auth/decorators/public.decorator';
-import { tencentMeetingConfig } from '../../configs/tencent-mtg.config';
+} from '@/integrations/tencent-meeting';
 
 /**
  * Tencent Meeting Webhook Controller
@@ -126,7 +127,6 @@ export class TencentWebhookController {
    */
   @Post()
   @HttpCode(HttpStatus.OK)
-  @Public()
   @ApiTencentEventReceiverDocs()
   async handleTencentWebhook(
     @Body(new ValidationPipe({ transform: true, whitelist: true }))

@@ -8,7 +8,7 @@ import {
 import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
-} from '../../../integrations/lark/repositories';
+} from '@/integrations/lark/repositories';
 import { MeetingRepository } from '@/meeting/repositories/meeting.repository';
 import { MeetingPlatform, MeetingType, ProcessingStatus } from '@prisma/client';
 

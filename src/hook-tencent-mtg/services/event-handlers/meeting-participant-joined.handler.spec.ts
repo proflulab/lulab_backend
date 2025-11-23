@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MeetingParticipantJoinedHandler } from './meeting-participant-joined.handler';
-import { MeetingUserBitableRepository } from '../../../integrations/lark/repositories/meeting-user.repository';
-import { MeetingBitableRepository } from '../../../integrations/lark/repositories/meeting.repository';
+import { MeetingUserBitableRepository } from '@/integrations/lark/repositories/meeting-user.repository';
+import { MeetingBitableRepository } from '@/integrations/lark/repositories/meeting.repository';
 import { TencentEventPayload } from '../../types/tencent-webhook-events.types';
 
 describe('MeetingParticipantJoinedHandler', () => {

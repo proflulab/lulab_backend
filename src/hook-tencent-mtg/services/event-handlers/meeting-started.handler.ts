@@ -7,7 +7,7 @@ import {
 import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
-} from '../../../integrations/lark/repositories';
+} from '@/integrations/lark/repositories';
 
 /**
  * 会议开始事件处理器
