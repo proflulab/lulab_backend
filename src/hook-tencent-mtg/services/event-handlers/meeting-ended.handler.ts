@@ -40,8 +40,6 @@ export class MeetingEndedHandler extends BaseEventHandler {
       `会议结束 [${index}]: ${meeting_info.subject} (${meeting_info.meeting_code})`,
     );
 
-    this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
-
     // 创建或更新用户信息
     let operatorRecordId;
     try {

@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-07 01:50:25
+ * @LastEditTime: 2025-11-24 02:19:28
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/event-handlers/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -60,8 +60,6 @@ export class RecordingCompletedHandler extends BaseEventHandler {
 
   async handle(payload: TencentEventPayload, index: number): Promise<void> {
     const { meeting_info, recording_files = [] } = payload;
-
-    this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
 
     // 记录会议信息
     this.logger.log(

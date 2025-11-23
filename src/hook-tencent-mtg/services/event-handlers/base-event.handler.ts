@@ -27,19 +27,4 @@ export abstract class BaseEventHandler implements IEventHandler {
 
   abstract handle(payload: any, index: number): Promise<void>;
   abstract supports(event: string): boolean;
-
-  /**
-   * 记录事件处理详情
-   */
-  protected logEventProcessing(
-    eventName: string,
-    payload: any,
-    index: number,
-  ): void {
-    this.logger.log(`处理 ${eventName} 事件 [${index}]`, {
-      event: eventName,
-      index,
-      timestamp: new Date().toISOString(),
-    });
-  }
 }

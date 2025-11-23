@@ -8,20 +8,8 @@ import {
   TencentMeetingEventType,
 } from '../enums/tencent-webhook-events.enum';
 
-// 腾讯会议事件相关类型定义
-
-// 腾讯会议事件操作者信息
-export interface TencentEventOperator {
-  userid: string; // 事件操作者 id（同企业用户才返回用户 id，OAuth 用户返回 openId,rooms 返回 roomsId）
-  open_id?: string;
-  uuid: string; // 用户身份 ID
-  user_name: string; // 事件操作者名称
-  ms_open_id?: string;
-  instance_id: string; // 用户的终端设备类型
-}
-
-// 腾讯会议创建者信息
-export interface TencentMeetingCreator {
+// 腾讯会议用户信息
+export interface TencentMeetingUser {
   userid: string; // 创建人 id（OAuth 用户返回 openId）
   open_id?: string;
   uuid: string; // 用户身份 ID
@@ -39,18 +27,12 @@ export interface TencentMeetingHost {
   ms_open_id?: string;
 }
 
-// 会议类型枚举
-// 会议创建类型枚举
-// 会议创建来源枚举
-// 会议ID类型枚举
-// 终端设备类型枚举
-
 // 腾讯会议信息
 export interface TencentEventMeetingInfo {
   meeting_id: string; // 会议 ID
   meeting_code: string; // 会议 code
   subject: string; // 会议主题
-  creator: TencentMeetingCreator;
+  creator: TencentMeetingUser;
   hosts?: TencentMeetingHost[]; // 主持人（某些事件类型包含）
   meeting_type: TencentMeetingType; // 会议类型
   start_time: number; // 秒级别的会议开始时间戳
@@ -63,8 +45,6 @@ export interface TencentEventMeetingInfo {
   sub_meeting_end_time?: number; // 子会议结束时间戳（周期性会议时使用）
 }
 
-// 会议结束类型枚举
-
 // 录制文件信息
 export interface TencentRecordingFile {
   record_file_id: string; // 录制文件ID
@@ -73,7 +53,7 @@ export interface TencentRecordingFile {
 // 腾讯会议事件载荷
 export interface TencentEventPayload {
   operate_time: number; // 毫秒级别事件操作时间戳
-  operator: TencentEventOperator; // 事件操作者
+  operator: TencentMeetingUser; // 事件操作者
   meeting_info: TencentEventMeetingInfo; // 会议信息
   meeting_end_type?: TencentMeetingEndType; // 结束类型（仅 meeting.end 事件）
   recording_files?: TencentRecordingFile[]; // 录制文件（某些事件类型包含）
@@ -85,8 +65,6 @@ export interface TencentMeetingEvent {
   trace_id: string; // 事件的唯一序列值
   payload: TencentEventPayload[];
 }
-
-// 腾讯会议事件类型枚举
 
 // 腾讯会议事件处理器接口
 export interface TencentMeetingEventHandler {

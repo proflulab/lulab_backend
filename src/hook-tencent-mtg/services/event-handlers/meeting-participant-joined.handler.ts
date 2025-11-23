@@ -43,8 +43,6 @@ export class MeetingParticipantJoinedHandler extends BaseEventHandler {
       `用户入会 [${index}]: ${operator.user_name} (${operator.uuid}) 加入会议 ${meeting_info.subject} (${meeting_info.meeting_code})`,
     );
 
-    this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
-
     // 创建或更新入会用户信息
     let participantRecordId;
     try {
