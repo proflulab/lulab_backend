@@ -23,6 +23,7 @@ import { MeetingParticipantJoinedHandler } from './services/event-handlers/meeti
 import { tencentMeetingConfig } from '../configs/tencent-mtg.config';
 import { OpenaiModule } from '../integrations/openai/openai.module';
 import { MeetingModule } from '@/meeting/meeting.module';
+import { TencentUrlVerificationPipe } from './pipes/tencent-url-verification.pipe';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { MeetingModule } from '@/meeting/meeting.module';
     MeetingEndedHandler,
     RecordingCompletedHandler,
     MeetingParticipantJoinedHandler,
+    TencentUrlVerificationPipe,
   ],
 })
 export class TencentMeetingModule {}
