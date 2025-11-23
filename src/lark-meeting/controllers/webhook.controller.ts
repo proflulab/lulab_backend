@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-11-22 23:46:35
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-11-23 02:24:43
+ * @LastEditTime: 2025-11-23 10:21:39
  * @FilePath: /lulab_backend/src/lark-meeting/controllers/webhook.controller.ts
  * @Description:
  *
@@ -41,7 +41,11 @@ export class LarkWebhookController {
       verificationToken: process.env.LARK_EVENT_VERIFICATION_TOKEN || '',
     }).register({
       'vc.meeting.all_meeting_ended_v1': (data: MeetingEndedEventData) => {
-        console.log('收到会议结束事件:', JSON.stringify(data));
+        this.logger.log({
+          event: 'meeting_ended',
+          event_type: 'vc.meeting.all_meeting_ended_v1',
+          meeting_id: data?.meeting?.id,
+        });
         const meetingId = data?.meeting?.id;
         if (meetingId) {
           const m = data.meeting;
@@ -56,12 +60,17 @@ export class LarkWebhookController {
               ...(startTime !== undefined && { start_time: startTime }),
               ...(endTime !== undefined && { end_time: endTime }),
             })
-            .catch(() => undefined);
+            .catch((err) =>
+              this.logger.error('upsertMeetingRecord_failed', err),
+            );
         }
         return 'success';
       },
       '*': (data: Record<string, unknown>) => {
-        console.log('收到未注册的飞书事件:', data);
+        this.logger.warn({
+          event: 'unhandled_lark_event',
+          data,
+        });
         return 'success';
       },
     });
