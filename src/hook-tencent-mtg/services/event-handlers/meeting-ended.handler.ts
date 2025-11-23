@@ -3,8 +3,8 @@ import { BaseEventHandler } from './base-event.handler';
 import {
   TencentEventPayload,
   TencentMeetingEventUtils,
-  TencentMeetingType,
 } from '../../types/tencent-webhook-events.types';
+import { TencentMeetingType } from '../../enums/tencent-webhook-events.enum';
 import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,

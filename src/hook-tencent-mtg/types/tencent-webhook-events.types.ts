@@ -1,3 +1,13 @@
+import {
+  TencentMeetingType,
+  TencentMeetingCreateMode,
+  TencentMeetingCreateFrom,
+  TencentMeetingIdType,
+  TencentInstanceType,
+  TencentMeetingEndType,
+  TencentMeetingEventType,
+} from '../enums/tencent-webhook-events.enum';
+
 // 腾讯会议事件相关类型定义
 
 // 腾讯会议事件操作者信息
@@ -30,49 +40,10 @@ export interface TencentMeetingHost {
 }
 
 // 会议类型枚举
-export enum TencentMeetingType {
-  ONE_TIME = 0, // 一次性会议
-  RECURRING = 1, // 周期性会议
-  WECHAT_EXCLUSIVE = 2, // 微信专属会议
-  ROOMS_SCREEN_SHARE = 4, // rooms 投屏会议
-  PERSONAL_MEETING_ID = 5, // 个人会议号会议
-}
-
 // 会议创建类型枚举
-export enum TencentMeetingCreateMode {
-  NORMAL = 0, // 普通会议
-  QUICK = 1, // 快速会议
-}
-
 // 会议创建来源枚举
-export enum TencentMeetingCreateFrom {
-  EMPTY = 0, // 空来源
-  CLIENT = 1, // 客户端
-  WEB = 2, // web
-  WECHAT_WORK = 3, // 企微
-  WECHAT = 4, // 微信
-  OUTLOOK = 5, // outlook
-  REST_API = 6, // restapi
-  TENCENT_DOCS = 7, // 腾讯文档
-  ROOMS_SMART_RECORDING = 8, // Rooms 智能录制
-}
-
 // 会议ID类型枚举
-export enum TencentMeetingIdType {
-  MAIN = 0, // 主会议 ID
-  BREAKOUT = 1, // 分组会议 ID
-}
-
 // 终端设备类型枚举
-export enum TencentInstanceType {
-  UNKNOWN = 0, // 未知设备
-  PC = 1, // PC端
-  MOBILE = 2, // 移动端
-  WEB = 3, // Web端
-  ROOMS = 4, // Rooms设备
-  PHONE = 5, // 电话接入
-  OUTDOOR = 6, // 户外设备
-}
 
 // 腾讯会议信息
 export interface TencentEventMeetingInfo {
@@ -93,12 +64,6 @@ export interface TencentEventMeetingInfo {
 }
 
 // 会议结束类型枚举
-export enum TencentMeetingEndType {
-  ACTIVE_END = 0, // 主动结束会议
-  LAST_USER_LEAVE_AFTER_END = 1, // 最后一个参会用户离开会议且超过了预定会议结束时间
-  NO_USER_AFTER_END = 2, // 会议中无人且超过了预定会议结束时间
-  NO_USER_BEFORE_END = 3, // 会议中无人且未到会议预定结束时间
-}
 
 // 录制文件信息
 export interface TencentRecordingFile {
@@ -122,19 +87,6 @@ export interface TencentMeetingEvent {
 }
 
 // 腾讯会议事件类型枚举
-export enum TencentMeetingEventType {
-  MEETING_START = 'meeting.start',
-  MEETING_END = 'meeting.end',
-  MEETING_JOIN = 'meeting.join',
-  MEETING_LEAVE = 'meeting.leave',
-  RECORDING_START = 'recording.start',
-  RECORDING_END = 'recording.end',
-  RECORDING_READY = 'recording.ready',
-  MEETING_UPDATE = 'meeting.update', // 会议更新事件
-  MEETING_DELETE = 'meeting.delete', // 会议删除事件
-  SUB_MEETING_START = 'sub_meeting.start', // 子会议开始（周期性会议）
-  SUB_MEETING_END = 'sub_meeting.end', // 子会议结束（周期性会议）
-}
 
 // 腾讯会议事件处理器接口
 export interface TencentMeetingEventHandler {
