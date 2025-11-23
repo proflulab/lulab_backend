@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-11-22 23:46:35
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-11-23 10:21:39
+ * @LastEditTime: 2025-11-23 11:23:03
  * @FilePath: /lulab_backend/src/lark-meeting/controllers/webhook.controller.ts
  * @Description:
  *
@@ -17,6 +17,7 @@ import {
   Logger,
   Req,
   Res,
+  Inject,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Public } from '@/auth/decorators/public.decorator';
@@ -24,47 +25,32 @@ import { EventDispatcher } from '@larksuiteoapi/node-sdk';
 import { createLarkAdapter } from '../adapter/lark-event-adapter';
 import { MeetingEndedEventData } from '../types/lark-meeting.types';
 import { Response, Request } from 'express';
-import { MeetingBitableRepository } from '@/integrations/lark';
-import { toMs } from '../time.util';
+import { LarkMeetingService } from '../service/lark-meeting.service';
 import { LarkEvent } from '../enums/lark-event.enum';
+import { ConfigType } from '@nestjs/config';
+import { larkConfig } from '@/configs/lark.config';
 
 @ApiTags('Webhooks')
 @Controller('webhooks/lark')
 export class LarkWebhookController {
   private readonly logger = new Logger(LarkWebhookController.name);
-  private readonly meetingBitable: MeetingBitableRepository;
+  private readonly larkMeetingService: LarkMeetingService;
   private readonly eventDispatcher: EventDispatcher;
 
-  constructor(meetingBitable: MeetingBitableRepository) {
-    this.meetingBitable = meetingBitable;
+  constructor(
+    larkMeetingService: LarkMeetingService,
+    @Inject(larkConfig.KEY)
+    private readonly larkConf: ConfigType<typeof larkConfig>,
+  ) {
+    this.larkMeetingService = larkMeetingService;
     this.eventDispatcher = new EventDispatcher({
-      encryptKey: process.env.LARK_EVENT_ENCRYPT_KEY || '',
-      verificationToken: process.env.LARK_EVENT_VERIFICATION_TOKEN || '',
+      encryptKey: this.larkConf.event.encryptKey,
+      verificationToken: this.larkConf.event.verificationToken,
     }).register({
       [LarkEvent.VC_MEETING_ALL_ENDED_V1]: (data: MeetingEndedEventData) => {
-        this.logger.log({
-          event: 'meeting_ended',
-          event_type: LarkEvent.VC_MEETING_ALL_ENDED_V1,
-          meeting_id: data?.meeting?.id,
-        });
-        const meetingId = data?.meeting?.id;
-        if (meetingId) {
-          const m = data.meeting;
-          const startTime = toMs(m.start_time);
-          const endTime = toMs(m.end_time);
-          this.meetingBitable
-            .upsertMeetingRecord({
-              platform: '飞书会议',
-              meeting_id: m.id,
-              ...(m.topic && { subject: m.topic }),
-              ...(m.meeting_no && { meeting_code: m.meeting_no }),
-              ...(startTime !== undefined && { start_time: startTime }),
-              ...(endTime !== undefined && { end_time: endTime }),
-            })
-            .catch((err) =>
-              this.logger.error('upsertMeetingRecord_failed', err),
-            );
-        }
+        this.larkMeetingService
+          .enqueueMeetingEnded(data)
+          .catch((err) => this.logger.error('enqueueMeetingEnded_failed', err));
         return 'success';
       },
       '*': (data: Record<string, unknown>) => {
