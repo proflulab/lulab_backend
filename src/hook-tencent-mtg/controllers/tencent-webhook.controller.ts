@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-01 01:08:34
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-11-23 21:25:11
+ * @LastEditTime: 2025-11-23 23:30:25
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/controllers/tencent-webhook.controller.ts
  * @Description: 腾讯会议Webhook控制器
  *
@@ -90,18 +90,12 @@ export class TencentWebhookController {
     );
 
     try {
-      // URL解码所有参数
-      const decodedCheckStr = decodeURIComponent(checkStr);
-      const decodedTimestamp = decodeURIComponent(timestamp);
-      const decodedNonce = decodeURIComponent(nonce);
-      const decodedSignature = decodeURIComponent(signature);
-
       const { token, encodingAesKey } = this.tencentConfig.webhook;
       return await verifyWebhookUrl(
-        decodedCheckStr,
-        decodedTimestamp,
-        decodedNonce,
-        decodedSignature,
+        checkStr,
+        timestamp,
+        nonce,
+        signature,
         token,
         encodingAesKey,
       );
