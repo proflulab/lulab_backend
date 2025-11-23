@@ -28,15 +28,19 @@ describe('MeetingRecordingService', () => {
       data: GetMeetingRecordingResponse;
     }>;
 
-    const getMock: MeetingRecordingGet = async () =>
-      Promise.resolve({
-        data: {
-          recording: {
-            url: 'https://example.com/recording.mp4',
-            duration: '3600',
+    const getMock: jest.MockedFunction<MeetingRecordingGet> = jest.fn(
+      async (args) => {
+        void args;
+        return Promise.resolve({
+          data: {
+            recording: {
+              url: 'https://example.com/recording.mp4',
+              duration: '3600',
+            },
           },
-        },
-      });
+        });
+      },
+    );
 
     mockLarkClient = {
       vc: {
@@ -46,7 +50,7 @@ describe('MeetingRecordingService', () => {
           },
         },
       },
-    } as Partial<LarkClient>;
+    } as unknown as Partial<LarkClient>;
 
     // 创建 NestJS 测试模块
     // 使用 mockLarkClient 替代真实的 LarkClient
