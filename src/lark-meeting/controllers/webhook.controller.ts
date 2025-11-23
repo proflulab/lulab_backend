@@ -26,6 +26,7 @@ import { MeetingEndedEventData } from '../types/lark-meeting.types';
 import { Response, Request } from 'express';
 import { MeetingBitableRepository } from '@/integrations/lark';
 import { toMs } from '../time.util';
+import { LarkEvent } from '../enums/lark-event.enum';
 
 @ApiTags('Webhooks')
 @Controller('webhooks/lark')
@@ -40,10 +41,10 @@ export class LarkWebhookController {
       encryptKey: process.env.LARK_EVENT_ENCRYPT_KEY || '',
       verificationToken: process.env.LARK_EVENT_VERIFICATION_TOKEN || '',
     }).register({
-      'vc.meeting.all_meeting_ended_v1': (data: MeetingEndedEventData) => {
+      [LarkEvent.VC_MEETING_ALL_ENDED_V1]: (data: MeetingEndedEventData) => {
         this.logger.log({
           event: 'meeting_ended',
-          event_type: 'vc.meeting.all_meeting_ended_v1',
+          event_type: LarkEvent.VC_MEETING_ALL_ENDED_V1,
           meeting_id: data?.meeting?.id,
         });
         const meetingId = data?.meeting?.id;
