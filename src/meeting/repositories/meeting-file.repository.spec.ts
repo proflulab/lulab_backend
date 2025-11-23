@@ -103,7 +103,10 @@ describe('MeetingFileRepository', () => {
 
       prisma.meetingFile.update.mockResolvedValue(updatedFile);
 
-      const result = await repository.updateMeetingFile('file-123', updateFileData);
+      const result = await repository.updateMeetingFile(
+        'file-123',
+        updateFileData,
+      );
 
       expect(prisma.meetingFile.update).toHaveBeenCalledWith({
         where: { id: 'file-123' },

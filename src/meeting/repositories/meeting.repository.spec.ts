@@ -318,8 +318,6 @@ describe('MeetingRepository', () => {
     });
   });
 
-
-
   describe('deleteMeetingRecord', () => {
     it('should delete meeting record successfully', async () => {
       const deletedMeeting = {

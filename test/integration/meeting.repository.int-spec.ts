@@ -3,17 +3,10 @@ import type { INestApplication } from '@nestjs/common';
 import { MeetingModule } from '@/meeting/meeting.module';
 import { MeetingRepository } from '@/meeting/repositories/meeting.repository';
 import { PrismaService } from '@/prisma/prisma.service';
-import {
-  MeetingPlatform,
-  MeetingType,
-  FileType,
-  StorageType,
-  ProcessingStatus,
-} from '@prisma/client';
+import { MeetingPlatform, MeetingType, ProcessingStatus } from '@prisma/client';
 import type {
   CreateMeetingRecordData,
   UpdateMeetingRecordData,
-  CreateMeetingFileData,
   GetMeetingRecordsParams,
 } from '@/meeting/types/meeting.types';
 import { createTestApp, closeTestApp } from '@/../test/helpers/test-app.helper';
