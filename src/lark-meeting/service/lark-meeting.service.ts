@@ -13,7 +13,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { MeetingBitableRepository } from '@/integrations/lark';
 import { MeetingEndedEventData } from '../types/lark-meeting.types';
-import { toMs } from '../time.util';
+import { toMs } from '../util/time.util';
 import { InjectQueue } from '@nestjs/bullmq';
 import type { Queue } from 'bullmq';
 import { LarkEvent } from '../enums/lark-event.enum';
