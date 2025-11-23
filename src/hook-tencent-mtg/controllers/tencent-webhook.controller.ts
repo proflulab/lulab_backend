@@ -107,7 +107,7 @@ export class TencentWebhookController {
         );
       });
 
-    // 保持快速响应
+    await Promise.resolve();
     return 'successfully received callback';
   }
 }

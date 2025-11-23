@@ -8,6 +8,7 @@ import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
 } from '@/integrations/lark/repositories';
+import { TencentMeetingQueueService } from '../tencent-meeting-queue.service';
 
 /**
  * 会议开始事件处理器
@@ -19,6 +20,7 @@ export class MeetingStartedHandler extends BaseEventHandler {
   constructor(
     private readonly MeetingBitable: MeetingBitableRepository,
     private readonly meetingUserBitable: MeetingUserBitableRepository,
+    private readonly queueService: TencentMeetingQueueService,
   ) {
     super();
   }
@@ -36,6 +38,7 @@ export class MeetingStartedHandler extends BaseEventHandler {
       TencentMeetingEventUtils.getMeetingTypeDescription(
         meeting_info.meeting_type,
       );
+      
     this.logger.log(
       `会议开始 [${index}]: ${meeting_info.subject} (${meeting_info.meeting_code}) - ${meetingTypeDescription}`,
     );
@@ -43,25 +46,18 @@ export class MeetingStartedHandler extends BaseEventHandler {
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
 
     // 创建或更新用户信息
-    let operatorRecordId;
     try {
-      const operatorResult =
-        await this.meetingUserBitable.upsertMeetingUserRecord({
-          uuid: operator.uuid,
-          userid: operator.userid,
-          user_name: operator.user_name,
-          is_enterprise_user: !!operator.userid, // 如果userid不为空则为true，否则为false
-        });
-      if (operatorResult.data?.record) {
-        operatorRecordId = operatorResult.data.record.record_id;
-        this.logger.log(`操作者记录ID: ${operatorRecordId}`);
-      }
+      await this.queueService.enqueueUpsertMeetingUser({
+        uuid: operator.uuid,
+        userid: operator.userid,
+        user_name: operator.user_name,
+        is_enterprise_user: !!operator.userid,
+      });
       this.logger.log(
-        `成功处理用户信息: ${operator.user_name} (${operator.uuid})`,
+        `已入队处理用户信息: ${operator.user_name} (${operator.uuid})`,
       );
     } catch (error) {
-      this.logger.error(`处理用户信息失败: ${operator.uuid}`, error);
-      // 不抛出错误，避免影响主流程
+      this.logger.error(`入队处理用户信息失败: ${operator.uuid}`, error);
     }
 
     let creatorRecordId;

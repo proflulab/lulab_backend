@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-01-03 10:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-01 06:26:26
+ * @LastEditTime: 2025-11-24 01:17:22
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/tencent-meeting.module.ts
  * @Description: 腾讯会议模块，处理腾讯会议相关的Webhook事件
  *
@@ -11,6 +11,7 @@
 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { BullModule } from '@nestjs/bullmq';
 import { TencentWebhookController } from './controllers/tencent-webhook.controller';
 import { TencentModule } from '../integrations/tencent-meeting/tencent.module';
 import { TencentEventHandlerService } from './services/tencent-event-handler.service';
@@ -24,6 +25,8 @@ import { tencentMeetingConfig } from '../configs/tencent-mtg.config';
 import { OpenaiModule } from '../integrations/openai/openai.module';
 import { MeetingModule } from '@/meeting/meeting.module';
 import { TencentUrlVerificationPipe } from './pipes/tencent-url-verification.pipe';
+import { TencentMeetingProcessor } from './services/processors/tencent-meeting.processor';
+import { TencentMeetingQueueService } from './services/tencent-meeting-queue.service';
 
 @Module({
   imports: [
@@ -32,6 +35,7 @@ import { TencentUrlVerificationPipe } from './pipes/tencent-url-verification.pip
     TencentModule,
     OpenaiModule,
     MeetingModule,
+    BullModule.registerQueue({ name: 'tencent-mtg' }),
   ],
   controllers: [TencentWebhookController],
   providers: [
@@ -42,6 +46,8 @@ import { TencentUrlVerificationPipe } from './pipes/tencent-url-verification.pip
     RecordingCompletedHandler,
     MeetingParticipantJoinedHandler,
     TencentUrlVerificationPipe,
+    TencentMeetingProcessor,
+    TencentMeetingQueueService,
   ],
 })
 export class TencentMeetingModule {}

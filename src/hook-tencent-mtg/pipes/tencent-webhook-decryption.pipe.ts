@@ -27,6 +27,7 @@ import { Request } from 'express'; // 或 fastify
 import { ConfigType } from '@nestjs/config';
 import { tencentMeetingConfig } from '@/configs/tencent-mtg.config';
 import { TencentWebhookEventBodyDto } from '../dto/tencent-webhook-body.dto';
+import { TencentMeetingEvent } from '../types/tencent-webhook-events.types';
 
 @Injectable({ scope: Scope.REQUEST }) // 需要获取 Request Headers，所以必须是 Request Scope
 export class TencentWebhookDecryptionPipe implements PipeTransform {
@@ -36,7 +37,9 @@ export class TencentWebhookDecryptionPipe implements PipeTransform {
     private readonly tencentConfig: ConfigType<typeof tencentMeetingConfig>,
   ) {}
 
-  async transform(value: TencentWebhookEventBodyDto) {
+  async transform(
+    value: TencentWebhookEventBodyDto,
+  ): Promise<TencentMeetingEvent> {
     // 1. 基础参数校验
     if (!value || !value.data) {
       throw new BadRequestException(
@@ -70,8 +73,7 @@ export class TencentWebhookDecryptionPipe implements PipeTransform {
     // 4. 解密数据
     try {
       const decryptedData = await aesDecrypt(value.data, encodingAesKey);
-      // 5. 解析 JSON 并返回
-      return JSON.parse(decryptedData);
+      return JSON.parse(decryptedData) as TencentMeetingEvent;
     } catch (error) {
       throw new WebhookDecryptionException(
         'TENCENT_MEETING',
