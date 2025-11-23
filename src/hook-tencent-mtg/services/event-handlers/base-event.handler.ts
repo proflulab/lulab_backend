@@ -1,3 +1,14 @@
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-11-22 23:39:35
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-11-24 00:20:51
+ * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/event-handlers/base-event.handler.ts
+ * @Description:
+ *
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
+ */
+
 import { Logger } from '@nestjs/common';
 
 /**
@@ -13,7 +24,6 @@ export interface IEventHandler {
  */
 export abstract class BaseEventHandler implements IEventHandler {
   protected readonly logger = new Logger(this.constructor.name);
-  protected readonly PLATFORM_NAME = 'TENCENT_MEETING';
 
   abstract handle(payload: any, index: number): Promise<void>;
   abstract supports(event: string): boolean;
@@ -31,48 +41,5 @@ export abstract class BaseEventHandler implements IEventHandler {
       index,
       timestamp: new Date().toISOString(),
     });
-  }
-
-  /**
-   * 获取会议创建模式描述
-   */
-  protected getMeetingModeDesc(mode?: number): string {
-    const modes = {
-      0: '普通会议',
-      1: '快速会议',
-    };
-    return modes[mode as keyof typeof modes] || '未知模式';
-  }
-
-  /**
-   * 获取会议创建来源描述
-   */
-  protected getMeetingSourceDesc(from?: number): string {
-    const sources = {
-      0: '空来源',
-      1: '客户端',
-      2: 'web',
-      3: '企微',
-      4: '微信',
-      5: 'outlook',
-      6: 'restapi',
-      7: '腾讯文档',
-      8: 'Rooms 智能录制',
-    };
-    return sources[from as keyof typeof sources] || '未知来源';
-  }
-
-  /**
-   * 获取会议类型描述
-   */
-  protected getMeetingTypeDesc(type: number): string {
-    const types = {
-      0: '一次性会议',
-      1: '周期性会议',
-      2: '微信专属会议',
-      4: 'rooms 投屏会议',
-      5: '个人会议号会议',
-    };
-    return types[type as keyof typeof types] || '未知类型';
   }
 }
