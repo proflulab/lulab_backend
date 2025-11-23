@@ -11,7 +11,6 @@
 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { LarkWebhookHandler } from './service/lark-webhook.service';
 import { LarkWebhookController } from './controllers/webhook.controller';
 import { LarkEventWsService } from './service/lark-event-ws.service';
 import { LarkMeetingRecordingService } from './service/lark-meeting-recording.service';
@@ -33,7 +32,6 @@ import { larkConfig } from '@/configs/lark.config';
   ],
   controllers: [LarkWebhookController],
   providers: [
-    LarkWebhookHandler,
     LarkEventWsService,
     LarkMeetingRecordingService,
     MinuteTranscriptService,
@@ -44,7 +42,6 @@ import { larkConfig } from '@/configs/lark.config';
     LarkEventProcessor,
   ],
   exports: [
-    LarkWebhookHandler,
     MinuteTranscriptService,
     LarkMeetingDetailService,
     LarkMeetingWriterService,
