@@ -12,7 +12,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LarkClient } from './lark.client';
-import { BitableService } from './services/bitable.service';
+import { BitableService, MeetingRecordingService } from './services';
 import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
@@ -26,18 +26,22 @@ import { larkConfig } from '../../configs/lark.config';
   providers: [
     LarkClient,
     BitableService,
+    MeetingRecordingService,
     MeetingBitableRepository,
     MeetingUserBitableRepository,
     RecordingFileBitableRepository,
     NumberRecordBitableRepository,
+    MeetingRecordingService,
   ],
   exports: [
     LarkClient,
     BitableService,
+    MeetingRecordingService,
     MeetingBitableRepository,
     MeetingUserBitableRepository,
     RecordingFileBitableRepository,
     NumberRecordBitableRepository,
+    MeetingRecordingService,
   ],
 })
 export class LarkModule {}

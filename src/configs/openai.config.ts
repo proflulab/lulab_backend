@@ -2,12 +2,13 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-01-10
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-01 06:21:15
+ * @LastEditTime: 2025-11-25 22:55:55
  * @FilePath: /lulab_backend/src/configs/openai.config.ts
  * @Description: OpenAI 配置
  *
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
+
 import { registerAs, ConfigType } from '@nestjs/config';
 
 export const openaiConfig = registerAs('openai', () => ({
