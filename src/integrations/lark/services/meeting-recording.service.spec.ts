@@ -1,13 +1,14 @@
 /*
  * @Author: Mingxuan 159552597+Luckymingxuan@users.noreply.github.com
  * @Date: 2025-10-03 15:11:09
- * @LastEditors: Mingxuan 159552597+Luckymingxuan@users.noreply.github.com
- * @LastEditTime: 2025-10-11 14:54:49
- * @FilePath: \lulab_backend\src\integrations\lark\services\meeting-recording.service.spec.ts
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-11-25 22:55:40
+ * @FilePath: /lulab_backend/src/integrations/lark/services/meeting-recording.service.spec.ts
  * @Description:
  *
  * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
  */
+
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   MeetingRecordingService,

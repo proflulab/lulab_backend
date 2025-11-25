@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-02 21:14:03
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-11-22 11:08:35
+ * @LastEditTime: 2025-10-04 23:15:45
  * @FilePath: /lulab_backend/src/configs/lark.config.ts
  * @Description:
  *

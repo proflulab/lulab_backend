@@ -71,7 +71,3 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 .codex/
 .specify/
-
-# Ignore Lark integration transcript text files
-transcripts/
-test/integration/lark/*.txt
