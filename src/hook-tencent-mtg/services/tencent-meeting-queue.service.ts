@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-11-24 01:17:14
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-11-24 01:18:18
+ * @LastEditTime: 2025-11-26 20:43:45
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/tencent-meeting-queue.service.ts
  * @Description:
  *

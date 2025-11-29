@@ -25,7 +25,7 @@ import { tencentMeetingConfig } from '../configs/tencent-mtg.config';
 import { OpenaiModule } from '../integrations/openai/openai.module';
 import { MeetingModule } from '@/meeting/meeting.module';
 import { TencentUrlVerificationPipe } from './pipes/tencent-url-verification.pipe';
-import { TencentMeetingProcessor } from './services/processors/tencent-meeting.processor';
+import { TencentMeetingProcessor } from './processors/tencent-meeting.processor';
 import { TencentMeetingQueueService } from './services/tencent-meeting-queue.service';
 
 @Module({

@@ -5,7 +5,7 @@ import {
   TencentMeetingIdType,
   TencentInstanceType,
   TencentMeetingEndType,
-  TencentMeetingEventType,
+  // TencentMeetingEventType,
 } from '../enums/tencent-webhook-events.enum';
 
 // 腾讯会议用户信息
@@ -181,59 +181,59 @@ export class TencentMeetingEventUtils {
     }
   }
 
-  /**
-   * 验证事件数据是否完整有效
-   */
-  static validateEvent(event: TencentMeetingEvent): boolean {
-    if (
-      !event ||
-      !event.event ||
-      !event.payload ||
-      !Array.isArray(event.payload)
-    ) {
-      return false;
-    }
+  // /**
+  //  * 验证事件数据是否完整有效
+  //  */
+  // static validateEvent(event: TencentMeetingEvent): boolean {
+  //   if (
+  //     !event ||
+  //     !event.event ||
+  //     !event.payload ||
+  //     !Array.isArray(event.payload)
+  //   ) {
+  //     return false;
+  //   }
 
-    return event.payload.every(
-      (payload) =>
-        payload.operate_time &&
-        payload.operator &&
-        payload.meeting_info &&
-        payload.meeting_info.meeting_id &&
-        payload.meeting_info.meeting_code &&
-        payload.meeting_info.subject &&
-        payload.meeting_info.creator,
-    );
-  }
+  //   return event.payload.every(
+  //     (payload) =>
+  //       payload.operate_time &&
+  //       payload.operator &&
+  //       payload.meeting_info &&
+  //       payload.meeting_info.meeting_id &&
+  //       payload.meeting_info.meeting_code &&
+  //       payload.meeting_info.subject &&
+  //       payload.meeting_info.creator,
+  //   );
+  // }
 
-  /**
-   * 获取事件的简短描述
-   */
-  static getEventDescription(event: TencentMeetingEvent): string {
-    const payload = event.payload?.[0];
-    if (!payload) return '未知事件';
+  // /**
+  //  * 获取事件的简短描述
+  //  */
+  // static getEventDescription(event: TencentMeetingEvent): string {
+  //   const payload = event.payload?.[0];
+  //   if (!payload) return '未知事件';
 
-    const meetingInfo = payload.meeting_info;
-    const operator = payload.operator;
+  //   const meetingInfo = payload.meeting_info;
+  //   const operator = payload.operator;
 
-    const eventType = event.event as TencentMeetingEventType;
-    switch (eventType) {
-      case TencentMeetingEventType.MEETING_START:
-        return `会议「${meetingInfo.subject}」开始，由 ${operator.user_name} 触发`;
-      case TencentMeetingEventType.MEETING_END:
-        return `会议「${meetingInfo.subject}」结束，由 ${operator.user_name} 触发`;
-      case TencentMeetingEventType.MEETING_JOIN:
-        return `${operator.user_name} 加入会议「${meetingInfo.subject}」`;
-      case TencentMeetingEventType.MEETING_LEAVE:
-        return `${operator.user_name} 离开会议「${meetingInfo.subject}」`;
-      case TencentMeetingEventType.RECORDING_START:
-        return `会议「${meetingInfo.subject}」开始录制`;
-      case TencentMeetingEventType.RECORDING_END:
-        return `会议「${meetingInfo.subject}」结束录制`;
-      case TencentMeetingEventType.RECORDING_READY:
-        return `会议「${meetingInfo.subject}」录制文件已就绪`;
-      default:
-        return `会议「${meetingInfo.subject}」${event.event}事件`;
-    }
-  }
+  //   const eventType = event.event as TencentMeetingEventType;
+  //   switch (eventType) {
+  //     case TencentMeetingEventType.MEETING_START:
+  //       return `会议「${meetingInfo.subject}」开始，由 ${operator.user_name} 触发`;
+  //     case TencentMeetingEventType.MEETING_END:
+  //       return `会议「${meetingInfo.subject}」结束，由 ${operator.user_name} 触发`;
+  //     case TencentMeetingEventType.MEETING_JOIN:
+  //       return `${operator.user_name} 加入会议「${meetingInfo.subject}」`;
+  //     case TencentMeetingEventType.MEETING_LEAVE:
+  //       return `${operator.user_name} 离开会议「${meetingInfo.subject}」`;
+  //     case TencentMeetingEventType.RECORDING_START:
+  //       return `会议「${meetingInfo.subject}」开始录制`;
+  //     case TencentMeetingEventType.RECORDING_END:
+  //       return `会议「${meetingInfo.subject}」结束录制`;
+  //     case TencentMeetingEventType.RECORDING_READY:
+  //       return `会议「${meetingInfo.subject}」录制文件已就绪`;
+  //     default:
+  //       return `会议「${meetingInfo.subject}」${event.event}事件`;
+  //   }
+  // }
 }
