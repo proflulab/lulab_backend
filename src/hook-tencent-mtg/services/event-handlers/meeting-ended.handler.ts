@@ -1,14 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { BaseEventHandler } from './base-event.handler';
 import { TencentMeetingType } from '../../enums/tencent-webhook-events.enum';
 import { MeetingRepository } from '@/meeting/repositories/meeting.repository';
 import { MeetingPlatform, MeetingType, ProcessingStatus } from '@prisma/client';
-import {
-  MeetingBitableRepository,
-  MeetingUserBitableRepository,
-} from '@/integrations/lark/repositories';
+import { TencentMeetingQueueService } from '../tencent-meeting-queue.service';
 import {
   TencentEventPayload,
+  TencentMeetingUser,
   TencentMeetingEventUtils,
 } from '../../types/tencent-webhook-events.types';
 
@@ -18,11 +16,11 @@ import {
 @Injectable()
 export class MeetingEndedHandler extends BaseEventHandler {
   private readonly SUPPORTED_EVENT = 'meeting.end';
+  protected readonly logger = new Logger(MeetingEndedHandler.name);
 
   constructor(
-    private readonly MeetingBitable: MeetingBitableRepository,
-    private readonly meetingUserBitable: MeetingUserBitableRepository,
     private readonly meetingRepository: MeetingRepository,
+    private readonly queueService: TencentMeetingQueueService,
   ) {
     super();
   }
@@ -40,52 +38,28 @@ export class MeetingEndedHandler extends BaseEventHandler {
       `会议结束 [${index}]: ${meeting_info.subject} (${meeting_info.meeting_code})`,
     );
 
-    // 创建或更新用户信息
-    let operatorRecordId;
-    try {
-      const operatorResult =
-        await this.meetingUserBitable.upsertMeetingUserRecord({
-          uuid: operator.uuid,
-          userid: operator.userid,
-          user_name: operator.user_name,
-          is_enterprise_user: !!operator.userid, // 如果userid不为空则为true，否则为false
-        });
-      if (operatorResult.data?.record) {
-        operatorRecordId = operatorResult.data.record.record_id;
-        this.logger.log(`操作者记录ID: ${operatorRecordId}`);
-      }
-      this.logger.log(
-        `成功处理用户信息: ${operator.user_name} (${operator.uuid})`,
-      );
-    } catch (error) {
-      this.logger.error(`处理用户信息失败: ${operator.uuid}`, error);
-      // 不抛出错误，避免影响主流程
+    // 2. 并发处理用户入队 (操作者 & 创建者)
+    // 使用 Promise.allSettled 确保一个失败不影响另一个
+    const userUpsertPromises: Promise<void>[] = [];
+
+    if (operator?.uuid) {
+      userUpsertPromises.push(this.enqueueUser(operator, '操作者'));
     }
 
-    let creatorRecordId;
-    try {
-      const creatorResult =
-        await this.meetingUserBitable.upsertMeetingUserRecord({
-          uuid: creator.uuid,
-          userid: creator.userid,
-          user_name: creator.user_name,
-          is_enterprise_user: !!creator.userid, // 如果userid不为空则为true，否则为false
-        });
-
-      if (creatorResult.data?.record) {
-        creatorRecordId = creatorResult.data.record.record_id;
-        this.logger.log(`创建者记录ID: ${creatorRecordId}`);
+    if (creator?.uuid) {
+      // 这里的 creator 逻辑和 operator 是一样的，去重处理
+      // 注意：如果 creator 和 operator 是同一个人，这里会重复入队，
+      // 可以在这里做个去重判断，或者交给 QueueService 去重
+      if (creator.uuid !== operator?.uuid) {
+        userUpsertPromises.push(this.enqueueUser(creator, '创建者'));
       }
-      this.logger.log(
-        `成功处理用户信息: ${creator.user_name} (${creator.uuid})`,
-      );
-    } catch (error) {
-      this.logger.error(`处理用户信息失败: ${creator.uuid}`, error);
-      // 不抛出错误，避免影响主流程
     }
 
+    // 不阻塞主流程，等待入队结果
+    await Promise.allSettled(userUpsertPromises);
+
     try {
-      await this.MeetingBitable.upsertMeetingRecord({
+      await this.queueService.enqueueUpsertMeetingRecord({
         platform: '腾讯会议',
         subject: meeting_info.subject,
         meeting_id: meeting_info.meeting_id,
@@ -93,11 +67,12 @@ export class MeetingEndedHandler extends BaseEventHandler {
         meeting_code: meeting_info.meeting_code,
         start_time: meeting_info.start_time * 1000,
         end_time: meeting_info.end_time * 1000,
-        creator: creatorRecordId ? [creatorRecordId] : [],
+        // 由于改为异步入队，这里无法立即获取 record_id，暂时传空
+        creator: [],
       });
     } catch (error) {
       this.logger.error(
-        `处理会议结束事件失败: ${meeting_info.meeting_id}`,
+        `处理会议结束事件失败(入队): ${meeting_info.meeting_id}`,
         error,
       );
       // 不抛出错误，避免影响主流程
@@ -146,6 +121,29 @@ export class MeetingEndedHandler extends BaseEventHandler {
         error instanceof Error ? error.stack : undefined,
       );
       // 不抛出错误，避免影响主流程
+    }
+  }
+
+  /**
+   * 封装用户入队逻辑，减少重复代码
+   */
+  private async enqueueUser(
+    user: TencentMeetingUser,
+    roleLabel: string,
+  ): Promise<void> {
+    try {
+      await this.queueService.enqueueUpsertMeetingUser({
+        uuid: user.uuid,
+        userid: user.userid,
+        user_name: user.user_name,
+        is_enterprise_user: !!user.userid,
+      });
+      this.logger.log(
+        `已入队处理${roleLabel}信息: ${user.user_name} (${user.uuid})`,
+      );
+    } catch (error) {
+      this.logger.error(`入队处理${roleLabel}信息失败: ${user.uuid}`, error);
+      // 这里可以选择 throw error 让 Promise.allSettled 捕获，或者仅记录日志
     }
   }
 }
