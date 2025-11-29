@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-11-26 20:41:44
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-11-30 04:43:06
+ * @LastEditTime: 2025-11-30 04:52:37
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/processors/tencent-meeting.processor.ts
  * @Description:
  *
@@ -13,7 +13,6 @@ import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import type { Job } from 'bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { MeetingUserBitableRepository } from '@/integrations/lark/repositories';
-import type { UpsertMeetingUserJobData } from '../services/tencent-meeting-queue.service';
 import { MeetingUserData } from '@/integrations/lark/types';
 
 @Injectable()
@@ -46,7 +45,7 @@ export class TencentMeetingProcessor extends WorkerHost {
   }
 
   @OnWorkerEvent('failed')
-  onFailed(job: Job<UpsertMeetingUserJobData>, err: Error) {
+  onFailed(job: Job<MeetingUserData>, err: Error) {
     this.logger.error(`处理用户信息失败: ${job.data.uuid}`, err);
   }
 }

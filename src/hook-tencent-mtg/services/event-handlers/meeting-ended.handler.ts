@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { BaseEventHandler } from './base-event.handler';
-import {
-  TencentEventPayload,
-  TencentMeetingEventUtils,
-} from '../../types/tencent-webhook-events.types';
 import { TencentMeetingType } from '../../enums/tencent-webhook-events.enum';
+import { MeetingRepository } from '@/meeting/repositories/meeting.repository';
+import { MeetingPlatform, MeetingType, ProcessingStatus } from '@prisma/client';
 import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
 } from '@/integrations/lark/repositories';
-import { MeetingRepository } from '@/meeting/repositories/meeting.repository';
-import { MeetingPlatform, MeetingType, ProcessingStatus } from '@prisma/client';
+import {
+  TencentEventPayload,
+  TencentMeetingEventUtils,
+} from '../../types/tencent-webhook-events.types';
 
 /**
  * 会议结束事件处理器
