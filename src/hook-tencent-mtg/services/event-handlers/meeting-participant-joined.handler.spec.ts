@@ -1,41 +1,36 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MeetingParticipantJoinedHandler } from './meeting-participant-joined.handler';
-import { MeetingUserBitableRepository } from '@/integrations/lark/repositories/meeting-user.repository';
 import { MeetingBitableRepository } from '@/integrations/lark/repositories/meeting.repository';
+import { TencentMeetingQueueService } from '../tencent-meeting-queue.service';
 import { TencentEventPayload } from '../../types/tencent-webhook-events.types';
 
 describe('MeetingParticipantJoinedHandler', () => {
   let handler: MeetingParticipantJoinedHandler;
-  let mockMeetingUserRepo: jest.Mocked<MeetingUserBitableRepository>;
   let mockMeetingRepo: jest.Mocked<MeetingBitableRepository>;
+  let mockQueueService: jest.Mocked<TencentMeetingQueueService>;
 
   beforeEach(async () => {
-    mockMeetingUserRepo = {
-      createMeetingUserRecord: jest.fn(),
-      upsertMeetingUserRecord: jest.fn(),
-      searchMeetingUserByUuid: jest.fn(),
-      searchMeetingUserByUserid: jest.fn(),
-      searchMeetingUserByuser_name: jest.fn(),
-      updateMeetingUserByUuid: jest.fn(),
-      searchMeetingUsersByEnterpriseStatus: jest.fn(),
-    } as unknown as jest.Mocked<MeetingUserBitableRepository>;
-
     mockMeetingRepo = {
       createMeetingRecord: jest.fn(),
       searchMeetingById: jest.fn(),
       upsertMeetingRecord: jest.fn(),
     } as unknown as jest.Mocked<MeetingBitableRepository>;
 
+    mockQueueService = {
+      enqueueUpsertMeetingUser: jest.fn(),
+      enqueueUpsertMeetingRecord: jest.fn(),
+    } as unknown as jest.Mocked<TencentMeetingQueueService>;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MeetingParticipantJoinedHandler,
         {
-          provide: MeetingUserBitableRepository,
-          useValue: mockMeetingUserRepo,
-        },
-        {
           provide: MeetingBitableRepository,
           useValue: mockMeetingRepo,
+        },
+        {
+          provide: TencentMeetingQueueService,
+          useValue: mockQueueService,
         },
       ],
     }).compile();
@@ -83,23 +78,6 @@ describe('MeetingParticipantJoinedHandler', () => {
     } as TencentEventPayload;
 
     it('should handle participant joined event successfully', async () => {
-      // Mock creating new user
-      const userRecordId = 'user-record-123';
-      mockMeetingUserRepo.upsertMeetingUserRecord.mockResolvedValue({
-        code: 0,
-        msg: 'success',
-        data: {
-          record: {
-            record_id: userRecordId,
-            fields: {},
-            created_by: { id: 'test' },
-            created_time: Date.now(),
-            last_modified_by: { id: 'test' },
-            last_modified_time: Date.now(),
-          },
-        },
-      });
-
       // Mock upserting meeting
       mockMeetingRepo.upsertMeetingRecord.mockResolvedValue({
         code: 0,
@@ -118,8 +96,9 @@ describe('MeetingParticipantJoinedHandler', () => {
 
       await handler.handle(mockPayload, 0);
 
+      // Verify queue service was called
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(mockMeetingUserRepo.upsertMeetingUserRecord).toHaveBeenCalledWith({
+      expect(mockQueueService.enqueueUpsertMeetingUser).toHaveBeenCalledWith({
         uuid: 'test-user-id',
         userid: 'test-user-id',
         user_name: 'Test User',
@@ -138,23 +117,6 @@ describe('MeetingParticipantJoinedHandler', () => {
     });
 
     it('should handle meeting upsert with participant', async () => {
-      // Mock creating new user
-      const userRecordId = 'user-record-123';
-      mockMeetingUserRepo.upsertMeetingUserRecord.mockResolvedValue({
-        code: 0,
-        msg: 'success',
-        data: {
-          record: {
-            record_id: userRecordId,
-            fields: {},
-            created_by: { id: 'test' },
-            created_time: Date.now(),
-            last_modified_by: { id: 'test' },
-            last_modified_time: Date.now(),
-          },
-        },
-      });
-
       // Mock upserting meeting
       mockMeetingRepo.upsertMeetingRecord.mockResolvedValue({
         code: 0,
@@ -173,80 +135,6 @@ describe('MeetingParticipantJoinedHandler', () => {
 
       await handler.handle(mockPayload, 0);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(mockMeetingRepo.upsertMeetingRecord).toHaveBeenCalledWith(
-        expect.objectContaining({
-          platform: '腾讯会议',
-          subject: 'Test Meeting',
-          meeting_id: 'test-meeting-id',
-          sub_meeting_id: 'test-sub-meeting-id',
-          meeting_code: '123456789',
-          start_time: 1234567890000,
-          end_time: 1234567900000,
-        }),
-      );
-    });
-
-    it('should handle existing user', async () => {
-      const existingUser = {
-        record_id: 'existing-record-id',
-        fields: {
-          uuid: 'test-user-id',
-          userid: 'test-user-id',
-          user_name: 'Test User',
-          is_enterprise_user: true,
-        },
-      };
-
-      // Mock the existing user
-      mockMeetingUserRepo.searchMeetingUserByUserid.mockResolvedValue([
-        existingUser,
-      ]);
-
-      // Mock upsert user record response
-      mockMeetingUserRepo.upsertMeetingUserRecord.mockResolvedValue({
-        code: 0,
-        msg: 'success',
-        data: {
-          record: {
-            record_id: 'existing-record-id',
-            fields: {},
-            created_by: { id: 'test' },
-            created_time: Date.now(),
-            last_modified_by: { id: 'test' },
-            last_modified_time: Date.now(),
-          },
-        },
-      });
-
-      // Mock upserting meeting
-      mockMeetingRepo.upsertMeetingRecord.mockResolvedValue({
-        code: 0,
-        msg: 'success',
-        data: {
-          record: {
-            record_id: 'meeting-record-123',
-            fields: {},
-            created_by: { id: 'test' },
-            created_time: Date.now(),
-            last_modified_by: { id: 'test' },
-            last_modified_time: Date.now(),
-          },
-        },
-      });
-
-      await handler.handle(mockPayload, 0);
-
-      // 即使存在用户，也会调用upsert更新记录
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(mockMeetingUserRepo.upsertMeetingUserRecord).toHaveBeenCalledWith({
-        uuid: 'test-user-id',
-        userid: 'test-user-id',
-        user_name: 'Test User',
-        is_enterprise_user: true,
-      });
-
-      // 验证会议记录被调用
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockMeetingRepo.upsertMeetingRecord).toHaveBeenCalledWith(
         expect.objectContaining({

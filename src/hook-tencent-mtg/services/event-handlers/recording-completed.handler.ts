@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-11-24 02:19:28
+ * @LastEditTime: 2025-11-30 06:14:50
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/event-handlers/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -12,15 +12,15 @@
 import { Injectable } from '@nestjs/common';
 import { BaseEventHandler } from './base-event.handler';
 import { TencentEventPayload } from '../../types/tencent-webhook-events.types';
+import { TencentApiService } from '@/integrations/tencent-meeting/api.service';
+import { MeetingParticipantDetail } from '@/integrations/tencent-meeting/types';
+import { OpenaiService } from '@/integrations/openai/openai.service';
 import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
   RecordingFileBitableRepository,
   NumberRecordBitableRepository,
 } from '@/integrations/lark/repositories';
-import { TencentApiService } from '@/integrations/tencent-meeting/api.service';
-import { MeetingParticipantDetail } from '@/integrations/tencent-meeting/types';
-import { OpenaiService } from '@/integrations/openai/openai.service';
 
 /**
  * 录制完成事件处理器
