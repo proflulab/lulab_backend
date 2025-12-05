@@ -19,7 +19,7 @@ export class MeetingEndedHandler extends BaseEventHandler {
   protected readonly logger = new Logger(MeetingEndedHandler.name);
 
   constructor(
-    private readonly meetingRepository: MeetingRepository,
+    // private readonly meetingRepository: MeetingRepository,
     private readonly queueService: TencentMeetingQueueService,
   ) {
     super();
