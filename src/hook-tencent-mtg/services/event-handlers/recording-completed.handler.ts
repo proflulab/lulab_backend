@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-11-30 18:16:54
+ * @LastEditTime: 2025-12-05 18:40:43
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/event-handlers/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -15,6 +15,10 @@ import { TencentEventPayload } from '../../types/tencent-webhook-events.types';
 import { TencentApiService } from '@/integrations/tencent-meeting/api.service';
 import { MeetingParticipantDetail } from '@/integrations/tencent-meeting/types';
 import { OpenaiService } from '@/integrations/openai/openai.service';
+import {
+  renderPrompt,
+  DEFAULT_PARTICIPANT_SUMMARY_TEMPLATE,
+} from '../../utils/prompts.util';
 import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
@@ -58,81 +62,31 @@ export class RecordingCompletedHandler extends BaseEventHandler {
     return event === this.SUPPORTED_EVENT;
   }
 
-  private async fetchTranscript(
-    file: TencentEventPayload['recording_files'][0],
-    meeting_info: TencentEventPayload['meeting_info'],
-  ): Promise<{ formattedTranscript: string; uniqueUsernames: Set<string> }> {
-    const uniqueUsernames = new Set<string>();
-    try {
-      const transcriptResponse = await this.tencentMeetingApi.getTranscript(
-        file.record_file_id,
-        meeting_info.creator.userid || '',
-      );
-
-      if (!transcriptResponse.minutes?.paragraphs) {
-        return { formattedTranscript: '', uniqueUsernames };
-      }
-
-      const formattedLines: string[] = [];
-
-      for (const paragraph of transcriptResponse.minutes.paragraphs) {
-        const speakerName = paragraph.speaker_info?.username || '未知发言人';
-        uniqueUsernames.add(speakerName);
-
-        const firstSentence = paragraph.sentences[0];
-        if (firstSentence) {
-          const startTime = firstSentence.start_time;
-          const hours = Math.floor(startTime / 3600000);
-          const minutes = Math.floor((startTime % 3600000) / 60000);
-          const seconds = Math.floor((startTime % 60000) / 1000);
-          const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-
-          const paragraphText = paragraph.sentences
-            .map((sentence) => sentence.words.map((word) => word.text).join(''))
-            .join('')
-            .trim();
-
-          if (paragraphText) {
-            formattedLines.push(
-              `${speakerName}(${timeString})：${paragraphText}`,
-            );
-          }
-        }
-      }
-
-      const formattedTranscript = formattedLines.join('\n\n');
-      this.logger.log(
-        `获取录音转写成功: ${file.record_file_id}, 共 ${formattedLines.length} 条记录, 提取到 ${uniqueUsernames.size} 个唯一用户名`,
-      );
-      return { formattedTranscript, uniqueUsernames };
-    } catch (error: unknown) {
-      const errorMessage = this.getErrorMessage(error);
-      this.logger.warn(
-        `获取录音转写失败: ${file.record_file_id}, 错误: ${errorMessage}`,
-      );
-      return { formattedTranscript: '', uniqueUsernames };
-    }
-  }
-
   async handle(payload: TencentEventPayload, index: number): Promise<void> {
     const { meeting_info, recording_files = [] } = payload;
+    const {
+      subject,
+      meeting_id,
+      sub_meeting_id,
+      meeting_code,
+      start_time,
+      end_time,
+    } = meeting_info;
 
     // 记录会议信息
-    this.logger.log(
-      `录制完成 [${index}]: ${meeting_info.subject} (${meeting_info.meeting_code})`,
-    );
+    this.logger.log(`录制完成 [${index}]: ${subject} (${meeting_code})`);
 
     let meetingRecordId: string | undefined;
 
     try {
       const meetingResult = await this.MeetingBitable.upsertMeetingRecord({
         platform: '腾讯会议',
-        subject: meeting_info.subject,
-        meeting_id: meeting_info.meeting_id,
-        sub_meeting_id: meeting_info.sub_meeting_id,
-        meeting_code: meeting_info.meeting_code,
-        start_time: meeting_info.start_time * 1000,
-        end_time: meeting_info.end_time * 1000,
+        subject,
+        meeting_id,
+        sub_meeting_id,
+        meeting_code,
+        start_time: start_time * 1000,
+        end_time: end_time * 1000,
       });
 
       if (meetingResult.data?.record) {
@@ -395,36 +349,25 @@ export class RecordingCompletedHandler extends BaseEventHandler {
                 this.logger.warn(`在会议参与者中未找到匹配的用户: ${username}`);
               }
 
-              // 构建参会者的会议总结提示词
-              const participantSummaryPrompt = `
-你是专业的会议总结助手，请为参会者提供个性化的会议总结。
+              // 准备模板变量
+              const promptVariables = {
+                subject,
+                start_time: new Date(start_time * 1000).toLocaleString(),
+                end_time: new Date(end_time * 1000).toLocaleString(),
+                username,
+                ai_minutes: ai_minutes || '暂无会议纪要',
+                todo: todo || '暂无待办事项',
+                transcript: formattedTranscript || '暂无录音转写',
+              };
 
-会议信息：
-- 会议主题：${meeting_info.subject}
-- 会议时间：${new Date(meeting_info.start_time * 1000).toLocaleString()} - ${new Date(meeting_info.end_time * 1000).toLocaleString()}
-- 参会者：${username}
-
-会议内容：
-${ai_minutes || '暂无会议纪要'}
-
-待办事项：
-${todo || '暂无待办事项'}
-
-录音转写：
-${formattedTranscript || '暂无录音转写'}
-
-请为参会者「${username}」生成一份个性化的会议总结，包含：
-1. 会议要点回顾
-2. 与该参会者相关的重要讨论
-3. 该参会者需要关注的待办事项
-4. 后续行动建议
-
-请用中文回答，保持简洁专业。
-              `.trim();
-
+              // 使用通用函数渲染提示词
+              // TODO: 这里未来可以从数据库读取自定义模板，传入 renderPrompt 的第一个参数
               // 调用OpenAI生成个性化总结
               const participantSummary = await this.openaiService.ask(
-                participantSummaryPrompt,
+                renderPrompt(
+                  DEFAULT_PARTICIPANT_SUMMARY_TEMPLATE,
+                  promptVariables,
+                ),
                 '你是专业的会议总结助手，擅长为参会者提供个性化、实用的会议总结。',
               );
 

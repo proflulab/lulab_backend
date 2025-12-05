@@ -441,4 +441,56 @@ export class TencentApiService {
       queryParams,
     );
   }
+
+  /**
+   * Retrieves and formats the recording transcript
+   * @param recordFileId - Unique identifier of the recording file
+   * @param operatorId - Operator ID making the request
+   * @returns Promise resolving to formatted transcript and unique usernames
+   */
+  async getFormattedTranscript(
+    recordFileId: string,
+    operatorId: string,
+  ): Promise<{ formattedTranscript: string; uniqueUsernames: Set<string> }> {
+    const uniqueUsernames = new Set<string>();
+    const transcriptResponse = await this.getTranscript(
+      recordFileId,
+      operatorId,
+    );
+
+    if (!transcriptResponse.minutes?.paragraphs) {
+      return { formattedTranscript: '', uniqueUsernames };
+    }
+
+    const formattedLines: string[] = [];
+
+    for (const paragraph of transcriptResponse.minutes.paragraphs) {
+      const speakerName = paragraph.speaker_info?.username || '未知发言人';
+      uniqueUsernames.add(speakerName);
+
+      const firstSentence = paragraph.sentences[0];
+
+      if (firstSentence) {
+        const startTime = firstSentence.start_time;
+        const hours = Math.floor(startTime / 3600000);
+        const minutes = Math.floor((startTime % 3600000) / 60000);
+        const seconds = Math.floor((startTime % 60000) / 1000);
+        const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        const paragraphText = paragraph.sentences
+          .map((sentence) => sentence.words.map((word) => word.text).join(''))
+          .join('')
+          .trim();
+
+        if (paragraphText) {
+          formattedLines.push(
+            `${speakerName}(${timeString})：${paragraphText}`,
+          );
+        }
+      }
+    }
+
+    const formattedTranscript = formattedLines.join('\n\n');
+    return { formattedTranscript, uniqueUsernames };
+  }
 }
