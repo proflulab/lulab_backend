@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-05 18:40:43
+ * @LastEditTime: 2025-12-05 22:16:41
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/event-handlers/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -69,34 +69,42 @@ export class RecordingCompletedHandler extends BaseEventHandler {
       meeting_id,
       sub_meeting_id,
       meeting_code,
-      start_time,
-      end_time,
+      start_time: _start_time,
+      end_time: _end_time,
     } = meeting_info;
+
+    const start_time = _start_time * 1000;
+    const end_time = _end_time * 1000;
 
     // 记录会议信息
     this.logger.log(`录制完成 [${index}]: ${subject} (${meeting_code})`);
 
     let meetingRecordId: string | undefined;
 
-    try {
-      const meetingResult = await this.MeetingBitable.upsertMeetingRecord({
+    const [meetingResultSettled] = await Promise.allSettled([
+      this.MeetingBitable.upsertMeetingRecord({
         platform: '腾讯会议',
         subject,
         meeting_id,
         sub_meeting_id,
         meeting_code,
-        start_time: start_time * 1000,
-        end_time: end_time * 1000,
-      });
+        start_time,
+        end_time,
+      }),
+    ]);
 
+    if (meetingResultSettled.status === 'fulfilled') {
+      const meetingResult = meetingResultSettled.value;
       if (meetingResult.data?.record) {
         meetingRecordId = meetingResult.data.record.record_id;
         this.logger.log(`操作者记录ID: ${meetingRecordId}`);
       }
-    } catch (error: unknown) {
+    } else {
       this.logger.error(
         `处理录制完成事件失败: ${meeting_info.meeting_id}`,
-        error instanceof Error ? error.stack : undefined,
+        meetingResultSettled.reason instanceof Error
+          ? meetingResultSettled.reason.stack
+          : undefined,
       );
       // 不抛出错误，避免影响主流程
     }
@@ -258,8 +266,8 @@ export class RecordingCompletedHandler extends BaseEventHandler {
             await this.recordingFileBitable.upsertRecordingFileRecord({
               record_file_id: file.record_file_id,
               meet: meetIds,
-              start_time: meeting_info.start_time * 1000,
-              end_time: meeting_info.end_time * 1000,
+              start_time,
+              end_time,
               fullsummary,
               todo,
               ai_minutes,
@@ -352,8 +360,8 @@ export class RecordingCompletedHandler extends BaseEventHandler {
               // 准备模板变量
               const promptVariables = {
                 subject,
-                start_time: new Date(start_time * 1000).toLocaleString(),
-                end_time: new Date(end_time * 1000).toLocaleString(),
+                start_time: new Date(start_time).toLocaleString(),
+                end_time: new Date(end_time).toLocaleString(),
                 username,
                 ai_minutes: ai_minutes || '暂无会议纪要',
                 todo: todo || '暂无待办事项',
