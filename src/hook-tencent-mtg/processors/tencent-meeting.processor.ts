@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-11-26 20:41:44
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-11-30 05:14:46
+ * @LastEditTime: 2025-12-05 22:53:57
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/processors/tencent-meeting.processor.ts
  * @Description:
  *
@@ -65,13 +65,17 @@ export class TencentMeetingProcessor extends WorkerHost {
   @OnWorkerEvent('failed')
   onFailed(job: Job<any>, err: Error) {
     switch (job.name) {
-      case 'upsertMeetingUser':
-        this.logger.error(`处理用户信息失败: ${job.data.uuid}`, err);
+      case 'upsertMeetingUser': {
+        const data = job.data as MeetingUserData;
+        this.logger.error(`处理用户信息失败: ${data.uuid}`, err);
         break;
+      }
 
-      case 'upsertMeetingRecord':
-        this.logger.error(`处理会议记录失败: ${job.data.meeting_id}`, err);
+      case 'upsertMeetingRecord': {
+        const data = job.data as MeetingData;
+        this.logger.error(`处理会议记录失败: ${data.meeting_id}`, err);
         break;
+      }
 
       default:
         this.logger.error(`Job ${job.name} failed`, err);

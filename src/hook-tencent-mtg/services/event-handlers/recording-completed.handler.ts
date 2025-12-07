@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-05 22:16:41
+ * @LastEditTime: 2025-12-06 10:36:56
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/event-handlers/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -165,61 +165,21 @@ export class RecordingCompletedHandler extends BaseEventHandler {
           const uniqueUsernames = new Set<string>(); // 用于存储所有唯一的用户名
 
           try {
-            const transcriptResponse =
-              await this.tencentMeetingApi.getTranscript(
-                file.record_file_id,
-                meeting_info.creator.userid || '',
-              );
-
-            if (transcriptResponse.minutes?.paragraphs) {
-              // 提取所有唯一的用户名
-              for (const paragraph of transcriptResponse.minutes.paragraphs) {
-                const speakerName =
-                  paragraph.speaker_info?.username || '未知发言人';
-                uniqueUsernames.add(speakerName);
-              }
-
-              // 格式化转写内容为指定格式 - 将每个段落的所有句子组合成段落
-              const formattedLines: string[] = [];
-
-              for (const paragraph of transcriptResponse.minutes.paragraphs) {
-                const speakerName =
-                  paragraph.speaker_info?.username || '未知发言人';
-
-                // 转换第一个句子的时间戳为小时:分钟:秒格式
-                const firstSentence = paragraph.sentences[0];
-                if (firstSentence) {
-                  const startTime = firstSentence.start_time;
-                  const hours = Math.floor(startTime / 3600000); // 转换为小时
-                  const minutes = Math.floor((startTime % 3600000) / 60000); // 剩余的分钟
-                  const seconds = Math.floor((startTime % 60000) / 1000); // 剩余的秒
-                  const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-
-                  // 将段落中的所有句子组合成一个段落文本
-                  const paragraphText = paragraph.sentences
-                    .map((sentence) =>
-                      sentence.words.map((word) => word.text).join(''),
-                    )
-                    .join('')
-                    .trim();
-
-                  if (paragraphText) {
-                    formattedLines.push(
-                      `${speakerName}(${timeString})：${paragraphText}`,
-                    );
-                  }
-                }
-              }
-
-              formattedTranscript = formattedLines.join('\n\n');
-              this.logger.log(
-                `获取录音转写成功: ${file.record_file_id}, 共 ${formattedLines.length} 条记录, 提取到 ${uniqueUsernames.size} 个唯一用户名`,
-              );
-            }
+            const {
+              formattedTranscript: formattedTranscriptResponse,
+              uniqueUsernames: uniqueUsernamesResponse,
+            } = await this.tencentMeetingApi.getFormattedTranscript(
+              file.record_file_id,
+              meeting_info.creator.userid || '',
+            );
+            formattedTranscript = formattedTranscriptResponse;
+            uniqueUsernamesResponse.forEach((username) =>
+              uniqueUsernames.add(username),
+            );
           } catch (error: unknown) {
             const errorMessage = this.getErrorMessage(error);
             this.logger.warn(
-              `获取录音转写失败: ${file.record_file_id}, 错误: ${errorMessage}`,
+              `获取格式化转写失败: ${file.record_file_id}, 错误: ${errorMessage}`,
             );
           }
 
@@ -229,9 +189,9 @@ export class RecordingCompletedHandler extends BaseEventHandler {
           try {
             const participantsResponse =
               await this.tencentMeetingApi.getParticipants(
-                meeting_info.meeting_id,
+                meeting_id,
                 meeting_info.creator.userid || '',
-                meeting_info.sub_meeting_id,
+                sub_meeting_id,
               );
 
             // 根据 uuid 去重
