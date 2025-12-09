@@ -29,15 +29,23 @@ export class MeetingStartedHandler extends BaseEventHandler {
 
   async handle(payload: TencentEventPayload, index: number): Promise<void> {
     const { meeting_info, operator } = payload;
-    const { creator } = meeting_info;
+    const {
+      creator,
+      meeting_id,
+      meeting_code,
+      subject,
+      meeting_type,
+      sub_meeting_id,
+      start_time,
+      end_time,
+    } = meeting_info;
 
     // 记录会议信息
     const meetingTypeDescription =
-      TencentMeetingEventUtils.getMeetingTypeDescription(
-        meeting_info.meeting_type,
-      );
+      TencentMeetingEventUtils.getMeetingTypeDescription(meeting_type);
+
     this.logger.log(
-      `会议开始 [${index}]: ${meeting_info.subject} (${meeting_info.meeting_code}) - ${meetingTypeDescription}`,
+      `会议开始 [${index}]: ${subject} (${meeting_code}) - ${meetingTypeDescription}`,
     );
 
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
@@ -89,12 +97,12 @@ export class MeetingStartedHandler extends BaseEventHandler {
     try {
       await this.MeetingBitable.upsertMeetingRecord({
         platform: '腾讯会议',
-        subject: meeting_info.subject,
-        meeting_id: meeting_info.meeting_id,
-        sub_meeting_id: meeting_info.sub_meeting_id,
-        meeting_code: meeting_info.meeting_code,
-        start_time: meeting_info.start_time * 1000,
-        end_time: meeting_info.end_time * 1000,
+        subject,
+        meeting_id,
+        sub_meeting_id,
+        meeting_code,
+        start_time: start_time * 1000,
+        end_time: end_time * 1000,
         creator: [creatorRecordId || ''],
         meeting_type: [meetingTypeDescription || ''],
       });
