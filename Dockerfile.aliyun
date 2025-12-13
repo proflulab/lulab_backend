@@ -1,6 +1,9 @@
 # Use the official Node.js image as the base image
 FROM node:20
 
+# Optional: Speed up & stabilize npm installation (for npmjs.org timeout issues)
+RUN npm config set registry https://registry.npmmirror.com
+
 RUN npm install -g pnpm
 
 # Set the working directory inside the container
