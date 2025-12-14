@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-01 01:08:34
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-09 18:27:15
+ * @LastEditTime: 2025-12-14 11:42:08
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/controllers/tencent-webhook.controller.ts
  * @Description: 腾讯会议Webhook控制器
  *
@@ -30,8 +30,10 @@ import { Public } from '@/auth/decorators/public.decorator';
 import { TencentEventHandlerService } from '../services/tencent-event-handler.service';
 import { WebhookLoggingInterceptor } from '../interceptors/webhook-logging.interceptor';
 import { TencentMeetingEvent } from '../types/tencent-webhook-events.types';
-import { TencentUrlVerificationPipe } from '../pipes/tencent-webhook-url-verification.pipe';
-import { TencentWebhookDecryptionPipe } from '../pipes/tencent-webhook-body-decryption.pipe';
+import {
+  TencentUrlVerificationPipe,
+  TencentWebhookDecryptionPipe,
+} from '../pipes';
 
 /**
  * Tencent Meeting Webhook Controller
