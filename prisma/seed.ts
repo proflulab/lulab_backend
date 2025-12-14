@@ -25,6 +25,7 @@ import {
   createProducts,
   createOrders,
   createRefunds,
+  createMeetings,
   createAllRelations
 } from './seeds/index'
 
@@ -360,8 +361,12 @@ async function seedDatabase(): Promise<void> {
     // 步骤 2: 创建业务数据
     const { orders, refunds } = await createBusinessData(userData, productData, channelData)
 
+    // 步骤 3: 创建会议数据
+    console.log('\n🎯 步骤 3: 创建会议数据')
+    const meetingData = await createMeetings(prisma, userData.adminUser.id)
+
     // 输出统计信息
-    printSeedStatistics(userData, permissionData, organizationData, channelData, projectData, curriculumData, productData, orders, refunds)
+    printSeedStatistics(userData, permissionData, organizationData, channelData, projectData, curriculumData, productData, orders, refunds, meetingData)
 
   } catch (error) {
     console.error('❌ 种子数据初始化失败:', error)
@@ -454,7 +459,8 @@ function printSeedStatistics(
   curriculumData: any,
   productData: any,
   orders: any[],
-  refunds: any[]
+  refunds: any[],
+  meetingData?: any
 ): void {
   console.log('\n✅ 数据库种子数据初始化完成！')
   console.log('\n📊 统计信息:')
@@ -469,6 +475,13 @@ function printSeedStatistics(
   console.log(`📦 产品: ${productData.products.length} 个`)
   console.log(`🛒 订单: ${orders.length} 个`)
   console.log(`💰 退款: ${refunds.length} 个`)
+  
+  if (meetingData) {
+    console.log(`🎯 会议: ${Object.keys(meetingData.meetings).length} 个`)
+    console.log(`👥 平台用户: ${Object.keys(meetingData.platformUsers).length} 个`)
+    console.log(`📁 会议文件: ${Object.keys(meetingData.meetingFiles).length} 个`)
+    console.log(`📝 会议总结: ${Object.keys(meetingData.meetingSummaries).length} 个`)
+  }
 }
 
 // ==================== 数据库分析功能 ====================

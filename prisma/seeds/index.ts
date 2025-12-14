@@ -35,6 +35,10 @@ export { createOrders } from './orders'
 // 退款相关
 export { createRefunds } from './refunds'
 
+// 会议相关
+export { createMeetings } from './meetings'
+export type { CreatedMeetings } from './meetings'
+
 // 关联关系相关
 export { 
   createUserOrganizationRelations, 
