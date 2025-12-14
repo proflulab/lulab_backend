@@ -2,46 +2,38 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-01 01:08:34
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-01 19:25:24
+ * @LastEditTime: 2025-12-14 11:42:08
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/controllers/tencent-webhook.controller.ts
  * @Description: 腾讯会议Webhook控制器
  *
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
+
 import {
   Controller,
   Get,
   Post,
   Body,
-  Headers,
   Query,
   HttpCode,
   HttpStatus,
   Logger,
-  BadRequestException,
   UseInterceptors,
   ValidationPipe,
-  Inject,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { ConfigType } from '@nestjs/config';
-import { TencentEventHandlerService } from '../services/tencent-event-handler.service';
-import { TencentWebhookEventBodyDto } from '../dto/tencent-webhook-body.dto';
-import { WebhookLoggingInterceptor } from '../interceptors/webhook-logging.interceptor';
 import {
   ApiTencentUrlVerificationDocs,
   ApiTencentEventReceiverDocs,
 } from '../decorators/tencent-webhook.decorators';
+import { ApiTags } from '@nestjs/swagger';
+import { Public } from '@/auth/decorators/public.decorator';
+import { TencentEventHandlerService } from '../services/tencent-event-handler.service';
+import { WebhookLoggingInterceptor } from '../interceptors/webhook-logging.interceptor';
 import { TencentMeetingEvent } from '../types/tencent-webhook-events.types';
 import {
-  verifySignature,
-  aesDecrypt,
-  verifyWebhookUrl,
-  WebhookSignatureVerificationException,
-  WebhookDecryptionException,
-} from '../../integrations/tencent-meeting';
-import { Public } from '@/auth/decorators/public.decorator';
-import { tencentMeetingConfig } from '../../configs/tencent-mtg.config';
+  TencentUrlVerificationPipe,
+  TencentWebhookDecryptionPipe,
+} from '../pipes';
 
 /**
  * Tencent Meeting Webhook Controller
@@ -56,14 +48,7 @@ export class TencentWebhookController {
 
   constructor(
     private readonly tencentEventHandlerService: TencentEventHandlerService,
-    @Inject(tencentMeetingConfig.KEY)
-    private readonly tencentConfig: ConfigType<typeof tencentMeetingConfig>,
   ) {}
-
-  /**
-   * 获取并验证腾讯会议配置
-   */
-  // Config is now provided by tencentMeetingConfig directly
 
   /**
    * Tencent Meeting Webhook URL verification endpoint (GET)
@@ -79,38 +64,13 @@ export class TencentWebhookController {
   @HttpCode(HttpStatus.OK)
   @ApiTencentUrlVerificationDocs()
   async verifyTencentWebhook(
-    @Query('check_str') checkStr: string,
-    @Headers('timestamp') timestamp: string,
-    @Headers('nonce') nonce: string,
-    @Headers('signature') signature: string,
+    @Query('check_str', TencentUrlVerificationPipe) decryptedStr: string,
   ): Promise<string> {
     this.logger.log(
       'Received Tencent Meeting Webhook URL verification request',
     );
-
-    try {
-      // URL解码所有参数
-      const decodedCheckStr = decodeURIComponent(checkStr);
-      const decodedTimestamp = decodeURIComponent(timestamp);
-      const decodedNonce = decodeURIComponent(nonce);
-      const decodedSignature = decodeURIComponent(signature);
-
-      const { token, encodingAesKey } = this.tencentConfig.webhook;
-      return await verifyWebhookUrl(
-        decodedCheckStr,
-        decodedTimestamp,
-        decodedNonce,
-        decodedSignature,
-        token,
-        encodingAesKey,
-      );
-    } catch (error: unknown) {
-      this.logger.error(
-        'Failed to handle Tencent Meeting Webhook URL verification',
-        (error as Error).stack,
-      );
-      throw error;
-    }
+    await Promise.resolve();
+    return decryptedStr;
   }
 
   /**
@@ -126,128 +86,30 @@ export class TencentWebhookController {
    */
   @Post()
   @HttpCode(HttpStatus.OK)
-  @Public()
   @ApiTencentEventReceiverDocs()
   async handleTencentWebhook(
-    @Body(new ValidationPipe({ transform: true, whitelist: true }))
-    body: TencentWebhookEventBodyDto,
-    @Headers('timestamp') timestamp: string,
-    @Headers('nonce') nonce: string,
-    @Headers('signature') signature: string,
+    @Body(
+      new ValidationPipe({ transform: true, whitelist: true }),
+      TencentWebhookDecryptionPipe,
+    )
+    eventData: TencentMeetingEvent,
   ): Promise<string> {
-    this.logger.log('Received Tencent Meeting Webhook request');
+    this.logger.log(`Received Tencent Meeting event: ${eventData.event}`, {
+      traceId: eventData.trace_id,
+      payloadCount: eventData.payload?.length || 0,
+    });
 
-    try {
-      // Event notification request
-      if (body && body.data) {
-        this.logger.log('Handling Tencent Meeting event notification');
-
-        if (!signature || !timestamp || !nonce) {
-          this.logger.error('Missing required signature headers', {
-            signature: !!signature,
-            timestamp: !!timestamp,
-            nonce: !!nonce,
-          });
-          // 返回400会导致腾讯会议重试，这里直接返回失败响应
-          throw new BadRequestException('Missing required signature headers');
-        }
-
-        // Process encrypted event data from body.data field
-        const encryptedData = body.data;
-
-        // Verify signature using the encrypted data
-        const { token, encodingAesKey } = this.tencentConfig.webhook;
-        const isValid = verifySignature(
-          token,
-          timestamp,
-          nonce,
-          encryptedData,
-          signature,
+    // 异步处理业务逻辑
+    this.tencentEventHandlerService
+      .handleEvent(eventData)
+      .catch((error: unknown) => {
+        this.logger.error(
+          'Failed to handle event asynchronously',
+          error instanceof Error ? error.stack : undefined,
         );
-
-        if (!isValid) {
-          this.logger.error('Signature verification failed', {
-            token,
-            timestamp,
-            nonce,
-            signature: signature
-              ? signature.slice(-6).padStart(signature.length, '*')
-              : undefined,
-          });
-          throw new WebhookSignatureVerificationException('TENCENT_MEETING');
-        }
-
-        // Decrypt data (base64解码 + AES解密)
-        let decryptedData: string;
-        try {
-          decryptedData = await aesDecrypt(encryptedData, encodingAesKey);
-        } catch (error: unknown) {
-          this.logger.error(
-            'Failed to decrypt event data',
-            error instanceof Error ? error.stack : undefined,
-          );
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
-          throw new WebhookDecryptionException(
-            'TENCENT_MEETING',
-            `Failed to decrypt event data: ${errorMessage}`,
-          );
-        }
-
-        // Parse JSON
-        let eventData: TencentMeetingEvent;
-        try {
-          eventData = JSON.parse(
-            decryptedData,
-          ) as unknown as TencentMeetingEvent;
-        } catch {
-          this.logger.error('Failed to parse decrypted JSON data', {
-            decryptedData: decryptedData.substring(0, 200) + '...',
-          });
-          throw new WebhookDecryptionException(
-            'TENCENT_MEETING',
-            'Failed to parse decrypted data as JSON',
-          );
-        }
-
-        this.logger.log(
-          `Successfully processed Tencent Meeting event: ${eventData.event}`,
-          {
-            event: eventData.event,
-            traceId: eventData.trace_id,
-            payloadCount: eventData.payload?.length || 0,
-          },
-        );
-
-        // Handle decrypted event data asynchronously
-        // 不等待处理完成，避免超时导致腾讯会议重试
-        this.tencentEventHandlerService
-          .handleEvent(eventData)
-          .catch((error: unknown) => {
-            this.logger.error(
-              'Failed to handle event asynchronously',
-              error instanceof Error ? error.stack : undefined,
-            );
-          });
-
-        // 必须返回这个确切字符串，不能有任何变化
-        return 'successfully received callback';
-      }
-
-      this.logger.warn('Invalid webhook request - no data field found');
-      throw new BadRequestException(
-        'Invalid Webhook request - missing data field',
-      );
-    } catch (error: unknown) {
-      const err = error as Error;
-      this.logger.error('Failed to handle Tencent Meeting Webhook', {
-        error: err?.message,
-        stack: err?.stack,
-        body: body ? JSON.stringify(body).substring(0, 500) + '...' : 'no body',
       });
 
-      // 确保所有错误都抛出，让腾讯会议能够重试
-      throw error;
-    }
+    await Promise.resolve();
+    return 'successfully received callback';
   }
 }

@@ -1,0 +1,33 @@
+# Use the official Node.js image as the base image
+FROM node:20
+
+# Optional: Speed up & stabilize npm installation (for npmjs.org timeout issues)
+RUN npm config set registry https://registry.npmmirror.com
+
+RUN npm install -g pnpm
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Copy package.json and package-lock.json to the working directory
+COPY package*.json ./
+
+COPY package.json pnpm-lock.yaml ./
+
+# Install the application dependencies
+RUN pnpm install
+
+# Copy the rest of the application files
+COPY . .
+
+# Generate Prisma client for the target platform
+RUN pnpm run db:generate
+
+# Build the NestJS application
+RUN pnpm run build
+
+# Expose the application port
+EXPOSE 3000
+
+# Command to run the application
+CMD ["node", "dist/src/main"]
