@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-01 01:08:34
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-01 05:35:24
+ * @LastEditTime: 2025-12-09 18:35:33
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/interceptors/webhook-logging.interceptor.ts
  * @Description: 腾讯会议Webhook日志拦截器，记录所有Webhook请求的详细信息
  */
@@ -268,40 +268,5 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
     const start = signature.substring(0, 4);
     const end = signature.substring(signature.length - 4);
     return `${start}***${end}`;
-  }
-
-  /**
-   * 格式化日志消息
-   */
-  private formatLogMessage(
-    method: string,
-    url: string,
-    statusCode: number,
-    duration: number,
-  ): string {
-    const status = statusCode >= 400 ? '❌' : '✅';
-    return `${status} ${method} ${url} ${statusCode} ${duration}ms`;
-  }
-
-  /**
-   * 检查是否为健康检查请求
-   */
-  private isHealthCheck(url: string): boolean {
-    return url.includes('/health') || url.includes('/ping');
-  }
-
-  /**
-   * 获取请求的唯一标识
-   */
-  private getRequestId(headers: Record<string, unknown>): string {
-    const reqId = headers['x-request-id'];
-    if (typeof reqId === 'string') {
-      return reqId;
-    }
-    const corrId = headers['x-correlation-id'];
-    if (typeof corrId === 'string') {
-      return corrId;
-    }
-    return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 }
