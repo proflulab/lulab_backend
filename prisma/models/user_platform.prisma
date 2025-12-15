@@ -26,13 +26,15 @@ model PlatformUser {
   lastSeenAt DateTime? // 最后出现时间
 
   // 关联关系
-  participations MeetingParticipant[] // 参会记录
-  hostedMeetings Meeting[]            @relation("HostedMeetings") // 主持的会议
-  paragraphs     Paragraph[]          @relation("Speaker") // 关联的段落
-  actions        MeetingUserAction[]
+  hostedMeetings    Meeting[]           @relation("HostedMeetings") // 主持的会议
+  paragraphs        Paragraph[]         @relation("Speaker") // 关联的段落
+  actions           MeetingUserAction[]
+  meetingRecordings MeetingRecording[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  createdSummaries  MeetingSummary[] @relation("SummaryCreator") // 创建的总结
+  reviewedSummaries MeetingSummary[] @relation("ReviewedSummaries") // 审核的总结
 
   @@unique([platform, platformUserId]) // 确保平台用户ID唯一
   @@index([email])
@@ -42,7 +44,7 @@ model PlatformUser {
   @@index([userName]) // 用户名查询优化
   @@index([isActive]) // 活跃用户查询优化
   @@index([lastSeenAt]) // 最后出现时间查询优化
-  @@map("platform_users")
+  @@map("user_platforms")
 }
 
 // 平台枚举

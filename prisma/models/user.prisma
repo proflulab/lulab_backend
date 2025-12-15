@@ -42,11 +42,7 @@ model User {
   dataPermissions UserDataPermission[] // 用户数据权限
 
   // 会议相关关联
-  MeetingParticipant     MeetingParticipant[]
   platformUsers          PlatformUser[] // 平台用户关联
-  createdSummaries       MeetingSummary[]     @relation("SummaryCreator") // 创建的总结
-  reviewedSummaries      MeetingSummary[]     @relation("ReviewedSummaries") // 审核的总结
-  recordedMeetings       MeetingRecording[] // 录制的会议
   uploadedStorageObjects StorageObject[]
 
   // 登录日志关联

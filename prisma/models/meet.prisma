@@ -59,20 +59,22 @@ model Meeting {
 }
 
 model MeetingRecording {
-  id             String    @id @default(uuid()) @db.Uuid
-  tenantId       String    @map("tenant_id") @db.Uuid
-  meetingId      String    @map("meeting_id")
-  recorderUserId String?   @map("recorder_user_id")
-  source         Int       @default(0) @db.SmallInt
-  startAt        DateTime? @map("start_at") @db.Timestamptz(6)
-  endAt          DateTime? @map("end_at") @db.Timestamptz(6)
-  status         Int       @default(0) @db.SmallInt
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  id        String @id @default(uuid()) @db.Uuid
+  tenantId  String @map("tenant_id") @db.Uuid
+  meetingId String @map("meeting_id")
+
+  source    Int       @default(0) @db.SmallInt
+  startAt   DateTime? @map("start_at") @db.Timestamptz(6)
+  endAt     DateTime? @map("end_at") @db.Timestamptz(6)
+  status    Int       @default(0) @db.SmallInt
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
 
   // tenant       Tenant  @relation(fields: [tenantId], references: [id])
-  meeting      Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
-  recorderUser User?   @relation(fields: [recorderUserId], references: [id])
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  recorderUserId String?       @map("recorder_user_id")
+  recorderUser   PlatformUser? @relation(fields: [recorderUserId], references: [id])
 
   files       MeetingRecordingFile[]
   transcripts Transcript[]
@@ -132,9 +134,9 @@ model MeetingSummary {
 
   // 用户交互
   createdBy  String? // 创建者
-  creator    User?     @relation("SummaryCreator", fields: [createdBy], references: [id])
+  creator    PlatformUser? @relation("SummaryCreator", fields: [createdBy], references: [id])
   reviewedBy String? // 审核者
-  reviewer   User?     @relation("ReviewedSummaries", fields: [reviewedBy], references: [id])
+  reviewer   PlatformUser? @relation("ReviewedSummaries", fields: [reviewedBy], references: [id])
   reviewedAt DateTime? // 审核时间
 
   // 元数据
@@ -171,9 +173,6 @@ model MeetingParticipant {
   meetingId String
   meeting   Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 
-  platformUserId String
-  platformUser   PlatformUser @relation(fields: [platformUserId], references: [id], onDelete: Cascade)
-
   // 参会行为数据
   joinTime        DateTime?
   leftTime        DateTime?
@@ -186,8 +185,6 @@ model MeetingParticipant {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String?
 
   @@index([meetingId])
   @@map("meeting_participants")
