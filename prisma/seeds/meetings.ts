@@ -267,9 +267,17 @@ async function createMeetingRecording(
   recorderUserId: string | null | undefined,
   fileConfig: typeof MEETING_FILE_CONFIGS.recording
 ) {
-  // 1. Create StorageObject
-  const storageObject = await prisma.storageObject.create({
-    data: {
+  // 1. Create StorageObject (Idempotent)
+  const storageObject = await prisma.storageObject.upsert({
+    where: {
+      provider_bucket_objectKey: {
+        provider: fileConfig.provider,
+        bucket: fileConfig.bucket,
+        objectKey: fileConfig.objectKey,
+      },
+    },
+    update: {},
+    create: {
       provider: fileConfig.provider,
       bucket: fileConfig.bucket,
       objectKey: fileConfig.objectKey,
@@ -278,29 +286,47 @@ async function createMeetingRecording(
     }
   });
 
-  // 2. Create MeetingRecording
-  const meetingRecording = await prisma.meetingRecording.create({
-    data: {
-      meetingId,
-      tenantId: '00000000-0000-0000-0000-000000000000', // Random or valid UUID
-      startAt: new Date(),
-      endAt: new Date(),
-      status: 1, // 0=recording?, 1=completed? assuming specific integer status
-      recorderUserId: recorderUserId, // Link to PlatformUser who recorded
+  // 2. Create MeetingRecording (Idempotent check)
+  let meetingRecording = await prisma.meetingRecording.findFirst({
+    where: {
+      meetingId: meetingId,
+      recorderUserId: recorderUserId,
     }
   });
 
-  // 3. Create MeetingRecordingFile linked to StorageObject and Recording
-  const recordingFile = await prisma.meetingRecordingFile.create({
-    data: {
-      tenantId: '00000000-0000-0000-0000-000000000000',
+  if (!meetingRecording) {
+    meetingRecording = await prisma.meetingRecording.create({
+      data: {
+        meetingId,
+        tenantId: '00000000-0000-0000-0000-000000000000', // Random or valid UUID
+        startAt: new Date(),
+        endAt: new Date(),
+        status: 1, // 0=recording?, 1=completed? assuming specific integer status
+        recorderUserId: recorderUserId, // Link to PlatformUser who recorded
+      }
+    });
+  }
+
+  // 3. Create MeetingRecordingFile linked to StorageObject and Recording (Idempotent check)
+  let recordingFile = await prisma.meetingRecordingFile.findFirst({
+    where: {
       recordingId: meetingRecording.id,
       fileObjectId: storageObject.id,
-      fileType: fileConfig.fileType,
-      durationMs: fileConfig.durationMs,
-      resolution: fileConfig.resolution,
     }
   });
+
+  if (!recordingFile) {
+    recordingFile = await prisma.meetingRecordingFile.create({
+      data: {
+        tenantId: '00000000-0000-0000-0000-000000000000',
+        recordingId: meetingRecording.id,
+        fileObjectId: storageObject.id,
+        fileType: fileConfig.fileType,
+        durationMs: fileConfig.durationMs,
+        resolution: fileConfig.resolution,
+      }
+    });
+  }
 
   return { meetingRecording, recordingFile, storageObject };
 }
@@ -358,13 +384,60 @@ async function createMeetingParticipant(
 /**
  * 创建转录记录 (Transcript -> Paragraph -> Sentence)
  */
-async function createTranscriptWithParagraphs(
+/**
+ * 创建模拟转录记录 (Transcript -> Paragraph -> Sentence -> Word)
+ */
+async function createSimulatedTranscript(
   prisma: PrismaClient,
   meetingRecordingId: string,
-  speakerPlatformUserId: string,
-  paragraphIdx: string,
-  text: string
+  speakers: { host: string; participant: string }
 ) {
+  // 模拟对话数据 (参考真实 JSON 结构)
+  const dialogue = [
+    {
+      role: 'host',
+      text: '大家好，能听到我说话吗？',
+      startTime: 5301,
+      duration: 1000,
+    },
+    {
+      role: 'participant',
+      text: '嗯，老师也来了。',
+      startTime: 8470,
+      duration: 1350,
+    },
+    {
+      role: 'host',
+      text: 'Ok 我们待会儿那个八点钟开始啊！',
+      startTime: 9206,
+      duration: 2130,
+    },
+    {
+      role: 'host',
+      text: '声音，声音可以吗？声音？',
+      startTime: 12000,
+      duration: 1470,
+    },
+    {
+      role: 'participant',
+      text: 'Ok 可以，能听到的哈！',
+      startTime: 14000,
+      duration: 1890,
+    },
+    {
+      role: 'host',
+      text: '大家好，欢迎来到今天的周例会。首先我们来同步一下各项目的进展情况。',
+      startTime: 18000,
+      duration: 5000,
+    },
+    {
+      role: 'participant',
+      text: '项目A目前进展顺利，预计可以在下周完成开发工作。',
+      startTime: 24000,
+      duration: 4000,
+    }
+  ];
+
   // 1. Create Transcript
   const transcript = await prisma.transcript.create({
     data: {
@@ -374,34 +447,74 @@ async function createTranscriptWithParagraphs(
     }
   });
 
-  // 2. Create Paragraph
-  const paragraph = await prisma.paragraph.create({
-    data: {
-      transcriptId: transcript.id,
-      pid: paragraphIdx,
-      startTimeMs: BigInt(0),
-      endTimeMs: BigInt(10000),
-      speakerId: speakerPlatformUserId,
-    }
-  });
+  // 2. Process Dialogue
+  let pidCounter = 0;
+  for (const line of dialogue) {
+    const speakerId = line.role === 'host' ? speakers.host : speakers.participant;
+    const pid = String(pidCounter++);
+    const startTimeMs = BigInt(line.startTime);
+    const endTimeMs = BigInt(line.startTime + line.duration);
 
-  // 3. Create Sentence (where text lives)
-  await prisma.sentence.create({
-    data: {
-      paragraphId: paragraph.id,
-      sid: paragraphIdx + '_s1',
-      startTimeMs: BigInt(0),
-      endTimeMs: BigInt(10000),
-      text: text
-    }
-  });
+    // Create Paragraph
+    const paragraph = await prisma.paragraph.create({
+      data: {
+        transcriptId: transcript.id,
+        pid: pid,
+        startTimeMs,
+        endTimeMs,
+        speakerId: speakerId,
+      }
+    });
+
+    // Create Sentence (Assume 1 sentence per paragraph for simulation)
+    const sid = pid + '_s0';
+    const sentence = await prisma.sentence.create({
+      data: {
+        paragraphId: paragraph.id,
+        sid: sid,
+        startTimeMs,
+        endTimeMs,
+        text: line.text,
+      }
+    });
+
+    // Create Words (Simple Tokenization: Split by characters for Chinese)
+    // In a real scenario, this would use proper segmentation.
+    // We distribute time evenly across characters effectively.
+    // Filtering out spaces from the textArray to create Word entries, 
+    // but preserving the original text in the sentence.
+    const chars = line.text.split('').filter(c => c.trim() !== '');
+    const charDuration = Math.floor(line.duration / Math.max(chars.length, 1));
+
+    let currentWordStart = line.startTime;
+
+    // Use promote createMany if valid, but here loop is safer for simple seed logic with small data
+    const wordsData = chars.map((char, idx) => {
+      const wid = sid + '_w' + idx;
+      const wStart = currentWordStart;
+      const wEnd = wStart + charDuration;
+      currentWordStart = wEnd;
+
+      return {
+        sentenceId: sentence.id,
+        wid: wid,
+        order: idx,
+        startTimeMs: BigInt(wStart),
+        endTimeMs: BigInt(wEnd),
+        text: char,
+      };
+    });
+
+    await prisma.word.createMany({
+      data: wordsData
+    });
+  }
 
   return transcript;
 }
 
 export async function createMeetings(
   prisma: PrismaClient,
-  userId?: string, // optional system user id, if needed for other things, but NOT for PlatformUser relations
 ): Promise<CreatedMeetings> {
 
   // 1. 创建平台用户
@@ -445,22 +558,13 @@ export async function createMeetings(
   );
 
   // 5. 创建会议转录记录 (Transcript)
-  // Host speaks
-  const transcript1 = await createTranscriptWithParagraphs(
+  const transcript1 = await createSimulatedTranscript(
     prisma,
     meetingRecording.id,
-    host1.id,
-    'p1',
-    '大家好，欢迎来到今天的周例会。首先我们来同步一下各项目的进展情况。'
-  );
-
-  // Participant speaks
-  await createTranscriptWithParagraphs(
-    prisma,
-    meetingRecording.id,
-    participant1.id,
-    'p2',
-    '项目A目前进展顺利，预计可以在下周完成开发工作。'
+    {
+      host: host1.id,
+      participant: participant1.id,
+    }
   );
 
 
