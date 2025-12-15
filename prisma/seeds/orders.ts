@@ -2,49 +2,52 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-06-20 04:09:42
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-07-04 10:22:20
+ * @LastEditTime: 2025-12-15 20:20:32
  * @FilePath: /lulab_backend/prisma/seeds/orders.ts
  * @Description: 订单种子数据
- * 
- * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ *
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
-import { PrismaClient, Product, User, Channel } from '@prisma/client'
+import { PrismaClient, Product, User, Channel } from '@prisma/client';
 
 interface CreateOrdersParams {
   users: {
-    adminUser: User
-    financeUser: User
-    normalUsers: User[]
-  }
-  products: Product[]
-  channels: Channel[]
+    adminUser: User;
+    financeUser: User;
+    normalUsers: User[];
+  };
+  products: Product[];
+  channels: Channel[];
 }
 
-export async function createOrders(prisma: PrismaClient, params: CreateOrdersParams) {
-  const { users, products, channels } = params
-  const { adminUser, financeUser, normalUsers } = users
+export async function createOrders(
+  prisma: PrismaClient,
+  params: CreateOrdersParams,
+) {
+  const { users, products, channels } = params;
+  const { adminUser, financeUser, normalUsers } = users;
 
   // 验证数据
   if (!products || products.length === 0) {
-    throw new Error('Products array is empty or undefined')
+    throw new Error('Products array is empty or undefined');
   }
 
   if (products.length < 6) {
-    throw new Error(`Expected at least 6 products, but got ${products.length}`)
+    throw new Error(`Expected at least 6 products, but got ${products.length}`);
   }
 
   // 生成订单编号的辅助函数
   const generateOrderCode = (index: number) => {
-    const timestamp = Date.now().toString().slice(-8)
-    return `ORD${timestamp}${index.toString().padStart(3, '0')}`
-  }
+    const timestamp = Date.now().toString().slice(-8);
+    return `ORD${timestamp}${index.toString().padStart(3, '0')}`;
+  };
 
   // 生成订单号码的辅助函数
   const generateOrderNumber = (index: number) => {
-    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-    const timestamp = Date.now().toString().slice(-6)
-    return `${date}${timestamp}${index.toString().padStart(3, '0')}`
-  }
+    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const timestamp = Date.now().toString().slice(-6);
+    return `${date}${timestamp}${index.toString().padStart(3, '0')}`;
+  };
 
   // 创建订单数据
   const orders = await Promise.all([
@@ -71,8 +74,8 @@ export async function createOrders(prisma: PrismaClient, params: CreateOrdersPar
         benefitStartDate: new Date('2024-01-15'),
         benefitDurationDays: 365,
         activeDays: 120,
-        benefitDaysRemaining: 245
-      }
+        benefitDaysRemaining: 245,
+      },
     }),
 
     // JavaScript 课程订单
@@ -98,8 +101,8 @@ export async function createOrders(prisma: PrismaClient, params: CreateOrdersPar
         benefitStartDate: new Date('2024-02-01'),
         benefitDurationDays: 365,
         activeDays: 90,
-        benefitDaysRemaining: 275
-      }
+        benefitDaysRemaining: 275,
+      },
     }),
 
     // 会员订单
@@ -125,8 +128,8 @@ export async function createOrders(prisma: PrismaClient, params: CreateOrdersPar
         benefitStartDate: new Date('2024-01-01'),
         benefitDurationDays: 365,
         activeDays: 150,
-        benefitDaysRemaining: 215
-      }
+        benefitDaysRemaining: 215,
+      },
     }),
 
     // 咨询服务订单
@@ -152,8 +155,8 @@ export async function createOrders(prisma: PrismaClient, params: CreateOrdersPar
         benefitStartDate: new Date('2024-03-01'),
         benefitDurationDays: 30,
         activeDays: 30,
-        benefitDaysRemaining: 0
-      }
+        benefitDaysRemaining: 0,
+      },
     }),
 
     // 实战项目订单
@@ -179,8 +182,8 @@ export async function createOrders(prisma: PrismaClient, params: CreateOrdersPar
         benefitStartDate: new Date('2024-02-15'),
         benefitDurationDays: 365,
         activeDays: 105,
-        benefitDaysRemaining: 260
-      }
+        benefitDaysRemaining: 260,
+      },
     }),
 
     // 未财务结单的订单
@@ -206,8 +209,8 @@ export async function createOrders(prisma: PrismaClient, params: CreateOrdersPar
         benefitStartDate: new Date('2024-03-20'),
         benefitDurationDays: 365,
         activeDays: 30,
-        benefitDaysRemaining: 335
-      }
+        benefitDaysRemaining: 335,
+      },
     }),
 
     // 美元支付的订单
@@ -233,10 +236,10 @@ export async function createOrders(prisma: PrismaClient, params: CreateOrdersPar
         benefitStartDate: new Date('2024-03-10'),
         benefitDurationDays: 365,
         activeDays: 40,
-        benefitDaysRemaining: 325
-      }
-    })
-  ])
+        benefitDaysRemaining: 325,
+      },
+    }),
+  ]);
 
-  return orders
+  return orders;
 }

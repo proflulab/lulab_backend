@@ -2,28 +2,29 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-06-20 04:09:42
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-07-04 10:21:54
+ * @LastEditTime: 2025-12-15 20:20:10
  * @FilePath: /lulab_backend/prisma/seeds/refunds.ts
  * @Description: 退款种子数据
- * 
- * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ *
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
-import { PrismaClient, Order, User } from '@prisma/client'
+import { PrismaClient, Order, User } from '@prisma/client';
 
 interface CreateRefundsParams {
   users: {
-    adminUser: User
-    financeUser: User
-    normalUsers: User[]
-  }
-  orders: Order[]
+    adminUser: User;
+    financeUser: User;
+    normalUsers: User[];
+  };
+  orders: Order[];
 }
 
-export async function createRefunds(prisma: PrismaClient, params: CreateRefundsParams) {
-
-
-  const { users, orders } = params
-  const { adminUser, financeUser, normalUsers } = users
+export async function createRefunds(
+  prisma: PrismaClient,
+  params: CreateRefundsParams,
+) {
+  const { users, orders } = params;
+  const { adminUser, financeUser, normalUsers } = users;
 
   // 创建退款记录
   const refunds = await Promise.all([
@@ -37,7 +38,7 @@ export async function createRefunds(prisma: PrismaClient, params: CreateRefundsP
         refundChannel: '抖音平台退款',
         approvalUrl: 'https://example.com/approval/AS_20240125_001',
         createdBy: adminUser.id,
-        refundAmount: 100.00,
+        refundAmount: 100.0,
         refundReason: '学员因个人原因申请部分退款',
         benefitEndedAt: new Date('2024-01-25'),
         benefitUsedDays: 10,
@@ -46,8 +47,8 @@ export async function createRefunds(prisma: PrismaClient, params: CreateRefundsP
         financialSettledAt: new Date('2024-01-30'),
         financialNote: '已完成退款处理',
         parentId: null,
-        productCategory: '课程'
-      }
+        productCategory: '课程',
+      },
     }),
 
     // 咨询服务的全额退款
@@ -60,7 +61,7 @@ export async function createRefunds(prisma: PrismaClient, params: CreateRefundsP
         refundChannel: '抖音平台退款',
         approvalUrl: 'https://example.com/approval/AS_20240305_002',
         createdBy: financeUser.id,
-        refundAmount: 199.00,
+        refundAmount: 199.0,
         refundReason: '服务质量不满意，申请全额退款',
         benefitEndedAt: new Date('2024-03-05'),
         benefitUsedDays: 4,
@@ -69,8 +70,8 @@ export async function createRefunds(prisma: PrismaClient, params: CreateRefundsP
         financialSettledAt: new Date('2024-03-08'),
         financialNote: '全额退款已处理',
         parentId: null,
-        productCategory: '咨询'
-      }
+        productCategory: '咨询',
+      },
     }),
 
     // 会员的退款申请（未处理）
@@ -83,7 +84,7 @@ export async function createRefunds(prisma: PrismaClient, params: CreateRefundsP
         refundChannel: '抖音平台退款',
         approvalUrl: 'https://example.com/approval/AS_20240315_003',
         createdBy: financeUser.id,
-        refundAmount: 800.00,
+        refundAmount: 800.0,
         refundReason: '学员搬家，无法继续学习',
         benefitEndedAt: null,
         benefitUsedDays: 74,
@@ -92,8 +93,8 @@ export async function createRefunds(prisma: PrismaClient, params: CreateRefundsP
         financialSettledAt: null,
         financialNote: null,
         parentId: null,
-        productCategory: '会员'
-      }
+        productCategory: '会员',
+      },
     }),
 
     // 资料包的退款（已拒绝）
@@ -106,7 +107,7 @@ export async function createRefunds(prisma: PrismaClient, params: CreateRefundsP
         refundChannel: '抖音平台退款',
         approvalUrl: 'https://example.com/approval/AS_20240220_004',
         createdBy: adminUser.id,
-        refundAmount: 0.00,
+        refundAmount: 0.0,
         refundReason: '已下载资料，不符合退款条件',
         benefitEndedAt: null,
         benefitUsedDays: 5,
@@ -115,12 +116,10 @@ export async function createRefunds(prisma: PrismaClient, params: CreateRefundsP
         financialSettledAt: new Date('2024-02-22'),
         financialNote: '退款申请被拒绝',
         parentId: null,
-        productCategory: '资料'
-      }
-    })
-  ])
+        productCategory: '资料',
+      },
+    }),
+  ]);
 
-
-
-  return refunds
+  return refunds;
 }

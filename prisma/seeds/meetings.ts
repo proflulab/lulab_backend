@@ -1,12 +1,13 @@
-/**
- * @Author: 杨仕明 shiming.y@qq.com
- * @Date: 2025-12-15
- * @Description: 会议数据种子模块
- * 
- * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
- */
-
-import { PrismaClient, MeetingPlatform, MeetingType, FileType, StorageType, ProcessingStatus, SummarySourceType, GenerationMethod } from '@prisma/client'
+import {
+  PrismaClient,
+  MeetingPlatform,
+  MeetingType,
+  FileType,
+  StorageType,
+  ProcessingStatus,
+  SummarySourceType,
+  GenerationMethod,
+} from '@prisma/client';
 
 // 会议配置数据
 const MEETING_CONFIGS = {
@@ -57,7 +58,7 @@ const MEETING_CONFIGS = {
     tags: ['紧急', '问题处理', '生产环境'],
     language: 'zh-CN',
   },
-} as const
+} as const;
 
 // 平台用户配置
 const PLATFORM_USER_CONFIGS = {
@@ -103,7 +104,7 @@ const PLATFORM_USER_CONFIGS = {
     userEmail: 'participant2@company.com',
     isActive: true,
   },
-} as const
+} as const;
 
 // 会议文件配置
 const MEETING_FILE_CONFIGS = {
@@ -127,7 +128,8 @@ const MEETING_FILE_CONFIGS = {
     fileSize: BigInt(102400), // 100KB
     storageType: StorageType.LOCAL,
     storagePath: '/transcripts/2024/12/15/meeting_transcript_20241215.txt',
-    storageUrl: 'https://example.com/transcripts/meeting_transcript_20241215.txt',
+    storageUrl:
+      'https://example.com/transcripts/meeting_transcript_20241215.txt',
     processingStatus: ProcessingStatus.COMPLETED,
     content: '会议转录内容示例...',
   },
@@ -142,7 +144,7 @@ const MEETING_FILE_CONFIGS = {
     storageUrl: 'https://example.com/summaries/meeting_summary_20241215.pdf',
     processingStatus: ProcessingStatus.COMPLETED,
   },
-} as const
+} as const;
 
 // 会议总结配置
 const MEETING_SUMMARY_CONFIGS = {
@@ -161,43 +163,44 @@ const MEETING_SUMMARY_CONFIGS = {
     ],
     actionItems: [
       { assignee: '张三', task: '跟进项目A的测试进度', deadline: '2024-12-22' },
-      { assignee: '李四', task: '协调资源解决项目B的技术问题', deadline: '2024-12-20' },
+      {
+        assignee: '李四',
+        task: '协调资源解决项目B的技术问题',
+        deadline: '2024-12-20',
+      },
     ],
-    decisions: [
-      '决定采用新的代码审查工具',
-      '调整项目B的开发计划',
-    ],
+    decisions: ['决定采用新的代码审查工具', '调整项目B的开发计划'],
     participants: [
       { name: '张三', role: '项目负责人', attendance: '全程参与' },
       { name: '李四', role: '技术负责人', attendance: '全程参与' },
     ],
     status: ProcessingStatus.COMPLETED,
   },
-} as const
+} as const;
 
 export interface CreatedMeetings {
   meetings: {
-    teamMeeting: any
-    clientMeeting: any
-    trainingMeeting: any
-    emergencyMeeting: any
-  }
+    teamMeeting: any;
+    clientMeeting: any;
+    trainingMeeting: any;
+    emergencyMeeting: any;
+  };
   platformUsers: {
-    host1: any
-    host2: any
-    host3: any
-    host4: any
-    participant1: any
-    participant2: any
-  }
+    host1: any;
+    host2: any;
+    host3: any;
+    host4: any;
+    participant1: any;
+    participant2: any;
+  };
   meetingFiles: {
-    recording: any
-    transcript: any
-    summary: any
-  }
+    recording: any;
+    transcript: any;
+    summary: any;
+  };
   meetingSummaries: {
-    teamSummary: any
-  }
+    teamSummary: any;
+  };
 }
 
 /**
@@ -209,7 +212,7 @@ async function createPlatformUser(
   platformUserId: string,
   userName: string,
   userEmail: string,
-  isActive: boolean = true
+  isActive: boolean = true,
 ) {
   return prisma.platformUser.upsert({
     where: {
@@ -227,7 +230,7 @@ async function createPlatformUser(
       isActive,
       lastSeenAt: new Date(),
     },
-  })
+  });
 }
 
 /**
@@ -238,11 +241,11 @@ async function createMeeting(
   meetingData: any,
   hostPlatformUserId?: string,
 ) {
-  const now = new Date()
-  const startTime = new Date(now.getTime() - 2 * 60 * 60 * 1000) // 2小时前
-  const endTime = new Date(now.getTime() - 1 * 60 * 60 * 1000) // 1小时前
+  const now = new Date();
+  const startTime = new Date(now.getTime() - 2 * 60 * 60 * 1000); // 2小时前
+  const endTime = new Date(now.getTime() - 1 * 60 * 60 * 1000); // 1小时前
 
-  const { hostUserName, ...dataToCreate } = meetingData
+  const { hostUserName, ...dataToCreate } = meetingData;
 
   return prisma.meeting.upsert({
     where: {
@@ -268,7 +271,7 @@ async function createMeeting(
       processingStatus: ProcessingStatus.COMPLETED,
       timezone: 'Asia/Shanghai',
     },
-  })
+  });
 }
 
 /**
@@ -277,14 +280,14 @@ async function createMeeting(
 async function createMeetingFile(
   prisma: PrismaClient,
   meetingId: string,
-  fileData: any
+  fileData: any,
 ) {
   return prisma.meetingFile.create({
     data: {
       meetingRecordId: meetingId,
       ...fileData,
     },
-  })
+  });
 }
 
 /**
@@ -295,7 +298,7 @@ async function createMeetingSummary(
   meetingId: string,
   summaryData: any,
   sourceFileId?: string,
-  createdBy?: string
+  createdBy?: string,
 ) {
   return prisma.meetingSummary.create({
     data: {
@@ -306,7 +309,7 @@ async function createMeetingSummary(
       processingTime: 30000, // 30秒
       status: ProcessingStatus.COMPLETED,
     },
-  })
+  });
 }
 
 /**
@@ -316,12 +319,14 @@ async function createMeetingParticipation(
   prisma: PrismaClient,
   meetingId: string,
   platformUserId: string,
-  userId?: string
+  userId?: string,
 ) {
-  const now = new Date()
-  const joinTime = new Date(now.getTime() - 1.5 * 60 * 60 * 1000) // 1.5小时前
-  const leftTime = new Date(now.getTime() - 0.5 * 60 * 60 * 1000) // 0.5小时前
-  const durationSeconds = Math.floor((leftTime.getTime() - joinTime.getTime()) / 1000)
+  const now = new Date();
+  const joinTime = new Date(now.getTime() - 1.5 * 60 * 60 * 1000); // 1.5小时前
+  const leftTime = new Date(now.getTime() - 0.5 * 60 * 60 * 1000); // 0.5小时前
+  const durationSeconds = Math.floor(
+    (leftTime.getTime() - joinTime.getTime()) / 1000,
+  );
 
   return prisma.meetingParticipation.create({
     data: {
@@ -333,7 +338,7 @@ async function createMeetingParticipation(
       durationSeconds,
       userRole: 1, // 普通参与者
     },
-  })
+  });
 }
 
 /**
@@ -342,59 +347,113 @@ async function createMeetingParticipation(
 async function createMeetingTranscript(
   prisma: PrismaClient,
   meetingId: string,
-  transcriptData: any
+  transcriptData: any,
 ) {
   return prisma.meetingTranscript.create({
     data: {
       meetingId,
       ...transcriptData,
     },
-  })
+  });
 }
 
-export async function createMeetings(prisma: PrismaClient, userId?: string): Promise<CreatedMeetings> {
+export async function createMeetings(
+  prisma: PrismaClient,
+  userId?: string,
+): Promise<CreatedMeetings> {
   // 创建平台用户
   const platformUsers = await Promise.all([
-    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.host1.platform, PLATFORM_USER_CONFIGS.host1.platformUserId, PLATFORM_USER_CONFIGS.host1.userName, PLATFORM_USER_CONFIGS.host1.userEmail),
-    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.host2.platform, PLATFORM_USER_CONFIGS.host2.platformUserId, PLATFORM_USER_CONFIGS.host2.userName, PLATFORM_USER_CONFIGS.host2.userEmail),
-    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.host3.platform, PLATFORM_USER_CONFIGS.host3.platformUserId, PLATFORM_USER_CONFIGS.host3.userName, PLATFORM_USER_CONFIGS.host3.userEmail),
-    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.host4.platform, PLATFORM_USER_CONFIGS.host4.platformUserId, PLATFORM_USER_CONFIGS.host4.userName, PLATFORM_USER_CONFIGS.host4.userEmail),
-    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.participant1.platform, PLATFORM_USER_CONFIGS.participant1.platformUserId, PLATFORM_USER_CONFIGS.participant1.userName, PLATFORM_USER_CONFIGS.participant1.userEmail),
-    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.participant2.platform, PLATFORM_USER_CONFIGS.participant2.platformUserId, PLATFORM_USER_CONFIGS.participant2.userName, PLATFORM_USER_CONFIGS.participant2.userEmail),
-  ])
+    createPlatformUser(
+      prisma,
+      PLATFORM_USER_CONFIGS.host1.platform,
+      PLATFORM_USER_CONFIGS.host1.platformUserId,
+      PLATFORM_USER_CONFIGS.host1.userName,
+      PLATFORM_USER_CONFIGS.host1.userEmail,
+    ),
+    createPlatformUser(
+      prisma,
+      PLATFORM_USER_CONFIGS.host2.platform,
+      PLATFORM_USER_CONFIGS.host2.platformUserId,
+      PLATFORM_USER_CONFIGS.host2.userName,
+      PLATFORM_USER_CONFIGS.host2.userEmail,
+    ),
+    createPlatformUser(
+      prisma,
+      PLATFORM_USER_CONFIGS.host3.platform,
+      PLATFORM_USER_CONFIGS.host3.platformUserId,
+      PLATFORM_USER_CONFIGS.host3.userName,
+      PLATFORM_USER_CONFIGS.host3.userEmail,
+    ),
+    createPlatformUser(
+      prisma,
+      PLATFORM_USER_CONFIGS.host4.platform,
+      PLATFORM_USER_CONFIGS.host4.platformUserId,
+      PLATFORM_USER_CONFIGS.host4.userName,
+      PLATFORM_USER_CONFIGS.host4.userEmail,
+    ),
+    createPlatformUser(
+      prisma,
+      PLATFORM_USER_CONFIGS.participant1.platform,
+      PLATFORM_USER_CONFIGS.participant1.platformUserId,
+      PLATFORM_USER_CONFIGS.participant1.userName,
+      PLATFORM_USER_CONFIGS.participant1.userEmail,
+    ),
+    createPlatformUser(
+      prisma,
+      PLATFORM_USER_CONFIGS.participant2.platform,
+      PLATFORM_USER_CONFIGS.participant2.platformUserId,
+      PLATFORM_USER_CONFIGS.participant2.userName,
+      PLATFORM_USER_CONFIGS.participant2.userEmail,
+    ),
+  ]);
 
-  const [
-    host1, host2, host3, host4, participant1, participant2
-  ] = platformUsers
+  const [host1, host2, host3, host4, participant1, participant2] =
+    platformUsers;
 
   // 创建会议记录
 
   const meetings = await Promise.all([
-    createMeeting(prisma, MEETING_CONFIGS.teamMeeting, host1.id, userId),
-    createMeeting(prisma, MEETING_CONFIGS.clientMeeting, host2.id, userId),
-    createMeeting(prisma, MEETING_CONFIGS.trainingMeeting, host3.id, userId),
-    createMeeting(prisma, MEETING_CONFIGS.emergencyMeeting, host4.id, userId),
-  ])
+    createMeeting(prisma, MEETING_CONFIGS.teamMeeting, host1.id),
+    createMeeting(prisma, MEETING_CONFIGS.clientMeeting, host2.id),
+    createMeeting(prisma, MEETING_CONFIGS.trainingMeeting, host3.id),
+    createMeeting(prisma, MEETING_CONFIGS.emergencyMeeting, host4.id),
+  ]);
 
-  const [teamMeeting, clientMeeting, trainingMeeting, emergencyMeeting] = meetings
+  const [teamMeeting, clientMeeting, trainingMeeting, emergencyMeeting] =
+    meetings;
 
   // 创建会议参与记录
   await Promise.all([
     createMeetingParticipation(prisma, teamMeeting.id, participant1.id, userId),
     createMeetingParticipation(prisma, teamMeeting.id, participant2.id, userId),
-    createMeetingParticipation(prisma, clientMeeting.id, participant1.id, userId),
-    createMeetingParticipation(prisma, trainingMeeting.id, participant1.id, userId),
-    createMeetingParticipation(prisma, emergencyMeeting.id, participant2.id, userId),
-  ])
+    createMeetingParticipation(
+      prisma,
+      clientMeeting.id,
+      participant1.id,
+      userId,
+    ),
+    createMeetingParticipation(
+      prisma,
+      trainingMeeting.id,
+      participant1.id,
+      userId,
+    ),
+    createMeetingParticipation(
+      prisma,
+      emergencyMeeting.id,
+      participant2.id,
+      userId,
+    ),
+  ]);
 
   // 创建会议文件
   const meetingFiles = await Promise.all([
     createMeetingFile(prisma, teamMeeting.id, MEETING_FILE_CONFIGS.recording),
     createMeetingFile(prisma, teamMeeting.id, MEETING_FILE_CONFIGS.transcript),
     createMeetingFile(prisma, teamMeeting.id, MEETING_FILE_CONFIGS.summary),
-  ])
+  ]);
 
-  const [recording, transcript, summaryFile] = meetingFiles
+  const [recording, transcript, summaryFile] = meetingFiles;
 
   // 创建会议转录记录
   await createMeetingTranscript(prisma, teamMeeting.id, {
@@ -404,7 +463,7 @@ export async function createMeetings(prisma: PrismaClient, userId?: string): Pro
     startTime: BigInt(Date.now() - 7200000), // 2小时前
     endTime: BigInt(Date.now() - 7140000), // 2小时前 + 1分钟
     text: '大家好，欢迎来到今天的周例会。首先我们来同步一下各项目的进展情况。',
-  })
+  });
 
   await createMeetingTranscript(prisma, teamMeeting.id, {
     platformUserId: participant1.id,
@@ -413,14 +472,20 @@ export async function createMeetings(prisma: PrismaClient, userId?: string): Pro
     startTime: BigInt(Date.now() - 7140000), // 2小时前 + 1分钟
     endTime: BigInt(Date.now() - 7080000), // 2小时前 + 2分钟
     text: '项目A目前进展顺利，预计可以在下周完成开发工作。',
-  })
+  });
 
   // 创建会议总结
   const meetingSummaries = await Promise.all([
-    createMeetingSummary(prisma, teamMeeting.id, MEETING_SUMMARY_CONFIGS.teamSummary, transcript.id, userId),
-  ])
+    createMeetingSummary(
+      prisma,
+      teamMeeting.id,
+      MEETING_SUMMARY_CONFIGS.teamSummary,
+      transcript.id,
+      userId,
+    ),
+  ]);
 
-  const [teamSummary] = meetingSummaries
+  const [teamSummary] = meetingSummaries;
 
   return {
     meetings: {
@@ -445,5 +510,5 @@ export async function createMeetings(prisma: PrismaClient, userId?: string): Pro
     meetingSummaries: {
       teamSummary,
     },
-  }
+  };
 }

@@ -1,18 +1,18 @@
-import { PrismaClient, Curriculum, Project } from '@prisma/client'
+import { PrismaClient, Curriculum, Project } from '@prisma/client';
 
 export interface CreateCurriculumsParams {
-  projects: Project[]
+  projects: Project[];
 }
 
 export interface CreatedCurriculums {
-  curriculums: Curriculum[]
+  curriculums: Curriculum[];
 }
 
 export async function createCurriculums(
   prisma: PrismaClient,
-  { projects }: CreateCurriculumsParams
+  { projects }: CreateCurriculumsParams,
 ): Promise<CreatedCurriculums> {
-  console.log('📖 开始创建课程数据...')
+  console.log('📖 开始创建课程数据...');
 
   const curriculumsData = [
     // Python数据分析实战项目课程
@@ -20,21 +20,22 @@ export async function createCurriculums(
       id: 'curr_001_01',
       projectId: 'proj_001',
       title: 'Python基础与环境搭建',
-      description: '学习Python基础语法，搭建开发环境，了解Jupyter Notebook的使用',
+      description:
+        '学习Python基础语法，搭建开发环境，了解Jupyter Notebook的使用',
       week: 1,
       topics: [
         'Python安装与配置',
         '基础语法学习',
         'Jupyter Notebook使用',
         '变量与数据类型',
-        '控制流程'
+        '控制流程',
       ],
       goals: [
         '能够搭建Python开发环境',
         '掌握Python基础语法',
         '熟练使用Jupyter Notebook',
-        '理解变量和数据类型概念'
-      ]
+        '理解变量和数据类型概念',
+      ],
     },
     {
       id: 'curr_001_02',
@@ -47,14 +48,14 @@ export async function createCurriculums(
         '数组索引与切片',
         '数组运算',
         '广播机制',
-        '常用数学函数'
+        '常用数学函数',
       ],
       goals: [
         '掌握NumPy数组操作',
         '理解广播机制',
         '能够进行数组运算',
-        '熟练使用数学函数'
-      ]
+        '熟练使用数学函数',
+      ],
     },
     {
       id: 'curr_001_03',
@@ -67,14 +68,14 @@ export async function createCurriculums(
         '数据读取与保存',
         '数据选择与过滤',
         '数据清洗技巧',
-        '数据合并与连接'
+        '数据合并与连接',
       ],
       goals: [
         '掌握Pandas基本操作',
         '能够读取各种格式数据',
         '掌握数据清洗技巧',
-        '理解数据合并方法'
-      ]
+        '理解数据合并方法',
+      ],
     },
     {
       id: 'curr_001_04',
@@ -87,14 +88,14 @@ export async function createCurriculums(
         'Seaborn统计图表',
         '图表美化技巧',
         '交互式图表',
-        '图表保存与导出'
+        '图表保存与导出',
       ],
       goals: [
         '掌握基础绘图技能',
         '能够创建统计图表',
         '掌握图表美化方法',
-        '理解可视化设计原则'
-      ]
+        '理解可视化设计原则',
+      ],
     },
     // 机器学习算法实践课程
     {
@@ -108,14 +109,14 @@ export async function createCurriculums(
         '监督学习vs无监督学习',
         '机器学习工作流程',
         '常见应用场景',
-        '评估指标介绍'
+        '评估指标介绍',
       ],
       goals: [
         '理解机器学习基本概念',
         '掌握学习类型分类',
         '了解工作流程',
-        '认识评估指标'
-      ]
+        '认识评估指标',
+      ],
     },
     {
       id: 'curr_002_02',
@@ -128,14 +129,14 @@ export async function createCurriculums(
         '最小二乘法',
         '逻辑回归原理',
         '梯度下降算法',
-        'scikit-learn实现'
+        'scikit-learn实现',
       ],
       goals: [
         '理解回归算法原理',
         '掌握梯度下降方法',
         '能够实现回归模型',
-        '理解模型评估方法'
-      ]
+        '理解模型评估方法',
+      ],
     },
     // 深度学习与神经网络课程
     {
@@ -149,14 +150,14 @@ export async function createCurriculums(
         '多层感知机',
         '激活函数',
         '前向传播',
-        '反向传播算法'
+        '反向传播算法',
       ],
       goals: [
         '理解神经网络结构',
         '掌握前向传播过程',
         '理解反向传播原理',
-        '熟悉激活函数作用'
-      ]
+        '熟悉激活函数作用',
+      ],
     },
     // Web全栈开发实战课程
     {
@@ -170,14 +171,14 @@ export async function createCurriculums(
         'JSX语法',
         '组件概念',
         'Props和State',
-        '事件处理'
+        '事件处理',
       ],
       goals: [
         '掌握React基础概念',
         '能够创建React组件',
         '理解Props和State',
-        '掌握事件处理方法'
-      ]
+        '掌握事件处理方法',
+      ],
     },
     {
       id: 'curr_004_02',
@@ -190,14 +191,14 @@ export async function createCurriculums(
         'Express框架',
         'RESTful API设计',
         '中间件使用',
-        '错误处理'
+        '错误处理',
       ],
       goals: [
         '掌握Node.js基础',
         '能够使用Express框架',
         '理解RESTful API设计',
-        '掌握中间件概念'
-      ]
+        '掌握中间件概念',
+      ],
     },
     // 移动应用开发课程
     {
@@ -211,29 +212,29 @@ export async function createCurriculums(
         '基础组件介绍',
         '样式系统',
         '导航系统',
-        '调试技巧'
+        '调试技巧',
       ],
       goals: [
         '搭建React Native环境',
         '掌握基础组件使用',
         '理解样式系统',
-        '掌握导航配置'
-      ]
-    }
-  ]
+        '掌握导航配置',
+      ],
+    },
+  ];
 
-  const curriculums: Curriculum[] = []
+  const curriculums: Curriculum[] = [];
 
   for (const curriculumData of curriculumsData) {
     const curriculum = await prisma.curriculum.upsert({
       where: { id: curriculumData.id },
       update: curriculumData,
-      create: curriculumData
-    })
-    curriculums.push(curriculum)
-    console.log(`✅ 创建课程: ${curriculum.title} (第${curriculum.week}周)`)
+      create: curriculumData,
+    });
+    curriculums.push(curriculum);
+    console.log(`✅ 创建课程: ${curriculum.title} (第${curriculum.week}周)`);
   }
 
-  console.log(`📚 课程数据创建完成，共 ${curriculums.length} 个课程`)
-  return { curriculums }
+  console.log(`📚 课程数据创建完成，共 ${curriculums.length} 个课程`);
+  return { curriculums };
 }
