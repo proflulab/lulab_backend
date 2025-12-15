@@ -2,7 +2,6 @@ import {
   PrismaClient,
   MeetingPlatform,
   MeetingType,
-  FileType,
   ProcessingStatus,
   GenerationMethod,
   Platform,
@@ -169,6 +168,12 @@ export interface CreatedMeetings {
     participant1: any;
     participant2: any;
   };
+  meetingFiles: {
+    recording: any;
+  };
+  meetingSummaries: {
+    teamSummary: any;
+  };
 }
 
 /**
@@ -319,7 +324,6 @@ async function createMeetingParticipant(
   prisma: PrismaClient,
   meetingId: string,
   platformUserId: string,
-  userId?: string,
 ) {
   const now = new Date();
   const joinTime = new Date(now.getTime() - 1.5 * 60 * 60 * 1000); // 1.5小时前
@@ -332,7 +336,6 @@ async function createMeetingParticipant(
     data: {
       meetingId,
       platformUserId,
-      userId,
       joinTime,
       leftTime,
       durationSeconds,
@@ -452,25 +455,22 @@ export async function createMeetings(
 
   // 创建会议参与记录
   await Promise.all([
-    createMeetingParticipant(prisma, teamMeeting.id, participant1.id, userId),
-    createMeetingParticipant(prisma, teamMeeting.id, participant2.id, userId),
+    createMeetingParticipant(prisma, teamMeeting.id, participant1.id),
+    createMeetingParticipant(prisma, teamMeeting.id, participant2.id),
     createMeetingParticipant(
       prisma,
       clientMeeting.id,
       participant1.id,
-      userId,
     ),
     createMeetingParticipant(
       prisma,
       trainingMeeting.id,
       participant1.id,
-      userId,
     ),
     createMeetingParticipant(
       prisma,
       emergencyMeeting.id,
       participant2.id,
-      userId,
     ),
   ]);
 

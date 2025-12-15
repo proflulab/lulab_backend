@@ -173,6 +173,10 @@ model MeetingParticipant {
   meetingId String
   meeting   Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 
+  // 参会人员
+  platformUserId String
+  platformUser   PlatformUser @relation(fields: [platformUserId], references: [id])
+
   // 参会行为数据
   joinTime        DateTime?
   leftTime        DateTime?

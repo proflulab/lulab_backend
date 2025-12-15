@@ -26,10 +26,11 @@ model PlatformUser {
   lastSeenAt DateTime? // 最后出现时间
 
   // 关联关系
-  hostedMeetings    Meeting[]           @relation("HostedMeetings") // 主持的会议
-  paragraphs        Paragraph[]         @relation("Speaker") // 关联的段落
-  actions           MeetingUserAction[]
-  meetingRecordings MeetingRecording[]
+  hostedMeetings      Meeting[]            @relation("HostedMeetings") // 主持的会议
+  paragraphs          Paragraph[]          @relation("Speaker") // 关联的段落
+  actions             MeetingUserAction[]
+  meetingRecordings   MeetingRecording[]
+  meetingParticipants MeetingParticipant[]
 
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
