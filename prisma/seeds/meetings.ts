@@ -14,7 +14,7 @@ const MEETING_CONFIGS = {
     title: '周例会 - 项目进度同步',
     description: '团队周例会，同步各项目进度和讨论下周计划',
     platform: MeetingPlatform.TENCENT_MEETING,
-    platformMeetingId: '123456789',
+    MeetingId: '123456789',
     meetingCode: '123-456-789',
     type: MeetingType.SCHEDULED,
     hostUserName: '张三',
@@ -26,7 +26,7 @@ const MEETING_CONFIGS = {
     title: '客户需求评审会议',
     description: '与客户讨论新功能需求和技术实现方案',
     platform: MeetingPlatform.ZOOM,
-    platformMeetingId: '987654321',
+    MeetingId: '987654321',
     meetingCode: '987-654-321',
     type: MeetingType.SCHEDULED,
     hostUserName: '李四',
@@ -38,7 +38,7 @@ const MEETING_CONFIGS = {
     title: '新员工培训 - 产品功能介绍',
     description: '为新入职员工介绍公司主要产品功能和使用方法',
     platform: MeetingPlatform.TENCENT_MEETING,
-    platformMeetingId: '555666777',
+    MeetingId: '555666777',
     meetingCode: '555-666-777',
     type: MeetingType.WEBINAR,
     hostUserName: '王五',
@@ -50,7 +50,7 @@ const MEETING_CONFIGS = {
     title: '紧急问题处理会议',
     description: '讨论生产环境紧急问题的处理方案',
     platform: MeetingPlatform.DINGTALK,
-    platformMeetingId: '111222333',
+    MeetingId: '111222333',
     type: MeetingType.INSTANT,
     hostUserName: '赵六',
     participantCount: 6,
@@ -112,7 +112,7 @@ const MEETING_FILE_CONFIGS = {
     originalFileName: '会议录制_20241215.mp4',
     fileType: FileType.VIDEO,
     mimeType: 'video/mp4',
-    fileSize: 524288000, // 500MB
+    fileSize: BigInt(524288000), // 500MB
     duration: 3600, // 1小时
     storageType: StorageType.LOCAL,
     storagePath: '/recordings/2024/12/15/meeting_recording_20241215.mp4',
@@ -124,7 +124,7 @@ const MEETING_FILE_CONFIGS = {
     originalFileName: '会议转录_20241215.txt',
     fileType: FileType.TRANSCRIPT,
     mimeType: 'text/plain',
-    fileSize: 102400, // 100KB
+    fileSize: BigInt(102400), // 100KB
     storageType: StorageType.LOCAL,
     storagePath: '/transcripts/2024/12/15/meeting_transcript_20241215.txt',
     storageUrl: 'https://example.com/transcripts/meeting_transcript_20241215.txt',
@@ -136,7 +136,7 @@ const MEETING_FILE_CONFIGS = {
     originalFileName: '会议纪要_20241215.pdf',
     fileType: FileType.SUMMARY,
     mimeType: 'application/pdf',
-    fileSize: 204800, // 200KB
+    fileSize: BigInt(204800), // 200KB
     storageType: StorageType.LOCAL,
     storagePath: '/summaries/2024/12/15/meeting_summary_20241215.pdf',
     storageUrl: 'https://example.com/summaries/meeting_summary_20241215.pdf',
@@ -154,23 +154,23 @@ const MEETING_SUMMARY_CONFIGS = {
     aiModel: 'gpt-4',
     confidence: 0.95,
     language: 'zh-CN',
-    keyPoints: JSON.stringify([
+    keyPoints: [
       '项目A进度正常，预计下周完成',
       '项目B遇到技术难点，需要额外支持',
       '团队需要加强代码审查流程',
-    ]),
-    actionItems: JSON.stringify([
+    ],
+    actionItems: [
       { assignee: '张三', task: '跟进项目A的测试进度', deadline: '2024-12-22' },
       { assignee: '李四', task: '协调资源解决项目B的技术问题', deadline: '2024-12-20' },
-    ]),
-    decisions: JSON.stringify([
+    ],
+    decisions: [
       '决定采用新的代码审查工具',
       '调整项目B的开发计划',
-    ]),
-    participants: JSON.stringify([
+    ],
+    participants: [
       { name: '张三', role: '项目负责人', attendance: '全程参与' },
       { name: '李四', role: '技术负责人', attendance: '全程参与' },
-    ]),
+    ],
     status: ProcessingStatus.COMPLETED,
   },
 } as const
@@ -237,25 +237,29 @@ async function createMeeting(
   prisma: PrismaClient,
   meetingData: any,
   hostPlatformUserId?: string,
-  userId?: string
 ) {
   const now = new Date()
   const startTime = new Date(now.getTime() - 2 * 60 * 60 * 1000) // 2小时前
   const endTime = new Date(now.getTime() - 1 * 60 * 60 * 1000) // 1小时前
 
-  return prisma.meetings.upsert({
+  const { hostUserName, ...dataToCreate } = meetingData
+
+  return prisma.meeting.upsert({
     where: {
-      platform_platformMeetingId: {
+      platform_MeetingId: {
         platform: meetingData.platform,
-        platformMeetingId: meetingData.platformMeetingId,
+        MeetingId: meetingData.MeetingId,
       },
     },
-    update: {},
-    create: {
-      ...meetingData,
+    update: {
       hostPlatformUserId,
-      hostUserId: userId,
+      updatedAt: new Date(),
+    },
+    create: {
+      ...dataToCreate,
+      hostPlatformUserId,
       scheduledStartTime: startTime,
+      scheduledEndTime: endTime,
       startTime,
       endTime,
       durationSeconds: 3600, // 1小时
@@ -263,7 +267,6 @@ async function createMeeting(
       recordingStatus: ProcessingStatus.COMPLETED,
       processingStatus: ProcessingStatus.COMPLETED,
       timezone: 'Asia/Shanghai',
-      userId,
     },
   })
 }
@@ -365,6 +368,7 @@ export async function createMeetings(prisma: PrismaClient, userId?: string): Pro
   ] = platformUsers
 
   // 创建会议记录
+
   const meetings = await Promise.all([
     createMeeting(prisma, MEETING_CONFIGS.teamMeeting, host1.id, userId),
     createMeeting(prisma, MEETING_CONFIGS.clientMeeting, host2.id, userId),
@@ -397,20 +401,18 @@ export async function createMeetings(prisma: PrismaClient, userId?: string): Pro
     platformUserId: host1.id,
     paragraphId: 'para_001',
     speakerName: '张三',
-    startTime: Date.now() - 7200000, // 2小时前
-    endTime: Date.now() - 7140000, // 2小时前 + 1分钟
+    startTime: BigInt(Date.now() - 7200000), // 2小时前
+    endTime: BigInt(Date.now() - 7140000), // 2小时前 + 1分钟
     text: '大家好，欢迎来到今天的周例会。首先我们来同步一下各项目的进展情况。',
-    userId,
   })
 
   await createMeetingTranscript(prisma, teamMeeting.id, {
     platformUserId: participant1.id,
     paragraphId: 'para_002',
     speakerName: '参与者1',
-    startTime: Date.now() - 7140000, // 2小时前 + 1分钟
-    endTime: Date.now() - 7080000, // 2小时前 + 2分钟
+    startTime: BigInt(Date.now() - 7140000), // 2小时前 + 1分钟
+    endTime: BigInt(Date.now() - 7080000), // 2小时前 + 2分钟
     text: '项目A目前进展顺利，预计可以在下周完成开发工作。',
-    userId,
   })
 
   // 创建会议总结

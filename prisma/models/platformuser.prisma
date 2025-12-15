@@ -1,0 +1,56 @@
+// 平台用户信息表
+model PlatformUser {
+    id String @id @default(cuid())
+
+    // 平台信息
+    platform       Platform // 平台枚举
+    platformUserId String // 平台用户ID
+
+    // 用户基本信息
+    userName    String? // 用户显示名称
+    email       String? // 用户邮箱
+    countryCode String? // 国家代码 如 +86
+    phone       String? // 电话号码
+    avatar      String? // 用户头像URL
+
+    // 本地用户关联
+    userId String? // 关联到本地用户表
+    user   User?   @relation(fields: [userId], references: [id])
+
+    // 平台特定数据
+    platformData Json? // 存储各平台特有的数据
+    phoneHash    String? // 腾讯会议加密手机号
+
+    // 用户状态
+    isActive   Boolean   @default(true)
+    lastSeenAt DateTime? // 最后出现时间
+
+    // 关联关系
+    participations MeetingParticipation[] // 参会记录
+    hostedMeetings Meeting[]              @relation("HostedMeetings") // 主持的会议
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([platform, platformUserId]) // 确保平台用户ID唯一
+    @@index([email])
+    @@index([userId])
+    @@index([phoneHash])
+    @@index([platform])
+    @@index([userName]) // 用户名查询优化
+    @@index([isActive]) // 活跃用户查询优化
+    @@index([lastSeenAt]) // 最后出现时间查询优化
+    @@map("platform_users")
+}
+
+// 平台枚举
+enum Platform {
+    TENCENT_MEETING // 腾讯会议
+    ZOOM // Zoom
+    TEAMS // Microsoft Teams
+    DINGTALK // 钉钉
+    FEISHU // 飞书
+    WEBEX // Cisco Webex
+    VOOV // 腾讯会议国际版
+    OTHER // 其他平台
+}
