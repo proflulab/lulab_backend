@@ -31,4 +31,5 @@ model OrderRefund {
   @@index([createdBy]) // 创建人查询
   @@index([isFinancialSettled]) // 财务结算状态
   @@index([submittedAt]) // 提交时间查询
+  @@map("order_refunds")
 }

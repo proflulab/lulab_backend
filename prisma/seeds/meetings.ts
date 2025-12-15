@@ -3,10 +3,10 @@ import {
   MeetingPlatform,
   MeetingType,
   FileType,
-  StorageType,
   ProcessingStatus,
-  SummarySourceType,
   GenerationMethod,
+  Platform,
+  StorageProvider,
 } from '@prisma/client';
 
 // 会议配置数据
@@ -15,7 +15,7 @@ const MEETING_CONFIGS = {
     title: '周例会 - 项目进度同步',
     description: '团队周例会，同步各项目进度和讨论下周计划',
     platform: MeetingPlatform.TENCENT_MEETING,
-    MeetingId: '123456789',
+    meetingId: '123456789',
     meetingCode: '123-456-789',
     type: MeetingType.SCHEDULED,
     hostUserName: '张三',
@@ -27,7 +27,7 @@ const MEETING_CONFIGS = {
     title: '客户需求评审会议',
     description: '与客户讨论新功能需求和技术实现方案',
     platform: MeetingPlatform.ZOOM,
-    MeetingId: '987654321',
+    meetingId: '987654321',
     meetingCode: '987-654-321',
     type: MeetingType.SCHEDULED,
     hostUserName: '李四',
@@ -39,7 +39,7 @@ const MEETING_CONFIGS = {
     title: '新员工培训 - 产品功能介绍',
     description: '为新入职员工介绍公司主要产品功能和使用方法',
     platform: MeetingPlatform.TENCENT_MEETING,
-    MeetingId: '555666777',
+    meetingId: '555666777',
     meetingCode: '555-666-777',
     type: MeetingType.WEBINAR,
     hostUserName: '王五',
@@ -51,7 +51,7 @@ const MEETING_CONFIGS = {
     title: '紧急问题处理会议',
     description: '讨论生产环境紧急问题的处理方案',
     platform: MeetingPlatform.DINGTALK,
-    MeetingId: '111222333',
+    meetingId: '111222333',
     type: MeetingType.INSTANT,
     hostUserName: '赵六',
     participantCount: 6,
@@ -63,45 +63,45 @@ const MEETING_CONFIGS = {
 // 平台用户配置
 const PLATFORM_USER_CONFIGS = {
   host1: {
-    platform: MeetingPlatform.TENCENT_MEETING,
+    platform: Platform.TENCENT_MEETING,
     platformUserId: 'user_12345',
     userName: '张三',
-    userEmail: 'zhangsan@company.com',
+    email: 'zhangsan@company.com',
     isActive: true,
   },
   host2: {
-    platform: MeetingPlatform.ZOOM,
+    platform: Platform.ZOOM,
     platformUserId: 'user_67890',
     userName: '李四',
-    userEmail: 'lisi@company.com',
+    email: 'lisi@company.com',
     isActive: true,
   },
   host3: {
-    platform: MeetingPlatform.TENCENT_MEETING,
+    platform: Platform.TENCENT_MEETING,
     platformUserId: 'user_54321',
     userName: '王五',
-    userEmail: 'wangwu@company.com',
+    email: 'wangwu@company.com',
     isActive: true,
   },
   host4: {
-    platform: MeetingPlatform.DINGTALK,
+    platform: Platform.DINGTALK,
     platformUserId: 'user_98765',
     userName: '赵六',
-    userEmail: 'zhaoliu@company.com',
+    email: 'zhaoliu@company.com',
     isActive: true,
   },
   participant1: {
-    platform: MeetingPlatform.TENCENT_MEETING,
+    platform: Platform.TENCENT_MEETING,
     platformUserId: 'participant_001',
     userName: '参与者1',
-    userEmail: 'participant1@company.com',
+    email: 'participant1@company.com',
     isActive: true,
   },
   participant2: {
-    platform: MeetingPlatform.TENCENT_MEETING,
+    platform: Platform.TENCENT_MEETING,
     platformUserId: 'participant_002',
     userName: '参与者2',
-    userEmail: 'participant2@company.com',
+    email: 'participant2@company.com',
     isActive: true,
   },
 } as const;
@@ -109,49 +109,25 @@ const PLATFORM_USER_CONFIGS = {
 // 会议文件配置
 const MEETING_FILE_CONFIGS = {
   recording: {
-    fileName: 'meeting_recording_20241215.mp4',
-    originalFileName: '会议录制_20241215.mp4',
-    fileType: FileType.VIDEO,
-    mimeType: 'video/mp4',
-    fileSize: BigInt(524288000), // 500MB
-    duration: 3600, // 1小时
-    storageType: StorageType.LOCAL,
-    storagePath: '/recordings/2024/12/15/meeting_recording_20241215.mp4',
-    storageUrl: 'https://example.com/recordings/meeting_recording_20241215.mp4',
-    processingStatus: ProcessingStatus.COMPLETED,
-  },
-  transcript: {
-    fileName: 'meeting_transcript_20241215.txt',
-    originalFileName: '会议转录_20241215.txt',
-    fileType: FileType.TRANSCRIPT,
-    mimeType: 'text/plain',
-    fileSize: BigInt(102400), // 100KB
-    storageType: StorageType.LOCAL,
-    storagePath: '/transcripts/2024/12/15/meeting_transcript_20241215.txt',
-    storageUrl:
-      'https://example.com/transcripts/meeting_transcript_20241215.txt',
-    processingStatus: ProcessingStatus.COMPLETED,
-    content: '会议转录内容示例...',
-  },
-  summary: {
-    fileName: 'meeting_summary_20241215.pdf',
-    originalFileName: '会议纪要_20241215.pdf',
-    fileType: FileType.SUMMARY,
-    mimeType: 'application/pdf',
-    fileSize: BigInt(204800), // 200KB
-    storageType: StorageType.LOCAL,
-    storagePath: '/summaries/2024/12/15/meeting_summary_20241215.pdf',
-    storageUrl: 'https://example.com/summaries/meeting_summary_20241215.pdf',
-    processingStatus: ProcessingStatus.COMPLETED,
+    // StorageObject fields
+    provider: StorageProvider.LOCAL,
+    bucket: 'recordings',
+    objectKey: '2024/12/15/meeting_recording_20241215.mp4',
+    contentType: 'video/mp4',
+    sizeBytes: BigInt(524288000), // 500MB
+
+    // MeetingRecordingFile fields
+    fileType: 0, // 假设0是某种类型，或者根据Model定义，这里先用0，因为Model里是Int default 0
+    durationMs: BigInt(3600000), // 1小时
+    resolution: '1920x1080',
   },
 } as const;
 
-// 会议总结配置
+// 会议总结配置 (Updated structure)
 const MEETING_SUMMARY_CONFIGS = {
   teamSummary: {
     title: '周例会总结 - 2024年12月第3周',
     content: '本次会议主要讨论了各项目的进展情况...',
-    sourceType: SummarySourceType.TRANSCRIPT,
     generatedBy: GenerationMethod.AI,
     aiModel: 'gpt-4',
     confidence: 0.95,
@@ -193,14 +169,6 @@ export interface CreatedMeetings {
     participant1: any;
     participant2: any;
   };
-  meetingFiles: {
-    recording: any;
-    transcript: any;
-    summary: any;
-  };
-  meetingSummaries: {
-    teamSummary: any;
-  };
 }
 
 /**
@@ -208,10 +176,10 @@ export interface CreatedMeetings {
  */
 async function createPlatformUser(
   prisma: PrismaClient,
-  platform: MeetingPlatform,
+  platform: Platform,
   platformUserId: string,
   userName: string,
-  userEmail: string,
+  email: string,
   isActive: boolean = true,
 ) {
   return prisma.platformUser.upsert({
@@ -226,7 +194,7 @@ async function createPlatformUser(
       platform,
       platformUserId,
       userName,
-      userEmail,
+      email,
       isActive,
       lastSeenAt: new Date(),
     },
@@ -245,13 +213,14 @@ async function createMeeting(
   const startTime = new Date(now.getTime() - 2 * 60 * 60 * 1000); // 2小时前
   const endTime = new Date(now.getTime() - 1 * 60 * 60 * 1000); // 1小时前
 
-  const { hostUserName, ...dataToCreate } = meetingData;
+  const { hostUserName, meetingId, ...dataToCreate } = meetingData;
 
+  // 根据 model: @@unique([platform, meetingId])
   return prisma.meeting.upsert({
     where: {
-      platform_MeetingId: {
+      platform_meetingId: {
         platform: meetingData.platform,
-        MeetingId: meetingData.MeetingId,
+        meetingId: meetingId,
       },
     },
     update: {
@@ -260,11 +229,12 @@ async function createMeeting(
     },
     create: {
       ...dataToCreate,
+      meetingId,
       hostPlatformUserId,
-      scheduledStartTime: startTime,
-      scheduledEndTime: endTime,
-      startTime,
-      endTime,
+      scheduledStartAt: startTime,
+      scheduledEndAt: endTime,
+      startAt: startTime,
+      endAt: endTime,
       durationSeconds: 3600, // 1小时
       hasRecording: true,
       recordingStatus: ProcessingStatus.COMPLETED,
@@ -275,20 +245,50 @@ async function createMeeting(
 }
 
 /**
- * 创建会议文件
+ * 创建会议录制和相关文件
  */
-async function createMeetingFile(
+async function createMeetingRecording(
   prisma: PrismaClient,
   meetingId: string,
-  fileData: any,
+  recorderUserId: string | null, // PlatformUser ID? No, definition says User? but here we might not have User. let's assume null for now.
+  fileConfig: typeof MEETING_FILE_CONFIGS.recording
 ) {
-  return prisma.meetingFile.create({
+  // 1. Create StorageObject
+  const storageObject = await prisma.storageObject.create({
     data: {
-      meetingRecordId: meetingId,
-      ...fileData,
-    },
+      provider: fileConfig.provider,
+      bucket: fileConfig.bucket,
+      objectKey: fileConfig.objectKey,
+      contentType: fileConfig.contentType,
+      sizeBytes: fileConfig.sizeBytes,
+    }
   });
+
+  // 2. Create MeetingRecording
+  const meetingRecording = await prisma.meetingRecording.create({
+    data: {
+      meetingId,
+      tenantId: '00000000-0000-0000-0000-000000000000', // Mock UUID if needed, or better, make it optional/valid. The schema says tenantId String @db.Uuid. We need a valid UUID.
+      // Wait, tenantId is required in MeetingRecording. I'll generate a dummy one or use a consistent one.
+      startAt: new Date(),
+      endAt: new Date(),
+    }
+  });
+
+  // 3. Create MeetingRecordingFile linked to StorageObject and Recording
+  const recordingFile = await prisma.meetingRecordingFile.create({
+    data: {
+      tenantId: '00000000-0000-0000-0000-000000000000',
+      recordingId: meetingRecording.id,
+      fileObjectId: storageObject.id,
+      durationMs: fileConfig.durationMs,
+      resolution: fileConfig.resolution,
+    }
+  });
+
+  return { meetingRecording, recordingFile, storageObject };
 }
+
 
 /**
  * 创建会议总结
@@ -297,14 +297,14 @@ async function createMeetingSummary(
   prisma: PrismaClient,
   meetingId: string,
   summaryData: any,
-  sourceFileId?: string,
+  transcriptId?: string,
   createdBy?: string,
 ) {
   return prisma.meetingSummary.create({
     data: {
       meetingId,
       ...summaryData,
-      sourceFileId,
+      transcriptId,
       createdBy,
       processingTime: 30000, // 30秒
       status: ProcessingStatus.COMPLETED,
@@ -315,7 +315,7 @@ async function createMeetingSummary(
 /**
  * 创建会议参与记录
  */
-async function createMeetingParticipation(
+async function createMeetingParticipant(
   prisma: PrismaClient,
   meetingId: string,
   platformUserId: string,
@@ -328,7 +328,7 @@ async function createMeetingParticipation(
     (leftTime.getTime() - joinTime.getTime()) / 1000,
   );
 
-  return prisma.meetingParticipation.create({
+  return prisma.meetingParticipant.create({
     data: {
       meetingId,
       platformUserId,
@@ -342,19 +342,47 @@ async function createMeetingParticipation(
 }
 
 /**
- * 创建会议转录记录
+ * 创建转录记录 (Transcript -> Paragraph -> Sentence)
  */
-async function createMeetingTranscript(
+async function createTranscriptWithParagraphs(
   prisma: PrismaClient,
-  meetingId: string,
-  transcriptData: any,
+  meetingRecordingId: string,
+  speakerPlatformUserId: string,
+  paragraphIdx: string,
+  text: string
 ) {
-  return prisma.meetingTranscript.create({
+  // 1. Create Transcript
+  const transcript = await prisma.transcript.create({
     data: {
-      meetingId,
-      ...transcriptData,
-    },
+      recordingId: meetingRecordingId,
+      language: 'zh-CN',
+      status: 1, // completed
+    }
   });
+
+  // 2. Create Paragraph
+  const paragraph = await prisma.paragraph.create({
+    data: {
+      transcriptId: transcript.id,
+      pid: paragraphIdx,
+      startTimeMs: BigInt(0),
+      endTimeMs: BigInt(10000),
+      speakerId: speakerPlatformUserId,
+    }
+  });
+
+  // 3. Create Sentence (where text lives)
+  await prisma.sentence.create({
+    data: {
+      paragraphId: paragraph.id,
+      sid: paragraphIdx + '_s1',
+      startTimeMs: BigInt(0),
+      endTimeMs: BigInt(10000),
+      text: text
+    }
+  });
+
+  return transcript;
 }
 
 export async function createMeetings(
@@ -368,42 +396,42 @@ export async function createMeetings(
       PLATFORM_USER_CONFIGS.host1.platform,
       PLATFORM_USER_CONFIGS.host1.platformUserId,
       PLATFORM_USER_CONFIGS.host1.userName,
-      PLATFORM_USER_CONFIGS.host1.userEmail,
+      PLATFORM_USER_CONFIGS.host1.email,
     ),
     createPlatformUser(
       prisma,
       PLATFORM_USER_CONFIGS.host2.platform,
       PLATFORM_USER_CONFIGS.host2.platformUserId,
       PLATFORM_USER_CONFIGS.host2.userName,
-      PLATFORM_USER_CONFIGS.host2.userEmail,
+      PLATFORM_USER_CONFIGS.host2.email,
     ),
     createPlatformUser(
       prisma,
       PLATFORM_USER_CONFIGS.host3.platform,
       PLATFORM_USER_CONFIGS.host3.platformUserId,
       PLATFORM_USER_CONFIGS.host3.userName,
-      PLATFORM_USER_CONFIGS.host3.userEmail,
+      PLATFORM_USER_CONFIGS.host3.email,
     ),
     createPlatformUser(
       prisma,
       PLATFORM_USER_CONFIGS.host4.platform,
       PLATFORM_USER_CONFIGS.host4.platformUserId,
       PLATFORM_USER_CONFIGS.host4.userName,
-      PLATFORM_USER_CONFIGS.host4.userEmail,
+      PLATFORM_USER_CONFIGS.host4.email,
     ),
     createPlatformUser(
       prisma,
       PLATFORM_USER_CONFIGS.participant1.platform,
       PLATFORM_USER_CONFIGS.participant1.platformUserId,
       PLATFORM_USER_CONFIGS.participant1.userName,
-      PLATFORM_USER_CONFIGS.participant1.userEmail,
+      PLATFORM_USER_CONFIGS.participant1.email,
     ),
     createPlatformUser(
       prisma,
       PLATFORM_USER_CONFIGS.participant2.platform,
       PLATFORM_USER_CONFIGS.participant2.platformUserId,
       PLATFORM_USER_CONFIGS.participant2.userName,
-      PLATFORM_USER_CONFIGS.participant2.userEmail,
+      PLATFORM_USER_CONFIGS.participant2.email,
     ),
   ]);
 
@@ -424,21 +452,21 @@ export async function createMeetings(
 
   // 创建会议参与记录
   await Promise.all([
-    createMeetingParticipation(prisma, teamMeeting.id, participant1.id, userId),
-    createMeetingParticipation(prisma, teamMeeting.id, participant2.id, userId),
-    createMeetingParticipation(
+    createMeetingParticipant(prisma, teamMeeting.id, participant1.id, userId),
+    createMeetingParticipant(prisma, teamMeeting.id, participant2.id, userId),
+    createMeetingParticipant(
       prisma,
       clientMeeting.id,
       participant1.id,
       userId,
     ),
-    createMeetingParticipation(
+    createMeetingParticipant(
       prisma,
       trainingMeeting.id,
       participant1.id,
       userId,
     ),
-    createMeetingParticipation(
+    createMeetingParticipant(
       prisma,
       emergencyMeeting.id,
       participant2.id,
@@ -446,33 +474,33 @@ export async function createMeetings(
     ),
   ]);
 
-  // 创建会议文件
-  const meetingFiles = await Promise.all([
-    createMeetingFile(prisma, teamMeeting.id, MEETING_FILE_CONFIGS.recording),
-    createMeetingFile(prisma, teamMeeting.id, MEETING_FILE_CONFIGS.transcript),
-    createMeetingFile(prisma, teamMeeting.id, MEETING_FILE_CONFIGS.summary),
-  ]);
+  // 创建会议文件 (Recording & Files)
+  const { meetingRecording } = await createMeetingRecording(
+    prisma,
+    teamMeeting.id,
+    null,
+    MEETING_FILE_CONFIGS.recording
+  );
 
-  const [recording, transcript, summaryFile] = meetingFiles;
+  // 创建会议转录记录 (Transcript)
+  // Host speaks
+  const transcript1 = await createTranscriptWithParagraphs(
+    prisma,
+    meetingRecording.id,
+    host1.id,
+    'p1',
+    '大家好，欢迎来到今天的周例会。首先我们来同步一下各项目的进展情况。'
+  );
 
-  // 创建会议转录记录
-  await createMeetingTranscript(prisma, teamMeeting.id, {
-    platformUserId: host1.id,
-    paragraphId: 'para_001',
-    speakerName: '张三',
-    startTime: BigInt(Date.now() - 7200000), // 2小时前
-    endTime: BigInt(Date.now() - 7140000), // 2小时前 + 1分钟
-    text: '大家好，欢迎来到今天的周例会。首先我们来同步一下各项目的进展情况。',
-  });
+  // Participant speaks
+  await createTranscriptWithParagraphs(
+    prisma,
+    meetingRecording.id,
+    participant1.id,
+    'p2',
+    '项目A目前进展顺利，预计可以在下周完成开发工作。'
+  );
 
-  await createMeetingTranscript(prisma, teamMeeting.id, {
-    platformUserId: participant1.id,
-    paragraphId: 'para_002',
-    speakerName: '参与者1',
-    startTime: BigInt(Date.now() - 7140000), // 2小时前 + 1分钟
-    endTime: BigInt(Date.now() - 7080000), // 2小时前 + 2分钟
-    text: '项目A目前进展顺利，预计可以在下周完成开发工作。',
-  });
 
   // 创建会议总结
   const meetingSummaries = await Promise.all([
@@ -480,7 +508,7 @@ export async function createMeetings(
       prisma,
       teamMeeting.id,
       MEETING_SUMMARY_CONFIGS.teamSummary,
-      transcript.id,
+      transcript1.id, // associating with the first transcript for now
       userId,
     ),
   ]);
@@ -502,11 +530,10 @@ export async function createMeetings(
       participant1,
       participant2,
     },
+    // Simplified return structure as we have complex file objects now
     meetingFiles: {
-      recording,
-      transcript,
-      summary: summaryFile,
-    },
+      recording: meetingRecording
+    } as any,
     meetingSummaries: {
       teamSummary,
     },

@@ -60,4 +60,5 @@ model Order {
   @@index([effectiveDate]) // 生效时间查询
   @@index([orderNumber]) // 订单号码查询
   @@index([orderCode]) // 订单编号查询
+  @@map("orders")
 }

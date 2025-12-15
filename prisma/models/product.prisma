@@ -1,20 +1,3 @@
-// 产品分类枚举
-enum ProductCategory {
-  COURSE // 课程
-  MEMBERSHIP // 会员
-  CONSULTATION // 咨询
-  MATERIAL // 资料
-  OTHER // 其他
-}
-
-// 产品状态枚举
-enum ProductStatus {
-  ACTIVE // 上架
-  INACTIVE // 下架
-  DRAFT // 草稿
-  ARCHIVED // 已归档
-}
-
 // 产品表
 model Product {
   id               String          @id @default(cuid()) // 内部主键
@@ -58,4 +41,22 @@ model Product {
   @@index([status])
   @@index([createdAt])
   @@index([publishedAt])
+  @@map("products")
+}
+
+// 产品分类枚举
+enum ProductCategory {
+  COURSE // 课程
+  MEMBERSHIP // 会员
+  CONSULTATION // 咨询
+  MATERIAL // 资料
+  OTHER // 其他
+}
+
+// 产品状态枚举
+enum ProductStatus {
+  ACTIVE // 上架
+  INACTIVE // 下架
+  DRAFT // 草稿
+  ARCHIVED // 已归档
 }

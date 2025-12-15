@@ -19,6 +19,7 @@ model Role {
 
   @@index([code])
   @@index([type])
+  @@map("roles")
 }
 
 // 角色类型枚举

@@ -22,4 +22,5 @@ model Department {
   @@index([organizationId])
   @@index([parentId])
   @@index([code])
+  @@map("departments")
 }
