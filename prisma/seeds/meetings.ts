@@ -6,10 +6,23 @@ import {
   GenerationMethod,
   Platform,
   StorageProvider,
+  Prisma,
 } from '@prisma/client';
 
+// Define configuration types derived from Unchecked inputs to allow raw IDs
+type MeetingConfig = Omit<Prisma.MeetingUncheckedCreateInput, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'platform' | 'type'> & {
+  platform: MeetingPlatform;
+  type: MeetingType;
+  hostUserName: string; // Used to look up the host in the specific seed logic
+  participantCount?: number;
+};
+
+type PlatformUserConfig = Omit<Prisma.PlatformUserUncheckedCreateInput, 'id' | 'createdAt' | 'updatedAt' | 'platform'> & {
+  platform: Platform;
+};
+
 // 会议配置数据
-const MEETING_CONFIGS = {
+const MEETING_CONFIGS: Record<string, MeetingConfig> = {
   teamMeeting: {
     title: '周例会 - 项目进度同步',
     description: '团队周例会，同步各项目进度和讨论下周计划',
@@ -57,10 +70,10 @@ const MEETING_CONFIGS = {
     tags: ['紧急', '问题处理', '生产环境'],
     language: 'zh-CN',
   },
-} as const;
+};
 
 // 平台用户配置
-const PLATFORM_USER_CONFIGS = {
+const PLATFORM_USER_CONFIGS: Record<string, PlatformUserConfig> = {
   host1: {
     platform: Platform.TENCENT_MEETING,
     platformUserId: 'user_12345',
@@ -103,7 +116,7 @@ const PLATFORM_USER_CONFIGS = {
     email: 'participant2@company.com',
     isActive: true,
   },
-} as const;
+};
 
 // 会议文件配置
 const MEETING_FILE_CONFIGS = {
@@ -116,13 +129,13 @@ const MEETING_FILE_CONFIGS = {
     sizeBytes: BigInt(524288000), // 500MB
 
     // MeetingRecordingFile fields
-    fileType: 0, // 假设0是某种类型，或者根据Model定义，这里先用0，因为Model里是Int default 0
+    fileType: 0, // 假设0是某种类型
     durationMs: BigInt(3600000), // 1小时
     resolution: '1920x1080',
   },
 } as const;
 
-// 会议总结配置 (Updated structure)
+// 会议总结配置
 const MEETING_SUMMARY_CONFIGS = {
   teamSummary: {
     title: '周例会总结 - 2024年12月第3周',
@@ -181,26 +194,22 @@ export interface CreatedMeetings {
  */
 async function createPlatformUser(
   prisma: PrismaClient,
-  platform: Platform,
-  platformUserId: string,
-  userName: string,
-  email: string,
-  isActive: boolean = true,
+  config: PlatformUserConfig
 ) {
   return prisma.platformUser.upsert({
     where: {
       platform_platformUserId: {
-        platform,
-        platformUserId,
+        platform: config.platform,
+        platformUserId: config.platformUserId,
       },
     },
     update: {},
     create: {
-      platform,
-      platformUserId,
-      userName,
-      email,
-      isActive,
+      platform: config.platform,
+      platformUserId: config.platformUserId,
+      userName: config.userName,
+      email: config.email,
+      isActive: config.isActive,
       lastSeenAt: new Date(),
     },
   });
@@ -211,21 +220,21 @@ async function createPlatformUser(
  */
 async function createMeeting(
   prisma: PrismaClient,
-  meetingData: any,
+  meetingConfig: MeetingConfig,
   hostPlatformUserId?: string,
 ) {
   const now = new Date();
   const startTime = new Date(now.getTime() - 2 * 60 * 60 * 1000); // 2小时前
   const endTime = new Date(now.getTime() - 1 * 60 * 60 * 1000); // 1小时前
 
-  const { hostUserName, meetingId, ...dataToCreate } = meetingData;
+  const { hostUserName, meetingId, ...restConfig } = meetingConfig;
 
   // 根据 model: @@unique([platform, meetingId])
   return prisma.meeting.upsert({
     where: {
       platform_meetingId: {
-        platform: meetingData.platform,
-        meetingId: meetingId,
+        platform: meetingConfig.platform,
+        meetingId: meetingId!,
       },
     },
     update: {
@@ -233,8 +242,8 @@ async function createMeeting(
       updatedAt: new Date(),
     },
     create: {
-      ...dataToCreate,
-      meetingId,
+      ...restConfig,
+      meetingId: meetingId!,
       hostPlatformUserId,
       scheduledStartAt: startTime,
       scheduledEndAt: endTime,
@@ -255,7 +264,7 @@ async function createMeeting(
 async function createMeetingRecording(
   prisma: PrismaClient,
   meetingId: string,
-  recorderUserId: string | null, // PlatformUser ID? No, definition says User? but here we might not have User. let's assume null for now.
+  recorderUserId: string | null | undefined,
   fileConfig: typeof MEETING_FILE_CONFIGS.recording
 ) {
   // 1. Create StorageObject
@@ -273,10 +282,11 @@ async function createMeetingRecording(
   const meetingRecording = await prisma.meetingRecording.create({
     data: {
       meetingId,
-      tenantId: '00000000-0000-0000-0000-000000000000', // Mock UUID if needed, or better, make it optional/valid. The schema says tenantId String @db.Uuid. We need a valid UUID.
-      // Wait, tenantId is required in MeetingRecording. I'll generate a dummy one or use a consistent one.
+      tenantId: '00000000-0000-0000-0000-000000000000', // Random or valid UUID
       startAt: new Date(),
       endAt: new Date(),
+      status: 1, // 0=recording?, 1=completed? assuming specific integer status
+      recorderUserId: recorderUserId, // Link to PlatformUser who recorded
     }
   });
 
@@ -286,6 +296,7 @@ async function createMeetingRecording(
       tenantId: '00000000-0000-0000-0000-000000000000',
       recordingId: meetingRecording.id,
       fileObjectId: storageObject.id,
+      fileType: fileConfig.fileType,
       durationMs: fileConfig.durationMs,
       resolution: fileConfig.resolution,
     }
@@ -303,14 +314,14 @@ async function createMeetingSummary(
   meetingId: string,
   summaryData: any,
   transcriptId?: string,
-  createdBy?: string,
+  creatorPlatformUserId?: string,
 ) {
   return prisma.meetingSummary.create({
     data: {
       meetingId,
       ...summaryData,
       transcriptId,
-      createdBy,
+      createdBy: creatorPlatformUserId, // MUST be PlatformUser.id
       processingTime: 30000, // 30秒
       status: ProcessingStatus.COMPLETED,
     },
@@ -390,59 +401,22 @@ async function createTranscriptWithParagraphs(
 
 export async function createMeetings(
   prisma: PrismaClient,
-  userId?: string,
+  userId?: string, // optional system user id, if needed for other things, but NOT for PlatformUser relations
 ): Promise<CreatedMeetings> {
-  // 创建平台用户
+
+  // 1. 创建平台用户
   const platformUsers = await Promise.all([
-    createPlatformUser(
-      prisma,
-      PLATFORM_USER_CONFIGS.host1.platform,
-      PLATFORM_USER_CONFIGS.host1.platformUserId,
-      PLATFORM_USER_CONFIGS.host1.userName,
-      PLATFORM_USER_CONFIGS.host1.email,
-    ),
-    createPlatformUser(
-      prisma,
-      PLATFORM_USER_CONFIGS.host2.platform,
-      PLATFORM_USER_CONFIGS.host2.platformUserId,
-      PLATFORM_USER_CONFIGS.host2.userName,
-      PLATFORM_USER_CONFIGS.host2.email,
-    ),
-    createPlatformUser(
-      prisma,
-      PLATFORM_USER_CONFIGS.host3.platform,
-      PLATFORM_USER_CONFIGS.host3.platformUserId,
-      PLATFORM_USER_CONFIGS.host3.userName,
-      PLATFORM_USER_CONFIGS.host3.email,
-    ),
-    createPlatformUser(
-      prisma,
-      PLATFORM_USER_CONFIGS.host4.platform,
-      PLATFORM_USER_CONFIGS.host4.platformUserId,
-      PLATFORM_USER_CONFIGS.host4.userName,
-      PLATFORM_USER_CONFIGS.host4.email,
-    ),
-    createPlatformUser(
-      prisma,
-      PLATFORM_USER_CONFIGS.participant1.platform,
-      PLATFORM_USER_CONFIGS.participant1.platformUserId,
-      PLATFORM_USER_CONFIGS.participant1.userName,
-      PLATFORM_USER_CONFIGS.participant1.email,
-    ),
-    createPlatformUser(
-      prisma,
-      PLATFORM_USER_CONFIGS.participant2.platform,
-      PLATFORM_USER_CONFIGS.participant2.platformUserId,
-      PLATFORM_USER_CONFIGS.participant2.userName,
-      PLATFORM_USER_CONFIGS.participant2.email,
-    ),
+    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.host1),
+    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.host2),
+    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.host3),
+    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.host4),
+    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.participant1),
+    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.participant2),
   ]);
 
-  const [host1, host2, host3, host4, participant1, participant2] =
-    platformUsers;
+  const [host1, host2, host3, host4, participant1, participant2] = platformUsers;
 
-  // 创建会议记录
-
+  // 2. 创建会议记录
   const meetings = await Promise.all([
     createMeeting(prisma, MEETING_CONFIGS.teamMeeting, host1.id),
     createMeeting(prisma, MEETING_CONFIGS.clientMeeting, host2.id),
@@ -450,39 +424,27 @@ export async function createMeetings(
     createMeeting(prisma, MEETING_CONFIGS.emergencyMeeting, host4.id),
   ]);
 
-  const [teamMeeting, clientMeeting, trainingMeeting, emergencyMeeting] =
-    meetings;
+  const [teamMeeting, clientMeeting, trainingMeeting, emergencyMeeting] = meetings;
 
-  // 创建会议参与记录
+  // 3. 创建会议参与记录
   await Promise.all([
     createMeetingParticipant(prisma, teamMeeting.id, participant1.id),
     createMeetingParticipant(prisma, teamMeeting.id, participant2.id),
-    createMeetingParticipant(
-      prisma,
-      clientMeeting.id,
-      participant1.id,
-    ),
-    createMeetingParticipant(
-      prisma,
-      trainingMeeting.id,
-      participant1.id,
-    ),
-    createMeetingParticipant(
-      prisma,
-      emergencyMeeting.id,
-      participant2.id,
-    ),
+    createMeetingParticipant(prisma, clientMeeting.id, participant1.id),
+    createMeetingParticipant(prisma, trainingMeeting.id, participant1.id),
+    createMeetingParticipant(prisma, emergencyMeeting.id, participant2.id),
   ]);
 
-  // 创建会议文件 (Recording & Files)
+  // 4. 创建会议文件 (Recording & Files)
+  // Use host1 as the recorder for the team meeting
   const { meetingRecording } = await createMeetingRecording(
     prisma,
     teamMeeting.id,
-    null,
+    host1.id, // Correctly linked to PlatformUser
     MEETING_FILE_CONFIGS.recording
   );
 
-  // 创建会议转录记录 (Transcript)
+  // 5. 创建会议转录记录 (Transcript)
   // Host speaks
   const transcript1 = await createTranscriptWithParagraphs(
     prisma,
@@ -502,14 +464,14 @@ export async function createMeetings(
   );
 
 
-  // 创建会议总结
+  // 6. 创建会议总结
   const meetingSummaries = await Promise.all([
     createMeetingSummary(
       prisma,
       teamMeeting.id,
       MEETING_SUMMARY_CONFIGS.teamSummary,
       transcript1.id, // associating with the first transcript for now
-      userId,
+      host1.id,       // Correctly using PlatformUser.id (host1) as creator
     ),
   ]);
 
