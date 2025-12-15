@@ -9,9 +9,10 @@ model PlatformUser {
     // 用户基本信息
     userName    String? // 用户显示名称
     email       String? // 用户邮箱
+    avatar      String? // 用户头像URL
     countryCode String? // 国家代码 如 +86
     phone       String? // 电话号码
-    avatar      String? // 用户头像URL
+    phoneHash   String? // 加密手机号
 
     // 本地用户关联
     userId String? // 关联到本地用户表
@@ -19,7 +20,6 @@ model PlatformUser {
 
     // 平台特定数据
     platformData Json? // 存储各平台特有的数据
-    phoneHash    String? // 腾讯会议加密手机号
 
     // 用户状态
     isActive   Boolean   @default(true)
