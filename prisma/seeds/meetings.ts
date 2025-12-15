@@ -10,14 +10,20 @@ import {
 } from '@prisma/client';
 
 // Define configuration types derived from Unchecked inputs to allow raw IDs
-type MeetingConfig = Omit<Prisma.MeetingUncheckedCreateInput, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'platform' | 'type'> & {
+type MeetingConfig = Omit<
+  Prisma.MeetingUncheckedCreateInput,
+  'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'platform' | 'type'
+> & {
   platform: MeetingPlatform;
   type: MeetingType;
   hostUserName: string; // Used to look up the host in the specific seed logic
   participantCount?: number;
 };
 
-type PlatformUserConfig = Omit<Prisma.PlatformUserUncheckedCreateInput, 'id' | 'createdAt' | 'updatedAt' | 'platform'> & {
+type PlatformUserConfig = Omit<
+  Prisma.PlatformUserUncheckedCreateInput,
+  'id' | 'createdAt' | 'updatedAt' | 'platform'
+> & {
   platform: Platform;
 };
 
@@ -167,6 +173,52 @@ const MEETING_SUMMARY_CONFIGS = {
   },
 } as const;
 
+// 模拟对话数据
+const TRANSCRIPT_DIALOGUE = [
+  {
+    role: 'host',
+    text: '大家好，能听到我说话吗？',
+    startTime: 5301,
+    duration: 1000,
+  },
+  {
+    role: 'participant',
+    text: '嗯，老师也来了。',
+    startTime: 8470,
+    duration: 1350,
+  },
+  {
+    role: 'host',
+    text: 'Ok 我们待会儿那个八点钟开始啊！',
+    startTime: 9206,
+    duration: 2130,
+  },
+  {
+    role: 'host',
+    text: '声音，声音可以吗？声音？',
+    startTime: 12000,
+    duration: 1470,
+  },
+  {
+    role: 'participant',
+    text: 'Ok 可以，能听到的哈！',
+    startTime: 14000,
+    duration: 1890,
+  },
+  {
+    role: 'host',
+    text: '大家好，欢迎来到今天的周例会。首先我们来同步一下各项目的进展情况。',
+    startTime: 18000,
+    duration: 5000,
+  },
+  {
+    role: 'participant',
+    text: '项目A目前进展顺利，预计可以在下周完成开发工作。',
+    startTime: 24000,
+    duration: 4000,
+  },
+];
+
 export interface CreatedMeetings {
   meetings: {
     teamMeeting: any;
@@ -195,7 +247,7 @@ export interface CreatedMeetings {
  */
 async function createPlatformUser(
   prisma: PrismaClient,
-  config: PlatformUserConfig
+  config: PlatformUserConfig,
 ) {
   return prisma.platformUser.upsert({
     where: {
@@ -266,7 +318,7 @@ async function createMeetingRecording(
   prisma: PrismaClient,
   meetingId: string,
   recorderUserId: string | null | undefined,
-  fileConfig: typeof MEETING_FILE_CONFIGS.recording
+  fileConfig: typeof MEETING_FILE_CONFIGS.recording,
 ) {
   // 1. Create StorageObject (Idempotent)
   const storageObject = await prisma.storageObject.upsert({
@@ -284,7 +336,7 @@ async function createMeetingRecording(
       objectKey: fileConfig.objectKey,
       contentType: fileConfig.contentType,
       sizeBytes: fileConfig.sizeBytes,
-    }
+    },
   });
 
   // 2. Create MeetingRecording (Idempotent check)
@@ -292,19 +344,18 @@ async function createMeetingRecording(
     where: {
       meetingId: meetingId,
       recorderUserId: recorderUserId,
-    }
+    },
   });
 
   if (!meetingRecording) {
     meetingRecording = await prisma.meetingRecording.create({
       data: {
         meetingId,
-        tenantId: '00000000-0000-0000-0000-000000000000', // Random or valid UUID
         startAt: new Date(),
         endAt: new Date(),
         status: 1, // 0=recording?, 1=completed? assuming specific integer status
         recorderUserId: recorderUserId, // Link to PlatformUser who recorded
-      }
+      },
     });
   }
 
@@ -313,25 +364,23 @@ async function createMeetingRecording(
     where: {
       recordingId: meetingRecording.id,
       fileObjectId: storageObject.id,
-    }
+    },
   });
 
   if (!recordingFile) {
     recordingFile = await prisma.meetingRecordingFile.create({
       data: {
-        tenantId: '00000000-0000-0000-0000-000000000000',
         recordingId: meetingRecording.id,
         fileObjectId: storageObject.id,
         fileType: fileConfig.fileType,
         durationMs: fileConfig.durationMs,
         resolution: fileConfig.resolution,
-      }
+      },
     });
   }
 
   return { meetingRecording, recordingFile, storageObject };
 }
-
 
 /**
  * 创建会议总结
@@ -391,53 +440,10 @@ async function createMeetingParticipant(
 async function createSimulatedTranscript(
   prisma: PrismaClient,
   meetingRecordingId: string,
-  speakers: { host: string; participant: string }
+  speakers: { host: string; participant: string },
 ) {
   // 模拟对话数据 (参考真实 JSON 结构)
-  const dialogue = [
-    {
-      role: 'host',
-      text: '大家好，能听到我说话吗？',
-      startTime: 5301,
-      duration: 1000,
-    },
-    {
-      role: 'participant',
-      text: '嗯，老师也来了。',
-      startTime: 8470,
-      duration: 1350,
-    },
-    {
-      role: 'host',
-      text: 'Ok 我们待会儿那个八点钟开始啊！',
-      startTime: 9206,
-      duration: 2130,
-    },
-    {
-      role: 'host',
-      text: '声音，声音可以吗？声音？',
-      startTime: 12000,
-      duration: 1470,
-    },
-    {
-      role: 'participant',
-      text: 'Ok 可以，能听到的哈！',
-      startTime: 14000,
-      duration: 1890,
-    },
-    {
-      role: 'host',
-      text: '大家好，欢迎来到今天的周例会。首先我们来同步一下各项目的进展情况。',
-      startTime: 18000,
-      duration: 5000,
-    },
-    {
-      role: 'participant',
-      text: '项目A目前进展顺利，预计可以在下周完成开发工作。',
-      startTime: 24000,
-      duration: 4000,
-    }
-  ];
+  const dialogue = TRANSCRIPT_DIALOGUE;
 
   // 1. Create Transcript
   const transcript = await prisma.transcript.create({
@@ -445,13 +451,14 @@ async function createSimulatedTranscript(
       recordingId: meetingRecordingId,
       language: 'zh-CN',
       status: 1, // completed
-    }
+    },
   });
 
   // 2. Process Dialogue
   let pidCounter = 0;
   for (const line of dialogue) {
-    const speakerId = line.role === 'host' ? speakers.host : speakers.participant;
+    const speakerId =
+      line.role === 'host' ? speakers.host : speakers.participant;
     const pid = String(pidCounter++);
     const startTimeMs = BigInt(line.startTime);
     const endTimeMs = BigInt(line.startTime + line.duration);
@@ -464,7 +471,7 @@ async function createSimulatedTranscript(
         startTimeMs,
         endTimeMs,
         speakerId: speakerId,
-      }
+      },
     });
 
     // Create Sentence (Assume 1 sentence per paragraph for simulation)
@@ -476,15 +483,15 @@ async function createSimulatedTranscript(
         startTimeMs,
         endTimeMs,
         text: line.text,
-      }
+      },
     });
 
     // Create Words (Simple Tokenization: Split by characters for Chinese)
     // In a real scenario, this would use proper segmentation.
     // We distribute time evenly across characters effectively.
-    // Filtering out spaces from the textArray to create Word entries, 
+    // Filtering out spaces from the textArray to create Word entries,
     // but preserving the original text in the sentence.
-    const chars = line.text.split('').filter(c => c.trim() !== '');
+    const chars = line.text.split('').filter((c) => c.trim() !== '');
     const charDuration = Math.floor(line.duration / Math.max(chars.length, 1));
 
     let currentWordStart = line.startTime;
@@ -507,7 +514,7 @@ async function createSimulatedTranscript(
     });
 
     await prisma.word.createMany({
-      data: wordsData
+      data: wordsData,
     });
   }
 
@@ -517,45 +524,88 @@ async function createSimulatedTranscript(
 export async function createMeetings(
   prisma: PrismaClient,
 ): Promise<CreatedMeetings> {
-
   // 1. 创建平台用户
-  const platformUsers = await Promise.all([
-    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.host1),
-    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.host2),
-    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.host3),
-    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.host4),
-    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.participant1),
-    createPlatformUser(prisma, PLATFORM_USER_CONFIGS.participant2),
-  ]);
+  const platformUsersRaw = await Promise.all(
+    Object.entries(PLATFORM_USER_CONFIGS).map(async ([key, config]) => {
+      const user = await createPlatformUser(prisma, config);
+      return { key, user };
+    }),
+  );
 
-  const [host1, host2, host3, host4, participant1, participant2] = platformUsers;
+  const platformUsers: any = platformUsersRaw.reduce((acc, { key, user }) => {
+    acc[key] = user;
+    return acc;
+  }, {} as any);
 
   // 2. 创建会议记录
-  const meetings = await Promise.all([
-    createMeeting(prisma, MEETING_CONFIGS.teamMeeting, host1.id),
-    createMeeting(prisma, MEETING_CONFIGS.clientMeeting, host2.id),
-    createMeeting(prisma, MEETING_CONFIGS.trainingMeeting, host3.id),
-    createMeeting(prisma, MEETING_CONFIGS.emergencyMeeting, host4.id),
-  ]);
+  const meetingsRaw = await Promise.all(
+    Object.entries(MEETING_CONFIGS).map(async ([key, config]) => {
+      // Find the corresponding host user based on the config's hostUserName or fallback logic
+      // Ideally we should use a more robust lookup. Here we'll stick to the previous mapping logic
+      // But notice the original code manually mapped specific hosts:
+      // teamMeeting -> host1, clientMeeting -> host2, trainingMeeting -> host3, emergencyMeeting -> host4
+      // We'll reproduce this mapping via a simple helper or just map by index if keys align, but keys don't strictly align by name.
+      // Let's use a mapping constant for clarity or stick to the concise manual mapping if logic is specific.
+      // Actually, we can look up the host by `hostUserName` if we had a map of `userName -> platformUser`.
+      // But `host1` name is '张三'.
+      // teamMeeting hostUserName is '杨仕明' -> This doesn't match '张三'.
+      // The original code was: teamMeeting -> host1
+      // host1 userName is '张三'.
+      // So there is a disconnect in the original seed data between `MeetingConfig.hostUserName` and `PlatformUserConfig.userName`.
+      // To simplify safely, I will keep a manual mapping for host assignment but use the map for storage.
 
-  const [teamMeeting, clientMeeting, trainingMeeting, emergencyMeeting] = meetings;
+      let hostUser;
+      if (key === 'teamMeeting') hostUser = platformUsers.host1;
+      else if (key === 'clientMeeting') hostUser = platformUsers.host2;
+      else if (key === 'trainingMeeting') hostUser = platformUsers.host3;
+      else if (key === 'emergencyMeeting') hostUser = platformUsers.host4;
+
+      const meeting = await createMeeting(prisma, config, hostUser?.id);
+      return { key, meeting };
+    }),
+  );
+
+  const meetings: any = meetingsRaw.reduce((acc, { key, meeting }) => {
+    acc[key] = meeting;
+    return acc;
+  }, {} as any);
 
   // 3. 创建会议参与记录
   await Promise.all([
-    createMeetingParticipant(prisma, teamMeeting.id, participant1.id),
-    createMeetingParticipant(prisma, teamMeeting.id, participant2.id),
-    createMeetingParticipant(prisma, clientMeeting.id, participant1.id),
-    createMeetingParticipant(prisma, trainingMeeting.id, participant1.id),
-    createMeetingParticipant(prisma, emergencyMeeting.id, participant2.id),
+    createMeetingParticipant(
+      prisma,
+      meetings.teamMeeting.id,
+      platformUsers.participant1.id,
+    ),
+    createMeetingParticipant(
+      prisma,
+      meetings.teamMeeting.id,
+      platformUsers.participant2.id,
+    ),
+    createMeetingParticipant(
+      prisma,
+      meetings.clientMeeting.id,
+      platformUsers.participant1.id,
+    ),
+    createMeetingParticipant(
+      prisma,
+      meetings.trainingMeeting.id,
+      platformUsers.participant1.id,
+    ),
+    createMeetingParticipant(
+      prisma,
+      meetings.emergencyMeeting.id,
+      platformUsers.participant2.id,
+    ),
   ]);
 
   // 4. 创建会议文件 (Recording & Files)
   // Use host1 as the recorder for the team meeting
   const { meetingRecording } = await createMeetingRecording(
     prisma,
-    teamMeeting.id,
-    host1.id, // Correctly linked to PlatformUser
-    MEETING_FILE_CONFIGS.recording
+    meetings.teamMeeting.id,
+    platformUsers.host1.id, // Correctly linked to PlatformUser
+    MEETING_FILE_CONFIGS.recording,
   );
 
   // 5. 创建会议转录记录 (Transcript)
@@ -563,43 +613,30 @@ export async function createMeetings(
     prisma,
     meetingRecording.id,
     {
-      host: host1.id,
-      participant: participant1.id,
-    }
+      host: platformUsers.host1.id,
+      participant: platformUsers.participant1.id,
+    },
   );
-
 
   // 6. 创建会议总结
   const meetingSummaries = await Promise.all([
     createMeetingSummary(
       prisma,
-      teamMeeting.id,
+      meetings.teamMeeting.id,
       MEETING_SUMMARY_CONFIGS.teamSummary,
       transcript1.id, // associating with the first transcript for now
-      host1.id,       // Correctly using PlatformUser.id (host1) as creator
+      platformUsers.host1.id, // Correctly using PlatformUser.id (host1) as creator
     ),
   ]);
 
   const [teamSummary] = meetingSummaries;
 
   return {
-    meetings: {
-      teamMeeting,
-      clientMeeting,
-      trainingMeeting,
-      emergencyMeeting,
-    },
-    platformUsers: {
-      host1,
-      host2,
-      host3,
-      host4,
-      participant1,
-      participant2,
-    },
+    meetings: meetings,
+    platformUsers: platformUsers,
     // Simplified return structure as we have complex file objects now
     meetingFiles: {
-      recording: meetingRecording
+      recording: meetingRecording,
     } as any,
     meetingSummaries: {
       teamSummary,

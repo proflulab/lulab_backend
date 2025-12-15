@@ -8,7 +8,7 @@ model Transcript {
   finishedAt DateTime? @map("finished_at") @db.Timestamptz(6)
   createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  recordingId String?           @map("recording_id") @db.Uuid
+  recordingId String?           @map("recording_id")
   recording   MeetingRecording? @relation(fields: [recordingId], references: [id], onDelete: Cascade)
   summaries   MeetingSummary[]
 

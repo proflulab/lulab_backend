@@ -59,8 +59,7 @@ model Meeting {
 }
 
 model MeetingRecording {
-  id        String @id @default(uuid()) @db.Uuid
-  tenantId  String @map("tenant_id") @db.Uuid
+  id        String @id @default(cuid())
   meetingId String @map("meeting_id")
 
   source    Int       @default(0) @db.SmallInt
@@ -70,7 +69,6 @@ model MeetingRecording {
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
 
-  // tenant       Tenant  @relation(fields: [tenantId], references: [id])
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 
   recorderUserId String?       @map("recorder_user_id")
@@ -80,21 +78,18 @@ model MeetingRecording {
   transcripts Transcript[]
 
   @@index([meetingId], map: "idx_recordings_meeting")
-  @@index([tenantId, status], map: "idx_recordings_tenant_status")
   @@map("meet_recordings")
 }
 
 model MeetingRecordingFile {
-  id           String   @id @default(uuid()) @db.Uuid
-  tenantId     String   @map("tenant_id") @db.Uuid
-  recordingId  String   @map("recording_id") @db.Uuid
+  id           String   @id @default(cuid())
+  recordingId  String   @map("recording_id")
   fileObjectId String   @map("file_object_id") @db.Uuid
   fileType     Int      @default(0) @map("file_type") @db.SmallInt
   durationMs   BigInt?  @map("duration_ms")
   resolution   String?
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  // tenant    Tenant        @relation(fields: [tenantId], references: [id])
   recording MeetingRecording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
   object    StorageObject    @relation(fields: [fileObjectId], references: [id])
 
@@ -195,8 +190,7 @@ model MeetingParticipant {
 }
 
 model MeetingUserAction {
-  id       String @id @default(uuid()) @db.Uuid
-  tenantId String @map("tenant_id") @db.Uuid
+  id String @id @default(cuid())
 
   action     String
   targetType String   @map("target_type")
@@ -206,11 +200,9 @@ model MeetingUserAction {
   userAgent  String?  @map("user_agent")
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  // tenant Tenant @relation(fields: [tenantId], references: [id])
   platformUserId String?       @map("user_id")
   platformUser   PlatformUser? @relation(fields: [platformUserId], references: [id])
 
-  @@index([tenantId, createdAt], map: "idx_actions_tenant_time")
   @@index([platformUserId, createdAt], map: "idx_actions_user_time")
   @@index([targetType, targetId], map: "idx_actions_target")
   @@map("meeting_user_actions")
