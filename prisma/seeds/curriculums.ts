@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-16 10:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-16 10:00:00
+ * @LastEditTime: 2025-12-16 17:42:01
  * @FilePath: /lulab_backend/prisma/seeds/curriculums.ts
  * @Description: 课程数据种子模块 - 优化版本
  *
@@ -52,8 +52,7 @@ const CURRICULUM_CONFIGS: CurriculumConfig[] = [
     id: 'curr_001_01',
     projectId: 'proj_001',
     title: 'Python基础与环境搭建',
-    description:
-      '学习Python基础语法，搭建开发环境，了解Jupyter Notebook的使用',
+    description: '学习Python基础语法，搭建开发环境，了解Jupyter Notebook的使用',
     week: 1,
     topics: [
       'Python安装与配置',
@@ -279,7 +278,7 @@ function convertToCurriculumCreateInput(
 
 /**
  * 创建课程数据
- * 
+ *
  * @param prisma - Prisma 客户端实例
  * @param params - 创建参数，包含项目列表
  * @returns 创建的课程数据
@@ -291,6 +290,26 @@ export async function createCurriculums(
   console.log('📖 开始创建课程数据...');
 
   try {
+    // 验证课程配置中引用的项目ID是否存在于提供的项目列表中
+    const projectIds = new Set(projects.map((p) => p.id));
+    const curriculumProjectIds = new Set(
+      CURRICULUM_CONFIGS.map((c) => c.projectId),
+    );
+
+    // 检查是否有课程引用了不存在的项目
+    const missingProjectIds: string[] = [];
+    curriculumProjectIds.forEach((id) => {
+      if (!projectIds.has(id)) {
+        missingProjectIds.push(id);
+      }
+    });
+
+    if (missingProjectIds.length > 0) {
+      console.warn(
+        `⚠️ 警告: 以下课程引用了不存在的项目ID: ${missingProjectIds.join(', ')}`,
+      );
+    }
+
     // 并行创建所有课程
     const curriculumPromises = CURRICULUM_CONFIGS.map((config) => {
       const createInput = convertToCurriculumCreateInput(config);

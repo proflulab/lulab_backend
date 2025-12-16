@@ -418,7 +418,7 @@ async function seedDatabase(): Promise<void> {
 
     // 步骤 3: 创建会议数据
     console.log('\n🎯 步骤 3: 创建会议数据');
-    const meetingData = await createMeetings(prisma, userData.adminUser.id);
+    const meetingData = await createMeetings(prisma);
 
     // 输出统计信息
     printSeedStatistics(

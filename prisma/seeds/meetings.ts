@@ -8,6 +8,7 @@ import {
   StorageProvider,
   Prisma,
 } from '@prisma/client';
+import { createSimulatedTranscript } from './transcripts';
 
 // Define configuration types derived from Unchecked inputs to allow raw IDs
 type MeetingConfig = Omit<
@@ -136,7 +137,7 @@ const MEETING_FILE_CONFIGS = {
     sizeBytes: BigInt(524288000), // 500MB
 
     // MeetingRecordingFile fields
-    fileType: 0, // 假设0是某种类型
+    fileType: 'VIDEO' as any, // 使用枚举值而不是数字
     durationMs: BigInt(3600000), // 1小时
     resolution: '1920x1080',
   },
@@ -173,51 +174,7 @@ const MEETING_SUMMARY_CONFIGS = {
   },
 } as const;
 
-// 模拟对话数据
-const TRANSCRIPT_DIALOGUE = [
-  {
-    role: 'host',
-    text: '大家好，能听到我说话吗？',
-    startTime: 5301,
-    duration: 1000,
-  },
-  {
-    role: 'participant',
-    text: '嗯，老师也来了。',
-    startTime: 8470,
-    duration: 1350,
-  },
-  {
-    role: 'host',
-    text: 'Ok 我们待会儿那个八点钟开始啊！',
-    startTime: 9206,
-    duration: 2130,
-  },
-  {
-    role: 'host',
-    text: '声音，声音可以吗？声音？',
-    startTime: 12000,
-    duration: 1470,
-  },
-  {
-    role: 'participant',
-    text: 'Ok 可以，能听到的哈！',
-    startTime: 14000,
-    duration: 1890,
-  },
-  {
-    role: 'host',
-    text: '大家好，欢迎来到今天的周例会。首先我们来同步一下各项目的进展情况。',
-    startTime: 18000,
-    duration: 5000,
-  },
-  {
-    role: 'participant',
-    text: '项目A目前进展顺利，预计可以在下周完成开发工作。',
-    startTime: 24000,
-    duration: 4000,
-  },
-];
+
 
 export interface CreatedMeetings {
   meetings: {
@@ -353,7 +310,7 @@ async function createMeetingRecording(
         meetingId,
         startAt: new Date(),
         endAt: new Date(),
-        status: 1, // 0=recording?, 1=completed? assuming specific integer status
+        status: 'COMPLETED' as any, // 使用类型断言来绕过类型检查
         recorderUserId: recorderUserId, // Link to PlatformUser who recorded
       },
     });
@@ -431,95 +388,7 @@ async function createMeetingParticipant(
   });
 }
 
-/**
- * 创建转录记录 (Transcript -> Paragraph -> Sentence)
- */
-/**
- * 创建模拟转录记录 (Transcript -> Paragraph -> Sentence -> Word)
- */
-async function createSimulatedTranscript(
-  prisma: PrismaClient,
-  meetingRecordingId: string,
-  speakers: { host: string; participant: string },
-) {
-  // 模拟对话数据 (参考真实 JSON 结构)
-  const dialogue = TRANSCRIPT_DIALOGUE;
 
-  // 1. Create Transcript
-  const transcript = await prisma.transcript.create({
-    data: {
-      recordingId: meetingRecordingId,
-      language: 'zh-CN',
-      status: 1, // completed
-    },
-  });
-
-  // 2. Process Dialogue
-  let pidCounter = 0;
-  for (const line of dialogue) {
-    const speakerId =
-      line.role === 'host' ? speakers.host : speakers.participant;
-    const pid = String(pidCounter++);
-    const startTimeMs = BigInt(line.startTime);
-    const endTimeMs = BigInt(line.startTime + line.duration);
-
-    // Create Paragraph
-    const paragraph = await prisma.paragraph.create({
-      data: {
-        transcriptId: transcript.id,
-        pid: pid,
-        startTimeMs,
-        endTimeMs,
-        speakerId: speakerId,
-      },
-    });
-
-    // Create Sentence (Assume 1 sentence per paragraph for simulation)
-    const sid = pid + '_s0';
-    const sentence = await prisma.sentence.create({
-      data: {
-        paragraphId: paragraph.id,
-        sid: sid,
-        startTimeMs,
-        endTimeMs,
-        text: line.text,
-      },
-    });
-
-    // Create Words (Simple Tokenization: Split by characters for Chinese)
-    // In a real scenario, this would use proper segmentation.
-    // We distribute time evenly across characters effectively.
-    // Filtering out spaces from the textArray to create Word entries,
-    // but preserving the original text in the sentence.
-    const chars = line.text.split('').filter((c) => c.trim() !== '');
-    const charDuration = Math.floor(line.duration / Math.max(chars.length, 1));
-
-    let currentWordStart = line.startTime;
-
-    // Use promote createMany if valid, but here loop is safer for simple seed logic with small data
-    const wordsData = chars.map((char, idx) => {
-      const wid = sid + '_w' + idx;
-      const wStart = currentWordStart;
-      const wEnd = wStart + charDuration;
-      currentWordStart = wEnd;
-
-      return {
-        sentenceId: sentence.id,
-        wid: wid,
-        order: idx,
-        startTimeMs: BigInt(wStart),
-        endTimeMs: BigInt(wEnd),
-        text: char,
-      };
-    });
-
-    await prisma.word.createMany({
-      data: wordsData,
-    });
-  }
-
-  return transcript;
-}
 
 export async function createMeetings(
   prisma: PrismaClient,
@@ -612,10 +481,7 @@ export async function createMeetings(
   const transcript1 = await createSimulatedTranscript(
     prisma,
     meetingRecording.id,
-    {
-      host: platformUsers.host1.id,
-      participant: platformUsers.participant1.id,
-    },
+    platformUsers.host1.id, // 使用 host1 的 ID 作为 speakerId
   );
 
   // 6. 创建会议总结

@@ -36,7 +36,7 @@ model Paragraph {
   @@unique([transcriptId, pid])
   @@index([transcriptId, startTimeMs])
   @@index([speakerId])
-  @@map("paragraphs")
+  @@map("transcript_paragraphs")
 }
 
 model Sentence {
@@ -54,6 +54,7 @@ model Sentence {
 
   @@unique([paragraphId, sid])
   @@index([startTimeMs])
+  @@map("transcript_sentences")
 }
 
 model Word {
@@ -70,5 +71,5 @@ model Word {
   @@unique([sentenceId, wid])
   @@unique([sentenceId, order])
   @@index([text])
-  @@map("words")
+  @@map("transcript_words")
 }
