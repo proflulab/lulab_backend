@@ -19,6 +19,8 @@ model Role {
 
   @@index([code])
   @@index([type])
+  @@index([active]) // 活跃角色查询
+  @@index([type, active]) // 按类型查询活跃角色
   @@map("roles")
 }
 

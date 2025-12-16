@@ -19,8 +19,6 @@ model RefreshToken {
   updatedAt DateTime @updatedAt
 
   @@index([userId]) // 用户令牌查询
-  @@index([tokenHash]) // 令牌哈希查询
-  @@index([jti]) // JWT ID查询
   @@index([deviceId, userId]) // 设备令牌查询
   @@index([expiresAt]) // 过期令牌清理
   @@index([revokedAt]) // 撤销令牌查询

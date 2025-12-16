@@ -132,5 +132,5 @@ model UserDataPermission {
   @@unique([userId, ruleId])
   @@index([userId])
   @@index([ruleId])
-  @@map("user_data_permissions")  
+  @@map("user_data_permissions")
 }

@@ -24,4 +24,3 @@ enum VerificationCodeType {
   LOGIN // 登录
   RESET_PASSWORD // 重置密码
 }
-

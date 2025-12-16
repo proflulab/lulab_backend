@@ -16,7 +16,7 @@ model PlatformUser {
 
   // 本地用户关联
   userId String? // 关联到本地用户表
-  user   User?   @relation(fields: [userId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   // 平台特定数据
   platformData Json? // 存储各平台特有的数据

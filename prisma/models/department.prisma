@@ -12,7 +12,7 @@ model Department {
 
   // 关联关系
   organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  parent       Department?      @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  parent       Department?      @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
   children     Department[]     @relation("DepartmentHierarchy")
   users        UserDepartment[]
 
@@ -22,5 +22,7 @@ model Department {
   @@index([organizationId])
   @@index([parentId])
   @@index([code])
+  @@index([organizationId, active]) // 活跃部门查询
+  @@index([parentId, sortOrder]) // 子部门排序查询
   @@map("departments")
 }

@@ -30,8 +30,8 @@ model Product {
   archivedAt       DateTime? // 归档时间
 
   // 关联关系
-  creator User?   @relation("ProductCreator", fields: [createdBy], references: [id])
-  updater User?   @relation("ProductUpdater", fields: [updatedBy], references: [id])
+  creator User?   @relation("ProductCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater User?   @relation("ProductUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
   orders  Order[] // 产品的订单记录
 
   createdAt DateTime @default(now()) // 创建时间
@@ -41,6 +41,8 @@ model Product {
   @@index([status])
   @@index([createdAt])
   @@index([publishedAt])
+  @@index([status, publishedAt]) // 已发布产品查询
+  @@index([category, status]) // 分类产品查询
   @@map("products")
 }
 

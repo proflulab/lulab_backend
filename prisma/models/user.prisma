@@ -58,5 +58,6 @@ model User {
   @@index([active]) // 活跃用户查询
   @@index([deletedAt]) // 软删除查询索引
   @@index([lastLoginAt]) // 最后登录时间查询
+  @@index([active, deletedAt]) // 活跃用户查询优化
   @@map("users")
 }

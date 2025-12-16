@@ -17,7 +17,7 @@ model Meeting {
 
   // 主持人和参与者
   hostPlatformUserId String? // Host's platform user ID
-  hostPlatformUser   PlatformUser? @relation("HostedMeetings", fields: [hostPlatformUserId], references: [id])
+  hostPlatformUser   PlatformUser? @relation("HostedMeetings", fields: [hostPlatformUserId], references: [id], onDelete: SetNull)
   participantCount   Int? // 参与人数
 
   // 时间信息
@@ -55,6 +55,9 @@ model Meeting {
   @@index([tags])
   @@index([deletedAt]) // 软删除查询索引
   @@index([createdAt]) // 创建时间查询优化
+  @@index([platform, startAt]) // 按平台查询会议列表
+  @@index([hostPlatformUserId, startAt]) // 查询主持人的会议
+  @@index([deletedAt, createdAt]) // 软删除查询优化
   @@map("meetings")
 }
 
@@ -62,17 +65,17 @@ model MeetingRecording {
   id        String @id @default(cuid())
   meetingId String @map("meeting_id")
 
-  source    Int       @default(0) @db.SmallInt
-  startAt   DateTime? @map("start_at") @db.Timestamptz(6)
-  endAt     DateTime? @map("end_at") @db.Timestamptz(6)
-  status    Int       @default(0) @db.SmallInt
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  source    RecordingSource @default(PLATFORM_AUTO)
+  startAt   DateTime?       @map("start_at") @db.Timestamptz(6)
+  endAt     DateTime?       @map("end_at") @db.Timestamptz(6)
+  status    RecordingStatus @default(RECORDING)
+  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime        @default(now()) @map("updated_at") @db.Timestamptz(6)
 
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 
   recorderUserId String?       @map("recorder_user_id")
-  recorderUser   PlatformUser? @relation(fields: [recorderUserId], references: [id])
+  recorderUser   PlatformUser? @relation(fields: [recorderUserId], references: [id], onDelete: SetNull)
 
   files       MeetingRecordingFile[]
   transcripts Transcript[]
@@ -82,16 +85,16 @@ model MeetingRecording {
 }
 
 model MeetingRecordingFile {
-  id           String   @id @default(cuid())
-  recordingId  String   @map("recording_id")
-  fileObjectId String   @map("file_object_id") @db.Uuid
-  fileType     Int      @default(0) @map("file_type") @db.SmallInt
-  durationMs   BigInt?  @map("duration_ms")
+  id           String            @id @default(cuid())
+  recordingId  String            @map("recording_id")
+  fileObjectId String            @map("file_object_id") @db.Uuid
+  fileType     RecordingFileType @default(VIDEO) @map("file_type")
+  durationMs   BigInt?           @map("duration_ms")
   resolution   String?
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
 
   recording MeetingRecording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
-  object    StorageObject    @relation(fields: [fileObjectId], references: [id])
+  object    StorageObject    @relation(fields: [fileObjectId], references: [id], onDelete: Restrict)
 
   @@index([recordingId], map: "idx_recording_files_recording")
   @@map("meet_recording_files")
@@ -158,6 +161,8 @@ model MeetingSummary {
   @@index([version])
   @@index([language]) // 语言查询优化
   @@index([reviewedBy]) // 审核者查询优化
+  @@index([meetingId, isLatest]) // 查询会议的最新总结
+  @@index([status, createdAt]) // 按状态查询总结列表
   @@map("meeting_summaries")
 }
 
@@ -170,7 +175,7 @@ model MeetingParticipant {
 
   // 参会人员
   platformUserId String
-  platformUser   PlatformUser @relation(fields: [platformUserId], references: [id])
+  platformUser   PlatformUser @relation(fields: [platformUserId], references: [id], onDelete: Cascade)
 
   // 参会行为数据
   joinTime        DateTime?
@@ -186,6 +191,7 @@ model MeetingParticipant {
   updatedAt DateTime @updatedAt
 
   @@index([meetingId])
+  @@index([platformUserId])
   @@map("meeting_participants")
 }
 
@@ -201,11 +207,34 @@ model MeetingUserAction {
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   platformUserId String?       @map("user_id")
-  platformUser   PlatformUser? @relation(fields: [platformUserId], references: [id])
+  platformUser   PlatformUser? @relation(fields: [platformUserId], references: [id], onDelete: SetNull)
 
   @@index([platformUserId, createdAt], map: "idx_actions_user_time")
   @@index([targetType, targetId], map: "idx_actions_target")
   @@map("meeting_user_actions")
+}
+
+// 录制来源枚举
+enum RecordingSource {
+  PLATFORM_AUTO // 平台自动录制
+  USER_MANUAL // 用户手动录制
+  THIRD_PARTY // 第三方录制
+}
+
+// 录制状态枚举
+enum RecordingStatus {
+  RECORDING // 录制中
+  PROCESSING // 处理中
+  COMPLETED // 已完成
+  FAILED // 失败
+}
+
+// 录制文件类型枚举
+enum RecordingFileType {
+  VIDEO // 视频
+  AUDIO // 音频
+  TRANSCRIPT // 转录文本
+  CHAT // 聊天记录
 }
 
 // 生成方式枚举

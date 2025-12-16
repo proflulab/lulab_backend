@@ -22,14 +22,15 @@ model OrderRefund {
   updatedAt          DateTime  @updatedAt // 更新时间
 
   // 关联关系
-  order        Order?        @relation(fields: [orderId], references: [id])
-  creator      User?         @relation("RefundCreator", fields: [createdBy], references: [id])
-  parentRefund OrderRefund?  @relation("RefundHierarchy", fields: [parentId], references: [id])
+  order        Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  creator      User?         @relation("RefundCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  parentRefund OrderRefund?  @relation("RefundHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
   childRefunds OrderRefund[] @relation("RefundHierarchy")
 
   @@index([orderId]) // 订单退款查询
   @@index([createdBy]) // 创建人查询
   @@index([isFinancialSettled]) // 财务结算状态
   @@index([submittedAt]) // 提交时间查询
+  @@index([isFinancialSettled, submittedAt]) // 财务结算报表查询
   @@map("order_refunds")
 }
