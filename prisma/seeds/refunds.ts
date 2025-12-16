@@ -165,7 +165,7 @@ function convertToRefundCreateInput(
 
 /**
  * 创建退款数据
- * 
+ *
  * @param prisma - Prisma 客户端实例
  * @param params - 创建参数，包含用户和订单数据
  * @returns 创建的退款记录数组
@@ -183,8 +183,13 @@ export async function createRefunds(
     // 并行创建所有退款记录
     const refundPromises = REFUND_CONFIGS.map((config) => {
       const orderId = orders[config.orderIndex].id;
-      const creatorId = config.creatorType === 'admin' ? adminUser.id : financeUser.id;
-      const createInput = convertToRefundCreateInput(config, orderId, creatorId);
+      const creatorId =
+        config.creatorType === 'admin' ? adminUser.id : financeUser.id;
+      const createInput = convertToRefundCreateInput(
+        config,
+        orderId,
+        creatorId,
+      );
 
       return prisma.orderRefund.create({
         data: createInput,

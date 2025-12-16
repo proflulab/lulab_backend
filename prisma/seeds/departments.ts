@@ -124,7 +124,7 @@ const DEPARTMENT_CONFIGS: DepartmentConfig[] = [
 
 /**
  * 创建部门数据
- * 
+ *
  * @param prisma - Prisma 客户端实例
  * @param organizationId - 组织 ID
  * @returns 创建的部门数据
@@ -141,7 +141,9 @@ export async function createDepartments(
     const departmentMap = new Map<string, Department>();
 
     // 第一步：创建所有一级部门（没有 parentCode 的部门）
-    const level1Configs = DEPARTMENT_CONFIGS.filter(config => !config.parentCode);
+    const level1Configs = DEPARTMENT_CONFIGS.filter(
+      (config) => !config.parentCode,
+    );
     const level1Promises = level1Configs.map(async (config) => {
       const department = await prisma.department.upsert({
         where: { code: config.code },
@@ -170,7 +172,9 @@ export async function createDepartments(
     await Promise.all(level1Promises);
 
     // 第二步：创建所有二级部门（有 parentCode 的部门）
-    const level2Configs = DEPARTMENT_CONFIGS.filter(config => config.parentCode);
+    const level2Configs = DEPARTMENT_CONFIGS.filter(
+      (config) => config.parentCode,
+    );
     const level2Promises = level2Configs.map(async (config) => {
       const parentDepartment = departmentMap.get(config.parentCode!);
       if (!parentDepartment) {
@@ -199,7 +203,9 @@ export async function createDepartments(
       });
 
       departmentMap.set(config.code, department);
-      console.log(`✅ 创建二级部门: ${department.name} (隶属于 ${parentDepartment.name})`);
+      console.log(
+        `✅ 创建二级部门: ${department.name} (隶属于 ${parentDepartment.name})`,
+      );
       return department;
     });
 
@@ -229,7 +235,7 @@ export async function createDepartments(
 
 /**
  * 创建用户部门关联数据
- * 
+ *
  * @param prisma - Prisma 客户端实例
  * @param departments - 已创建的部门数据
  * @param users - 用户数据

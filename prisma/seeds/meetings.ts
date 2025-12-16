@@ -174,8 +174,6 @@ const MEETING_SUMMARY_CONFIGS = {
   },
 } as const;
 
-
-
 export interface CreatedMeetings {
   meetings: {
     teamMeeting: any;
@@ -387,8 +385,6 @@ async function createMeetingParticipant(
     },
   });
 }
-
-
 
 export async function createMeetings(
   prisma: PrismaClient,

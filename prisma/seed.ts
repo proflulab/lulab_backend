@@ -37,9 +37,7 @@
  *
  * @author 杨仕明 shiming.y@qq.com
  * @copyright 2025
-*/
-
-
+ */
 
 import { PrismaClient } from '@prisma/client';
 import {
@@ -696,5 +694,3 @@ if (require.main === module) {
       process.exit(1);
     });
 }
-
-

@@ -239,7 +239,7 @@ CREATE TABLE "meet_recording_files" (
 );
 
 -- CreateTable
-CREATE TABLE "meeting_summaries" (
+CREATE TABLE "meet_summaries" (
     "id" TEXT NOT NULL,
     "title" VARCHAR(500),
     "content" TEXT NOT NULL,
@@ -268,11 +268,11 @@ CREATE TABLE "meeting_summaries" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "meeting_summaries_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "meet_summaries_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "meeting_participants" (
+CREATE TABLE "meet_participants" (
     "id" TEXT NOT NULL,
     "meetingId" TEXT NOT NULL,
     "platformUserId" TEXT NOT NULL,
@@ -285,11 +285,11 @@ CREATE TABLE "meeting_participants" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "meeting_participants_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "meet_participants_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "meeting_user_actions" (
+CREATE TABLE "meet_user_actions" (
     "id" TEXT NOT NULL,
     "action" TEXT NOT NULL,
     "target_type" TEXT NOT NULL,
@@ -300,7 +300,7 @@ CREATE TABLE "meeting_user_actions" (
     "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "user_id" TEXT,
 
-    CONSTRAINT "meeting_user_actions_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "meet_user_actions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -841,43 +841,43 @@ CREATE INDEX "idx_recordings_meeting" ON "meet_recordings"("meeting_id");
 CREATE INDEX "idx_recording_files_recording" ON "meet_recording_files"("recording_id");
 
 -- CreateIndex
-CREATE INDEX "meeting_summaries_meetingId_idx" ON "meeting_summaries"("meetingId");
+CREATE INDEX "meet_summaries_meetingId_idx" ON "meet_summaries"("meetingId");
 
 -- CreateIndex
-CREATE INDEX "meeting_summaries_isLatest_idx" ON "meeting_summaries"("isLatest");
+CREATE INDEX "meet_summaries_isLatest_idx" ON "meet_summaries"("isLatest");
 
 -- CreateIndex
-CREATE INDEX "meeting_summaries_status_idx" ON "meeting_summaries"("status");
+CREATE INDEX "meet_summaries_status_idx" ON "meet_summaries"("status");
 
 -- CreateIndex
-CREATE INDEX "meeting_summaries_createdBy_idx" ON "meeting_summaries"("createdBy");
+CREATE INDEX "meet_summaries_createdBy_idx" ON "meet_summaries"("createdBy");
 
 -- CreateIndex
-CREATE INDEX "meeting_summaries_version_idx" ON "meeting_summaries"("version");
+CREATE INDEX "meet_summaries_version_idx" ON "meet_summaries"("version");
 
 -- CreateIndex
-CREATE INDEX "meeting_summaries_language_idx" ON "meeting_summaries"("language");
+CREATE INDEX "meet_summaries_language_idx" ON "meet_summaries"("language");
 
 -- CreateIndex
-CREATE INDEX "meeting_summaries_reviewedBy_idx" ON "meeting_summaries"("reviewedBy");
+CREATE INDEX "meet_summaries_reviewedBy_idx" ON "meet_summaries"("reviewedBy");
 
 -- CreateIndex
-CREATE INDEX "meeting_summaries_meetingId_isLatest_idx" ON "meeting_summaries"("meetingId", "isLatest");
+CREATE INDEX "meet_summaries_meetingId_isLatest_idx" ON "meet_summaries"("meetingId", "isLatest");
 
 -- CreateIndex
-CREATE INDEX "meeting_summaries_status_createdAt_idx" ON "meeting_summaries"("status", "createdAt");
+CREATE INDEX "meet_summaries_status_createdAt_idx" ON "meet_summaries"("status", "createdAt");
 
 -- CreateIndex
-CREATE INDEX "meeting_participants_meetingId_idx" ON "meeting_participants"("meetingId");
+CREATE INDEX "meet_participants_meetingId_idx" ON "meet_participants"("meetingId");
 
 -- CreateIndex
-CREATE INDEX "meeting_participants_platformUserId_idx" ON "meeting_participants"("platformUserId");
+CREATE INDEX "meet_participants_platformUserId_idx" ON "meet_participants"("platformUserId");
 
 -- CreateIndex
-CREATE INDEX "idx_actions_user_time" ON "meeting_user_actions"("user_id", "created_at");
+CREATE INDEX "idx_actions_user_time" ON "meet_user_actions"("user_id", "created_at");
 
 -- CreateIndex
-CREATE INDEX "idx_actions_target" ON "meeting_user_actions"("target_type", "target_id");
+CREATE INDEX "idx_actions_target" ON "meet_user_actions"("target_type", "target_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "orders_orderCode_key" ON "orders"("orderCode");
@@ -1246,28 +1246,28 @@ ALTER TABLE "meet_recording_files" ADD CONSTRAINT "meet_recording_files_recordin
 ALTER TABLE "meet_recording_files" ADD CONSTRAINT "meet_recording_files_file_object_id_fkey" FOREIGN KEY ("file_object_id") REFERENCES "storage_objects"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "meeting_summaries" ADD CONSTRAINT "meeting_summaries_parentSummaryId_fkey" FOREIGN KEY ("parentSummaryId") REFERENCES "meeting_summaries"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "meet_summaries" ADD CONSTRAINT "meet_summaries_parentSummaryId_fkey" FOREIGN KEY ("parentSummaryId") REFERENCES "meet_summaries"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "meeting_summaries" ADD CONSTRAINT "meeting_summaries_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "user_platforms"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "meet_summaries" ADD CONSTRAINT "meet_summaries_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "user_platforms"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "meeting_summaries" ADD CONSTRAINT "meeting_summaries_reviewedBy_fkey" FOREIGN KEY ("reviewedBy") REFERENCES "user_platforms"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "meet_summaries" ADD CONSTRAINT "meet_summaries_reviewedBy_fkey" FOREIGN KEY ("reviewedBy") REFERENCES "user_platforms"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "meeting_summaries" ADD CONSTRAINT "meeting_summaries_meetingId_fkey" FOREIGN KEY ("meetingId") REFERENCES "meetings"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "meet_summaries" ADD CONSTRAINT "meet_summaries_meetingId_fkey" FOREIGN KEY ("meetingId") REFERENCES "meetings"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "meeting_summaries" ADD CONSTRAINT "meeting_summaries_transcriptId_fkey" FOREIGN KEY ("transcriptId") REFERENCES "transcripts"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "meet_summaries" ADD CONSTRAINT "meet_summaries_transcriptId_fkey" FOREIGN KEY ("transcriptId") REFERENCES "transcripts"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "meeting_participants" ADD CONSTRAINT "meeting_participants_meetingId_fkey" FOREIGN KEY ("meetingId") REFERENCES "meetings"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "meet_participants" ADD CONSTRAINT "meet_participants_meetingId_fkey" FOREIGN KEY ("meetingId") REFERENCES "meetings"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "meeting_participants" ADD CONSTRAINT "meeting_participants_platformUserId_fkey" FOREIGN KEY ("platformUserId") REFERENCES "user_platforms"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "meet_participants" ADD CONSTRAINT "meet_participants_platformUserId_fkey" FOREIGN KEY ("platformUserId") REFERENCES "user_platforms"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "meeting_user_actions" ADD CONSTRAINT "meeting_user_actions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user_platforms"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "meet_user_actions" ADD CONSTRAINT "meet_user_actions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user_platforms"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "orders" ADD CONSTRAINT "orders_productId_fkey" FOREIGN KEY ("productId") REFERENCES "products"("id") ON DELETE SET NULL ON UPDATE CASCADE;

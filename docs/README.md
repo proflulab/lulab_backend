@@ -1,56 +1,25 @@
-# 项目文档
+# LuLab Backend 项目文档
 
 欢迎来到 LuLab Backend 项目文档！本文档库提供了项目的全面指南，包括架构、集成、功能模块和部署等信息。
 
 ## 📚 文档导航
 
-### 🚀 入门指南
-- [系统架构](getting-started/ARCHITECTURE.md) - 系统架构与模块划分
+本文档分为两个主要板块，请根据您的角色选择合适的文档入口：
 
-### 🔧 第三方集成
-#### 腾讯会议集成
-- [腾讯会议集成功能](reference/integrations/tencent-meeting/TENCENT_MEETING_INTEGRATION.md)
-- [腾讯会议Webhook](reference/integrations/tencent-meeting/TENCENT_MEETING_WEBHOOK.md)
+### 👨‍💻 开发者文档
+面向开发团队成员，包含技术实现细节、架构设计、开发指南等。
 
-#### 飞书集成
-- [飞书多维表格集成指南](reference/integrations/lark/LARK_INTEGRATION.md)
-- [飞书集成完成总结](reference/integrations/lark/LARK_INTEGRATION_SUMMARY.md)
-- [飞书Webhook集成指南](reference/integrations/lark/LARK_WEBHOOK_INTEGRATION.md)
-- [飞书多维表格批量操作](reference/integrations/lark/LARK_BITABLE_BATCH_OPERATIONS.md)
-- [飞书多维表格集成测试指南](reference/integrations/lark/LARK_BITABLE_TESTING_GUIDE.md)
-- [飞书多维表格Upsert操作](reference/integrations/lark/LARK_BITABLE_UPSERT_OPERATIONS.md)
-- [Bitable服务测试](reference/integrations/lark/BITABLE_SERVICE_TESTING.md)
-- [Bitable Upsert指南](reference/integrations/lark/BITABLE_UPSERT_GUIDE.md)
-- [录制文件记录表](reference/integrations/lark/RECORDING_FILE_TABLE.md)
+[📖 进入开发者文档](developer/README.md)
 
-#### 其他集成
-- [阿里云短信服务配置指南](reference/integrations/aliyun/ALIYUN_SMS_SETUP.md)
-- [邮件服务](reference/integrations/email/EMAIL_API.md)
+### 👤 用户文档
+面向最终用户，包含如何使用系统功能、API接口等。
 
-### 🎯 功能模块
-#### 认证相关
-- [注册流程说明](reference/authentication/REGISTRATION_FLOW.md)
-- [登出实现总结](reference/authentication/LOGOUT_IMPLEMENTATION_SUMMARY.md)
+[📖 进入用户文档](user/README.md)
 
-### 🏗️ 基础设施
-#### 数据库
-- [Prisma集成说明](infrastructure/database/PRISMA_SETUP.md)
+## 📝 文档贡献
 
-#### 部署
-- [部署与环境](infrastructure/deployment/DEPLOYMENT.md)
-
-### 📖 参考资料
-- [源码示例和演示](reference/src/) - 腾讯会议事件示例
-- [数据库示例](reference/prisma/) - Prisma数据库示例和风格指南
-
-## 🔍 快速查找
-
-如果您是第一次接触项目，建议按以下顺序阅读：
-
-1. [系统架构](getting-started/ARCHITECTURE.md) - 了解项目整体架构
-2. [项目规范与协作](getting-started/PROJECT_GUIDELINES.md) - 熟悉开发规范
-3. 根据您的需求，查看对应的集成指南或功能模块文档
-
-## 📞 技术支持
-
-如有问题，请参考对应文档中的"故障排除/注意事项"部分，或在任务/Issue中描述现象与日志。
+如果您想为文档做出贡献，请遵循以下原则：
+- 保持文档的准确性和时效性
+- 使用清晰简洁的语言
+- 为新功能添加相应的文档
+- 遵循现有的文档结构和格式规范

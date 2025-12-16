@@ -26,7 +26,7 @@ const ORGANIZATION_CONFIG = {
 
 /**
  * 创建组织数据
- * 
+ *
  * @param prisma - Prisma 客户端实例
  * @returns 创建的组织数据
  */

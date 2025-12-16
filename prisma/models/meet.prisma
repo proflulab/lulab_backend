@@ -163,7 +163,7 @@ model MeetingSummary {
   @@index([reviewedBy]) // 审核者查询优化
   @@index([meetingId, isLatest]) // 查询会议的最新总结
   @@index([status, createdAt]) // 按状态查询总结列表
-  @@map("meeting_summaries")
+  @@map("meet_summaries")
 }
 
 model MeetingParticipant {
@@ -192,7 +192,7 @@ model MeetingParticipant {
 
   @@index([meetingId])
   @@index([platformUserId])
-  @@map("meeting_participants")
+  @@map("meet_participants")
 }
 
 model MeetingUserAction {
@@ -211,7 +211,7 @@ model MeetingUserAction {
 
   @@index([platformUserId, createdAt], map: "idx_actions_user_time")
   @@index([targetType, targetId], map: "idx_actions_target")
-  @@map("meeting_user_actions")
+  @@map("meet_user_actions")
 }
 
 // 录制来源枚举

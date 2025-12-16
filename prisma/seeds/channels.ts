@@ -71,7 +71,7 @@ const CHANNEL_CONFIGS: ChannelConfig[] = [
 
 /**
  * 创建渠道数据
- * 
+ *
  * @param prisma - Prisma 客户端实例
  * @returns 创建的渠道数据
  */
