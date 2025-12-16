@@ -15,6 +15,7 @@ model UserOrganization {
   @@unique([userId, organizationId])
   @@index([userId])
   @@index([organizationId])
+  @@map("user_organizations")
 }
 
 // 用户部门关联表
@@ -34,6 +35,7 @@ model UserDepartment {
   @@unique([userId, departmentId])
   @@index([userId])
   @@index([departmentId])
+  @@map("user_departments")
 }
 
 // 用户角色关联表
@@ -52,6 +54,7 @@ model UserRole {
   @@unique([userId, roleId])
   @@index([userId])
   @@index([roleId])
+  @@map("user_roles")
 }
 
 // 角色权限关联表
@@ -70,6 +73,7 @@ model RolePermission {
   @@unique([roleId, permissionId])
   @@index([roleId])
   @@index([permissionId])
+  @@map("role_permissions")
 }
 
 // 用户权限关联表（用于特殊权限授权）
@@ -89,6 +93,7 @@ model UserPermission {
   @@unique([userId, permissionId])
   @@index([userId])
   @@index([permissionId])
+  @@map("user_permissions")
 }
 
 // 角色数据权限关联表
@@ -107,6 +112,7 @@ model RoleDataPermission {
   @@unique([roleId, ruleId])
   @@index([roleId])
   @@index([ruleId])
+  @@map("role_data_permissions")
 }
 
 // 用户数据权限关联表
@@ -126,4 +132,5 @@ model UserDataPermission {
   @@unique([userId, ruleId])
   @@index([userId])
   @@index([ruleId])
+  @@map("user_data_permissions")
 }

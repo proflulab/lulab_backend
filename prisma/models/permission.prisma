@@ -13,7 +13,7 @@ model Permission {
   active      Boolean        @default(true) // 是否启用
 
   // 自关联
-  parent   Permission?  @relation("PermissionHierarchy", fields: [parentId], references: [id])
+  parent   Permission?  @relation("PermissionHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
   children Permission[] @relation("PermissionHierarchy")
 
   // 关联关系
@@ -27,6 +27,9 @@ model Permission {
   @@index([resource])
   @@index([type])
   @@index([parentId])
+  @@index([type, active]) // 活跃权限查询
+  @@index([parentId, sortOrder]) // 子权限排序查询
+  @@map("permissions")
 }
 
 // 权限类型枚举
@@ -57,4 +60,5 @@ model DataPermissionRule {
 
   @@index([code])
   @@index([resource])
+  @@map("data_permission_rules")
 }

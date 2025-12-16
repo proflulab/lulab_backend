@@ -42,10 +42,8 @@ model User {
   dataPermissions UserDataPermission[] // 用户数据权限
 
   // 会议相关关联
-  MeetingParticipation MeetingParticipation[]
-  platformUsers        PlatformUser[] // 平台用户关联
-  createdSummaries     MeetingSummary[]       @relation("SummaryCreator") // 创建的总结
-  reviewedSummaries    MeetingSummary[]       @relation("ReviewedSummaries") // 审核的总结
+  platformUsers          PlatformUser[] // 平台用户关联
+  uploadedStorageObjects StorageObject[]
 
   // 登录日志关联
   loginLogs LoginLog[] // 登录日志
@@ -60,4 +58,6 @@ model User {
   @@index([active]) // 活跃用户查询
   @@index([deletedAt]) // 软删除查询索引
   @@index([lastLoginAt]) // 最后登录时间查询
+  @@index([active, deletedAt]) // 活跃用户查询优化
+  @@map("users")
 }
