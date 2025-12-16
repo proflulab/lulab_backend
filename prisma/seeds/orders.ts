@@ -1,14 +1,14 @@
 /*
  * @Author: 杨仕明 shiming.y@qq.com
- * @Date: 2025-06-20 04:09:42
+ * @Date: 2025-12-16 10:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-15 20:20:32
+ * @LastEditTime: 2025-12-16 10:00:00
  * @FilePath: /lulab_backend/prisma/seeds/orders.ts
- * @Description: 订单种子数据
+ * @Description: 订单数据种子模块 - 优化版本
  *
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
-import { PrismaClient, Product, User, Channel } from '@prisma/client';
+import { PrismaClient, Product, User, Channel, Currency } from '@prisma/client';
 
 interface CreateOrdersParams {
   users: {
@@ -67,7 +67,7 @@ export async function createOrders(
         financialClosedAt: new Date('2024-01-20'),
         financialClosed: true,
         amount: 29900, // 299.00 yuan in cents
-        currency: 'CNY',
+        currency: Currency.CNY,
         amountCny: 29900,
         paidAt: new Date('2024-01-15 10:30:00'),
         effectiveDate: new Date('2024-01-15'),
@@ -94,7 +94,7 @@ export async function createOrders(
         financialClosedAt: new Date('2024-02-05'),
         financialClosed: true,
         amount: 49900, // 499.00 yuan in cents
-        currency: 'CNY',
+        currency: Currency.CNY,
         amountCny: 49900,
         paidAt: new Date('2024-02-01 14:20:00'),
         effectiveDate: new Date('2024-02-01'),
@@ -121,7 +121,7 @@ export async function createOrders(
         financialClosedAt: new Date('2024-01-05'),
         financialClosed: true,
         amount: 99900, // 999.00 yuan in cents
-        currency: 'CNY',
+        currency: Currency.CNY,
         amountCny: 99900,
         paidAt: new Date('2024-01-01 09:15:00'),
         effectiveDate: new Date('2024-01-01'),
@@ -148,7 +148,7 @@ export async function createOrders(
         financialClosedAt: null,
         financialClosed: false,
         amount: 19900, // 199.00 yuan in cents
-        currency: 'CNY',
+        currency: Currency.CNY,
         amountCny: 19900,
         paidAt: new Date('2024-03-01 16:45:00'),
         effectiveDate: new Date('2024-03-01'),
@@ -175,7 +175,7 @@ export async function createOrders(
         financialClosedAt: new Date('2024-02-20'),
         financialClosed: true,
         amount: 79900, // 799.00 yuan in cents
-        currency: 'CNY',
+        currency: Currency.CNY,
         amountCny: 79900,
         paidAt: new Date('2024-02-15 11:30:00'),
         effectiveDate: new Date('2024-02-15'),
@@ -202,7 +202,7 @@ export async function createOrders(
         financialClosedAt: null,
         financialClosed: false,
         amount: 39900, // 399.00 yuan in cents
-        currency: 'CNY',
+        currency: Currency.CNY,
         amountCny: 39900,
         paidAt: new Date('2024-03-20 13:20:00'),
         effectiveDate: new Date('2024-03-20'),
@@ -229,7 +229,7 @@ export async function createOrders(
         financialClosedAt: new Date('2024-03-15'),
         financialClosed: true,
         amount: 7000, // 70.00 USD in cents
-        currency: 'USD',
+        currency: Currency.USD,
         amountCny: 49900, // 499.00 yuan in cents (按汇率折算)
         paidAt: new Date('2024-03-10 08:45:00'),
         effectiveDate: new Date('2024-03-10'),

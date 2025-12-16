@@ -8,9 +8,38 @@
  * - 分析数据库结构
  * - 重置数据库（清理+初始化）
  *
+ * 使用说明:
+ *
+ * 1. 初始化种子数据（默认）:
+ *    npx tsx prisma/seed.ts
+ *    npx tsx prisma/seed.ts seed
+ *
+ * 2. 清理数据库:
+ *    npx tsx prisma/seed.ts clean
+ *    - 自动发现所有数据库表
+ *    - 分析表之间的外键依赖关系
+ *    - 按正确的顺序清理数据，避免外键约束错误
+ *
+ * 3. 删除所有表结构:
+ *    npx tsx prisma/seed.ts drop
+ *    npx tsx prisma/seed.ts drop --force  # 强制删除（生产环境）
+ *    - 会显示将要删除的表列表
+ *    - 需要输入 "DELETE" 确认操作（非强制模式）
+ *
+ * 4. 分析数据库结构:
+ *    npx tsx prisma/seed.ts analyze
+ *
+ * 5. 重置数据库（清理 + 初始化）:
+ *    npx tsx prisma/seed.ts reset
+ *
+ * ⚠️ 注意：清理和重置操作会删除所有数据，请谨慎使用！
+ *
+ *
  * @author 杨仕明 shiming.y@qq.com
  * @copyright 2025
- */
+*/
+
+
 
 import { PrismaClient } from '@prisma/client';
 import {
@@ -668,30 +697,4 @@ if (require.main === module) {
     });
 }
 
-/**
- * 使用说明:
- *
- * 1. 初始化种子数据（默认）:
- *    npx tsx prisma/seed.ts
- *    npx tsx prisma/seed.ts seed
- *
- * 2. 清理数据库:
- *    npx tsx prisma/seed.ts clean
- *    - 自动发现所有数据库表
- *    - 分析表之间的外键依赖关系
- *    - 按正确的顺序清理数据，避免外键约束错误
- *
- * 3. 删除所有表结构:
- *    npx tsx prisma/seed.ts drop
- *    npx tsx prisma/seed.ts drop --force  # 强制删除（生产环境）
- *    - 会显示将要删除的表列表
- *    - 需要输入 "DELETE" 确认操作（非强制模式）
- *
- * 4. 分析数据库结构:
- *    npx tsx prisma/seed.ts analyze
- *
- * 5. 重置数据库（清理 + 初始化）:
- *    npx tsx prisma/seed.ts reset
- *
- * ⚠️ 注意：清理和重置操作会删除所有数据，请谨慎使用！
- */
+

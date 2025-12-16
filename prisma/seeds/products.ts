@@ -1,10 +1,10 @@
 /*
  * @Author: 杨仕明 shiming.y@qq.com
- * @Date: 2025-06-22 03:48:43
+ * @Date: 2025-12-16 10:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-15 20:20:24
+ * @LastEditTime: 2025-12-16 10:00:00
  * @FilePath: /lulab_backend/prisma/seeds/products.ts
- * @Description:
+ * @Description: 产品数据种子模块 - 优化版本
  *
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
@@ -15,6 +15,7 @@ import {
   User,
   ProductCategory,
   ProductStatus,
+  Currency,
 } from '@prisma/client';
 
 export interface CreatedProducts {
@@ -59,7 +60,7 @@ async function createProduct(
       status: ProductStatus.ACTIVE,
       price: config.price,
       originalPrice: config.originalPrice,
-      currency: 'CNY',
+      currency: Currency.CNY,
       tags: config.tags,
       imageUrl: config.imageUrl,
       videoUrl: config.videoUrl,
