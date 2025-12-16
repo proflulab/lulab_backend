@@ -1,5 +1,5 @@
 model Transcript {
-  id         String    @id @default(uuid())
+  id         String    @id @default(cuid())
   source     String? // 文件名/来源
   rawJson    Json? // 可选：整份原始 JSON 备份
   language   String    @default("zh-CN")
@@ -20,7 +20,7 @@ model Transcript {
 }
 
 model Paragraph {
-  id           String @id @default(uuid())
+  id           String @id @default(cuid())
   transcriptId String
   pid          String
   startTimeMs  BigInt
@@ -40,7 +40,7 @@ model Paragraph {
 }
 
 model Sentence {
-  id          String @id @default(uuid())
+  id          String @id @default(cuid())
   paragraphId String
   sid         String
   startTimeMs BigInt
@@ -57,7 +57,7 @@ model Sentence {
 }
 
 model Word {
-  id          String @id @default(uuid())
+  id          String @id @default(cuid())
   sentenceId  String
   wid         String
   order       Int // 导入时按数组顺序写入

@@ -1,6 +1,6 @@
 // 项目表
 model Project {
-  id            String  @id @default(uuid()) @db.VarChar(50)
+  id            String  @id @default(cuid())
   title         String  @db.VarChar(100) // 项目标题
   subtitle      String? @db.VarChar(150) // 项目副标题
   category      String? @db.VarChar(50) // 项目分类

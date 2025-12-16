@@ -1,7 +1,7 @@
 // 课程表
 model Curriculum {
-  id          String  @id @default(uuid()) @db.VarChar(50)
-  projectId   String? @map("project_id") @db.VarChar(50) // 项目ID
+  id          String  @id @default(cuid())
+  projectId   String? @map("project_id") // 项目ID
   title       String? @db.VarChar(100) // 课程标题
   description String? @db.Text // 课程描述
   week        Int? // 第几周
