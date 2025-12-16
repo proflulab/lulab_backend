@@ -1,81 +1,56 @@
-# 项目文档目录（统一入口）
+# 项目文档
 
-本页作为文档统一入口与导航，覆盖集成指南、开发规范、测试与部署等主题。
+欢迎来到 LuLab Backend 项目文档！本文档库提供了项目的全面指南，包括架构、集成、功能模块和部署等信息。
 
-## 🚀 快速开始
+## 📚 文档导航
 
-- 项目总览与运行：根目录 `README.md`
-- 架构与模块：`ARCHITECTURE.md`
-- API 概览与示例：`API_DOCUMENTATION.md`，Swagger：`/api`
+### 🚀 入门指南
+- [系统架构](getting-started/ARCHITECTURE.md) - 系统架构与模块划分
 
-## 🔧 集成与配置
+### 🔧 第三方集成
+#### 腾讯会议集成
+- [腾讯会议集成功能](reference/integrations/tencent-meeting/TENCENT_MEETING_INTEGRATION.md)
+- [腾讯会议Webhook](reference/integrations/tencent-meeting/TENCENT_MEETING_WEBHOOK.md)
 
-- 腾讯会议：`TENCENT_MEETING_INTEGRATION.md`、`TENCENT_MEETING_WEBHOOK.md`
-- 飞书集成：`LARK_INTEGRATION.md`、`LARK_INTEGRATION_SUMMARY.md`、`LARK_WEBHOOK_INTEGRATION.md`
-- 邮件服务：`EMAIL_API.md`
-- 阿里云短信：`ALIYUN_SMS_SETUP.md`
-- Prisma 数据库：`PRISMA_SETUP.md`
-- 登出机制：`LOGOUT_IMPLEMENTATION_SUMMARY.md`
+#### 飞书集成
+- [飞书多维表格集成指南](reference/integrations/lark/LARK_INTEGRATION.md)
+- [飞书集成完成总结](reference/integrations/lark/LARK_INTEGRATION_SUMMARY.md)
+- [飞书Webhook集成指南](reference/integrations/lark/LARK_WEBHOOK_INTEGRATION.md)
+- [飞书多维表格批量操作](reference/integrations/lark/LARK_BITABLE_BATCH_OPERATIONS.md)
+- [飞书多维表格集成测试指南](reference/integrations/lark/LARK_BITABLE_TESTING_GUIDE.md)
+- [飞书多维表格Upsert操作](reference/integrations/lark/LARK_BITABLE_UPSERT_OPERATIONS.md)
+- [Bitable服务测试](reference/integrations/lark/BITABLE_SERVICE_TESTING.md)
+- [Bitable Upsert指南](reference/integrations/lark/BITABLE_UPSERT_GUIDE.md)
+- [录制文件记录表](reference/integrations/lark/RECORDING_FILE_TABLE.md)
 
-## 📊 飞书多维表格专题
+#### 其他集成
+- [阿里云短信服务配置指南](reference/integrations/aliyun/ALIYUN_SMS_SETUP.md)
+- [邮件服务](reference/integrations/email/EMAIL_API.md)
 
-- 录制文件记录表：`RECORDING_FILE_TABLE.md`
-- 批量操作指南：`LARK_BITABLE_BATCH_OPERATIONS.md`
-- Upsert 操作详解：`LARK_BITABLE_UPSERT_OPERATIONS.md`、`BITABLE_UPSERT_GUIDE.md`
-- 测试指南：`LARK_BITABLE_TESTING_GUIDE.md`、`BITABLE_SERVICE_TESTING.md`
+### 🎯 功能模块
+#### 认证相关
+- [注册流程说明](reference/authentication/REGISTRATION_FLOW.md)
+- [登出实现总结](reference/authentication/LOGOUT_IMPLEMENTATION_SUMMARY.md)
 
-## 👥 用户与认证
+### 🏗️ 基础设施
+#### 数据库
+- [Prisma集成说明](infrastructure/database/PRISMA_SETUP.md)
 
-- 注册流程：`REGISTRATION_FLOW.md`
-- 登出实现：`LOGOUT_IMPLEMENTATION_SUMMARY.md`
+#### 部署
+- [部署与环境](infrastructure/deployment/DEPLOYMENT.md)
 
-## 🧭 项目规范与协作
+### 📖 参考资料
+- [源码示例和演示](reference/src/) - 腾讯会议事件示例
+- [数据库示例](reference/prisma/) - Prisma数据库示例和风格指南
 
-- 项目协作与规范（Monorepo 指南）：`PROJECT_GUIDELINES.md`
-  - 项目结构、命令、代码风格
-  - 测试约定与覆盖率
-  - 提交/PR 规范，安全与配置建议
+## 🔍 快速查找
 
-## 🧪 测试与质量
+如果您是第一次接触项目，建议按以下顺序阅读：
 
-- 测试分层与运行：[test/README.md](../test/README.md)
-- 常用脚本：根 `README.md` 与 `package.json` scripts
-
-## 🚀 部署与运维
-
-- 部署与环境：`DEPLOYMENT.md`
-
-## ⚡ 快捷导航
-
-常用直达：
-
-- **核心集成**
-  - 腾讯会议：`TENCENT_MEETING_INTEGRATION.md`｜`TENCENT_MEETING_WEBHOOK.md`
-  - 飞书：`LARK_INTEGRATION.md`｜`LARK_INTEGRATION_SUMMARY.md`｜`LARK_WEBHOOK_INTEGRATION.md`
-  - 登出机制：`LOGOUT_IMPLEMENTATION_SUMMARY.md`
-
-- **数据与存储**
-  - Prisma：`PRISMA_SETUP.md`
-  - 录制文件表：`RECORDING_FILE_TABLE.md`
-
-- **飞书专题**
-  - 批量操作：`LARK_BITABLE_BATCH_OPERATIONS.md`
-  - Upsert 操作：`LARK_BITABLE_UPSERT_OPERATIONS.md`｜`BITABLE_UPSERT_GUIDE.md`
-  - 测试：`LARK_BITABLE_TESTING_GUIDE.md`｜`BITABLE_SERVICE_TESTING.md`
-
-- **通信与用户**
-  - 邮件：`EMAIL_API.md`
-  - 短信：`ALIYUN_SMS_SETUP.md`
-  - 注册流程：`REGISTRATION_FLOW.md`
-  - 登出机制：`LOGOUT_IMPLEMENTATION_SUMMARY.md`
-
-- **规范与运维**
-  - 项目规范：`PROJECT_GUIDELINES.md`
-  - API文档：`API_DOCUMENTATION.md`
-  - 部署：`DEPLOYMENT.md`
-  - 目录结构：`DIRECTORY_STRUCTURE.md`
+1. [系统架构](getting-started/ARCHITECTURE.md) - 了解项目整体架构
+2. [项目规范与协作](getting-started/PROJECT_GUIDELINES.md) - 熟悉开发规范
+3. 根据您的需求，查看对应的集成指南或功能模块文档
 
 ## 📞 技术支持
 
-- 优先参考对应文档"故障排除/注意事项"
-- 如仍有问题，请在任务/Issue 中描述现象与日志
+如有问题，请参考对应文档中的"故障排除/注意事项"部分，或在任务/Issue中描述现象与日志。

@@ -22,9 +22,9 @@ const TRANSCRIPT_DIALOGUE = [
       }
     ],
     speaker_info: {
-      userid: "woaJARCQAAW77jsYznG9_tCWfsw93s_w",
+      userid: "user_001",
       openId: "",
-      username: "曹泰宇",
+      username: "用户001",
       ms_open_id: ""
     }
   },
@@ -48,9 +48,9 @@ const TRANSCRIPT_DIALOGUE = [
       }
     ],
     speaker_info: {
-      userid: "woaJARCQAAOfoysBFyV5bdQYjxk7oppA",
+      userid: "user_002",
       openId: "",
-      username: "龙奎亦",
+      username: "用户002",
       ms_open_id: ""
     }
   },
@@ -74,9 +74,9 @@ const TRANSCRIPT_DIALOGUE = [
       }
     ],
     speaker_info: {
-      userid: "woaJARCQAAW77jsYznG9_tCWfsw93s_w",
+      userid: "user_001",
       openId: "",
-      username: "曹泰宇",
+      username: "用户001",
       ms_open_id: ""
     }
   },
@@ -100,9 +100,9 @@ const TRANSCRIPT_DIALOGUE = [
       }
     ],
     speaker_info: {
-      userid: "woaJARCQAAW77jsYznG9_tCWfsw93s_w",
+      userid: "user_001",
       openId: "",
-      username: "曹泰宇",
+      username: "用户001",
       ms_open_id: ""
     }
   },
@@ -126,9 +126,9 @@ const TRANSCRIPT_DIALOGUE = [
       }
     ],
     speaker_info: {
-      userid: "woaJARCQAAOfoysBFyV5bdQYjxk7oppA",
+      userid: "user_002",
       openId: "",
-      username: "龙奎亦",
+      username: "用户002",
       ms_open_id: ""
     }
   },
@@ -152,9 +152,9 @@ const TRANSCRIPT_DIALOGUE = [
       }
     ],
     speaker_info: {
-      userid: "woaJARCQAAW77jsYznG9_tCWfsw93s_w",
+      userid: "user_001",
       openId: "",
-      username: "曹泰宇",
+      username: "用户001",
       ms_open_id: ""
     }
   },
@@ -178,9 +178,9 @@ const TRANSCRIPT_DIALOGUE = [
       }
     ],
     speaker_info: {
-      userid: "woaJARCQAAOfoysBFyV5bdQYjxk7oppA",
+      userid: "user_002",
       openId: "",
-      username: "龙奎亦",
+      username: "用户002",
       ms_open_id: ""
     }
   }

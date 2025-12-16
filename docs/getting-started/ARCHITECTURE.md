@@ -49,6 +49,12 @@
 - 测试: Jest + Supertest
 - 构建: Nest build（tsc/SWC）
 - 依赖管理: pnpm
+- 队列管理: BullMQ + Redis
+- 任务调度: @nestjs/schedule
+- GraphQL: Apollo Server
+- 身份验证: JWT + Passport
+- 密码加密: bcryptjs
+- 数据验证: class-validator + class-transformer
 
 ### 第三方服务集成
 
@@ -56,6 +62,7 @@
 - **飞书**: 多维表格数据同步，支持 Upsert 操作
 - **阿里云**: 短信服务 (SMS)
 - **邮件服务**: SMTP/邮件API，支持 Nodemailer
+- **OpenAI**: AI 功能支持，包括会议总结、转录等
 
 ### 现代化特性
 
@@ -63,6 +70,9 @@
 - **定时任务**: 使用 @nestjs/schedule 支持定时任务调度
 - **路径别名**: 配置 `@/` 指向 `src/`，提升代码可读性
 - **TypeScript 支持**: 全面使用 TypeScript，配合 tsx 运行时工具
+- **队列系统**: BullMQ + Redis 支持异步任务处理
+- **缓存系统**: Redis 支持数据缓存和会话存储
+- **API 文档**: 自动生成 Swagger/OpenAPI 文档
 
 ## 模块划分
 
@@ -83,39 +93,57 @@
   - **UserRepository**：用户与档案读写
   - **LoginLogRepository**：登录日志统计与写入
   - **RefreshTokenRepository**：刷新令牌管理
+- 安全层：
+  - **JwtAuthGuard**：JWT 认证守卫
+  - **JwtStrategy**：JWT 认证策略
+- 装饰器：
+  - **@Public**：标记公开接口
+  - **@User**：提取用户信息
+  - **@ApiDocs**：API 文档装饰器
 
 #### 2. 会议模块 (Meeting Module)
 
-- 会议记录管理
-- 会议数据存储
-- 会议文件处理
-- 会议参与者管理
+- **MeetingService**：会议记录管理业务逻辑
+- **MeetingRepository**：会议数据访问层
+- **MeetingController**：会议管理 API 接口
+- **TextAnalysisUtil**：会议文本分析工具
+- **装饰器**：会议记录相关装饰器
+- **DTO**：会议记录数据传输对象
+- **类型定义**：会议相关类型定义
 
-#### 5. 腾讯会议集成模块 (Tencent Meeting Module)
+#### 3. 腾讯会议集成模块 (Tencent Meeting Module)
 
 - **Webhook事件处理器**：
   - MeetingStartedHandler：会议开始事件
   - MeetingEndedHandler：会议结束事件
   - RecordingCompletedHandler：录制完成事件
+  - MeetingParticipantJoinedHandler：参与者加入事件
 - **服务层**：
   - TencentEventHandlerService：Webhook 事件分发
+  - TencentApiService：腾讯会议开放 API 调用
   - TencentMeetingConfigService：配置管理
 - **控制器**：
   - TencentWebhookController：Webhook 事件接收
   - TencentMeetingController：管理接口
+- **工具类**：
+  - 加密工具：签名验证和 AES 解密
+  - 类型定义：会议、录制、参会者等 API 响应类型
+  - 异常处理：腾讯会议 API 相关异常
 
 #### 4. 集成服务模块 (Integration Services)
 
 ##### 飞书集成 (Lark Integration)
 - **LarkClient**：飞书 SDK 封装和 API 调用
 - **BitableService**：多维表格操作服务
+- **MeetingRecordingService**：会议录制处理服务
 - **Repositories**：
-  - MeetingBitableRepository：会议记录管理
-  - MeetingUserBitableRepository：会议用户管理
-  - RecordingFileBitableRepository：录制文件管理
-- **类型定义**：MeetingData, MeetingUserData, RecordingFileData
+  - MeetingRepository：会议记录管理
+  - MeetingUserRepository：会议用户管理
+  - MeetingRecordingFileRepository：录制文件管理
+  - NumberRecordRepository：数字记录管理
+- **类型定义**：MeetingData, MeetingUserData, RecordingFileData 等
 - **异常处理**：Lark 相关异常类
-- **数据验证**：字段验证器
+- **数据验证**：FieldValidator 字段验证器
 
 ##### 腾讯会议集成 (Tencent Meeting Integration)
 - **TencentApiService**：腾讯会议开放 API 调用
@@ -126,30 +154,47 @@
 ##### 其他集成服务
 - **阿里云短信 (Aliyun SMS)**：短信发送服务
 - **邮件服务 (Email Service)**：SMTP 邮件发送服务
+- **OpenAI 集成**：AI 功能支持
 
-#### 6. 飞书会议模块 (Lark Meeting Module)
+#### 5. 飞书会议模块 (Lark Meeting Module)
 
 - **LarkWebhookController**：飞书 Webhook 事件接收
 - **LarkWebhookService**：飞书事件处理服务
+- **LarkMeetingService**：飞书会议业务逻辑
+- **LarkEventWsService**：WebSocket 事件服务
+- **LarkEventProcessor**：事件队列处理器
+- **适配器**：LarkEventAdapter，PickRequestData
 - **兼容性支持**：保留旧的 `/webhooks/feishu` 路由别名
 
-#### 7. 邮件模块 (Email Module)
+#### 6. 邮件模块 (Email Module)
 
 - **EmailController**：邮件发送 API 接口
 - **EmailService**：邮件发送业务逻辑
+- **MailProcessor**：邮件队列处理器
 - **模板管理**：邮件模板系统
+- **装饰器**：邮件相关装饰器
 
-#### 8. 验证码模块 (Verification Module)
+#### 7. 验证码模块 (Verification Module)
 
 - **VerificationController**：验证码 API 接口
 - **VerificationService**：验证码生成、发送和验证
+- **VerificationRepository**：验证码数据管理
 - **多渠道支持**：邮件和短信验证码
 
-#### 9. 用户模块 (User Module)
+#### 8. 用户模块 (User Module)
 
 - **UserController**：用户管理 API 接口
 - **UserService**：用户信息管理业务逻辑
+- **ProfileService**：用户档案管理
+- **UserRepository**：用户数据访问层
 - **功能**：用户档案管理、权限控制
+
+#### 9. 任务模块 (Task Module)
+
+- **TaskController**：任务管理 API 接口
+- **TaskService**：任务业务逻辑
+- **TaskProcessor**：任务队列处理器
+- **功能**：定时任务、一次性任务管理
 
 #### 10. 安全模块 (Security Module)
 
@@ -160,8 +205,20 @@
 #### 11. 公共模块 (Common Module)
 
 - **工具类**：随机数生成、验证器、HTTP 文件处理
-- **邮件模板**：邮件模板系统
 - **枚举类型**：公共枚举定义
+- **邮件模板**：邮件模板系统
+
+#### 12. 数据库模块 (Database Module)
+
+- **PrismaService**：Prisma 客户端管理
+- **PrismaModule**：数据库模块配置
+- **数据库连接**：PostgreSQL 连接管理
+
+#### 13. 缓存模块 (Cache Module)
+
+- **RedisService**：Redis 客户端管理
+- **RedisModule**：缓存模块配置
+- **缓存策略**：数据缓存、会话存储
 
 ## 数据流设计
 
@@ -188,7 +245,7 @@
 ```text
 1. 接收录制完成事件 (RecordingCompletedHandler)
          ↓
-2. 调用腾讯会诮API获取录制文件详情
+2. 调用腾讯会议API获取录制文件详情
          ↓
 3. 下载录制文件（HttpFileUtil）
          ↓
@@ -215,6 +272,64 @@
 5. Upsert 操作（基于唯一键去重）
          ↓
 6. 返回操作结果和记录 ID
+```
+
+### 用户认证流程
+
+```text
+1. 用户提交登录请求
+         ↓
+2. LoginService 验证用户凭据
+         ↓
+3. TokenService 生成 JWT Token
+         ↓
+4. 记录登录日志 (LoginLogRepository)
+         ↓
+5. 返回认证信息
+```
+
+### 邮件/短信验证码流程
+
+```text
+1. 用户请求发送验证码
+         ↓
+2. VerificationService 生成验证码
+         ↓
+3. 调用第三方服务发送 (Aliyun SMS / Email Service)
+         ↓
+4. 存储验证码记录 (VerificationRepository)
+         ↓
+5. 用户提交验证码进行验证
+```
+
+### 异步任务处理流程
+
+```text
+1. 业务操作触发任务
+         ↓
+2. 任务加入 BullMQ 队列
+         ↓
+3. Redis 存储队列数据
+         ↓
+4. TaskProcessor 处理任务
+         ↓
+5. 更新任务状态到数据库
+```
+
+### AI 功能处理流程
+
+```text
+1. 会议录制/转录完成
+         ↓
+2. 触发 AI 处理任务
+         ↓
+3. 调用 OpenAI API 进行处理
+         ↓
+4. 生成会议总结/分析
+         ↓
+5. 存储结果到数据库
+         ↓
+6. 同步到飞书多维表格
 ```
 
 ## 数据库设计
@@ -255,6 +370,181 @@ User─────────┘
 Meetings 1───┐
               ├── MeetingSummary
 MeetingFile──┘
+```
+
+### 主要数据模型
+
+#### 用户相关模型
+- **User**: 用户基本信息，包括用户名、邮箱、手机号等
+- **UserProfile**: 用户详细资料
+- **Account**: 第三方账户关联
+- **Session**: 用户会话管理
+- **RefreshToken**: 刷新令牌管理
+- **LoginLog**: 登录日志记录
+
+#### 权限系统模型
+- **Organization**: 组织信息
+- **Department**: 部门信息
+- **Role**: 角色定义
+- **Permission**: 权限定义
+- **UserRole**: 用户角色关联
+- **UserPermission**: 用户特殊权限
+- **UserDataPermission**: 用户数据权限
+
+#### 会议相关模型
+- **Meeting**: 会议基本信息
+- **MeetingRecording**: 会议录制信息
+- **MeetingRecordingFile**: 录制文件详情
+- **MeetingParticipant**: 会议参与者记录
+- **MeetingSummary**: 会议总结
+- **MeetingUserAction**: 用户行为记录
+- **Transcript**: 会议转录文本
+- **PlatformUser**: 平台用户关联
+
+#### 业务数据模型
+- **Product**: 产品信息
+- **Order**: 订单信息
+- **OrderRefund**: 退款记录
+- **Project**: 项目信息
+- **Task**: 任务信息
+- **Channel**: 渠道信息
+- **Curriculum**: 课程信息
+
+#### 系统支持模型
+- **Verification**: 验证码记录
+- **StorageObject**: 存储对象
+- **NumberRecord**: 数字记录
+
+### 数据库特性
+
+#### 索引优化
+- 用户查询优化：username, email, phone 索引
+- 会议查询优化：platform, startAt, endAt 索引
+- 软删除支持：deletedAt 索引
+- 复合索引：active + deletedAt, platform + startAt 等
+
+#### 数据完整性
+- 外键约束确保数据一致性
+- 唯一约束防止重复数据
+- 软删除支持数据恢复
+- 时间戳记录创建和更新时间
+
+#### 扩展性设计
+- JSON 字段支持灵活的元数据存储
+- 枚举类型确保数据一致性
+- 多对多关系支持复杂业务场景
+- 分表设计支持大数据量
+
+## 项目结构
+
+```
+lulab_backend/
+├── src/                           # 源代码目录
+│   ├── auth/                      # 认证模块
+│   │   ├── controllers/           # 控制器
+│   │   ├── services/              # 业务逻辑服务
+│   │   ├── repositories/          # 数据访问层
+│   │   ├── dto/                   # 数据传输对象
+│   │   ├── enums/                 # 枚举定义
+│   │   ├── types/                 # 类型定义
+│   │   ├── guards/                # 守卫
+│   │   ├── strategies/            # 策略
+│   │   └── decorators/            # 装饰器
+│   ├── meeting/                   # 会议模块
+│   ├── hook-tencent-mtg/           # 腾讯会议集成
+│   ├── integrations/               # 第三方集成
+│   │   ├── lark/                  # 飞书集成
+│   │   ├── tencent-meeting/       # 腾讯会议API
+│   │   ├── aliyun/                # 阿里云服务
+│   │   ├── email/                 # 邮件服务
+│   │   └── openai/                # OpenAI集成
+│   ├── lark-meeting/              # 飞书会议模块
+│   ├── user/                      # 用户模块
+│   ├── verification/              # 验证码模块
+│   ├── mail/                      # 邮件模块
+│   ├── task/                      # 任务模块
+│   ├── common/                    # 公共模块
+│   ├── configs/                   # 配置模块
+│   ├── prisma/                    # 数据库模块
+│   └── redis/                     # 缓存模块
+├── prisma/                        # 数据库相关
+│   ├── models/                    # 数据模型定义
+│   ├── seeds/                     # 种子数据
+│   ├── migrations/                # 数据库迁移
+│   └── schema.prisma              # Prisma主模式文件
+├── docs/                          # 文档目录
+│   ├── getting-started/           # 入门文档
+│   ├── infrastructure/            # 基础设施文档
+│   └── reference/                 # 参考文档
+├── scripts/                       # 脚本目录
+└── test/                          # 测试目录
+```
+
+## 开发流程
+
+### 本地开发环境搭建
+
+1. **安装依赖**
+   ```bash
+   pnpm install
+   ```
+
+2. **配置环境变量**
+   ```bash
+   cp .env.example .env
+   # 编辑 .env 文件，配置必要的环境变量
+   ```
+
+3. **数据库设置**
+   ```bash
+   # 生成 Prisma 客户端
+   pnpm db:generate
+   
+   # 运行数据库迁移
+   pnpm db:migrate
+   
+   # 填充种子数据
+   pnpm db:seed
+   ```
+
+4. **启动开发服务器**
+   ```bash
+   pnpm start:dev
+   ```
+
+### 代码质量检查
+
+```bash
+# 代码格式化
+pnpm format
+
+# 代码检查和修复
+pnpm lint
+
+# 运行测试
+pnpm test:unit
+
+# 运行所有测试
+pnpm test:all
+
+# 生成测试覆盖率报告
+pnpm test:cov
+```
+
+### 数据库操作
+
+```bash
+# 查看数据库
+pnpm db:studio
+
+# 重置数据库
+pnpm db:reset
+
+# 备份数据库
+pnpm db:backup
+
+# 清理数据
+pnpm db:cleandata
 ```
 
 ## 部署架构
