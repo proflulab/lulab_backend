@@ -1,20 +1,3 @@
-// 产品分类枚举
-enum ProductCategory {
-  COURSE // 课程
-  MEMBERSHIP // 会员
-  CONSULTATION // 咨询
-  MATERIAL // 资料
-  OTHER // 其他
-}
-
-// 产品状态枚举
-enum ProductStatus {
-  ACTIVE // 上架
-  INACTIVE // 下架
-  DRAFT // 草稿
-  ARCHIVED // 已归档
-}
-
 // 产品表
 model Product {
   id               String          @id @default(cuid()) // 内部主键
@@ -47,8 +30,8 @@ model Product {
   archivedAt       DateTime? // 归档时间
 
   // 关联关系
-  creator User?   @relation("ProductCreator", fields: [createdBy], references: [id])
-  updater User?   @relation("ProductUpdater", fields: [updatedBy], references: [id])
+  creator User?   @relation("ProductCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater User?   @relation("ProductUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
   orders  Order[] // 产品的订单记录
 
   createdAt DateTime @default(now()) // 创建时间
@@ -58,4 +41,24 @@ model Product {
   @@index([status])
   @@index([createdAt])
   @@index([publishedAt])
+  @@index([status, publishedAt]) // 已发布产品查询
+  @@index([category, status]) // 分类产品查询
+  @@map("products")
+}
+
+// 产品分类枚举
+enum ProductCategory {
+  COURSE // 课程
+  MEMBERSHIP // 会员
+  CONSULTATION // 咨询
+  MATERIAL // 资料
+  OTHER // 其他
+}
+
+// 产品状态枚举
+enum ProductStatus {
+  ACTIVE // 上架
+  INACTIVE // 下架
+  DRAFT // 草稿
+  ARCHIVED // 已归档
 }

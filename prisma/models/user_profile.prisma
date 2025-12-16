@@ -1,11 +1,3 @@
-// 在文件开头添加性别枚举
-enum Gender {
-  MALE // 男性
-  FEMALE // 女性
-  OTHER // 其他
-  PREFER_NOT_TO_SAY // 不愿透露
-}
-
 model UserProfile {
   id     String @id @default(cuid())
   userId String @unique
@@ -33,4 +25,13 @@ model UserProfile {
   updatedAt DateTime @updatedAt
 
   @@index([userId]) // 用户关联查询优化
+  @@map("user_profiles")
+}
+
+// 性别枚举
+enum Gender {
+  MALE // 男性
+  FEMALE // 女性
+  OTHER // 其他
+  PREFER_NOT_TO_SAY // 不愿透露
 }
