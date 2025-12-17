@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ProcessingStatus } from '@prisma/client';
 import { MeetingRepository } from './repositories/meeting.repository';
-import { GetMeetingRecordsParams } from './types/meeting.types';
+import { GetMeetingRecordsParams } from './types';
 import { MeetingRecordResponseDto } from './dto/meeting-record.dto';
 import { CreateMeetingRecordDto } from './dto/create-meeting-record.dto';
 import { UpdateMeetingRecordDto } from './dto/update-meeting-record.dto';

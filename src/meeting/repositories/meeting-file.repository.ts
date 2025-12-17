@@ -13,7 +13,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type {
   CreateMeetingFileData,
   UpdateMeetingFileData,
-} from '@/meeting/types/meeting.types';
+} from '@/meeting/types';
 
 @Injectable()
 export class MeetingFileRepository {

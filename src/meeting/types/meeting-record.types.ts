@@ -2,7 +2,6 @@ import {
   MeetingPlatform,
   MeetingType,
   ProcessingStatus,
-  RecordingFileType,
 } from '@prisma/client';
 
 /**
@@ -39,20 +38,6 @@ export interface UpdateMeetingRecordParams {
 }
 
 /**
- * 会议文件创建参数
- */
-export interface CreateMeetingFileParams {
-  recordingId: string;
-  fileObjectId: string;
-  fileType: RecordingFileType;
-  durationMs?: number | bigint;
-  resolution?: string;
-}
-
-// Repository-layer alias for creating meeting file
-export type CreateMeetingFileData = CreateMeetingFileParams;
-
-/**
  * 会议记录查询参数
  */
 export interface GetMeetingRecordsParams {
@@ -86,42 +71,3 @@ export interface CreateMeetingRecordData {
  * 仓储层：会议记录更新数据（与服务层参数等价）
  */
 export type UpdateMeetingRecordData = UpdateMeetingRecordParams;
-
-/**
- * 仓储层：会议文件更新数据
- */
-export interface UpdateMeetingFileData {
-  fileObjectId?: string;
-  fileType?: RecordingFileType;
-  durationMs?: number | bigint;
-  resolution?: string;
-}
-
-/**
- * 平台事件数据接口
- */
-export interface PlatformEventData {
-  event: string;
-  platform: MeetingPlatform;
-  payload: any;
-}
-
-/**
- * Webhook验证参数
- */
-export interface WebhookVerificationParams {
-  timestamp: string;
-  nonce: string;
-  signature: string;
-  data: string;
-}
-
-/**
- * URL验证参数
- */
-export interface UrlVerificationParams {
-  checkStr: string;
-  timestamp: string;
-  nonce: string;
-  signature: string;
-}

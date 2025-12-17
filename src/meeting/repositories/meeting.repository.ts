@@ -4,7 +4,7 @@ import type {
   CreateMeetingRecordData,
   UpdateMeetingRecordData,
   GetMeetingRecordsParams,
-} from '@/meeting/types/meeting.types';
+} from '@/meeting/types';
 import { MeetingPlatform } from '@prisma/client';
 
 @Injectable()
@@ -12,7 +12,7 @@ export class MeetingRepository {
   constructor(private prisma: PrismaService) {}
 
   /**
-   * 根据平台和会议ID查找会议记录
+   * Find meeting record by platform and meeting ID
    */
   async findMeetingByPlatformId(
     platform: MeetingPlatform,
@@ -29,7 +29,7 @@ export class MeetingRepository {
   }
 
   /**
-   * 根据ID查找会议记录
+   * Find meeting record by ID
    */
   async findMeetingById(id: string) {
     return this.prisma.meeting.findUnique({
@@ -41,7 +41,7 @@ export class MeetingRepository {
   }
 
   /**
-   * 创建会议记录
+   * Create meeting record
    */
   async createMeetingRecord(data: CreateMeetingRecordData) {
     return this.prisma.meeting.create({
@@ -50,7 +50,7 @@ export class MeetingRepository {
   }
 
   /**
-   * 更新会议记录
+   * Update meeting record
    */
   async updateMeetingRecord(id: string, data: UpdateMeetingRecordData) {
     return this.prisma.meeting.update({
@@ -60,7 +60,7 @@ export class MeetingRepository {
   }
 
   /**
-   * 删除会议记录
+   * Delete meeting record
    */
   async deleteMeetingRecord(id: string) {
     return this.prisma.meeting.delete({
@@ -69,7 +69,7 @@ export class MeetingRepository {
   }
 
   /**
-   * 获取会议记录列表
+   * Get meeting records list
    */
   async getMeetingRecords(params: GetMeetingRecordsParams): Promise<{
     records: any[];
