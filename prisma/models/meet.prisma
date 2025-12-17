@@ -3,20 +3,20 @@ model Meeting {
 
   // 平台和来源信息
   platform     MeetingPlatform // 会议平台
-  meetingId    String          @db.VarChar(100) // 平台会议ID
-  subMeetingId String?         @db.VarChar(100) // 子会议ID，用于区分同一主会议下的不同子会议
-  externalId   String?         @db.VarChar(100) // 外部系统ID
+  meetingId    String          @map("meeting_id") @db.VarChar(100) // 平台会议ID
+  subMeetingId String?         @map("sub_meeting_id") @db.VarChar(100) // 子会议ID，用于区分同一主会议下的不同子会议
+  externalId   String?         @map("external_id") @db.VarChar(100) // 外部系统ID
 
   // 会议基本信息
   title       String      @db.VarChar(500) // 会议标题
   description String?     @db.Text // 会议描述
-  meetingCode String?     @db.VarChar(50) // 会议号码
+  meetingCode String?     @map("meeting_code") @db.VarChar(50) // 会议号码
   type        MeetingType @default(SCHEDULED)
   language    String?     @db.VarChar(10) // 会议语言
   tags        String[] // 标签
 
   // 主持人和参与者
-  hostPlatformUserId String? // Host's platform user ID
+  hostPlatformUserId String? @map("host_platform_user_id") // Host's platform user ID
   hostPlatformUser   PlatformUser? @relation("HostedMeetings", fields: [hostPlatformUserId], references: [id], onDelete: SetNull)
   participantCount   Int? // 参与人数
 
@@ -34,7 +34,7 @@ model Meeting {
   processingStatus ProcessingStatus @default(PENDING) // Status for overall meeting processing (e.g. transcription, summary generation)
 
   // 元数据
-  metadata Json? // 平台特定的元数据
+  metadata Json? @default("{}") @db.JsonB // 平台特定的元数据
 
   // 关联关系
   participants MeetingParticipant[] // 参会记录
@@ -43,8 +43,8 @@ model Meeting {
 
   // 系统字段及时间
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime? // 软删除时间戳
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6) // 软删除时间戳
 
   @@unique([platform, meetingId])
   @@index([platform])
@@ -65,12 +65,10 @@ model MeetingRecording {
   id        String @id @default(cuid())
   meetingId String @map("meeting_id")
 
-  source    RecordingSource @default(PLATFORM_AUTO)
-  startAt   DateTime?       @map("start_at") @db.Timestamptz(6)
-  endAt     DateTime?       @map("end_at") @db.Timestamptz(6)
-  status    RecordingStatus @default(RECORDING)
-  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime        @default(now()) @map("updated_at") @db.Timestamptz(6)
+  source  RecordingSource @default(PLATFORM_AUTO)
+  startAt DateTime?       @map("start_at") @db.Timestamptz(6)
+  endAt   DateTime?       @map("end_at") @db.Timestamptz(6)
+  status  RecordingStatus @default(RECORDING)
 
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 
@@ -79,6 +77,11 @@ model MeetingRecording {
 
   files       MeetingRecordingFile[]
   transcripts Transcript[]
+
+  // 系统字段及时间
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6) // 软删除时间戳
 
   @@index([meetingId], map: "idx_recordings_meeting")
   @@map("meet_recordings")
@@ -91,10 +94,14 @@ model MeetingRecordingFile {
   fileType     RecordingFileType @default(VIDEO) @map("file_type")
   durationMs   BigInt?           @map("duration_ms")
   resolution   String?
-  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
 
   recording MeetingRecording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
   object    StorageObject    @relation(fields: [fileObjectId], references: [id], onDelete: Restrict)
+
+  // 系统字段及时间
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6) // 软删除时间戳
 
   @@index([recordingId], map: "idx_recording_files_recording")
   @@map("meet_recording_files")
