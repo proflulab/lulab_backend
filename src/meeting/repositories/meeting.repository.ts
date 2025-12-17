@@ -60,6 +60,30 @@ export class MeetingRepository {
   }
 
   /**
+   * Upsert meeting record - create if not exists, update if exists
+   */
+  async upsertMeetingRecord(
+    platform: MeetingPlatform,
+    platformMeetingId: string,
+    data: Omit<CreateMeetingRecordData, 'platform' | 'meetingId'>,
+  ) {
+    return this.prisma.meeting.upsert({
+      where: {
+        platform_meetingId: {
+          platform,
+          meetingId: platformMeetingId,
+        },
+      },
+      update: data,
+      create: {
+        platform,
+        meetingId: platformMeetingId,
+        ...data,
+      },
+    });
+  }
+
+  /**
    * Delete meeting record
    */
   async deleteMeetingRecord(id: string) {
