@@ -1,9 +1,8 @@
 import {
   MeetingPlatform,
   MeetingType,
-  FileType,
-  StorageType,
   ProcessingStatus,
+  RecordingFileType,
 } from '@prisma/client';
 
 /**
@@ -43,14 +42,11 @@ export interface UpdateMeetingRecordParams {
  * 会议文件创建参数
  */
 export interface CreateMeetingFileParams {
-  meetingRecordId: string;
-  fileName: string;
-  fileType: FileType;
-  storageType: StorageType;
-  downloadUrl?: string;
-  content?: string;
-  mimeType: string;
-  processingStatus: ProcessingStatus;
+  recordingId: string;
+  fileObjectId: string;
+  fileType: RecordingFileType;
+  durationMs?: number | bigint;
+  resolution?: string;
 }
 
 // Repository-layer alias for creating meeting file
@@ -72,18 +68,17 @@ export interface GetMeetingRecordsParams {
  */
 export interface CreateMeetingRecordData {
   platform: MeetingPlatform;
-  platformMeetingId: string;
+  meetingId: string; // 改为 meetingId 以匹配模型
   title: string;
-  meetingCode: string;
+  meetingCode?: string;
   type: MeetingType;
-  hostUserId: string;
-  hostUserName: string;
-  startTime: Date;
-  endTime: Date;
-  durationSeconds: number;
-  hasRecording: boolean;
-  recordingStatus: ProcessingStatus;
-  processingStatus: ProcessingStatus;
+  hostPlatformUserId?: string; // 改为 hostPlatformUserId 以匹配模型
+  startTime?: Date;
+  endTime?: Date;
+  durationSeconds?: number;
+  hasRecording?: boolean;
+  recordingStatus?: ProcessingStatus;
+  processingStatus?: ProcessingStatus;
   metadata?: any;
 }
 
@@ -96,10 +91,10 @@ export type UpdateMeetingRecordData = UpdateMeetingRecordParams;
  * 仓储层：会议文件更新数据
  */
 export interface UpdateMeetingFileData {
-  fileName?: string;
-  content?: string;
-  processingStatus?: ProcessingStatus;
-  metadata?: any;
+  fileObjectId?: string;
+  fileType?: RecordingFileType;
+  durationMs?: number | bigint;
+  resolution?: string;
 }
 
 /**

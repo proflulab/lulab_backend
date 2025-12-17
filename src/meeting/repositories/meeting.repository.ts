@@ -3,8 +3,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type {
   CreateMeetingRecordData,
   UpdateMeetingRecordData,
-  CreateMeetingFileData,
-  UpdateMeetingFileData,
   GetMeetingRecordsParams,
 } from '@/meeting/types/meeting.types';
 import { MeetingPlatform } from '@prisma/client';
@@ -20,11 +18,11 @@ export class MeetingRepository {
     platform: MeetingPlatform,
     platformMeetingId: string,
   ) {
-    return this.prisma.meetings.findUnique({
+    return this.prisma.meeting.findUnique({
       where: {
-        platform_platformMeetingId: {
+        platform_meetingId: {
           platform,
-          platformMeetingId,
+          meetingId: platformMeetingId,
         },
       },
     });
@@ -34,10 +32,10 @@ export class MeetingRepository {
    * 根据ID查找会议记录
    */
   async findMeetingById(id: string) {
-    return this.prisma.meetings.findUnique({
+    return this.prisma.meeting.findUnique({
       where: { id },
       include: {
-        files: true,
+        recordings: true,
       },
     });
   }
@@ -46,7 +44,7 @@ export class MeetingRepository {
    * 创建会议记录
    */
   async createMeetingRecord(data: CreateMeetingRecordData) {
-    return this.prisma.meetings.create({
+    return this.prisma.meeting.create({
       data,
     });
   }
@@ -55,26 +53,7 @@ export class MeetingRepository {
    * 更新会议记录
    */
   async updateMeetingRecord(id: string, data: UpdateMeetingRecordData) {
-    return this.prisma.meetings.update({
-      where: { id },
-      data,
-    });
-  }
-
-  /**
-   * 创建会议文件
-   */
-  async createMeetingFile(data: CreateMeetingFileData) {
-    return this.prisma.meetingFile.create({
-      data,
-    });
-  }
-
-  /**
-   * 更新会议文件
-   */
-  async updateMeetingFile(id: string, data: UpdateMeetingFileData) {
-    return this.prisma.meetingFile.update({
+    return this.prisma.meeting.update({
       where: { id },
       data,
     });
@@ -84,7 +63,7 @@ export class MeetingRepository {
    * 删除会议记录
    */
   async deleteMeetingRecord(id: string) {
-    return this.prisma.meetings.delete({
+    return this.prisma.meeting.delete({
       where: { id },
     });
   }
@@ -120,10 +99,10 @@ export class MeetingRepository {
     }
 
     const [records, total] = await Promise.all([
-      this.prisma.meetings.findMany({
+      this.prisma.meeting.findMany({
         where,
         include: {
-          files: true,
+          recordings: true,
         },
         orderBy: {
           createdAt: 'desc',
@@ -131,7 +110,7 @@ export class MeetingRepository {
         skip,
         take: limit,
       }),
-      this.prisma.meetings.count({ where }),
+      this.prisma.meeting.count({ where }),
     ]);
 
     return {
