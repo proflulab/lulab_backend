@@ -4,8 +4,8 @@ import {
   TencentMeetingType, 
   TencentInstanceType, 
   TencentMeetingIdType 
-} from './tencent-base.types';
-import { TencentMeetingEvent, TencentMeetingEventType } from './tencent-event.types';
+} from '../types/tencent-base.types';
+import { TencentMeetingEvent, TencentMeetingEventType } from '../types/tencent-event.types';
 
 // 类型工具函数
 export class TencentMeetingEventUtils {

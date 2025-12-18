@@ -7,4 +7,4 @@ export * from './tencent-base.types';
 export * from './tencent-event.types';
 
 // 工具类
-export * from './tencent-event-utils';
+export * from '../utils/tencent-event.utils';
