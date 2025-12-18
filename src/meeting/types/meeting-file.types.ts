@@ -4,9 +4,9 @@
  * @LastEditors: 杨仕明 shiming.y@qq.com
  * @LastEditTime: 2025-12-17 21:43:19
  * @FilePath: /lulab_backend/src/meeting/types/meeting-file.types.ts
- * @Description: 
- * 
- * Copyright (c) 2025 by LuLab-Team, All Rights Reserved. 
+ * @Description:
+ *
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
  */
 import { RecordingFileType } from '@prisma/client';
 

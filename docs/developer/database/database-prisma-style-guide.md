@@ -76,6 +76,7 @@ model Meeting {
 ```prisma
 hostUserId String?   @map("host_user_id")
 createdAt  DateTime  @map("created_at")
+name       String?   
 ```
 
 ---

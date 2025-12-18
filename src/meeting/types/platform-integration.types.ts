@@ -4,9 +4,9 @@
  * @LastEditors: 杨仕明 shiming.y@qq.com
  * @LastEditTime: 2025-12-17 21:43:31
  * @FilePath: /lulab_backend/src/meeting/types/platform-integration.types.ts
- * @Description: 
- * 
- * Copyright (c) 2025 by LuLab-Team, All Rights Reserved. 
+ * @Description:
+ *
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
  */
 import { MeetingPlatform } from '@prisma/client';
 

@@ -16,8 +16,10 @@ model Meeting {
   tags        String[] // 标签
 
   // 主持人和参与者
-  hostPlatformUserId String? @map("host_platform_user_id") // Host's platform user ID
-  hostPlatformUser   PlatformUser? @relation("HostedMeetings", fields: [hostPlatformUserId], references: [id], onDelete: SetNull)
+  createdById String? @map("created_by_id") // Creator's platform user ID
+  createdBy   PlatformUser? @relation("MeetingCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  hostId      String? @map("host_id") // Host's platform user ID
+  host        PlatformUser? @relation("HostedMeetings", fields: [hostId], references: [id], onDelete: SetNull)
   participantCount   Int? // 参与人数
 
   // 时间信息
@@ -56,7 +58,8 @@ model Meeting {
   @@index([deletedAt]) // 软删除查询索引
   @@index([createdAt]) // 创建时间查询优化
   @@index([platform, startAt]) // 按平台查询会议列表
-  @@index([hostPlatformUserId, startAt]) // 查询主持人的会议
+  @@index([hostId, startAt]) // 查询主持人的会议
+  @@index([createdById, startAt]) // 查询创建者的会议
   @@index([deletedAt, createdAt]) // 软删除查询优化
   @@map("meetings")
 }

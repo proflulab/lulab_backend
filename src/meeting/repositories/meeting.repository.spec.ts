@@ -72,7 +72,9 @@ describe('MeetingRepository', () => {
         updatedAt: new Date(),
       };
 
-      (prismaService.meeting.upsert as jest.Mock).mockResolvedValue(mockCreatedMeeting);
+      (prismaService.meeting.upsert as jest.Mock).mockResolvedValue(
+        mockCreatedMeeting,
+      );
 
       const result = await repository.upsertMeetingRecord(
         platform,
@@ -126,7 +128,9 @@ describe('MeetingRepository', () => {
         metadata: { updated: 'data' },
       };
 
-      (prismaService.meeting.upsert as jest.Mock).mockResolvedValue(mockUpdatedMeeting);
+      (prismaService.meeting.upsert as jest.Mock).mockResolvedValue(
+        mockUpdatedMeeting,
+      );
 
       const result = await repository.upsertMeetingRecord(
         platform,
@@ -170,7 +174,9 @@ describe('MeetingRepository', () => {
         updatedAt: new Date(),
       };
 
-      (prismaService.meeting.upsert as jest.Mock).mockResolvedValue(mockFeishuMeeting);
+      (prismaService.meeting.upsert as jest.Mock).mockResolvedValue(
+        mockFeishuMeeting,
+      );
 
       const result = await repository.upsertMeetingRecord(
         feishuPlatform,
@@ -200,7 +206,11 @@ describe('MeetingRepository', () => {
       (prismaService.meeting.upsert as jest.Mock).mockRejectedValue(error);
 
       await expect(
-        repository.upsertMeetingRecord(platform, platformMeetingId, meetingData),
+        repository.upsertMeetingRecord(
+          platform,
+          platformMeetingId,
+          meetingData,
+        ),
       ).rejects.toThrow(error);
 
       expect(prismaService.meeting.upsert).toHaveBeenCalledWith({
@@ -234,7 +244,9 @@ describe('MeetingRepository', () => {
         updatedAt: new Date(),
       };
 
-      (prismaService.meeting.upsert as jest.Mock).mockResolvedValue(mockMinimalMeeting);
+      (prismaService.meeting.upsert as jest.Mock).mockResolvedValue(
+        mockMinimalMeeting,
+      );
 
       const result = await repository.upsertMeetingRecord(
         platform,
