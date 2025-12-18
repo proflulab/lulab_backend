@@ -3,6 +3,8 @@ import { BaseEventHandler } from './base-event.handler';
 import {
   TencentEventPayload,
   TencentMeetingEventUtils,
+  TencentMeetingCreator,
+  TencentEventOperator,
 } from '../../types/tencent-webhook-events.types';
 import {
   MeetingBitableRepository,
@@ -50,68 +52,88 @@ export class MeetingStartedHandler extends BaseEventHandler {
 
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
 
-    // 创建或更新用户信息
-    let operatorRecordId;
-    try {
-      const operatorResult =
-        await this.meetingUserBitable.upsertMeetingUserRecord({
-          uuid: operator.uuid,
-          userid: operator.userid,
-          user_name: operator.user_name,
-          is_enterprise_user: !!operator.userid, // 如果userid不为空则为true，否则为false
-        });
-      if (operatorResult.data?.record) {
-        operatorRecordId = operatorResult.data.record.record_id;
-        this.logger.log(`操作者记录ID: ${operatorRecordId}`);
-      }
-      this.logger.log(
-        `成功处理用户信息: ${operator.user_name} (${operator.uuid})`,
+    // 并行处理用户信息创建/更新
+    const [operatorRecordId, creatorRecordId] = await Promise.allSettled([
+      this.processUserRecord(operator, '操作者'),
+      this.processUserRecord(creator, '创建者'),
+    ]);
+
+    // 获取记录ID，如果处理失败则使用空字符串
+    const creatorId =
+      creatorRecordId.status === 'fulfilled' ? creatorRecordId.value : '';
+
+    // 记录处理失败的用户信息
+    if (operatorRecordId.status === 'rejected') {
+      this.logger.error(
+        `处理操作者信息失败: ${operator.uuid}`,
+        operatorRecordId.reason,
       );
-    } catch (error) {
-      this.logger.error(`处理用户信息失败: ${operator.uuid}`, error);
-      // 不抛出错误，避免影响主流程
     }
 
-    let creatorRecordId;
-    try {
-      const creatorResult =
-        await this.meetingUserBitable.upsertMeetingUserRecord({
-          uuid: creator.uuid,
-          userid: creator.userid,
-          user_name: creator.user_name,
-          is_enterprise_user: !!creator.userid, // 如果userid不为空则为true，否则为false
-        });
-
-      if (creatorResult.data?.record) {
-        creatorRecordId = creatorResult.data.record.record_id;
-        this.logger.log(`创建者记录ID: ${creatorRecordId}`);
-      }
-      this.logger.log(
-        `成功处理用户信息: ${creator.user_name} (${creator.uuid})`,
+    if (creatorRecordId.status === 'rejected') {
+      this.logger.error(
+        `处理创建者信息失败: ${creator.uuid}`,
+        creatorRecordId.reason,
       );
-    } catch (error) {
-      this.logger.error(`处理用户信息失败: ${creator.uuid}`, error);
-      // 不抛出错误，避免影响主流程
     }
 
+    // 创建或更新会议记录
     try {
       await this.MeetingBitable.upsertMeetingRecord({
-        platform: '腾讯会议',
+        platform: this.PLATFORM_NAME,
         subject,
         meeting_id,
         sub_meeting_id,
         meeting_code,
         start_time: start_time * 1000,
         end_time: end_time * 1000,
-        creator: [creatorRecordId || ''],
-        meeting_type: [meetingTypeDescription || ''],
+        creator: creatorId ? [creatorId] : [],
+        meeting_type: meetingTypeDescription ? [meetingTypeDescription] : [],
       });
+
+      this.logger.log(
+        `会议记录处理成功: ${meeting_id} (${meetingTypeDescription})`,
+      );
     } catch (error) {
       this.logger.error(
-        `处理会议开始事件失败: ${meeting_info.meeting_id} (${meetingTypeDescription})`,
+        `处理会议开始事件失败: ${meeting_id} (${meetingTypeDescription})`,
         error,
       );
-      // 不抛出错误，避免影响主流程
+      throw error; // 会议记录创建失败应该抛出异常
+    }
+  }
+
+  /**
+   * 处理用户记录的创建或更新
+   * @param user 用户信息（操作者或创建者）
+   * @param userType 用户类型，用于日志记录
+   * @returns 用户记录ID，如果处理失败则返回空字符串
+   */
+  private async processUserRecord(
+    user: TencentEventOperator | TencentMeetingCreator,
+    userType: string,
+  ): Promise<string> {
+    try {
+      const result = await this.meetingUserBitable.upsertMeetingUserRecord({
+        uuid: user.uuid,
+        userid: user.userid,
+        user_name: user.user_name,
+        is_enterprise_user: !!user.userid, // 如果userid不为空则为true，否则为false
+      });
+
+      const recordId = result.data?.record?.record_id || '';
+      if (recordId) {
+        this.logger.log(`${userType}记录ID: ${recordId}`);
+      }
+
+      this.logger.log(
+        `成功处理${userType}信息: ${user.user_name} (${user.uuid})`,
+      );
+
+      return recordId;
+    } catch (error) {
+      this.logger.error(`处理${userType}信息失败: ${user.uuid}`, error);
+      throw error; // 抛出错误，让调用方决定如何处理
     }
   }
 }
