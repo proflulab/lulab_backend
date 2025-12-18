@@ -8,11 +8,11 @@ import {
 import { TencentMeetingEvent, TencentMeetingEventType } from '../types/tencent-event.types';
 
 // 类型工具函数
-export class TencentMeetingEventUtils {
+export class TencentEventUtils {
   /**
    * 判断是否为周期性会议
    */
-  static isRecurringMeeting(meetingInfo: TencentEventMeetingInfo): boolean {
+  static isRecurring(meetingInfo: TencentEventMeetingInfo): boolean {
     return meetingInfo.meeting_type === TencentMeetingType.RECURRING;
   }
 
@@ -30,7 +30,7 @@ export class TencentMeetingEventUtils {
    * 获取会议的实际开始时间
    * 对于子会议，返回子会议开始时间；否则返回主会议开始时间
    */
-  static getActualStartTime(meetingInfo: TencentEventMeetingInfo): number {
+  static getStartTime(meetingInfo: TencentEventMeetingInfo): number {
     return meetingInfo.sub_meeting_start_time || meetingInfo.start_time;
   }
 
@@ -38,14 +38,14 @@ export class TencentMeetingEventUtils {
    * 获取会议的实际结束时间
    * 对于子会议，返回子会议结束时间；否则返回主会议结束时间
    */
-  static getActualEndTime(meetingInfo: TencentEventMeetingInfo): number {
+  static getEndTime(meetingInfo: TencentEventMeetingInfo): number {
     return meetingInfo.sub_meeting_end_time || meetingInfo.end_time;
   }
 
   /**
    * 获取会议创建来源的描述文本
    */
-  static getCreateFromDescription(
+  static getCreateFromDesc(
     createFrom: TencentMeetingCreateFrom,
   ): string {
     switch (createFrom) {
@@ -75,7 +75,7 @@ export class TencentMeetingEventUtils {
   /**
    * 获取会议类型的描述文本
    */
-  static getMeetingTypeDescription(meetingType: TencentMeetingType): string {
+  static getMeetingTypeDesc(meetingType: TencentMeetingType): string {
     switch (meetingType) {
       case TencentMeetingType.ONE_TIME:
         return '一次性会议';
@@ -95,7 +95,7 @@ export class TencentMeetingEventUtils {
   /**
    * 获取终端设备类型的描述文本
    */
-  static getInstanceTypeDescription(instanceType: TencentInstanceType): string {
+  static getInstanceTypeDesc(instanceType: TencentInstanceType): string {
     switch (instanceType) {
       case TencentInstanceType.UNKNOWN:
         return '未知设备';
@@ -144,7 +144,7 @@ export class TencentMeetingEventUtils {
   /**
    * 获取事件的简短描述
    */
-  static getEventDescription(event: TencentMeetingEvent): string {
+  static getEventDesc(event: TencentMeetingEvent): string {
     const payload = event.payload?.[0];
     if (!payload) return '未知事件';
 

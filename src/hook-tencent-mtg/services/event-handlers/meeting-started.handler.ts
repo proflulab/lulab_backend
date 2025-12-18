@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { BaseEventHandler } from './base-event.handler';
 import {
   TencentEventPayload,
-  TencentMeetingEventUtils,
+  TencentEventUtils,
   TencentMeetingCreator,
   TencentEventOperator,
 } from '../../types';
@@ -44,7 +44,7 @@ export class MeetingStartedHandler extends BaseEventHandler {
 
     // 记录会议信息
     const meetingTypeDescription =
-      TencentMeetingEventUtils.getMeetingTypeDescription(meeting_type);
+      TencentEventUtils.getMeetingTypeDesc(meeting_type);
 
     this.logger.log(
       `会议开始 [${index}]: ${subject} (${meeting_code}) - ${meetingTypeDescription}`,
@@ -52,11 +52,27 @@ export class MeetingStartedHandler extends BaseEventHandler {
 
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
 
-    // 并行处理用户信息创建/更新
-    const [operatorRecordId, creatorRecordId] = await Promise.allSettled([
-      this.processUserRecord(operator, '操作者'),
-      this.processUserRecord(creator, '创建者'),
-    ]);
+    // 判断操作者和创建者是否为同一人
+    const isSameUser = operator.uuid === creator.uuid;
+
+    // 处理用户信息，避免重复处理同一用户
+    let operatorRecordId: PromiseSettledResult<string>;
+    let creatorRecordId: PromiseSettledResult<string>;
+
+    if (isSameUser) {
+      // 如果是同一人，只处理一次
+      operatorRecordId = creatorRecordId = await Promise.allSettled([
+        this.processUserRecord(operator, '操作者/创建者'),
+      ])[0];
+    } else {
+      // 如果是不同的人，分别处理
+      const results = await Promise.allSettled([
+        this.processUserRecord(operator, '操作者'),
+        this.processUserRecord(creator, '创建者'),
+      ]);
+      operatorRecordId = results[0];
+      creatorRecordId = results[1];
+    }
 
     // 获取记录ID，如果处理失败则使用空字符串
     const creatorId =
@@ -70,7 +86,8 @@ export class MeetingStartedHandler extends BaseEventHandler {
       );
     }
 
-    if (creatorRecordId.status === 'rejected') {
+    // 只有当操作者和创建者不是同一人时，才单独记录创建者的错误
+    if (!isSameUser && creatorRecordId.status === 'rejected') {
       this.logger.error(
         `处理创建者信息失败: ${creator.uuid}`,
         creatorRecordId.reason,
