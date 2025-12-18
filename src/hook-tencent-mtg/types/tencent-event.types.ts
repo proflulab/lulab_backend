@@ -4,12 +4,17 @@
  * @LastEditors: 杨仕明 shiming.y@qq.com
  * @LastEditTime: 2025-12-18 20:15:14
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/types/tencent-event.types.ts
- * @Description: 
- * 
- * Copyright (c) 2025 by LuLab-Team, All Rights Reserved. 
+ * @Description:
+ *
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
  */
 
-import { TencentEventOperator, TencentEventMeetingInfo, TencentMeetingEndType, TencentRecordingFile } from './tencent-base.types';
+import {
+  TencentEventOperator,
+  TencentEventMeetingInfo,
+  TencentMeetingEndType,
+  TencentRecordingFile,
+} from './tencent-base.types';
 
 // 腾讯会议事件
 export interface TencentMeetingEvent {
@@ -26,8 +31,6 @@ export interface TencentEventPayload {
   meeting_end_type?: TencentMeetingEndType; // 结束类型（仅 meeting.end 事件）
   recording_files?: TencentRecordingFile[]; // 录制文件（某些事件类型包含）
 }
-
-
 
 // 腾讯会议事件类型枚举
 export enum TencentMeetingEventType {

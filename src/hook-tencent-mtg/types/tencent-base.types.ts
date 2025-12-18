@@ -5,8 +5,8 @@
  * @LastEditTime: 2025-12-18 20:16:57
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/types/tencent-base.types.ts
  * @Description: 腾讯会议基础类型定义
- * 
- * Copyright (c) 2025 by LuLab-Team, All Rights Reserved. 
+ *
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
  */
 
 // 腾讯会议事件操作者信息

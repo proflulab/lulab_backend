@@ -1,11 +1,14 @@
-import { 
-  TencentEventMeetingInfo, 
-  TencentMeetingCreateFrom, 
-  TencentMeetingType, 
-  TencentInstanceType, 
-  TencentMeetingIdType 
+import {
+  TencentEventMeetingInfo,
+  TencentMeetingCreateFrom,
+  TencentMeetingType,
+  TencentInstanceType,
+  TencentMeetingIdType,
 } from '../types/tencent-base.types';
-import { TencentMeetingEvent, TencentMeetingEventType } from '../types/tencent-event.types';
+import {
+  TencentMeetingEvent,
+  TencentMeetingEventType,
+} from '../types/tencent-event.types';
 
 // 类型工具函数
 export class TencentEventUtils {
@@ -45,9 +48,7 @@ export class TencentEventUtils {
   /**
    * 获取会议创建来源的描述文本
    */
-  static getCreateFromDesc(
-    createFrom: TencentMeetingCreateFrom,
-  ): string {
+  static getCreateFromDesc(createFrom: TencentMeetingCreateFrom): string {
     switch (createFrom) {
       case TencentMeetingCreateFrom.EMPTY:
         return '空来源';
