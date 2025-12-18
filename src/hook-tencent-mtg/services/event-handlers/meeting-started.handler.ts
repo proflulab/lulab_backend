@@ -5,7 +5,7 @@ import {
   TencentMeetingEventUtils,
   TencentMeetingCreator,
   TencentEventOperator,
-} from '../../types/tencent-webhook-events.types';
+} from '../../types';
 import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,

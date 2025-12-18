@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-11-23 23:53:29
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-09 18:11:58
+ * @LastEditTime: 2025-12-18 20:12:04
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/pipes/tencent-webhook-body-decryption.pipe.ts
  * @Description: 腾讯会议Webhook解密管道
  *
@@ -27,7 +27,7 @@ import { Request } from 'express'; // 或 fastify
 import { ConfigType } from '@nestjs/config';
 import { tencentMeetingConfig } from '@/configs/tencent-mtg.config';
 import { TencentWebhookEventBodyDto } from '../dto/tencent-webhook-body.dto';
-import { TencentMeetingEvent } from '../types/tencent-webhook-events.types';
+import { TencentMeetingEvent } from '../types';
 
 @Injectable({ scope: Scope.REQUEST }) // 需要获取 Request Headers，所以必须是 Request Scope
 export class TencentWebhookDecryptionPipe implements PipeTransform {

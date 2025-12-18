@@ -29,7 +29,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Public } from '@/auth/decorators/public.decorator';
 import { TencentEventHandlerService } from '../services/tencent-event-handler.service';
 import { WebhookLoggingInterceptor } from '../interceptors/webhook-logging.interceptor';
-import { TencentMeetingEvent } from '../types/tencent-webhook-events.types';
+import { TencentMeetingEvent } from '../types';
 import {
   TencentUrlVerificationPipe,
   TencentWebhookDecryptionPipe,

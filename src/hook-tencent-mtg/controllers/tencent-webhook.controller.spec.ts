@@ -12,7 +12,7 @@
 import { Logger } from '@nestjs/common';
 import { TencentWebhookController } from './tencent-webhook.controller';
 import { TencentEventHandlerService } from '../services/tencent-event-handler.service';
-import { TencentMeetingEvent } from '../types/tencent-webhook-events.types';
+import { TencentMeetingEvent } from '../types';
 
 describe('TencentWebhookController', () => {
   let controller: TencentWebhookController;
