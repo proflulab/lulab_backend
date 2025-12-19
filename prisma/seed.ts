@@ -54,6 +54,7 @@ import {
   createRefunds,
   createMeetings,
   createAllRelations,
+  createParticipantSummaries,
 } from './seeds/index';
 
 // 全局Prisma客户端实例
@@ -418,6 +419,13 @@ async function seedDatabase(): Promise<void> {
     console.log('\n🎯 步骤 3: 创建会议数据');
     const meetingData = await createMeetings(prisma);
 
+    // 步骤 4: 创建参与者总结数据
+    console.log('\n📝 步骤 4: 创建参与者总结数据');
+    const participantSummaryData = await createParticipantSummaries(
+      prisma,
+      meetingData,
+    );
+
     // 输出统计信息
     printSeedStatistics(
       userData,
@@ -430,6 +438,7 @@ async function seedDatabase(): Promise<void> {
       orders,
       refunds,
       meetingData,
+      participantSummaryData,
     );
   } catch (error) {
     console.error('❌ 种子数据初始化失败:', error);
@@ -532,6 +541,7 @@ function printSeedStatistics(
   orders: any[],
   refunds: any[],
   meetingData?: any,
+  participantSummaryData?: any,
 ): void {
   console.log('\n✅ 数据库种子数据初始化完成！');
   console.log('\n📊 统计信息:');
@@ -559,6 +569,12 @@ function printSeedStatistics(
     );
     console.log(
       `📝 会议总结: ${Object.keys(meetingData.meetingSummaries).length} 个`,
+    );
+  }
+
+  if (participantSummaryData) {
+    console.log(
+      `📋 参与者总结: ${participantSummaryData.singleSummaries.length} 个`,
     );
   }
 }

@@ -45,6 +45,9 @@ export { createRefunds } from './refunds';
 export { createMeetings } from './meetings';
 export type { CreatedMeetings } from './meetings';
 
+// 参与者总结相关
+export { createParticipantSummaries } from './participant-summaries';
+
 // 关联关系相关
 export {
   createUserOrganizationRelations,
