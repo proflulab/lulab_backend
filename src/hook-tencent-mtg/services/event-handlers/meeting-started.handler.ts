@@ -43,11 +43,11 @@ export class MeetingStartedHandler extends BaseEventHandler {
     } = meeting_info;
 
     // 记录会议信息
-    const meetingTypeDescription =
+    const typeDesc =
       TencentEventUtils.getMeetingTypeDesc(meeting_type);
 
     this.logger.log(
-      `会议开始 [${index}]: ${subject} (${meeting_code}) - ${meetingTypeDescription}`,
+      `会议开始 [${index}]: ${subject} (${meeting_code}) - ${typeDesc}`,
     );
 
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
@@ -107,15 +107,15 @@ export class MeetingStartedHandler extends BaseEventHandler {
         start_time: start_time * 1000,
         end_time: end_time * 1000,
         creator: creatorId ? [creatorId] : [],
-        meeting_type: meetingTypeDescription ? [meetingTypeDescription] : [],
+        meeting_type: typeDesc ? [typeDesc] : [],
       });
 
       this.logger.log(
-        `会议记录处理成功: ${meeting_id} (${meetingTypeDescription})`,
+        `会议记录处理成功: ${meeting_id} (${typeDesc})`,
       );
     } catch (error) {
       this.logger.error(
-        `处理会议开始事件失败: ${meeting_id} (${meetingTypeDescription})`,
+        `处理会议开始事件失败: ${meeting_id} (${typeDesc})`,
         error,
       );
       throw error; // 会议记录创建失败应该抛出异常
