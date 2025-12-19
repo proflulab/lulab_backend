@@ -40,10 +40,7 @@
     "db:cleandata": "tsx prisma/seed.ts clean",
     "db:drop": "tsx prisma/seed.ts drop",
     "db:drop:force": "tsx prisma/seed.ts drop --force",
-    "db:seed:reset": "tsx prisma/seed.ts reset",
-    "db:test-platform-users:create": "tsx prisma/seeds/platform-users-test-data.ts create",
-    "db:test-platform-users:clean": "tsx prisma/seeds/platform-users-test-data.ts clean",
-    "db:test-platform-users:stats": "tsx prisma/seeds/platform-users-test-data.ts stats"
+    "db:seed:reset": "tsx prisma/seed.ts reset"
   },
   "dependencies": {
     "@alicloud/credentials": "^2.4.4",
