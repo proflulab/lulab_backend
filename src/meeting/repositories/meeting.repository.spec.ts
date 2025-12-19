@@ -9,7 +9,17 @@ import { MeetingPlatform, MeetingType, ProcessingStatus } from '@prisma/client';
 
 describe('MeetingRepository', () => {
   let repository: MeetingRepository;
-  let prismaService: jest.Mocked<PrismaService>;
+  let prismaService: PrismaService & {
+    meeting: {
+      findUnique: jest.Mock;
+      create: jest.Mock;
+      update: jest.Mock;
+      delete: jest.Mock;
+      findMany: jest.Mock;
+      count: jest.Mock;
+      upsert: jest.Mock;
+    };
+  };
 
   beforeEach(async () => {
     const mockPrismaService = {
@@ -22,7 +32,7 @@ describe('MeetingRepository', () => {
         count: jest.fn(),
         upsert: jest.fn(),
       },
-    } as unknown as jest.Mocked<PrismaService>;
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

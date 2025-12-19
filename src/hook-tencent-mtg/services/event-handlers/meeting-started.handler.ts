@@ -61,9 +61,11 @@ export class MeetingStartedHandler extends BaseEventHandler {
 
     if (isSameUser) {
       // 如果是同一人，只处理一次
-      operatorRecordId = creatorRecordId = await Promise.allSettled([
+      const result = await Promise.allSettled([
         this.processUserRecord(operator, '操作者/创建者'),
-      ])[0];
+      ]);
+      operatorRecordId = result[0];
+      creatorRecordId = result[0];
     } else {
       // 如果是不同的人，分别处理
       const results = await Promise.allSettled([
