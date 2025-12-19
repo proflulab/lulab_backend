@@ -16,11 +16,11 @@ model Meeting {
   tags        String[] // 标签
 
   // 主持人和参与者
-  createdById String? @map("created_by_id") // Creator's platform user ID
-  createdBy   PlatformUser? @relation("MeetingCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  hostId      String? @map("host_id") // Host's platform user ID
-  host        PlatformUser? @relation("HostedMeetings", fields: [hostId], references: [id], onDelete: SetNull)
-  participantCount   Int? // 参与人数
+  createdById      String?       @map("created_by_id") // Creator's platform user ID
+  createdBy        PlatformUser? @relation("MeetingCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  hostId           String?       @map("host_id") // Host's platform user ID
+  host             PlatformUser? @relation("HostedMeetings", fields: [hostId], references: [id], onDelete: SetNull)
+  participantCount Int? // 参与人数
 
   // 时间信息
   scheduledStartAt DateTime? @map("scheduled_start_at") @db.Timestamptz(6) // 预定开始时间
@@ -46,7 +46,7 @@ model Meeting {
   // 系统字段及时间
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6) 
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   @@unique([platform, meetingId])
   @@index([platform])
@@ -76,7 +76,7 @@ model MeetingRecording {
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 
   recorderUserId String?       @map("recorder_user_id")
-  recorderUser   PlatformUser? @relation(fields: [recorderUserId], references: [id], onDelete: SetNull)
+  recorderUser   PlatformUser? @relation("RecordingUser", fields: [recorderUserId], references: [id], onDelete: SetNull)
 
   files       MeetingRecordingFile[]
   transcripts Transcript[]
@@ -185,7 +185,7 @@ model MeetingParticipant {
 
   // 参会人员
   platformUserId String
-  platformUser   PlatformUser @relation(fields: [platformUserId], references: [id], onDelete: Cascade)
+  platformUser   PlatformUser? @relation("ParticipantUser", fields: [platformUserId], references: [id], onDelete: Cascade)
 
   // 参会行为数据
   joinTime        DateTime?
@@ -209,15 +209,16 @@ model MeetingUserAction {
   id String @id @default(cuid())
 
   action     String
-  targetType String   @map("target_type")
-  targetId   String?  @map("target_id") @db.Uuid
-  metadata   Json     @default("{}") @db.JsonB
-  ip         String?  @db.Inet
-  userAgent  String?  @map("user_agent")
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  targetType String  @map("target_type")
+  targetId   String? @map("target_id") @db.Uuid
+  metadata   Json    @default("{}") @db.JsonB
+  ip         String? @db.Inet
+  userAgent  String? @map("user_agent")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   platformUserId String?       @map("user_id")
-  platformUser   PlatformUser? @relation(fields: [platformUserId], references: [id], onDelete: SetNull)
+  platformUser   PlatformUser? @relation("UserActions", fields: [platformUserId], references: [id], onDelete: SetNull)
 
   @@index([platformUserId, createdAt], map: "idx_actions_user_time")
   @@index([targetType, targetId], map: "idx_actions_target")

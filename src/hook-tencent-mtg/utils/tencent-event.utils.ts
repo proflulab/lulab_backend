@@ -9,6 +9,7 @@ import {
   TencentMeetingEvent,
   TencentMeetingEventType,
 } from '../types/tencent-event.types';
+import { MeetingType } from '@prisma/client';
 
 // 类型工具函数
 export class TencentEventUtils {
@@ -140,6 +141,27 @@ export class TencentEventUtils {
         payload.meeting_info.subject &&
         payload.meeting_info.creator,
     );
+  }
+
+  /**
+   * 将腾讯会议类型转换为系统会议类型
+   */
+  static convertMeetingType(tencentMeetingType: number): MeetingType {
+    const meetingType = tencentMeetingType as TencentMeetingType;
+
+    switch (meetingType) {
+      case TencentMeetingType.ONE_TIME: // 一次性会议
+        return MeetingType.ONE_TIME;
+      case TencentMeetingType.RECURRING: // 周期性会议
+        return MeetingType.RECURRING;
+      case TencentMeetingType.WECHAT_EXCLUSIVE: // 微信专属会议
+      case TencentMeetingType.ROOMS_SCREEN_SHARE: // rooms 投屏会议
+        return MeetingType.INSTANT;
+      case TencentMeetingType.PERSONAL_MEETING_ID: // 个人会议号会议
+        return MeetingType.SCHEDULED;
+      default:
+        return MeetingType.SCHEDULED;
+    }
   }
 
   /**

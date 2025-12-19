@@ -5,6 +5,9 @@ model PlatformUser {
   // 平台信息
   platform       Platform // 平台枚举
   platformUserId String   @map("platform_user_id") // 平台用户ID
+  platformUuid   String?  @map("platform_uuid") // 平台用户唯一标识符 (如腾讯会议的uuid)
+  // 平台特定数据
+  platformData   Json?    @default("{}") @map("platform_data") @db.JsonB // 存储各平台特有的数据
 
   // 用户基本信息
   userName    String? @map("user_name") // 用户显示名称
@@ -18,12 +21,8 @@ model PlatformUser {
   userId String? @map("user_id") // 关联到本地用户表
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  // 平台特定数据
-  platformData Json? @default("{}") @map("platform_data") @db.JsonB // 存储各平台特有的数据
-
   // 用户状态
-  isActive   Boolean   @default(true) @map("is_active")
-  lastSeenAt DateTime? @map("last_seen_at") @db.Timestamptz(6) // 最后出现时间
+  isActive Boolean @default(true) @map("is_active")
 
   // 关联关系
   createdMeetings     Meeting[]            @relation("MeetingCreator") // 创建的会议
@@ -31,14 +30,15 @@ model PlatformUser {
   paragraphs          Paragraph[]          @relation("Speaker") // 关联的段落
   createdSummaries    MeetingSummary[]     @relation("SummaryCreator") // 创建的总结
   reviewedSummaries   MeetingSummary[]     @relation("ReviewedSummaries") // 审核的总结
-  actions             MeetingUserAction[]
-  meetingRecordings   MeetingRecording[]
-  meetingParticipants MeetingParticipant[]
+  actions             MeetingUserAction[]  @relation("UserActions")
+  meetingRecordings   MeetingRecording[]   @relation("RecordingUser")
+  meetingParticipants MeetingParticipant[] @relation("ParticipantUser")
 
   // 系统字段及时间
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6) 
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  lastSeenAt DateTime? @map("last_seen_at") @db.Timestamptz(6) // 最后出现时间
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   @@unique([platform, platformUserId], map: "uq_user_platforms_platform_platform_user_id") // 确保平台用户ID唯一
   @@index([email], map: "idx_user_platforms_email")
@@ -48,6 +48,7 @@ model PlatformUser {
   @@index([userName], map: "idx_user_platforms_user_name") // 用户名查询优化
   @@index([isActive], map: "idx_user_platforms_is_active") // 活跃用户查询优化
   @@index([lastSeenAt], map: "idx_user_platforms_last_seen_at") // 最后出现时间查询优化
+  @@index([platformUuid], map: "idx_user_platforms_platform_uuid") // UUID查询优化
   @@map("user_platforms")
 }
 

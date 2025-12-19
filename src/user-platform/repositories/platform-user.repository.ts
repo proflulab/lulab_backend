@@ -2,36 +2,63 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import type { PlatformUser, Platform, Prisma } from '@prisma/client';
 
+type PlatformUserCreateInput = Prisma.PlatformUserUncheckedCreateInput;
+type PlatformUserUpdateInput = Prisma.PlatformUserUncheckedUpdateInput;
+
 @Injectable()
 export class PlatformUserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createPlatformUser(data: {
-    platform: Platform;
-    platformUserId: string;
-    userName?: string | null;
-    email?: string | null;
-    avatar?: string | null;
-    countryCode?: string | null;
-    phone?: string | null;
-    phoneHash?: string | null;
-    userId?: string | null;
-    platformData?: Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue;
-    isActive?: boolean;
-  }): Promise<PlatformUser> {
+  async createPlatformUser(
+    data: Omit<
+      PlatformUserCreateInput,
+      'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
+    >,
+  ): Promise<PlatformUser> {
     return this.prisma.platformUser.create({
       data: {
-        platform: data.platform,
-        platformUserId: data.platformUserId,
-        userName: data.userName ?? null,
-        email: data.email ?? null,
-        avatar: data.avatar ?? null,
-        countryCode: data.countryCode ?? null,
-        phone: data.phone ?? null,
-        phoneHash: data.phoneHash ?? null,
-        userId: data.userId ?? null,
-        platformData: data.platformData ?? undefined,
+        ...data,
         isActive: data.isActive ?? true,
+      },
+    });
+  }
+
+  async updatePlatformUser(
+    id: string,
+    data: Partial<
+      Omit<
+        PlatformUserUpdateInput,
+        'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
+      >
+    >,
+  ): Promise<PlatformUser> {
+    return this.prisma.platformUser.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async upsertPlatformUser(
+    where: { platform: Platform; platformUserId: string },
+    create: Omit<
+      PlatformUserCreateInput,
+      'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
+    >,
+    update: Partial<
+      Omit<
+        PlatformUserUpdateInput,
+        'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
+      >
+    >,
+  ): Promise<PlatformUser> {
+    return this.prisma.platformUser.upsert({
+      where: {
+        platform_platformUserId: where,
+      },
+      create,
+      update: {
+        ...update,
+        lastSeenAt: new Date(),
       },
     });
   }
@@ -83,42 +110,6 @@ export class PlatformUserRepository {
       where: {
         platform,
         isActive: true,
-      },
-    });
-  }
-
-  async updatePlatformUser(
-    id: string,
-    data: {
-      userName?: string | null;
-      email?: string | null;
-      avatar?: string | null;
-      countryCode?: string | null;
-      phone?: string | null;
-      phoneHash?: string | null;
-      userId?: string | null;
-      platformData?: Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue;
-      isActive?: boolean;
-      lastSeenAt?: Date | null;
-    },
-  ): Promise<PlatformUser> {
-    return this.prisma.platformUser.update({
-      where: { id },
-      data: {
-        ...(data.userName !== undefined && { userName: data.userName }),
-        ...(data.email !== undefined && { email: data.email }),
-        ...(data.avatar !== undefined && { avatar: data.avatar }),
-        ...(data.countryCode !== undefined && {
-          countryCode: data.countryCode,
-        }),
-        ...(data.phone !== undefined && { phone: data.phone }),
-        ...(data.phoneHash !== undefined && { phoneHash: data.phoneHash }),
-        ...(data.userId !== undefined && { userId: data.userId }),
-        ...(data.platformData !== undefined && {
-          platformData: data.platformData,
-        }),
-        ...(data.isActive !== undefined && { isActive: data.isActive }),
-        ...(data.lastSeenAt !== undefined && { lastSeenAt: data.lastSeenAt }),
       },
     });
   }
