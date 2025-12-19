@@ -29,14 +29,16 @@ model PlatformUser {
   createdMeetings     Meeting[]            @relation("MeetingCreator") // 创建的会议
   hostedMeetings      Meeting[]            @relation("HostedMeetings") // 主持的会议
   paragraphs          Paragraph[]          @relation("Speaker") // 关联的段落
+  createdSummaries    MeetingSummary[]     @relation("SummaryCreator") // 创建的总结
+  reviewedSummaries   MeetingSummary[]     @relation("ReviewedSummaries") // 审核的总结
   actions             MeetingUserAction[]
   meetingRecordings   MeetingRecording[]
   meetingParticipants MeetingParticipant[]
 
-  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
-  createdSummaries  MeetingSummary[] @relation("SummaryCreator") // 创建的总结
-  reviewedSummaries MeetingSummary[] @relation("ReviewedSummaries") // 审核的总结
+  // 系统字段及时间
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6) 
 
   @@unique([platform, platformUserId], map: "uq_user_platforms_platform_platform_user_id") // 确保平台用户ID唯一
   @@index([email], map: "idx_user_platforms_email")
