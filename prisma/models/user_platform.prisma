@@ -40,7 +40,6 @@ model PlatformUser {
   lastSeenAt DateTime? @map("last_seen_at") @db.Timestamptz(6) // 最后出现时间
   deletedAt  DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  @@unique([platform, platformUserId], map: "uq_user_platforms_platform_platform_user_id") // 确保平台用户ID唯一
   @@index([email], map: "idx_user_platforms_email")
   @@index([userId], map: "idx_user_platforms_user_id")
   @@index([phoneHash], map: "idx_user_platforms_phone_hash")

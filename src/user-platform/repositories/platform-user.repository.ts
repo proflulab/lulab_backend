@@ -39,7 +39,7 @@ export class PlatformUserRepository {
   }
 
   async upsertPlatformUser(
-    where: { platform: Platform; platformUserId: string },
+    where: { platform: Platform; platformUuid: string },
     create: Omit<
       PlatformUserCreateInput,
       'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
@@ -51,31 +51,44 @@ export class PlatformUserRepository {
       >
     >,
   ): Promise<PlatformUser> {
-    return this.prisma.platformUser.upsert({
+    // 首先查找是否存在相同 platformUuid 的记录
+    const existingUser = await this.prisma.platformUser.findFirst({
       where: {
-        platform_platformUserId: where,
-      },
-      create: {
-        ...create,
-        lastSeenAt: new Date(),
-      },
-      update: {
-        ...update,
-        lastSeenAt: new Date(),
+        platform: where.platform,
+        platformUuid: where.platformUuid,
       },
     });
+
+    if (existingUser) {
+      // 如果存在，则更新
+      return this.prisma.platformUser.update({
+        where: { id: existingUser.id },
+        data: {
+          ...update,
+          lastSeenAt: new Date(),
+        },
+      });
+    } else {
+      // 如果不存在，则创建
+      return this.prisma.platformUser.create({
+        data: {
+          ...create,
+          platform: where.platform,
+          platformUuid: where.platformUuid,
+          lastSeenAt: new Date(),
+        },
+      });
+    }
   }
 
   async findPlatformUserByPlatformAndId(
     platform: Platform,
     platformUserId: string,
   ): Promise<PlatformUser | null> {
-    return this.prisma.platformUser.findUnique({
+    return this.prisma.platformUser.findFirst({
       where: {
-        platform_platformUserId: {
-          platform,
-          platformUserId,
-        },
+        platform,
+        platformUserId,
       },
     });
   }
@@ -83,20 +96,6 @@ export class PlatformUserRepository {
   async findPlatformUserById(id: string): Promise<PlatformUser | null> {
     return this.prisma.platformUser.findUnique({
       where: { id },
-    });
-  }
-
-  async findPlatformUserByEmail(email: string): Promise<PlatformUser | null> {
-    return this.prisma.platformUser.findFirst({
-      where: { email },
-    });
-  }
-
-  async findPlatformUserByPhoneHash(
-    phoneHash: string,
-  ): Promise<PlatformUser | null> {
-    return this.prisma.platformUser.findFirst({
-      where: { phoneHash },
     });
   }
 

@@ -270,7 +270,7 @@ export class MeetingStartedHandler extends BaseEventHandler {
     return this.platformUserRepository.upsertPlatformUser(
       {
         platform: Platform.TENCENT_MEETING,
-        platformUserId: user.userid,
+        platformUuid: user.uuid,
       },
       {
         platform: Platform.TENCENT_MEETING,
