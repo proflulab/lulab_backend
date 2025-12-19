@@ -246,13 +246,13 @@ async function createMeeting(
       },
     },
     update: {
-      hostPlatformUserId,
+      hostId: hostPlatformUserId,
       updatedAt: new Date(),
     },
     create: {
       ...restConfig,
       meetingId: meetingId!,
-      hostPlatformUserId,
+      hostId: hostPlatformUserId,
       scheduledStartAt: startTime,
       scheduledEndAt: endTime,
       startAt: startTime,
