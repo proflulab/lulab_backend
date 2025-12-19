@@ -36,7 +36,7 @@ model Meeting {
   processingStatus ProcessingStatus @default(PENDING) // Status for overall meeting processing (e.g. transcription, summary generation)
 
   // 元数据
-  metadata Json? @default("{}") @db.JsonB // 平台特定的元数据
+  metadata Json @default("{}") @db.JsonB // 平台特定的元数据
 
   // 关联关系
   participants MeetingParticipant[] // 参会记录
@@ -184,8 +184,8 @@ model MeetingParticipant {
   meeting   Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 
   // 参会人员
-  platformUserId String
-  platformUser   PlatformUser? @relation("ParticipantUser", fields: [platformUserId], references: [id], onDelete: Cascade)
+  platformUserId String?
+  platformUser   PlatformUser? @relation("ParticipantUser", fields: [platformUserId], references: [id], onDelete: SetNull)
 
   // 参会行为数据
   joinTime        DateTime?

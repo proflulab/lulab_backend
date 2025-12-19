@@ -55,7 +55,10 @@ export class PlatformUserRepository {
       where: {
         platform_platformUserId: where,
       },
-      create,
+      create: {
+        ...create,
+        lastSeenAt: new Date(),
+      },
       update: {
         ...update,
         lastSeenAt: new Date(),
