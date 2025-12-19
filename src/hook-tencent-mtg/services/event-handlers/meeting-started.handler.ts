@@ -5,6 +5,7 @@ import {
   TencentEventUtils,
   TencentMeetingCreator,
   TencentEventOperator,
+  TencentEventMeetingInfo,
 } from '../../types';
 import {
   MeetingBitableRepository,
@@ -19,7 +20,7 @@ export class MeetingStartedHandler extends BaseEventHandler {
   private readonly SUPPORTED_EVENT = 'meeting.started';
 
   constructor(
-    private readonly MeetingBitable: MeetingBitableRepository,
+    private readonly meetingBitable: MeetingBitableRepository,
     private readonly meetingUserBitable: MeetingUserBitableRepository,
   ) {
     super();
@@ -31,102 +32,146 @@ export class MeetingStartedHandler extends BaseEventHandler {
 
   async handle(payload: TencentEventPayload, index: number): Promise<void> {
     const { meeting_info, operator } = payload;
-    const {
-      creator,
-      meeting_id,
-      meeting_code,
-      subject,
-      meeting_type,
-      sub_meeting_id,
-      start_time,
-      end_time,
-    } = meeting_info;
-
-    // 记录会议信息
-    const typeDesc =
-      TencentEventUtils.getMeetingTypeDesc(meeting_type);
-
-    this.logger.log(
-      `会议开始 [${index}]: ${subject} (${meeting_code}) - ${typeDesc}`,
+    const { creator } = meeting_info;
+    const meetingTypeDesc = TencentEventUtils.getMeetingTypeDesc(
+      meeting_info.meeting_type,
     );
 
+    this.logMeetingStart(index, meeting_info, meetingTypeDesc);
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
 
-    // 判断操作者和创建者是否为同一人
+    const userRecords = await this.processUserRecords(
+      operator,
+      creator,
+    );
+
+    const creatorRecordId = this.getCreatorRecordId(
+      userRecords,
+      operator,
+      creator,
+    );
+
+    this.logUserProcessingErrors(userRecords, operator, creator);
+
+    await this.createOrUpdateMeetingRecord(
+      meeting_info,
+      meetingTypeDesc,
+      creatorRecordId,
+    );
+  }
+
+  /**
+   * 记录会议开始日志
+   */
+  private logMeetingStart(
+    index: number,
+    meetingInfo: TencentEventMeetingInfo,
+    meetingTypeDesc: string,
+  ): void {
+    const { subject, meeting_code } = meetingInfo;
+    this.logger.log(
+      `会议开始 [${index}]: ${subject} (${meeting_code}) - ${meetingTypeDesc}`,
+    );
+  }
+
+  /**
+   * 处理用户记录（操作者和创建者）
+   */
+  private async processUserRecords(
+    operator: TencentEventOperator,
+    creator: TencentMeetingCreator,
+  ): Promise<PromiseSettledResult<string>[]> {
     const isSameUser = operator.uuid === creator.uuid;
 
-    // 处理用户信息，避免重复处理同一用户
-    let operatorRecordId: PromiseSettledResult<string>;
-    let creatorRecordId: PromiseSettledResult<string>;
-
     if (isSameUser) {
-      // 如果是同一人，只处理一次
       const result = await Promise.allSettled([
         this.processUserRecord(operator, '操作者/创建者'),
       ]);
-      operatorRecordId = result[0];
-      creatorRecordId = result[0];
-    } else {
-      // 如果是不同的人，分别处理
-      const results = await Promise.allSettled([
-        this.processUserRecord(operator, '操作者'),
-        this.processUserRecord(creator, '创建者'),
-      ]);
-      operatorRecordId = results[0];
-      creatorRecordId = results[1];
+      return [result[0], result[0]]; // 操作者和创建者是同一人
     }
 
-    // 获取记录ID，如果处理失败则使用空字符串
-    const creatorId =
-      creatorRecordId.status === 'fulfilled' ? creatorRecordId.value : '';
+    return await Promise.allSettled([
+      this.processUserRecord(operator, '操作者'),
+      this.processUserRecord(creator, '创建者'),
+    ]);
+  }
 
-    // 记录处理失败的用户信息
-    if (operatorRecordId.status === 'rejected') {
+  /**
+   * 获取创建者记录ID
+   */
+  private getCreatorRecordId(
+    userRecords: PromiseSettledResult<string>[],
+    operator: TencentEventOperator,
+    creator: TencentMeetingCreator,
+  ): string {
+    const isSameUser = operator.uuid === creator.uuid;
+    const creatorRecordIndex = isSameUser ? 0 : 1;
+    const creatorRecord = userRecords[creatorRecordIndex];
+
+    return creatorRecord.status === 'fulfilled' ? creatorRecord.value : '';
+  }
+
+  /**
+   * 记录用户处理错误
+   */
+  private logUserProcessingErrors(
+    userRecords: PromiseSettledResult<string>[],
+    operator: TencentEventOperator,
+    creator: TencentMeetingCreator,
+  ): void {
+    const isSameUser = operator.uuid === creator.uuid;
+    const [operatorRecord, creatorRecord] = userRecords;
+
+    if (operatorRecord.status === 'rejected') {
       this.logger.error(
         `处理操作者信息失败: ${operator.uuid}`,
-        operatorRecordId.reason,
+        operatorRecord.reason,
       );
     }
 
-    // 只有当操作者和创建者不是同一人时，才单独记录创建者的错误
-    if (!isSameUser && creatorRecordId.status === 'rejected') {
+    if (!isSameUser && creatorRecord.status === 'rejected') {
       this.logger.error(
         `处理创建者信息失败: ${creator.uuid}`,
-        creatorRecordId.reason,
+        creatorRecord.reason,
       );
     }
+  }
 
-    // 创建或更新会议记录
+  /**
+   * 创建或更新会议记录
+   */
+  private async createOrUpdateMeetingRecord(
+    meetingInfo: TencentEventMeetingInfo,
+    meetingTypeDesc: string,
+    creatorRecordId: string,
+  ): Promise<void> {
     try {
-      await this.MeetingBitable.upsertMeetingRecord({
+      await this.meetingBitable.upsertMeetingRecord({
         platform: this.PLATFORM_NAME,
-        subject,
-        meeting_id,
-        sub_meeting_id,
-        meeting_code,
-        start_time: start_time * 1000,
-        end_time: end_time * 1000,
-        creator: creatorId ? [creatorId] : [],
-        meeting_type: typeDesc ? [typeDesc] : [],
+        subject: meetingInfo.subject,
+        meeting_id: meetingInfo.meeting_id,
+        sub_meeting_id: meetingInfo.sub_meeting_id,
+        meeting_code: meetingInfo.meeting_code,
+        start_time: meetingInfo.start_time * 1000,
+        end_time: meetingInfo.end_time * 1000,
+        creator: creatorRecordId ? [creatorRecordId] : [],
+        meeting_type: meetingTypeDesc ? [meetingTypeDesc] : [],
       });
 
       this.logger.log(
-        `会议记录处理成功: ${meeting_id} (${typeDesc})`,
+        `会议记录处理成功: ${meetingInfo.meeting_id} (${meetingTypeDesc})`,
       );
     } catch (error) {
       this.logger.error(
-        `处理会议开始事件失败: ${meeting_id} (${typeDesc})`,
+        `处理会议开始事件失败: ${meetingInfo.meeting_id} (${meetingTypeDesc})`,
         error,
       );
-      throw error; // 会议记录创建失败应该抛出异常
+      throw error;
     }
   }
 
   /**
    * 处理用户记录的创建或更新
-   * @param user 用户信息（操作者或创建者）
-   * @param userType 用户类型，用于日志记录
-   * @returns 用户记录ID，如果处理失败则返回空字符串
    */
   private async processUserRecord(
     user: TencentEventOperator | TencentMeetingCreator,
@@ -137,7 +182,7 @@ export class MeetingStartedHandler extends BaseEventHandler {
         uuid: user.uuid,
         userid: user.userid,
         user_name: user.user_name,
-        is_enterprise_user: !!user.userid, // 如果userid不为空则为true，否则为false
+        is_enterprise_user: !!user.userid,
       });
 
       const recordId = result.data?.record?.record_id || '';
@@ -152,7 +197,7 @@ export class MeetingStartedHandler extends BaseEventHandler {
       return recordId;
     } catch (error) {
       this.logger.error(`处理${userType}信息失败: ${user.uuid}`, error);
-      throw error; // 抛出错误，让调用方决定如何处理
+      throw error;
     }
   }
 }
