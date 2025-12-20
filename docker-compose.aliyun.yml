@@ -1,6 +1,7 @@
 services:
-  nest-app:
+  lulab-backend:
     image: registry.cn-hangzhou.aliyuncs.com/lulab_docker/lulab_backend:dev1.0.0
+    restart: always
     ports:
       - '3000:3000'
     env_file:

@@ -1,6 +1,7 @@
 services:
-  nest-app:
+  lulab-backend:
     build: .
+    restart: always
     ports:
       - '3000:3000'
     env_file:
