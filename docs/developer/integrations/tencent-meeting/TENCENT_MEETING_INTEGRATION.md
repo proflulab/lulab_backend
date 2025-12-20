@@ -37,7 +37,12 @@ src/
     │   ├── tencent-event-handler.service.ts # 事件分发服务
     │   └── tencent-meeting.service.ts      # 业务聚合服务
     ├── types/
-    │   └── tencent-webhook-events.types.ts # Webhook 事件类型
+    │   └── types/                        # Webhook 事件类型
+    │       ├── index.ts                  # 统一导出
+    │       ├── tencent-base.types.ts     # 基础类型和枚举
+    │       └── tencent-event.types.ts    # 事件类型定义
+    ├── utils/
+    │   └── tencent-event.utils.ts        # 工具类
     └── tencent-meeting.module.ts           # 模块装配
 
 src/integrations/
