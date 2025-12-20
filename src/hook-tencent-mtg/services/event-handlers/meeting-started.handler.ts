@@ -50,34 +50,73 @@ export class MeetingStartedHandler extends BaseEventHandler {
     this.logMeetingStart(index, meeting_info, meetingTypeDesc);
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
 
-    // 处理用户记录（操作者和创建者）- 飞书多维表格
-    const userRecords = await this.processUserRecords(operator, creator);
+    // 使用 Promise.allSettled 并行执行所有操作，确保任何一个失败都不会影响其他操作
+    const results = await Promise.allSettled([
+      // 处理用户记录（操作者和创建者）- 飞书多维表格
+      this.processUserRecordsWithFallback(operator, creator),
+      // 处理平台用户记录 - Prisma数据库
+      this.processPlatformUsers(operator, creator),
+    ]);
 
-    const creatorRecordId = this.getCreatorRecordId(
-      userRecords,
-      operator,
-      creator,
-    );
+    // 从结果中提取数据
+    const [userRecordsResult, platformUsersResult] = results;
+    
+    // 处理用户记录结果
+    let userRecords: PromiseSettledResult<string>[] = [];
+    if (userRecordsResult.status === 'fulfilled') {
+      userRecords = userRecordsResult.value;
+    } else {
+      this.logger.error('处理用户记录失败，但继续执行后续流程', userRecordsResult.reason);
+      // 创建空数组以避免后续处理出错
+      userRecords = [
+        { status: 'rejected', reason: userRecordsResult.reason } as PromiseRejectedResult,
+        { status: 'rejected', reason: userRecordsResult.reason } as PromiseRejectedResult,
+      ];
+    }
 
-    this.logUserProcessingErrors(userRecords, operator, creator);
+    // 处理平台用户结果
+    let operatorPlatformUser: PlatformUser | null = null;
+    let creatorPlatformUser: PlatformUser | null = null;
+    if (platformUsersResult.status === 'fulfilled') {
+      [operatorPlatformUser, creatorPlatformUser] = platformUsersResult.value;
+    } else {
+      this.logger.error('处理平台用户记录失败，但继续执行后续流程', platformUsersResult.reason);
+    }
 
-    // 创建或更新平台用户记录 - Prisma数据库
-    const [operatorPlatformUser, creatorPlatformUser] =
-      await this.processPlatformUsers(operator, creator);
+    // 获取创建者记录ID
+    let creatorRecordId = '';
+    try {
+      creatorRecordId = this.getCreatorRecordId(
+        userRecords,
+        operator,
+        creator,
+      );
+    } catch (error) {
+      this.logger.error('获取创建者记录ID失败，但继续执行后续流程', error);
+    }
 
-    // 创建或更新会议记录 - Prisma数据库
-    await this.createOrUpdateMeetingInDatabase(
-      meeting_info,
-      operatorPlatformUser,
-      creatorPlatformUser,
-    );
+    // 记录用户处理错误
+    try {
+      this.logUserProcessingErrors(userRecords, operator, creator);
+    } catch (error) {
+      this.logger.error('记录用户处理错误失败，但继续执行后续流程', error);
+    }
 
-    // 创建或更新会议记录 - 飞书多维表格
-    await this.createOrUpdateMeetingRecord(
-      meeting_info,
-      meetingTypeDesc,
-      creatorRecordId,
-    );
+    // 使用 Promise.allSettled 并行执行会议记录操作
+    await Promise.allSettled([
+      // 创建或更新会议记录 - Prisma数据库
+      this.createOrUpdateMeetingInDatabase(
+        meeting_info,
+        operatorPlatformUser,
+        creatorPlatformUser,
+      ),
+      // 创建或更新会议记录 - 飞书多维表格
+      this.createOrUpdateMeetingRecord(
+        meeting_info,
+        meetingTypeDesc,
+        creatorRecordId,
+      ),
+    ]);
   }
 
   /**
@@ -114,6 +153,24 @@ export class MeetingStartedHandler extends BaseEventHandler {
       this.processUserRecord(operator, '操作者'),
       this.processUserRecord(creator, '创建者'),
     ]);
+  }
+
+  /**
+   * 处理用户记录（操作者和创建者）- 带错误回退
+   */
+  private async processUserRecordsWithFallback(
+    operator: TencentEventOperator,
+    creator: TencentMeetingCreator,
+  ): Promise<PromiseSettledResult<string>[]> {
+    try {
+      return await this.processUserRecords(operator, creator);
+    } catch (error) {
+      this.logger.error('处理用户记录失败，返回空结果', error);
+      return [
+        { status: 'rejected', reason: error } as PromiseRejectedResult,
+        { status: 'rejected', reason: error } as PromiseRejectedResult,
+      ];
+    }
   }
 
   /**
