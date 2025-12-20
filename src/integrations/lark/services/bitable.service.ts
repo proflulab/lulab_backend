@@ -97,9 +97,11 @@ export class BitableService {
         },
       });
 
-      this.logger.debug('Bitable record created successfully', {
-        recordId: response.data?.record?.record_id,
-      });
+      this.logger.debug(
+        'Bitable record created successfully,recordId:',
+        JSON.stringify(response.data?.record?.record_id, null, 2),
+      );
+
       return response as CreateRecordResponse;
     } catch (error) {
       this.logger.error('Failed to create Bitable record', error);
@@ -135,9 +137,11 @@ export class BitableService {
         },
       });
 
-      this.logger.debug('Bitable record updated successfully', {
-        recordId: response.data?.record?.record_id,
-      });
+      this.logger.debug(
+        'Bitable record updated successfully,recordId:',
+        JSON.stringify(response.data?.record?.record_id, null, 2),
+      );
+
       return response as UpdateRecordResponse;
     } catch (error) {
       this.logger.error('Failed to update Bitable record', error);

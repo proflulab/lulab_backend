@@ -204,23 +204,38 @@ async function createPlatformUser(
   prisma: PrismaClient,
   config: PlatformUserConfig,
 ) {
-  return prisma.platformUser.upsert({
+  // 先查找是否已存在相同的平台用户
+  const existingUser = await prisma.platformUser.findFirst({
     where: {
-      platform_platformUserId: {
-        platform: config.platform,
-        platformUserId: config.platformUserId,
-      },
-    },
-    update: {},
-    create: {
       platform: config.platform,
       platformUserId: config.platformUserId,
-      userName: config.userName,
-      email: config.email,
-      isActive: config.isActive,
-      lastSeenAt: new Date(),
     },
   });
+
+  if (existingUser) {
+    // 如果存在，更新并返回
+    return prisma.platformUser.update({
+      where: { id: existingUser.id },
+      data: {
+        userName: config.userName,
+        email: config.email,
+        isActive: config.isActive,
+        lastSeenAt: new Date(),
+      },
+    });
+  } else {
+    // 如果不存在，创建新用户
+    return prisma.platformUser.create({
+      data: {
+        platform: config.platform,
+        platformUserId: config.platformUserId,
+        userName: config.userName,
+        email: config.email,
+        isActive: config.isActive,
+        lastSeenAt: new Date(),
+      },
+    });
+  }
 }
 
 /**

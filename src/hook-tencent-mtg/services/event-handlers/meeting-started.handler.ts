@@ -60,18 +60,22 @@ export class MeetingStartedHandler extends BaseEventHandler {
 
     // 从结果中提取数据
     const [userRecordsResult, platformUsersResult] = results;
-    
+
     // 处理用户记录结果
     let userRecords: PromiseSettledResult<string>[] = [];
     if (userRecordsResult.status === 'fulfilled') {
       userRecords = userRecordsResult.value;
     } else {
-      this.logger.error('处理用户记录失败，但继续执行后续流程', userRecordsResult.reason);
+      this.logger.error(
+        '处理用户记录失败，但继续执行后续流程',
+        userRecordsResult.reason,
+      );
       // 创建空数组以避免后续处理出错
-      userRecords = [
-        { status: 'rejected', reason: userRecordsResult.reason } as PromiseRejectedResult,
-        { status: 'rejected', reason: userRecordsResult.reason } as PromiseRejectedResult,
-      ];
+      const rejectedResult: PromiseSettledResult<string> = {
+        status: 'rejected',
+        reason: userRecordsResult.reason as unknown,
+      };
+      userRecords = [rejectedResult, rejectedResult];
     }
 
     // 处理平台用户结果
@@ -80,17 +84,16 @@ export class MeetingStartedHandler extends BaseEventHandler {
     if (platformUsersResult.status === 'fulfilled') {
       [operatorPlatformUser, creatorPlatformUser] = platformUsersResult.value;
     } else {
-      this.logger.error('处理平台用户记录失败，但继续执行后续流程', platformUsersResult.reason);
+      this.logger.error(
+        '处理平台用户记录失败，但继续执行后续流程',
+        platformUsersResult.reason,
+      );
     }
 
     // 获取创建者记录ID
     let creatorRecordId = '';
     try {
-      creatorRecordId = this.getCreatorRecordId(
-        userRecords,
-        operator,
-        creator,
-      );
+      creatorRecordId = this.getCreatorRecordId(userRecords, operator, creator);
     } catch (error) {
       this.logger.error('获取创建者记录ID失败，但继续执行后续流程', error);
     }
@@ -166,10 +169,11 @@ export class MeetingStartedHandler extends BaseEventHandler {
       return await this.processUserRecords(operator, creator);
     } catch (error) {
       this.logger.error('处理用户记录失败，返回空结果', error);
-      return [
-        { status: 'rejected', reason: error } as PromiseRejectedResult,
-        { status: 'rejected', reason: error } as PromiseRejectedResult,
-      ];
+      const rejectedResult: PromiseSettledResult<string> = {
+        status: 'rejected',
+        reason: error as unknown,
+      };
+      return [rejectedResult, rejectedResult];
     }
   }
 
@@ -232,7 +236,7 @@ export class MeetingStartedHandler extends BaseEventHandler {
         start_time: meetingInfo.start_time * 1000,
         end_time: meetingInfo.end_time * 1000,
         creator: creatorRecordId ? [creatorRecordId] : [],
-        meeting_type: meetingTypeDesc ? [meetingTypeDesc] : [],
+        meeting_type: meetingTypeDesc ? meetingTypeDesc : '',
       });
 
       this.logger.log(

@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-28 06:15:49
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-09 01:15:32
+ * @LastEditTime: 2025-12-20 21:16:48
  * @FilePath: /lulab_backend/src/integrations/lark/types/meeting.types.ts
  * @Description:
  *
@@ -20,5 +20,5 @@ export interface MeetingData {
   operator?: string[];
   creator?: string[];
   participants?: string[];
-  meeting_type?: string[];
+  meeting_type?: string;
 }

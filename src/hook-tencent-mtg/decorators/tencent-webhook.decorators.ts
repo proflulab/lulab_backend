@@ -74,7 +74,8 @@ export function ApiTencentEventReceiverDocs() {
   return applyDecorators(
     ApiOperation({
       summary: '腾讯会议Webhook事件接收',
-      description: '接收腾讯会议的Webhook事件通知。支持会议创建、开始、结束、录制完成等事件。请求体中的data字段是Base64编码的加密事件数据，需要使用EncodingAESKey进行解密。',
+      description:
+        '接收腾讯会议的Webhook事件通知。支持会议创建、开始、结束、录制完成等事件。请求体中的data字段是Base64编码的加密事件数据，需要使用EncodingAESKey进行解密。',
       tags: ['Tencent Meeting'],
     }),
     ApiHeader({
@@ -105,7 +106,8 @@ export function ApiTencentEventReceiverDocs() {
           data: {
             type: 'string',
             description: 'Base64编码的加密事件数据',
-            example: 'PEircBnzWLN8UEmnWYclRuejXA55PpzDhz4UDpL2L7kSR/g3eWQ+4k8s+BYwviUtOgiYJ+qWBkMUatK7n0hD37DbxnroY3Svohpzhe8UVjPyjPj/ywbMfkvv9VbBZb7b3Zc2E72N3wPixoY312/SVC2rYNzsvUOKQwKCyIIFVkpepufOwVNKGikwv6apt7KqmNg9uR/PAyB39WBtAs6DlmvHBTDZY8Dnh+Wckm/KGKcUyuQ0OMNXbLLaEqZhlnLf8ciVdhDySOvbS50yTNElJFtIdmpmCwbx02n+MUUk3PfQEW8bTx0w1+/3YXhLo5Xs8DfOcIKRLoGa3o9uJeo54n20zxGmAroMiR3bebsKfa4xJruTH23tkpxg6wHqZIrJAEWrdeHsmKjWt5LhdIdbto5fh6AVD4lkzoXm9wtxM7WOlr6yKux0ErAgP63I2Ig+n2ReimGtGMhrgBAtwNndzgXcoMqjiAY6jaJ7UWK/QbDnVee4RpfxvmkMppGJmn/5bF0Glt+K/d8zbbtbI1YWvZY3ImBny1WmXaGORu+++i4y51MZUgrURguQJo0WiGn+DLP5/IPIVe5bIJMLODHPNADGy5rZIkjAOYGJq2yav7ln5WfLd4VPlP/xLbDJrKdScbxSMrpkROZ1UwudnfYUtg==',
+            example:
+              'PEircBnzWLN8UEmnWYclRuejXA55PpzDhz4UDpL2L7kSR/g3eWQ+4k8s+BYwviUtOgiYJ+qWBkMUatK7n0hD37DbxnroY3Svohpzhe8UVjPyjPj/ywbMfkvv9VbBZb7b3Zc2E72N3wPixoY312/SVC2rYNzsvUOKQwKCyIIFVkpepufOwVNKGikwv6apt7KqmNg9uR/PAyB39WBtAs6DlmvHBTDZY8Dnh+Wckm/KGKcUyuQ0OMNXbLLaEqZhlnLf8ciVdhDySOvbS50yTNElJFtIdmpmCwbx02n+MUUk3PfQEW8bTx0w1+/3YXhLo5Xs8DfOcIKRLoGa3o9uJeo54n20zxGmAroMiR3bebsKfa4xJruTH23tkpxg6wHqZIrJAEWrdeHsmKjWt5LhdIdbto5fh6AVD4lkzoXm9wtxM7WOlr6yKux0ErAgP63I2Ig+n2ReimGtGMhrgBAtwNndzgXcoMqjiAY6jaJ7UWK/QbDnVee4RpfxvmkMppGJmn/5bF0Glt+K/d8zbbtbI1YWvZY3ImBny1WmXaGORu+++i4y51MZUgrURguQJo0WiGn+DLP5/IPIVe5bIJMLODHPNADGy5rZIkjAOYGJq2yav7ln5WfLd4VPlP/xLbDJrKdScbxSMrpkROZ1UwudnfYUtg==',
           },
         },
         required: ['data'],
@@ -113,7 +115,8 @@ export function ApiTencentEventReceiverDocs() {
     }),
     ApiResponse({
       status: 200,
-      description: 'Webhook处理成功，必须返回字符串 "successfully received callback"（不含引号）',
+      description:
+        'Webhook处理成功，必须返回字符串 "successfully received callback"（不含引号）',
       schema: {
         type: 'string',
         example: 'successfully received callback',
