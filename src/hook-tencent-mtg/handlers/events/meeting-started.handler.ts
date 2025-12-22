@@ -47,7 +47,6 @@ export class MeetingStartedHandler extends BaseEventHandler {
       meeting_info.meeting_type,
     );
 
-    this.logMeetingStart(index, meeting_info, meetingTypeDesc);
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
 
     // 使用 Promise.allSettled 并行执行所有操作，确保任何一个失败都不会影响其他操作
@@ -120,20 +119,6 @@ export class MeetingStartedHandler extends BaseEventHandler {
         creatorRecordId,
       ),
     ]);
-  }
-
-  /**
-   * 记录会议开始日志
-   */
-  private logMeetingStart(
-    index: number,
-    meetingInfo: TencentEventMeetingInfo,
-    meetingTypeDesc: string,
-  ): void {
-    const { subject, meeting_code } = meetingInfo;
-    this.logger.log(
-      `会议开始 [${index}]: ${subject} (${meeting_code}) - ${meetingTypeDesc}`,
-    );
   }
 
   /**
