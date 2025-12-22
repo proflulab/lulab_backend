@@ -2,9 +2,9 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-06 05:06:37
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-03 06:34:37
+ * @LastEditTime: 2025-12-23 02:01:59
  * @FilePath: /lulab_backend/src/app.module.ts
- * @Description:
+ * @Description: Application module that defines the application's entry point and dependency injection
  *
  * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
  */
@@ -20,7 +20,7 @@ import { UserModule } from './user/user.module';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 import { PrismaModule } from './prisma/prisma.module';
 import { MeetingModule } from './meeting/meeting.module';
-import { TencentMeetingModule } from './hook-tencent-mtg/tencent-meeting.module';
+import { HookTencentMtgModule } from './hook-tencent-mtg/hook-tencent-mtg.module';
 import { LarkMeetingModule } from './lark-meeting/lark-meeting.module';
 import { VerificationModule } from '@/verification/verification.module';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -58,7 +58,7 @@ import { TasksModule } from './task/tasks.module';
     AuthModule,
     UserModule,
     MeetingModule,
-    TencentMeetingModule,
+    HookTencentMtgModule,
     LarkMeetingModule,
     VerificationModule,
     OpenaiModule,

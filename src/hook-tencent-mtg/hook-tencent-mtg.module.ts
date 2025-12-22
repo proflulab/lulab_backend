@@ -2,8 +2,8 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-01-03 10:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-19 20:39:54
- * @FilePath: /lulab_backend/src/hook-tencent-mtg/tencent-meeting.module.ts
+ * @LastEditTime: 2025-12-23 02:01:48
+ * @FilePath: /lulab_backend/src/hook-tencent-mtg/hook-tencent-mtg.module.ts
  * @Description: 腾讯会议模块，处理腾讯会议相关的Webhook事件
  *
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
@@ -57,4 +57,5 @@ import {
     TencentWebhookDecryptionPipe,
   ],
 })
-export class TencentMeetingModule {}
+
+export class HookTencentMtgModule {}
