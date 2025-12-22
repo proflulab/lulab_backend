@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { BaseEventHandler } from './base-event.handler';
+import { BaseEventHandler } from '../base/base-event.handler';
 import {
   TencentEventPayload,
   TencentMeetingCreator,
   TencentEventOperator,
   TencentEventMeetingInfo,
-} from '../types';
-import { TencentEventUtils } from '../utils/tencent-event.utils';
+} from '../../types';
+import { TencentEventUtils } from '../../utils/tencent-event.utils';
 import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
-} from '../../integrations/lark/repositories';
-import { PlatformUserRepository } from '../../user-platform/repositories/platform-user.repository';
-import { MeetingRepository } from '../../meeting/repositories/meeting.repository';
+} from '../../../integrations/lark/repositories';
+import { PlatformUserRepository } from '../../../user-platform/repositories/platform-user.repository';
+import { MeetingRepository } from '../../../meeting/repositories/meeting.repository';
 import {
   Platform,
   MeetingPlatform,

@@ -2,16 +2,16 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-07 01:50:25
- * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/event-handlers/recording-completed.handler.ts
+ * @LastEditTime: 2025-12-23 02:07:51
+ * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
  */
 
 import { Injectable } from '@nestjs/common';
-import { BaseEventHandler } from './base-event.handler';
-import { TencentEventPayload } from '../types';
+import { BaseEventHandler } from '../base/base-event.handler';
+import { TencentEventPayload } from '../../types';
 import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,

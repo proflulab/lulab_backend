@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-01-03 10:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-23 02:01:48
+ * @LastEditTime: 2025-12-23 02:33:05
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/hook-tencent-mtg.module.ts
  * @Description: 腾讯会议模块，处理腾讯会议相关的Webhook事件
  *
@@ -34,6 +34,7 @@ import {
   RecordingCompletedHandler,
   MeetingParticipantJoinedHandler,
 } from './handlers';
+import { BaseEventHandler } from './handlers/base/base-event.handler';
 
 @Module({
   imports: [
@@ -55,7 +56,27 @@ import {
     MeetingRepository,
     TencentUrlVerificationPipe,
     TencentWebhookDecryptionPipe,
+    // 提供 BaseEventHandler 数组的依赖注入配置
+    {
+      provide: 'BaseEventHandler[]',
+      useFactory: (
+        meetingStartedHandler: MeetingStartedHandler,
+        meetingEndedHandler: MeetingEndedHandler,
+        recordingCompletedHandler: RecordingCompletedHandler,
+        meetingParticipantJoinedHandler: MeetingParticipantJoinedHandler,
+      ) => [
+        meetingStartedHandler,
+        meetingEndedHandler,
+        recordingCompletedHandler,
+        meetingParticipantJoinedHandler,
+      ],
+      inject: [
+        MeetingStartedHandler,
+        MeetingEndedHandler,
+        RecordingCompletedHandler,
+        MeetingParticipantJoinedHandler,
+      ],
+    },
   ],
 })
-
 export class HookTencentMtgModule {}

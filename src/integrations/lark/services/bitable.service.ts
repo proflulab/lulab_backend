@@ -544,7 +544,9 @@ export class BitableService {
         );
 
         if (updateResult.data?.record) {
-          this.logger.log(`upsert-updated Record : ${existingRecord.record_id}`);
+          this.logger.log(
+            `upsert-updated Record : ${existingRecord.record_id}`,
+          );
           return {
             action: 'updated',
             record: updateResult.data.record,
@@ -557,7 +559,9 @@ export class BitableService {
       const createResult = await this.createRecord(appToken, tableId, fields);
 
       if (createResult.data?.record) {
-        this.logger.log(`upsert-created Record : ${createResult.data.record.record_id}`);
+        this.logger.log(
+          `upsert-created Record : ${createResult.data.record.record_id}`,
+        );
         return {
           action: 'created',
           record: createResult.data.record,

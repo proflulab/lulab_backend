@@ -66,7 +66,6 @@ export class TencentWebhookController {
   async verifyTencentWebhook(
     @Query('check_str', TencentUrlVerificationPipe) decryptedStr: string,
   ): Promise<string> {
-
     this.logger.log(
       'Received Tencent Meeting Webhook URL verification request',
     );
@@ -95,7 +94,6 @@ export class TencentWebhookController {
     )
     eventData: TencentMeetingEvent,
   ): Promise<string> {
-
     // 异步处理业务逻辑，不阻塞主流程
     this.tencentEventHandlerService
       .handleEvent(eventData)
