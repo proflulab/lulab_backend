@@ -378,7 +378,6 @@ export class MeetingStartedHandler extends BaseEventHandler {
         startAt: startTime,
         endAt: endTime,
         durationSeconds,
-        subMeetingId: meetingInfo.sub_meeting_id || null,
         hasRecording: false,
         recordingStatus: ProcessingStatus.PENDING,
         processingStatus: ProcessingStatus.PENDING,
@@ -396,6 +395,7 @@ export class MeetingStartedHandler extends BaseEventHandler {
       await this.meetingRepository.upsertMeetingRecord(
         MeetingPlatform.TENCENT_MEETING,
         meetingInfo.meeting_id,
+        meetingInfo.sub_meeting_id || '__ROOT__', // Default empty subMeetingId
         meetingData,
       );
 

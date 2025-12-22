@@ -252,12 +252,13 @@ async function createMeeting(
 
   const { hostUserName, meetingId, ...restConfig } = meetingConfig;
 
-  // 根据 model: @@unique([platform, meetingId])
+  // 根据 model: @@unique([platform, meetingId, subMeetingId])
   return prisma.meeting.upsert({
     where: {
-      platform_meetingId: {
+      platform_meetingId_subMeetingId: {
         platform: meetingConfig.platform,
         meetingId: meetingId!,
+        subMeetingId: '', // Default empty subMeetingId for seed data
       },
     },
     update: {

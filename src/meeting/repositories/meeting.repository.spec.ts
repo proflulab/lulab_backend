@@ -89,20 +89,23 @@ describe('MeetingRepository', () => {
       const result = await repository.upsertMeetingRecord(
         platform,
         platformMeetingId,
+        '', // Default empty subMeetingId
         meetingData,
       );
 
       expect(prismaService.meeting.upsert).toHaveBeenCalledWith({
         where: {
-          platform_meetingId: {
+          platform_meetingId_subMeetingId: {
             platform,
             meetingId: platformMeetingId,
+            subMeetingId: '',
           },
         },
         update: meetingData,
         create: {
           platform,
           meetingId: platformMeetingId,
+          subMeetingId: '',
           ...meetingData,
         },
       });
@@ -145,20 +148,23 @@ describe('MeetingRepository', () => {
       const result = await repository.upsertMeetingRecord(
         platform,
         platformMeetingId,
+        '', // Default empty subMeetingId
         updateData,
       );
 
       expect(prismaService.meeting.upsert).toHaveBeenCalledWith({
         where: {
-          platform_meetingId: {
+          platform_meetingId_subMeetingId: {
             platform,
             meetingId: platformMeetingId,
+            subMeetingId: '',
           },
         },
         update: updateData,
         create: {
           platform,
           meetingId: platformMeetingId,
+          subMeetingId: '',
           ...updateData,
         },
       });
@@ -191,20 +197,23 @@ describe('MeetingRepository', () => {
       const result = await repository.upsertMeetingRecord(
         feishuPlatform,
         feishuMeetingId,
+        '', // Default empty subMeetingId
         feishuMeetingData,
       );
 
       expect(prismaService.meeting.upsert).toHaveBeenCalledWith({
         where: {
-          platform_meetingId: {
+          platform_meetingId_subMeetingId: {
             platform: feishuPlatform,
             meetingId: feishuMeetingId,
+            subMeetingId: '',
           },
         },
         update: feishuMeetingData,
         create: {
           platform: feishuPlatform,
           meetingId: feishuMeetingId,
+          subMeetingId: '',
           ...feishuMeetingData,
         },
       });
@@ -219,21 +228,24 @@ describe('MeetingRepository', () => {
         repository.upsertMeetingRecord(
           platform,
           platformMeetingId,
+          '', // Default empty subMeetingId
           meetingData,
         ),
       ).rejects.toThrow(error);
 
       expect(prismaService.meeting.upsert).toHaveBeenCalledWith({
         where: {
-          platform_meetingId: {
+          platform_meetingId_subMeetingId: {
             platform,
             meetingId: platformMeetingId,
+            subMeetingId: '',
           },
         },
         update: meetingData,
         create: {
           platform,
           meetingId: platformMeetingId,
+          subMeetingId: '',
           ...meetingData,
         },
       });
@@ -261,20 +273,23 @@ describe('MeetingRepository', () => {
       const result = await repository.upsertMeetingRecord(
         platform,
         platformMeetingId,
+        '', // Default empty subMeetingId
         minimalData,
       );
 
       expect(prismaService.meeting.upsert).toHaveBeenCalledWith({
         where: {
-          platform_meetingId: {
+          platform_meetingId_subMeetingId: {
             platform,
             meetingId: platformMeetingId,
+            subMeetingId: '',
           },
         },
         update: minimalData,
         create: {
           platform,
           meetingId: platformMeetingId,
+          subMeetingId: '',
           ...minimalData,
         },
       });
