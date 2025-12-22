@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-11 20:21:09
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-23 02:56:13
+ * @LastEditTime: 2025-12-23 04:18:20
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/factories/event-handler.factory.ts
  * @Description:
  *
@@ -17,7 +17,6 @@ import { BaseEventHandler } from '../base/base-event.handler';
  */
 @Injectable()
 export class EventHandlerFactory {
-
   constructor(
     // 使用依赖注入自动发现所有事件处理器
     @Inject('BaseEventHandler[]')
@@ -53,16 +52,21 @@ export class EventHandlerFactory {
    * 从处理器中提取支持的事件类型
    */
   private extractSupportedEvents(handler: BaseEventHandler): string[] {
-    const handlerClass = handler.constructor;
+    const handlerClass = handler.constructor as unknown as Record<
+      string,
+      unknown
+    >;
 
     // 尝试获取处理器类的 SUPPORTED_EVENT 静态属性
-    const supportedEvent = (handlerClass as any).SUPPORTED_EVENT;
+    const supportedEvent = handlerClass.SUPPORTED_EVENT as string | undefined;
     if (supportedEvent) {
       return [supportedEvent];
     }
 
     // 尝试获取处理器类的 SUPPORTED_EVENTS 静态属性（支持多个事件）
-    const supportedEvents = (handlerClass as any).SUPPORTED_EVENTS;
+    const supportedEvents = handlerClass.SUPPORTED_EVENTS as
+      | string[]
+      | undefined;
     if (Array.isArray(supportedEvents)) {
       return supportedEvents;
     }

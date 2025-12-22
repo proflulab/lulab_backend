@@ -21,8 +21,11 @@ class TestEventHandler1 extends BaseEventHandler {
     return event === TestEventHandler1.SUPPORTED_EVENT;
   }
 
-  async handle(payload: TencentEventPayload, index: number): Promise<void> {
-    // Mock implementation
+  handle(payload: TencentEventPayload, index: number): Promise<void> {
+    // Mock implementation - ignore parameters
+    void payload;
+    void index;
+    return Promise.resolve();
   }
 }
 
@@ -33,8 +36,11 @@ class TestEventHandler2 extends BaseEventHandler {
     return TestEventHandler2.SUPPORTED_EVENTS.includes(event);
   }
 
-  async handle(payload: TencentEventPayload, index: number): Promise<void> {
-    // Mock implementation
+  handle(payload: TencentEventPayload, index: number): Promise<void> {
+    // Mock implementation - ignore parameters
+    void payload;
+    void index;
+    return Promise.resolve();
   }
 }
 
@@ -49,7 +55,7 @@ describe('EventHandlerFactory', () => {
     handler2 = new TestEventHandler2();
 
     // 创建工厂实例并手动传入处理器
-    factory = new (EventHandlerFactory as any)([handler1, handler2]);
+    factory = new EventHandlerFactory([handler1, handler2]);
   });
 
   it('should be defined', () => {

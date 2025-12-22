@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-01-03 10:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-23 02:33:05
+ * @LastEditTime: 2025-12-23 04:17:18
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/hook-tencent-mtg.module.ts
  * @Description: 腾讯会议模块，处理腾讯会议相关的Webhook事件
  *
@@ -34,7 +34,6 @@ import {
   RecordingCompletedHandler,
   MeetingParticipantJoinedHandler,
 } from './handlers';
-import { BaseEventHandler } from './handlers/base/base-event.handler';
 
 @Module({
   imports: [

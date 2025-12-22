@@ -5,8 +5,6 @@ import { MeetingBitableRepository } from '../../../integrations/lark/repositorie
 
 describe('MeetingParticipantJoinedHandler', () => {
   let handler: MeetingParticipantJoinedHandler;
-  let meetingBitableRepository: jest.Mocked<MeetingBitableRepository>;
-  let meetingUserBitableRepository: jest.Mocked<MeetingUserBitableRepository>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -30,8 +28,6 @@ describe('MeetingParticipantJoinedHandler', () => {
     handler = module.get<MeetingParticipantJoinedHandler>(
       MeetingParticipantJoinedHandler,
     );
-    meetingBitableRepository = module.get(MeetingBitableRepository);
-    meetingUserBitableRepository = module.get(MeetingUserBitableRepository);
   });
 
   it('should be defined', () => {
