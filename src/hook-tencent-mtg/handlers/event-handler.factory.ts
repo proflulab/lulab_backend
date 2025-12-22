@@ -1,3 +1,13 @@
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-12-11 20:21:09
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-12-23 01:53:59
+ * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/event-handler.factory.ts
+ * @Description: 
+ * 
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved. 
+ */
 import { Injectable } from '@nestjs/common';
 import { IEventHandler } from './base-event.handler';
 import { MeetingStartedHandler } from './meeting-started.handler';

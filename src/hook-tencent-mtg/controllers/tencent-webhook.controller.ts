@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-01 01:08:34
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-20 21:28:22
+ * @LastEditTime: 2025-12-23 00:55:49
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/controllers/tencent-webhook.controller.ts
  * @Description: 腾讯会议Webhook控制器
  *
@@ -27,7 +27,7 @@ import {
 } from '../decorators/tencent-webhook.decorators';
 import { ApiTags } from '@nestjs/swagger';
 import { Public } from '@/auth/decorators/public.decorator';
-import { TencentEventHandlerService } from '../services/tencent-event-handler.service';
+import { TencentEventHandlerService } from '../services/event-handler.service';
 import { WebhookLoggingInterceptor } from '../interceptors/webhook-logging.interceptor';
 import { TencentMeetingEvent } from '../types';
 import {
@@ -66,6 +66,7 @@ export class TencentWebhookController {
   async verifyTencentWebhook(
     @Query('check_str', TencentUrlVerificationPipe) decryptedStr: string,
   ): Promise<string> {
+
     this.logger.log(
       'Received Tencent Meeting Webhook URL verification request',
     );
@@ -94,12 +95,8 @@ export class TencentWebhookController {
     )
     eventData: TencentMeetingEvent,
   ): Promise<string> {
-    this.logger.log(`Received Tencent Meeting event: ${eventData.event}`, {
-      traceId: eventData.trace_id,
-      payloadCount: eventData.payload?.length || 0,
-    });
 
-    // 异步处理业务逻辑
+    // 异步处理业务逻辑，不阻塞主流程
     this.tencentEventHandlerService
       .handleEvent(eventData)
       .catch((error: unknown) => {

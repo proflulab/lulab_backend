@@ -1,11 +1,23 @@
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-12-20 22:01:42
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-12-23 01:39:22
+ * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/event-handler.service.ts
+ * @Description: Tencent Meeting event handler service
+ * 
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved. 
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { TencentMeetingEvent } from '../types';
 import { UnsupportedWebhookEventException } from '../../integrations/tencent-meeting';
-import { EventHandlerFactory } from './event-handlers/event-handler.factory';
+import { EventHandlerFactory } from '../handlers/event-handler.factory';
 
 /**
- * 腾讯会议事件处理器 - 使用工厂模式
- * 将不同事件的处理逻辑分离到不同的处理器中
+ * Tencent Meeting event handler service
+ * - using factory pattern  
+ * Separates handling logic for different events into different handlers
  */
 @Injectable()
 export class TencentEventHandlerService {
@@ -15,12 +27,11 @@ export class TencentEventHandlerService {
   constructor(private readonly eventHandlerFactory: EventHandlerFactory) {}
 
   /**
-   * 处理腾讯会议事件
+   * Handle Tencent Meeting events
    */
   async handleEvent(eventData: TencentMeetingEvent): Promise<void> {
     const { event, payload } = eventData;
-
-    this.logger.log(`开始处理腾讯会议事件: ${event}`);
+    
     this.logEventDetails(eventData);
 
     const handler = this.eventHandlerFactory.getHandler(event);
@@ -29,23 +40,23 @@ export class TencentEventHandlerService {
     }
 
     try {
-      // 批量处理payload
+      // Batch process payloads
       for (let i = 0; i < payload.length; i++) {
         await handler.handle(payload[i], i);
       }
 
-      this.logger.log(`腾讯会议事件处理完成: ${event}`);
+      this.logger.log(`Tencent Meeting event processing completed: ${event}`);
     } catch (error) {
-      this.logger.error(`腾讯会议事件处理失败: ${event}`, error);
+      this.logger.error(`Tencent Meeting event processing failed: ${event}`, error);
       throw error;
     }
   }
 
   /**
-   * 记录事件详情
+   * Log event details
    */
   private logEventDetails(eventData: TencentMeetingEvent): void {
-    this.logger.log('事件接收详情:', {
+    this.logger.log('Event received details:', {
       event: eventData.event,
       traceId: eventData.trace_id,
       payloadCount: eventData.payload.length,
@@ -54,7 +65,7 @@ export class TencentEventHandlerService {
   }
 
   /**
-   * 获取支持的事件类型
+   * Get supported event types
    */
   getSupportedEvents(): string[] {
     return this.eventHandlerFactory.getSupportedEvents();

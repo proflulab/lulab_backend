@@ -19,7 +19,7 @@ import { OpenaiModule } from '../integrations/openai/openai.module';
 import { TencentModule } from '../integrations/tencent-meeting/tencent.module';
 
 import { TencentWebhookController } from './controllers/tencent-webhook.controller';
-import { TencentEventHandlerService } from './services/tencent-event-handler.service';
+import { TencentEventHandlerService } from './services/event-handler.service';
 import { MeetingRepository } from '../meeting/repositories/meeting.repository';
 import { PlatformUserRepository } from '../user-platform/repositories/platform-user.repository';
 
@@ -33,7 +33,7 @@ import {
   MeetingEndedHandler,
   RecordingCompletedHandler,
   MeetingParticipantJoinedHandler,
-} from './services/event-handlers';
+} from './handlers';
 
 @Module({
   imports: [

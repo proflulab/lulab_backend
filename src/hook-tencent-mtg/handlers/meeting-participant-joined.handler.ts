@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { BaseEventHandler } from './base-event.handler';
-import { TencentEventPayload } from '../../types';
+import { TencentEventPayload } from '../types';
 import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
-} from '../../../integrations/lark/repositories';
+} from '../../integrations/lark/repositories';
 
 /**
  * 用户入会事件处理器
