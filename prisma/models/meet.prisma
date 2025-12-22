@@ -4,7 +4,7 @@ model Meeting {
   // 平台和来源信息
   platform     MeetingPlatform // 会议平台
   meetingId    String          @map("meeting_id") @db.VarChar(100) // 平台会议ID
-  subMeetingId String?         @map("sub_meeting_id") @db.VarChar(100) // 子会议ID，用于区分同一主会议下的不同子会议
+  subMeetingId String          @default("__ROOT__") @map("sub_meeting_id") @db.VarChar(100) // 子会议ID，用于区分同一主会议下的不同子会议
   externalId   String?         @map("external_id") @db.VarChar(100) // 外部系统ID
 
   // 会议基本信息
