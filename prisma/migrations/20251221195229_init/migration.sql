@@ -182,16 +182,17 @@ CREATE TABLE "code_send_limits" (
 CREATE TABLE "meetings" (
     "id" TEXT NOT NULL,
     "platform" "MeetingPlatform" NOT NULL,
-    "meetingId" VARCHAR(100) NOT NULL,
-    "subMeetingId" VARCHAR(100),
-    "externalId" VARCHAR(100),
+    "meeting_id" VARCHAR(100) NOT NULL,
+    "sub_meeting_id" VARCHAR(100),
+    "external_id" VARCHAR(100),
     "title" VARCHAR(500) NOT NULL,
     "description" TEXT,
-    "meetingCode" VARCHAR(50),
+    "meeting_code" VARCHAR(50),
     "type" "MeetingType" NOT NULL DEFAULT 'SCHEDULED',
     "language" VARCHAR(10),
     "tags" TEXT[],
-    "hostPlatformUserId" TEXT,
+    "created_by_id" TEXT,
+    "host_id" TEXT,
     "participantCount" INTEGER,
     "scheduled_start_at" TIMESTAMPTZ(6),
     "scheduled_end_at" TIMESTAMPTZ(6),
@@ -202,10 +203,10 @@ CREATE TABLE "meetings" (
     "hasRecording" BOOLEAN NOT NULL DEFAULT false,
     "recordingStatus" "ProcessingStatus" NOT NULL DEFAULT 'PENDING',
     "processingStatus" "ProcessingStatus" NOT NULL DEFAULT 'PENDING',
-    "metadata" JSONB,
+    "metadata" JSONB NOT NULL DEFAULT '{}',
     "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-    "deletedAt" TIMESTAMP(3),
+    "updated_at" TIMESTAMPTZ(6) NOT NULL,
+    "deleted_at" TIMESTAMPTZ(6),
 
     CONSTRAINT "meetings_pkey" PRIMARY KEY ("id")
 );
@@ -218,9 +219,10 @@ CREATE TABLE "meet_recordings" (
     "start_at" TIMESTAMPTZ(6),
     "end_at" TIMESTAMPTZ(6),
     "status" "RecordingStatus" NOT NULL DEFAULT 'RECORDING',
-    "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "recorder_user_id" TEXT,
+    "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(6) NOT NULL,
+    "deleted_at" TIMESTAMPTZ(6),
 
     CONSTRAINT "meet_recordings_pkey" PRIMARY KEY ("id")
 );
@@ -234,6 +236,8 @@ CREATE TABLE "meet_recording_files" (
     "duration_ms" BIGINT,
     "resolution" TEXT,
     "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(6) NOT NULL,
+    "deleted_at" TIMESTAMPTZ(6),
 
     CONSTRAINT "meet_recording_files_pkey" PRIMARY KEY ("id")
 );
@@ -275,7 +279,7 @@ CREATE TABLE "meet_summaries" (
 CREATE TABLE "meet_participants" (
     "id" TEXT NOT NULL,
     "meetingId" TEXT NOT NULL,
-    "platformUserId" TEXT NOT NULL,
+    "platformUserId" TEXT,
     "joinTime" TIMESTAMP(3),
     "leftTime" TIMESTAMP(3),
     "durationSeconds" INTEGER,
@@ -679,11 +683,11 @@ CREATE TABLE "users" (
     "countryCode" TEXT,
     "phone" TEXT,
     "phoneVerifiedAt" TIMESTAMP(3),
-    "lastLoginAt" TIMESTAMP(3),
     "active" BOOLEAN NOT NULL DEFAULT true,
-    "deletedAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(6) NOT NULL,
+    "last_login_at" TIMESTAMPTZ(6),
+    "deleted_at" TIMESTAMPTZ(6),
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
@@ -692,19 +696,21 @@ CREATE TABLE "users" (
 CREATE TABLE "user_platforms" (
     "id" TEXT NOT NULL,
     "platform" "Platform" NOT NULL,
-    "platformUserId" TEXT NOT NULL,
-    "userName" TEXT,
+    "platform_user_id" TEXT NOT NULL,
+    "platform_uuid" TEXT,
+    "platform_data" JSONB DEFAULT '{}',
+    "user_name" TEXT,
     "email" TEXT,
     "avatar" TEXT,
-    "countryCode" TEXT,
+    "country_code" TEXT,
     "phone" TEXT,
-    "phoneHash" TEXT,
-    "userId" TEXT,
-    "platformData" JSONB,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "lastSeenAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "phone_hash" TEXT,
+    "user_id" TEXT,
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(6) NOT NULL,
+    "last_seen_at" TIMESTAMPTZ(6),
+    "deleted_at" TIMESTAMPTZ(6),
 
     CONSTRAINT "user_platforms_pkey" PRIMARY KEY ("id")
 );
@@ -817,7 +823,7 @@ CREATE INDEX "meetings_processingStatus_idx" ON "meetings"("processingStatus");
 CREATE INDEX "meetings_tags_idx" ON "meetings"("tags");
 
 -- CreateIndex
-CREATE INDEX "meetings_deletedAt_idx" ON "meetings"("deletedAt");
+CREATE INDEX "meetings_deleted_at_idx" ON "meetings"("deleted_at");
 
 -- CreateIndex
 CREATE INDEX "meetings_created_at_idx" ON "meetings"("created_at");
@@ -826,13 +832,16 @@ CREATE INDEX "meetings_created_at_idx" ON "meetings"("created_at");
 CREATE INDEX "meetings_platform_start_at_idx" ON "meetings"("platform", "start_at");
 
 -- CreateIndex
-CREATE INDEX "meetings_hostPlatformUserId_start_at_idx" ON "meetings"("hostPlatformUserId", "start_at");
+CREATE INDEX "meetings_host_id_start_at_idx" ON "meetings"("host_id", "start_at");
 
 -- CreateIndex
-CREATE INDEX "meetings_deletedAt_created_at_idx" ON "meetings"("deletedAt", "created_at");
+CREATE INDEX "meetings_created_by_id_start_at_idx" ON "meetings"("created_by_id", "start_at");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "meetings_platform_meetingId_key" ON "meetings"("platform", "meetingId");
+CREATE INDEX "meetings_deleted_at_created_at_idx" ON "meetings"("deleted_at", "created_at");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "meetings_platform_meeting_id_key" ON "meetings"("platform", "meeting_id");
 
 -- CreateIndex
 CREATE INDEX "idx_recordings_meeting" ON "meet_recordings"("meeting_id");
@@ -1159,40 +1168,40 @@ CREATE INDEX "users_phone_idx" ON "users"("phone");
 CREATE INDEX "users_active_idx" ON "users"("active");
 
 -- CreateIndex
-CREATE INDEX "users_deletedAt_idx" ON "users"("deletedAt");
+CREATE INDEX "users_deleted_at_idx" ON "users"("deleted_at");
 
 -- CreateIndex
-CREATE INDEX "users_lastLoginAt_idx" ON "users"("lastLoginAt");
+CREATE INDEX "users_last_login_at_idx" ON "users"("last_login_at");
 
 -- CreateIndex
-CREATE INDEX "users_active_deletedAt_idx" ON "users"("active", "deletedAt");
+CREATE INDEX "users_active_deleted_at_idx" ON "users"("active", "deleted_at");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_countryCode_phone_key" ON "users"("countryCode", "phone");
 
 -- CreateIndex
-CREATE INDEX "user_platforms_email_idx" ON "user_platforms"("email");
+CREATE INDEX "idx_user_platforms_email" ON "user_platforms"("email");
 
 -- CreateIndex
-CREATE INDEX "user_platforms_userId_idx" ON "user_platforms"("userId");
+CREATE INDEX "idx_user_platforms_user_id" ON "user_platforms"("user_id");
 
 -- CreateIndex
-CREATE INDEX "user_platforms_phoneHash_idx" ON "user_platforms"("phoneHash");
+CREATE INDEX "idx_user_platforms_phone_hash" ON "user_platforms"("phone_hash");
 
 -- CreateIndex
-CREATE INDEX "user_platforms_platform_idx" ON "user_platforms"("platform");
+CREATE INDEX "idx_user_platforms_platform" ON "user_platforms"("platform");
 
 -- CreateIndex
-CREATE INDEX "user_platforms_userName_idx" ON "user_platforms"("userName");
+CREATE INDEX "idx_user_platforms_user_name" ON "user_platforms"("user_name");
 
 -- CreateIndex
-CREATE INDEX "user_platforms_isActive_idx" ON "user_platforms"("isActive");
+CREATE INDEX "idx_user_platforms_is_active" ON "user_platforms"("is_active");
 
 -- CreateIndex
-CREATE INDEX "user_platforms_lastSeenAt_idx" ON "user_platforms"("lastSeenAt");
+CREATE INDEX "idx_user_platforms_last_seen_at" ON "user_platforms"("last_seen_at");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "user_platforms_platform_platformUserId_key" ON "user_platforms"("platform", "platformUserId");
+CREATE INDEX "idx_user_platforms_platform_uuid" ON "user_platforms"("platform_uuid");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "user_profiles_userId_key" ON "user_profiles"("userId");
@@ -1231,7 +1240,10 @@ ALTER TABLE "departments" ADD CONSTRAINT "departments_parentId_fkey" FOREIGN KEY
 ALTER TABLE "login_logs" ADD CONSTRAINT "login_logs_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "meetings" ADD CONSTRAINT "meetings_hostPlatformUserId_fkey" FOREIGN KEY ("hostPlatformUserId") REFERENCES "user_platforms"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "meetings" ADD CONSTRAINT "meetings_created_by_id_fkey" FOREIGN KEY ("created_by_id") REFERENCES "user_platforms"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "meetings" ADD CONSTRAINT "meetings_host_id_fkey" FOREIGN KEY ("host_id") REFERENCES "user_platforms"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "meet_recordings" ADD CONSTRAINT "meet_recordings_meeting_id_fkey" FOREIGN KEY ("meeting_id") REFERENCES "meetings"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1264,7 +1276,7 @@ ALTER TABLE "meet_summaries" ADD CONSTRAINT "meet_summaries_transcriptId_fkey" F
 ALTER TABLE "meet_participants" ADD CONSTRAINT "meet_participants_meetingId_fkey" FOREIGN KEY ("meetingId") REFERENCES "meetings"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "meet_participants" ADD CONSTRAINT "meet_participants_platformUserId_fkey" FOREIGN KEY ("platformUserId") REFERENCES "user_platforms"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "meet_participants" ADD CONSTRAINT "meet_participants_platformUserId_fkey" FOREIGN KEY ("platformUserId") REFERENCES "user_platforms"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "meet_user_actions" ADD CONSTRAINT "meet_user_actions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user_platforms"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -1369,7 +1381,7 @@ ALTER TABLE "transcript_sentences" ADD CONSTRAINT "transcript_sentences_paragrap
 ALTER TABLE "transcript_words" ADD CONSTRAINT "transcript_words_sentenceId_fkey" FOREIGN KEY ("sentenceId") REFERENCES "transcript_sentences"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "user_platforms" ADD CONSTRAINT "user_platforms_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "user_platforms" ADD CONSTRAINT "user_platforms_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "user_profiles" ADD CONSTRAINT "user_profiles_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
