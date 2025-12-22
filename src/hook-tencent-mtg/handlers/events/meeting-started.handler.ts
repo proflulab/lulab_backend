@@ -396,6 +396,7 @@ export class MeetingStartedHandler extends BaseEventHandler {
       await this.meetingRepository.upsertMeetingRecord(
         MeetingPlatform.TENCENT_MEETING,
         meetingInfo.meeting_id,
+        meetingInfo.sub_meeting_id || '', // Default empty subMeetingId
         meetingData,
       );
 

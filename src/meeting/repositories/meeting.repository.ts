@@ -16,13 +16,15 @@ export class MeetingRepository {
    */
   async findMeetingByPlatformId(
     platform: MeetingPlatform,
-    platformMeetingId: string,
+    meetingId: string,
+    subMeetingId: string,
   ) {
     return this.prisma.meeting.findUnique({
       where: {
-        platform_meetingId: {
+        platform_meetingId_subMeetingId: {
           platform,
-          meetingId: platformMeetingId,
+          meetingId,
+          subMeetingId,
         },
       },
     });
@@ -64,20 +66,26 @@ export class MeetingRepository {
    */
   async upsertMeetingRecord(
     platform: MeetingPlatform,
-    platformMeetingId: string,
-    data: Omit<CreateMeetingRecordData, 'platform' | 'meetingId'>,
+    meetingId: string,
+    subMeetingId: string,
+    data: Omit<
+      CreateMeetingRecordData,
+      'platform' | 'meetingId' | 'subMeetingId'
+    >,
   ) {
     return this.prisma.meeting.upsert({
       where: {
-        platform_meetingId: {
+        platform_meetingId_subMeetingId: {
           platform,
-          meetingId: platformMeetingId,
+          meetingId,
+          subMeetingId,
         },
       },
       update: data,
       create: {
         platform,
-        meetingId: platformMeetingId,
+        meetingId,
+        subMeetingId,
         ...data,
       },
     });
