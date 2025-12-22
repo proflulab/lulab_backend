@@ -2,8 +2,8 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-01-03 10:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-19 20:39:54
- * @FilePath: /lulab_backend/src/hook-tencent-mtg/tencent-meeting.module.ts
+ * @LastEditTime: 2025-12-23 04:17:18
+ * @FilePath: /lulab_backend/src/hook-tencent-mtg/hook-tencent-mtg.module.ts
  * @Description: 腾讯会议模块，处理腾讯会议相关的Webhook事件
  *
  * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
@@ -19,7 +19,7 @@ import { OpenaiModule } from '../integrations/openai/openai.module';
 import { TencentModule } from '../integrations/tencent-meeting/tencent.module';
 
 import { TencentWebhookController } from './controllers/tencent-webhook.controller';
-import { TencentEventHandlerService } from './services/tencent-event-handler.service';
+import { TencentEventHandlerService } from './services/event-handler.service';
 import { MeetingRepository } from '../meeting/repositories/meeting.repository';
 import { PlatformUserRepository } from '../user-platform/repositories/platform-user.repository';
 
@@ -33,7 +33,7 @@ import {
   MeetingEndedHandler,
   RecordingCompletedHandler,
   MeetingParticipantJoinedHandler,
-} from './services/event-handlers';
+} from './handlers';
 
 @Module({
   imports: [
@@ -55,6 +55,27 @@ import {
     MeetingRepository,
     TencentUrlVerificationPipe,
     TencentWebhookDecryptionPipe,
+    // 提供 BaseEventHandler 数组的依赖注入配置
+    {
+      provide: 'BaseEventHandler[]',
+      useFactory: (
+        meetingStartedHandler: MeetingStartedHandler,
+        meetingEndedHandler: MeetingEndedHandler,
+        recordingCompletedHandler: RecordingCompletedHandler,
+        meetingParticipantJoinedHandler: MeetingParticipantJoinedHandler,
+      ) => [
+        meetingStartedHandler,
+        meetingEndedHandler,
+        recordingCompletedHandler,
+        meetingParticipantJoinedHandler,
+      ],
+      inject: [
+        MeetingStartedHandler,
+        MeetingEndedHandler,
+        RecordingCompletedHandler,
+        MeetingParticipantJoinedHandler,
+      ],
+    },
   ],
 })
-export class TencentMeetingModule {}
+export class HookTencentMtgModule {}

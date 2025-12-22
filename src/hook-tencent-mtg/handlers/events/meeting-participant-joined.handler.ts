@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { BaseEventHandler } from './base-event.handler';
+import { BaseEventHandler } from '../base/base-event.handler';
 import { TencentEventPayload } from '../../types';
 import {
   MeetingBitableRepository,

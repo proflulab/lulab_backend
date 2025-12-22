@@ -166,8 +166,8 @@ export class BitableService {
     },
   ): Promise<SearchRecordResponse> {
     try {
-      this.logger.debug(
-        `Searching Bitable records in app: ${appToken}, table: ${tableId}`,
+      this.logger.log(
+        `Searching Bitable records [app: ${appToken}; table: ${tableId}]`,
       );
 
       const request: SearchRecordRequest = {
@@ -204,7 +204,7 @@ export class BitableService {
         },
       });
 
-      this.logger.debug(`Found ${response.data?.items?.length || 0} records`);
+      this.logger.log(`Found ${response.data?.items?.length || 0} records`);
       return response as SearchRecordResponse;
     } catch (error) {
       this.logger.error('Failed to search Bitable records', error);
@@ -544,7 +544,9 @@ export class BitableService {
         );
 
         if (updateResult.data?.record) {
-          this.logger.log(`记录已更新: ${existingRecord.record_id}`);
+          this.logger.log(
+            `upsert-updated Record : ${existingRecord.record_id}`,
+          );
           return {
             action: 'updated',
             record: updateResult.data.record,
@@ -557,7 +559,9 @@ export class BitableService {
       const createResult = await this.createRecord(appToken, tableId, fields);
 
       if (createResult.data?.record) {
-        this.logger.log(`记录已创建: ${createResult.data.record.record_id}`);
+        this.logger.log(
+          `upsert-created Record : ${createResult.data.record.record_id}`,
+        );
         return {
           action: 'created',
           record: createResult.data.record,
