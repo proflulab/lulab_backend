@@ -166,8 +166,8 @@ export class BitableService {
     },
   ): Promise<SearchRecordResponse> {
     try {
-      this.logger.debug(
-        `Searching Bitable records in app: ${appToken}, table: ${tableId}`,
+      this.logger.log(
+        `Searching Bitable records [app: ${appToken}; table: ${tableId}]`,
       );
 
       const request: SearchRecordRequest = {
@@ -204,7 +204,7 @@ export class BitableService {
         },
       });
 
-      this.logger.debug(`Found ${response.data?.items?.length || 0} records`);
+      this.logger.log(`Found ${response.data?.items?.length || 0} records`);
       return response as SearchRecordResponse;
     } catch (error) {
       this.logger.error('Failed to search Bitable records', error);
