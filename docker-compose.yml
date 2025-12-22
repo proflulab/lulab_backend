@@ -11,7 +11,7 @@ services:
       - redis
       - postgres
     networks:
-      - lulab_network
+      - lulab_net
   redis:
     image: redis:8.2.1-alpine
     restart: always
@@ -38,7 +38,7 @@ services:
       timeout: 3s
       retries: 10
     networks:
-      - lulab_network
+      - lulab_net
   postgres:
     image: postgres:17.5-alpine
     restart: always
@@ -57,13 +57,13 @@ services:
       timeout: 3s
       retries: 10
     networks:
-      - lulab_network
+      - lulab_net
 
 volumes:
   redis_data:
   postgres_data:
 
 networks:
-  lulab_network:
+  lulab_net:
     driver: bridge
-    name: lulab_backend_network
+    name: lulab_net
