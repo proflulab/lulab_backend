@@ -2,12 +2,13 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-23 04:23:42
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-23 12:15:39
+ * @LastEditTime: 2025-12-23 12:33:37
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/meeting-participant-joined.handler.spec.ts
  * @Description:
  *
  * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
  */
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { MeetingParticipantJoinedHandler } from './meeting-participant-joined.handler';
 import { MeetingRecordService } from '../../services/meeting-record.service';
@@ -26,13 +27,17 @@ describe('MeetingParticipantJoinedHandler', () => {
         {
           provide: MeetingRecordService,
           useValue: {
-            updateMeetingParticipants: jest.fn(),
+            updateMeetingParticipants: jest
+              .fn()
+              .mockImplementation(function (this: void) {}),
           },
         },
         {
           provide: MeetingUserService,
           useValue: {
-            upsertMeetingUserRecord: jest.fn(),
+            upsertMeetingUserRecord: jest
+              .fn()
+              .mockImplementation(function (this: void) {}),
           },
         },
       ],
@@ -85,15 +90,19 @@ describe('MeetingParticipantJoinedHandler', () => {
     await handler.handle(payload, 1);
 
     expect(meetingUserService.upsertMeetingUserRecord).toHaveBeenCalledTimes(2);
+
     expect(meetingUserService.upsertMeetingUserRecord).toHaveBeenCalledWith(
       payload.operator,
     );
+
     expect(meetingUserService.upsertMeetingUserRecord).toHaveBeenCalledWith(
       payload.meeting_info.creator,
     );
+
     expect(
       meetingRecordService.updateMeetingParticipants,
     ).toHaveBeenCalledTimes(1);
+
     expect(meetingRecordService.updateMeetingParticipants).toHaveBeenCalledWith(
       payload.meeting_info,
       payload.operator,

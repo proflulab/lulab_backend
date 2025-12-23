@@ -3,10 +3,10 @@ import { PrismaService } from '@/prisma/prisma.service';
 import {
   MeetingPlatform,
   Platform,
-  Prisma,
   PrismaClient,
   MeetingType,
   ProcessingStatus,
+  Prisma,
 } from '@prisma/client';
 
 type PrismaTransaction = Omit<
@@ -77,7 +77,8 @@ export class TencentMeetingRepository {
           platformUserId: creatorData.platformUserId,
           userName: creatorData.userName,
           email: creatorData.email,
-          platformData: creatorData.platformData || {},
+          platformData: (creatorData.platformData ||
+            {}) as unknown as Prisma.InputJsonValue,
         },
       );
 
@@ -90,7 +91,8 @@ export class TencentMeetingRepository {
           platformUserId: hostData.platformUserId,
           userName: hostData.userName,
           email: hostData.email,
-          platformData: hostData.platformData || {},
+          platformData: (hostData.platformData ||
+            {}) as unknown as Prisma.InputJsonValue,
         },
       );
 
@@ -166,7 +168,8 @@ export class TencentMeetingRepository {
           platformUserId: data.platformUserId,
           userName: data.userName,
           email: data.email,
-          platformData: data.platformData || {},
+          platformData: (data.platformData ||
+            {}) as unknown as Prisma.InputJsonValue,
           lastSeenAt: new Date(),
           isActive: true,
         },

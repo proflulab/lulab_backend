@@ -53,7 +53,7 @@ export class MeetingStartedHandler extends BaseEventHandler {
 
     // 如果操作者和创建者不是同一人，添加创建者记录处理
     if (operator.uuid !== creator.uuid) {
-      this.meetingUserService.upsertMeetingUserRecord(operator);
+      void this.meetingUserService.upsertMeetingUserRecord(creator);
     }
 
     // 使用 Promise.allSettled 并行执行所有操作，确保任何一个失败都不会影响其他操作
