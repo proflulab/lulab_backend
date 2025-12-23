@@ -6,6 +6,7 @@ import {
   UpdateRecordResponse,
   BitableField,
   SearchFilter,
+  SearchRecordResponse,
 } from '../types/lark-bitable.types';
 import { larkConfig } from '../../../configs/lark.config';
 import { MeetingUserData, UpdateMeetingUserData } from '../types';
@@ -125,7 +126,7 @@ export class MeetingUserBitableRepository {
   /**
    * Search user records by uuid
    */
-  async searchMeetingUserByUuid(uuid: string): Promise<unknown> {
+  async searchMeetingUserByUuid(uuid: string): Promise<SearchRecordResponse> {
     const searchConditions: Array<{
       field_name: string;
       operator: 'is';
@@ -161,7 +162,9 @@ export class MeetingUserBitableRepository {
   /**
    * Search user records by userid
    */
-  async searchMeetingUserByUserid(userid: string): Promise<unknown> {
+  async searchMeetingUserByUserid(
+    userid: string,
+  ): Promise<SearchRecordResponse> {
     const searchConditions: Array<{
       field_name: string;
       operator: 'is';
@@ -197,7 +200,9 @@ export class MeetingUserBitableRepository {
   /**
    * Search user records by user_name
    */
-  async searchMeetingUserByuser_name(user_name: string): Promise<unknown> {
+  async searchMeetingUserByuser_name(
+    user_name: string,
+  ): Promise<SearchRecordResponse> {
     const searchConditions: Array<{
       field_name: string;
       operator: 'is';
@@ -274,7 +279,7 @@ export class MeetingUserBitableRepository {
    */
   async searchMeetingUsersByEnterpriseStatus(
     isEnterpriseUser: boolean,
-  ): Promise<unknown> {
+  ): Promise<SearchRecordResponse> {
     const searchConditions: Array<{
       field_name: string;
       operator: 'is';
