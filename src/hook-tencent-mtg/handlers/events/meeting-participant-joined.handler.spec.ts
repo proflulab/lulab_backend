@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 /*
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-23 04:23:42
@@ -26,20 +27,14 @@ describe('MeetingParticipantJoinedHandler', () => {
         {
           provide: MeetingBitableService,
           useValue: {
-            updateMeetingParticipants: jest
-              .fn()
-              .mockImplementation(function (this: void) {}),
-            upsertMeetingUserRecord: jest
-              .fn()
-              .mockImplementation(function (this: void) {}),
+            updateMeetingParticipants: jest.fn().mockImplementation(() => {}),
+            upsertMeetingUserRecord: jest.fn().mockImplementation(() => {}),
           },
         },
         {
           provide: MeetingDatabaseService,
           useValue: {
-            upsertPlatformUser: jest
-              .fn()
-              .mockImplementation(function (this: void) {}),
+            upsertPlatformUser: jest.fn().mockImplementation(() => {}),
           },
         },
       ],
@@ -93,19 +88,15 @@ describe('MeetingParticipantJoinedHandler', () => {
     expect(meetingRecordService.upsertMeetingUserRecord).toHaveBeenCalledTimes(
       2,
     );
-
     expect(meetingRecordService.upsertMeetingUserRecord).toHaveBeenCalledWith(
       payload.operator,
     );
-
     expect(meetingRecordService.upsertMeetingUserRecord).toHaveBeenCalledWith(
       payload.meeting_info.creator,
     );
-
     expect(
       meetingRecordService.updateMeetingParticipants,
     ).toHaveBeenCalledTimes(1);
-
     expect(meetingRecordService.updateMeetingParticipants).toHaveBeenCalledWith(
       payload.meeting_info,
       payload.operator,
