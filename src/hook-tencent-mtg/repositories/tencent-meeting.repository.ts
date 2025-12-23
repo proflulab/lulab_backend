@@ -31,7 +31,7 @@ interface CreateMeetingRecordData {
   recordingStatus?: ProcessingStatus;
   processingStatus?: ProcessingStatus;
   participantCount?: number;
-  metadata?: any;
+  metadata?: Prisma.InputJsonValue;
 }
 
 /**
@@ -56,7 +56,7 @@ export class TencentMeetingRepository {
       platform: Platform;
       userName?: string;
       email?: string;
-      platformData?: any;
+      platformData?: Prisma.InputJsonValue;
     },
     hostData: {
       platformUuid: string;
@@ -64,7 +64,7 @@ export class TencentMeetingRepository {
       platform: Platform;
       userName?: string;
       email?: string;
-      platformData?: any;
+      platformData?: Prisma.InputJsonValue;
     },
   ) {
     return this.prisma.$transaction(async (tx) => {
@@ -77,8 +77,7 @@ export class TencentMeetingRepository {
           platformUserId: creatorData.platformUserId,
           userName: creatorData.userName,
           email: creatorData.email,
-          platformData: (creatorData.platformData ||
-            {}) as unknown as Prisma.InputJsonValue,
+          platformData: creatorData.platformData,
         },
       );
 
@@ -91,8 +90,7 @@ export class TencentMeetingRepository {
           platformUserId: hostData.platformUserId,
           userName: hostData.userName,
           email: hostData.email,
-          platformData: (hostData.platformData ||
-            {}) as unknown as Prisma.InputJsonValue,
+          platformData: hostData.platformData,
         },
       );
 
@@ -139,7 +137,7 @@ export class TencentMeetingRepository {
       platformUserId?: string;
       userName?: string;
       email?: string;
-      platformData?: any;
+      platformData?: Prisma.InputJsonValue;
     },
   ) {
     // First, check if a user with this platformUuid already exists
@@ -168,8 +166,7 @@ export class TencentMeetingRepository {
           platformUserId: data.platformUserId,
           userName: data.userName,
           email: data.email,
-          platformData: (data.platformData ||
-            {}) as unknown as Prisma.InputJsonValue,
+          platformData: data.platformData,
           lastSeenAt: new Date(),
           isActive: true,
         },
