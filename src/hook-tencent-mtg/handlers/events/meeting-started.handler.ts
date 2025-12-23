@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-23 09:15:35
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-23 12:16:43
+ * @LastEditTime: 2025-12-23 21:22:46
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/meeting-started.handler.ts
  * @Description:
  *
@@ -92,10 +92,10 @@ export class MeetingStartedHandler extends BaseEventHandler {
           userName: creator.user_name,
         },
         {
-          platformUuid: operator.uuid,
-          platformUserId: operator.userid,
+          platformUuid: creator.uuid,
+          platformUserId: creator.userid,
           platform: Platform.TENCENT_MEETING,
-          userName: operator.user_name,
+          userName: creator.user_name,
         },
       ),
     ]);
