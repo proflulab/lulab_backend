@@ -2,40 +2,42 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-23 04:23:42
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-23 12:33:37
+ * @LastEditTime: 2025-12-24 05:01:01
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/meeting-participant-joined.handler.spec.ts
  * @Description:
  *
  * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
  */
-/* eslint-disable @typescript-eslint/unbound-method */
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { MeetingParticipantJoinedHandler } from './meeting-participant-joined.handler';
-import { MeetingRecordService } from '../../services/meeting-record.service';
-import { MeetingUserService } from '../../services/meeting-user.service';
+import { MeetingBitableService } from '../../services/meeting-bitable.service';
+import { MeetingDatabaseService } from '../../services/meeting-database.service';
 import { TencentEventPayload } from '../../types/tencent-event.types';
 
 describe('MeetingParticipantJoinedHandler', () => {
   let handler: MeetingParticipantJoinedHandler;
-  let meetingRecordService: jest.Mocked<MeetingRecordService>;
-  let meetingUserService: jest.Mocked<MeetingUserService>;
+  let meetingRecordService: jest.Mocked<MeetingBitableService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MeetingParticipantJoinedHandler,
         {
-          provide: MeetingRecordService,
+          provide: MeetingBitableService,
           useValue: {
             updateMeetingParticipants: jest
+              .fn()
+              .mockImplementation(function (this: void) {}),
+            upsertMeetingUserRecord: jest
               .fn()
               .mockImplementation(function (this: void) {}),
           },
         },
         {
-          provide: MeetingUserService,
+          provide: MeetingDatabaseService,
           useValue: {
-            upsertMeetingUserRecord: jest
+            upsertPlatformUser: jest
               .fn()
               .mockImplementation(function (this: void) {}),
           },
@@ -46,8 +48,7 @@ describe('MeetingParticipantJoinedHandler', () => {
     handler = module.get<MeetingParticipantJoinedHandler>(
       MeetingParticipantJoinedHandler,
     );
-    meetingRecordService = module.get(MeetingRecordService);
-    meetingUserService = module.get(MeetingUserService);
+    meetingRecordService = module.get(MeetingBitableService);
   });
 
   it('should be defined', () => {
@@ -84,18 +85,20 @@ describe('MeetingParticipantJoinedHandler', () => {
       },
     };
 
-    meetingUserService.upsertMeetingUserRecord.mockResolvedValue('record-id');
+    meetingRecordService.upsertMeetingUserRecord.mockResolvedValue('record-id');
     meetingRecordService.updateMeetingParticipants.mockResolvedValue();
 
     await handler.handle(payload, 1);
 
-    expect(meetingUserService.upsertMeetingUserRecord).toHaveBeenCalledTimes(2);
+    expect(meetingRecordService.upsertMeetingUserRecord).toHaveBeenCalledTimes(
+      2,
+    );
 
-    expect(meetingUserService.upsertMeetingUserRecord).toHaveBeenCalledWith(
+    expect(meetingRecordService.upsertMeetingUserRecord).toHaveBeenCalledWith(
       payload.operator,
     );
 
-    expect(meetingUserService.upsertMeetingUserRecord).toHaveBeenCalledWith(
+    expect(meetingRecordService.upsertMeetingUserRecord).toHaveBeenCalledWith(
       payload.meeting_info.creator,
     );
 
@@ -134,7 +137,7 @@ describe('MeetingParticipantJoinedHandler', () => {
       },
     };
 
-    meetingUserService.upsertMeetingUserRecord.mockRejectedValue(
+    meetingRecordService.upsertMeetingUserRecord.mockRejectedValue(
       new Error('Service error'),
     );
 

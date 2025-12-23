@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-23 04:23:42
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-23 10:39:19
+ * @LastEditTime: 2025-12-24 05:00:00
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/meeting-participant-joined.handler.ts
  * @Description:
  *
@@ -12,8 +12,8 @@
 import { Injectable } from '@nestjs/common';
 import { BaseEventHandler } from '../base/base-event.handler';
 import { TencentEventPayload } from '../../types';
-import { MeetingRecordService } from '../../services/meeting-record.service';
-import { MeetingUserService } from '../../services/meeting-user.service';
+import { MeetingBitableService } from '../../services/meeting-bitable.service';
+import { MeetingDatabaseService } from '../../services/meeting-database.service';
 
 /**
  * Meeting participant joined event handler
@@ -24,8 +24,8 @@ export class MeetingParticipantJoinedHandler extends BaseEventHandler {
   private readonly SUPPORTED_EVENT = 'meeting.participant-joined';
 
   constructor(
-    private readonly meetingRecordService: MeetingRecordService,
-    private readonly meetingUserService: MeetingUserService,
+    private readonly meetingBitableService: MeetingBitableService,
+    private readonly meetingDatabaseService: MeetingDatabaseService,
   ) {
     super();
   }
@@ -39,14 +39,16 @@ export class MeetingParticipantJoinedHandler extends BaseEventHandler {
 
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
 
-    // 使用 Promise.allSettled 并行执行三个操作
+    // 使用 Promise.allSettled 并行执行四个操作
     await Promise.allSettled([
-      // 创建或更新会议参与者信息
-      this.meetingUserService.upsertMeetingUserRecord(operator),
-      // 创建或更新会议创建者信息
-      this.meetingUserService.upsertMeetingUserRecord(meeting_info.creator),
-      // 更新会议记录的参与者列表
-      this.meetingRecordService.updateMeetingParticipants(
+      // (Prisma)创建或更新会议参与者信息
+      this.meetingDatabaseService.upsertPlatformUser(operator),
+
+      // (Bitable)创建或更新会议创建者信息
+      this.meetingBitableService.upsertMeetingUserRecord(meeting_info.creator),
+      this.meetingBitableService.upsertMeetingUserRecord(operator),
+      // (Bitable)更新会议记录的参与者列表
+      this.meetingBitableService.updateMeetingParticipants(
         meeting_info,
         operator,
       ),
