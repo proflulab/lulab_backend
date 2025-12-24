@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   TencentEventOperator,
   TencentEventMeetingInfo,
@@ -8,6 +8,7 @@ import { TencentEventUtils } from '../utils/tencent-event.utils';
 import {
   MeetingBitableRepository,
   MeetingUserBitableRepository,
+  RecordingFileBitableRepository,
 } from '@/integrations/lark/repositories';
 
 /**
@@ -16,9 +17,12 @@ import {
  */
 @Injectable()
 export class MeetingBitableService {
+  private readonly logger = new Logger(MeetingBitableService.name);
+
   constructor(
     private readonly meetingBitable: MeetingBitableRepository,
     private readonly meetingUserBitable: MeetingUserBitableRepository,
+    private readonly recordingFileBitable: RecordingFileBitableRepository,
   ) {}
 
   /**
@@ -179,6 +183,93 @@ export class MeetingBitableService {
       throw new Error(
         `Failed to upsert meeting record for meeting ${meetingInfo.meeting_id}: ${error instanceof Error ? error.message : String(error)}`,
       );
+    }
+  }
+
+  /**
+   * 创建或更新会议记录并返回记录ID
+   * @param meetingInfo 会议信息
+   * @returns 会议记录ID
+   */
+  async createMeetingRecord(
+    meetingInfo: TencentEventMeetingInfo,
+  ): Promise<string | undefined> {
+    try {
+      const meetingResult = await this.meetingBitable.upsertMeetingRecord({
+        platform: '腾讯会议',
+        subject: meetingInfo.subject,
+        meeting_id: meetingInfo.meeting_id,
+        sub_meeting_id: meetingInfo.sub_meeting_id,
+      });
+
+      if (meetingResult.data?.record) {
+        const meetingRecordId = meetingResult.data.record.record_id;
+        this.logger.log(`操作者记录ID: ${meetingRecordId}`);
+        return meetingRecordId;
+      }
+      return undefined;
+    } catch (error: unknown) {
+      this.logger.error(
+        `处理录制完成事件失败: ${meetingInfo.meeting_id}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+      // 不抛出错误，避免影响主流程
+      return undefined;
+    }
+  }
+
+  /**
+   * 创建或更新录制文件记录
+   * @param recordFileId 录制文件ID
+   * @param meetingRecordId 会议记录ID
+   * @param meetingInfo 会议信息
+   * @param fullsummary 会议摘要
+   * @param todo 待办事项
+   * @param aiMinutes 会议纪要
+   * @param uniqueParticipants 参与者列表
+   * @param formattedTranscript 格式化转写内容
+   * @returns 录制文件记录ID
+   */
+  async createRecordingFileRecord(
+    recordFileId: string,
+    meetingRecordId: string | undefined,
+    meetingInfo: TencentEventMeetingInfo,
+    fullsummary: string,
+    todo: string,
+    aiMinutes: string,
+    uniqueParticipants: any[],
+    formattedTranscript: string,
+  ): Promise<string | undefined> {
+    try {
+      const meetIds: string[] = meetingRecordId ? [meetingRecordId] : [];
+
+      const recordingResult =
+        await this.recordingFileBitable.upsertRecordingFileRecord({
+          record_file_id: recordFileId,
+          meet: meetIds,
+          start_time: meetingInfo.start_time * 1000,
+          end_time: meetingInfo.end_time * 1000,
+          fullsummary,
+          todo,
+          ai_minutes: aiMinutes,
+          participants: uniqueParticipants.map((p) => p.user_name).toString(),
+          ai_meeting_transcripts: formattedTranscript,
+        });
+
+      if (recordingResult.data?.record) {
+        const recordingRecordId = recordingResult.data.record.record_id;
+        this.logger.log(
+          `录制文件记录已创建/更新: ${recordFileId} (记录ID: ${recordingRecordId})`,
+        );
+        return recordingRecordId;
+      }
+      return undefined;
+    } catch (error: unknown) {
+      this.logger.error(
+        `创建录制文件记录失败: ${recordFileId}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+      return undefined;
     }
   }
 }
