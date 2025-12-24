@@ -12,3 +12,4 @@
 export { TencentEventHandlerService } from './event-handler.service';
 export { MeetingBitableService } from './meeting-bitable.service';
 export { MeetingDatabaseService } from './meeting-database.service';
+export { TranscriptService } from './transcript.service';
