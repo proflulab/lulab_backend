@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-24 00:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-24 18:53:49
+ * @LastEditTime: 2025-12-25 04:52:55
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/recording-content.service.ts
  * @Description: 录制内容服务，负责获取会议内容（摘要、纪要、转写等）
  *
@@ -90,7 +90,11 @@ export class RecordingContentService {
         contentLength: result.fullsummary.length,
       });
     } else {
-      this.handleApiError('获取智能摘要失败', summaryResult.reason, context);
+      throw new MeetingContentError(
+        ErrorType.API_ERROR,
+        `获取智能摘要失败: ${summaryResult.reason instanceof Error ? summaryResult.reason.message : String(summaryResult.reason)}`,
+        summaryResult.reason,
+      );
     }
 
     // 处理纪要结果
@@ -103,7 +107,11 @@ export class RecordingContentService {
         todoLength: result.todo.length,
       });
     } else {
-      this.handleApiError('获取会议纪要失败', minutesResult.reason, context);
+      throw new MeetingContentError(
+        ErrorType.API_ERROR,
+        `获取会议纪要失败: ${minutesResult.reason instanceof Error ? minutesResult.reason.message : String(minutesResult.reason)}`,
+        minutesResult.reason,
+      );
     }
 
     const duration = Date.now() - startTime;
@@ -131,7 +139,7 @@ export class RecordingContentService {
     } catch (error) {
       throw new MeetingContentError(
         ErrorType.API_ERROR,
-        `获取智能摘要失败: ${this.getErrorMessage(error)}`,
+        `获取智能摘要失败: ${error instanceof Error ? error.message : String(error)}`,
         error,
       );
     }
@@ -159,7 +167,7 @@ export class RecordingContentService {
     } catch (error) {
       throw new MeetingContentError(
         ErrorType.API_ERROR,
-        `获取会议纪要失败: ${this.getErrorMessage(error)}`,
+        `获取会议纪要失败: ${error instanceof Error ? error.message : String(error)}`,
         error,
       );
     }
@@ -178,43 +186,9 @@ export class RecordingContentService {
     } catch (error) {
       throw new MeetingContentError(
         ErrorType.DECODING_ERROR,
-        `Base64解码失败: ${this.getErrorMessage(error)}`,
+        `Base64解码失败: ${error instanceof Error ? error.message : String(error)}`,
         error,
       );
-    }
-  }
-
-  /**
-   * 处理API错误
-   * @param message 错误消息
-   * @param error 错误对象
-   * @param context 上下文信息
-   */
-  private handleApiError(
-    message: string,
-    error: unknown,
-    context: Record<string, any>,
-  ): void {
-    const errorMessage = this.getErrorMessage(error);
-    this.logger.warn(message, { ...context, error: errorMessage });
-  }
-
-  /**
-   * 获取错误消息
-   * @param error 错误对象
-   * @returns 错误消息字符串
-   */
-  private getErrorMessage(error: unknown): string {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    if (typeof error === 'string') {
-      return error;
-    }
-    try {
-      return JSON.stringify(error);
-    } catch {
-      return String(error);
     }
   }
 }

@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-24 00:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-24 00:00:00
+ * @LastEditTime: 2025-12-25 04:54:10
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/meeting-participant.service.ts
  * @Description: 会议参与者服务，负责处理会议参与者相关逻辑
  *
@@ -37,7 +37,7 @@ export class MeetingParticipantService {
     subMeetingId?: string,
   ): Promise<MeetingParticipantDetail[]> {
     try {
-      const participantsResponse = await this.tencentMeetingApi.getParticipants(
+      const response = await this.tencentMeetingApi.getParticipants(
         meetingId,
         userId,
         subMeetingId,
@@ -45,7 +45,7 @@ export class MeetingParticipantService {
 
       // 根据 uuid 去重
       const seenUuids = new Set<string>();
-      const uniqueParticipants = participantsResponse.participants
+      const uniqueParticipants = response.participants
         .filter((participant) => {
           if (seenUuids.has(participant.uuid)) {
             return false;
@@ -66,10 +66,7 @@ export class MeetingParticipantService {
 
       return uniqueParticipants;
     } catch (error: unknown) {
-      const errorMessage = this.getErrorMessage(error);
-      this.logger.warn(
-        `获取会议参与者失败: ${meetingId}, 错误: ${errorMessage}`,
-      );
+      this.logger.warn(`获取会议参与者失败: ${meetingId}`);
       return [];
     }
   }
@@ -97,30 +94,10 @@ export class MeetingParticipantService {
           `用户记录已创建/更新: ${participant.user_name} (${participant.uuid})`,
         );
       } catch (error: unknown) {
-        const errorMessage = this.getErrorMessage(error);
         this.logger.warn(
-          `更新用户记录失败: ${participant.user_name} (${participant.uuid}), 错误: ${errorMessage}`,
+          `更新用户记录失败: ${participant.user_name} (${participant.uuid}), `,
         );
       }
-    }
-  }
-
-  /**
-   * 获取错误消息
-   * @param error 错误对象
-   * @returns 错误消息字符串
-   */
-  private getErrorMessage(error: unknown): string {
-    if (error instanceof Error) {
-      return error.message;
-    }
-    if (typeof error === 'string') {
-      return error;
-    }
-    try {
-      return JSON.stringify(error);
-    } catch {
-      return String(error);
     }
   }
 }

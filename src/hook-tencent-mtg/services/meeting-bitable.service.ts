@@ -10,6 +10,7 @@ import {
   MeetingUserBitableRepository,
   RecordingFileBitableRepository,
 } from '@/integrations/lark/repositories';
+import { MeetingParticipantDetail } from '@/integrations/tencent-meeting/types';
 
 /**
  * 会议记录服务
@@ -46,6 +47,74 @@ export class MeetingBitableService {
         `Failed to upsert meeting user record for user ${user.uuid}: ${(error as Error).message}`,
       );
     }
+  }
+
+  /**
+   * 安全地创建或更新会议用户记录，包含错误处理
+   * @param participant 参与者信息
+   * @returns 成功创建/更新的记录ID
+   */
+  async safeUpsertMeetingUserRecord(
+    participant: MeetingParticipantDetail,
+  ): Promise<string> {
+    try {
+      const result = await this.meetingUserBitable.upsertMeetingUserRecord({
+        userid: participant.userid,
+        uuid: participant.uuid,
+        user_name: participant.user_name,
+        phone_hase: participant.phone,
+        is_enterprise_user: participant.is_enterprise_user,
+      });
+
+      return result.data?.record?.record_id || '';
+    } catch (error) {
+      throw new Error(
+        `Failed to upsert meeting user record for user ${participant.uuid}: ${(error as Error).message}`,
+      );
+    }
+  }
+
+  /**
+   * 通过UUID搜索用户记录并返回记录ID列表
+   * @param uuid 用户UUID
+   * @param username 用户名（用于日志）
+   * @returns 记录ID列表
+   */
+  async searchUserRecordIdsByUuid(
+    uuid: string,
+    username: string,
+  ): Promise<string[]> {
+    let participantRecordIds: string[] = [];
+
+    try {
+      // 通过uuid请求获取记录id
+      const searchResult =
+        await this.meetingUserBitable.searchMeetingUserByUuid(uuid);
+
+      // 解析搜索结果获取记录ID
+      const searchData = searchResult as {
+        data?: { items?: Array<{ record_id: string }> };
+      };
+
+      if (searchData.data?.items && searchData.data.items.length > 0) {
+        participantRecordIds = searchData.data.items.map(
+          (item) => item.record_id,
+        );
+        this.logger.log(
+          `找到参会者记录: ${username} (uuid: ${uuid}), 记录ID: ${participantRecordIds.join(', ')}`,
+        );
+      } else {
+        this.logger.warn(`未找到参会者记录: ${username} (uuid: ${uuid})`);
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.warn(
+        `搜索参会者记录失败: ${username}, 错误: ${errorMessage}`,
+      );
+    }
+
+    return participantRecordIds;
   }
 
   /**
@@ -221,26 +290,38 @@ export class MeetingBitableService {
   /**
    * 创建或更新录制文件记录
    * @param recordFileId 录制文件ID
-   * @param meetingRecordId 会议记录ID
    * @param meetingInfo 会议信息
    * @param fullsummary 会议摘要
    * @param todo 待办事项
    * @param aiMinutes 会议纪要
-   * @param uniqueParticipants 参与者列表
+   * @param participants 参与者列表
    * @param formattedTranscript 格式化转写内容
    * @returns 录制文件记录ID
    */
-  async createRecordingFileRecord(
+  async upsertRecordingFileRecord(
     recordFileId: string,
-    meetingRecordId: string | undefined,
     meetingInfo: TencentEventMeetingInfo,
     fullsummary: string,
     todo: string,
     aiMinutes: string,
-    uniqueParticipants: any[],
+    participants: string,
     formattedTranscript: string,
   ): Promise<string | undefined> {
     try {
+      // 获取会议记录ID
+      const meetingResult = await this.meetingBitable.upsertMeetingRecord({
+        platform: '腾讯会议',
+        subject: meetingInfo.subject,
+        meeting_id: meetingInfo.meeting_id,
+        sub_meeting_id: meetingInfo.sub_meeting_id,
+      });
+
+      let meetingRecordId: string | undefined;
+      if (meetingResult.data?.record) {
+        meetingRecordId = meetingResult.data.record.record_id;
+        this.logger.log(`操作者记录ID: ${meetingRecordId}`);
+      }
+
       const meetIds: string[] = meetingRecordId ? [meetingRecordId] : [];
 
       const recordingResult =
@@ -252,7 +333,7 @@ export class MeetingBitableService {
           fullsummary,
           todo,
           ai_minutes: aiMinutes,
-          participants: uniqueParticipants.map((p) => p.user_name).toString(),
+          participants,
           ai_meeting_transcripts: formattedTranscript,
         });
 
