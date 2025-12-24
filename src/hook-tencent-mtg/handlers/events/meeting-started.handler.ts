@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-23 09:15:35
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-24 05:22:22
+ * @LastEditTime: 2025-12-24 09:08:21
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/meeting-started.handler.ts
  * @Description:
  *
@@ -59,6 +59,7 @@ export class MeetingStartedHandler extends BaseEventHandler {
 
       // 创建或更新会议记录 - Prisma数据库
       this.meetingDatabaseService.upsertMeetingRecord(payload),
+      this.meetingDatabaseService.upsertPlatformUser(operator),
     ]);
   }
 }
