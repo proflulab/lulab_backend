@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-25 06:07:44
+ * @LastEditTime: 2025-12-25 06:52:05
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -112,7 +112,7 @@ export class RecordingCompletedHandler extends BaseEventHandler {
           const uId = await this.bitableService.safeUpsertMeetingUserRecord(u);
 
           if (uniqueUsernames.find((uName) => uName === u.user_name)) {
-             // 构建参会者的会议总结提示词
+            // 构建参会者的会议总结提示词
             const participantSummaryPrompt = PARTICIPANT_SUMMARY_PROMPT(
               meeting_info.subject,
               new Date(meeting_info.start_time * 1000).toLocaleString(),
@@ -140,7 +140,6 @@ export class RecordingCompletedHandler extends BaseEventHandler {
             this.logger.log(`参会者 ${u.user_name}总结记录已保存`);
           }
         }
-
       } catch (error: unknown) {
         this.logger.error(
           `处理录制文件处理失败: ${file.record_file_id}`,

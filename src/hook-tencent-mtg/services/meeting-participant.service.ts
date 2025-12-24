@@ -66,7 +66,7 @@ export class MeetingParticipantService {
 
       return uniqueParticipants;
     } catch (error: unknown) {
-      this.logger.warn(`获取会议参与者失败: ${meetingId}`);
+      this.logger.warn(`获取会议参与者失败: ${meetingId}`, error);
       return [];
     }
   }
@@ -95,7 +95,8 @@ export class MeetingParticipantService {
         );
       } catch (error: unknown) {
         this.logger.warn(
-          `更新用户记录失败: ${participant.user_name} (${participant.uuid}), `,
+          `更新用户记录失败: ${participant.user_name} (${participant.uuid})`,
+          error,
         );
       }
     }

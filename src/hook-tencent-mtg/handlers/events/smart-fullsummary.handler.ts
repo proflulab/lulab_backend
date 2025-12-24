@@ -23,10 +23,8 @@ import { TencentEventPayload } from '../../types';
 export class SmartFullsummaryHandler extends BaseEventHandler {
   private readonly SUPPORTED_EVENT = 'smart.fullsummary';
 
-  constructor(
-    // private readonly meetingBitableService: MeetingBitableService,
-    // private readonly meetingDatabaseService: MeetingDatabaseService,
-  ) {
+  constructor() {
+    // private readonly meetingDatabaseService: MeetingDatabaseService, // private readonly meetingBitableService: MeetingBitableService,
     super();
   }
 
@@ -34,6 +32,7 @@ export class SmartFullsummaryHandler extends BaseEventHandler {
     return event === this.SUPPORTED_EVENT;
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async handle(payload: TencentEventPayload, index: number): Promise<void> {
     // const { meeting_info, operator } = payload;
 
@@ -61,5 +60,7 @@ export class SmartFullsummaryHandler extends BaseEventHandler {
     //   // 更新会议记录的智能摘要状态 - Prisma数据库
     //   this.meetingDatabaseService.upsertMeetingRecord(payload),
     // ]);
+
+    return;
   }
 }
