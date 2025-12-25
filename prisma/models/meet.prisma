@@ -119,11 +119,18 @@ model MeetingSummary {
   // 总结内容
   title        String?  @db.VarChar(500) // 总结标题
   content      String   @db.Text // 总结内容
-  aiMinutes    Json?    @map("ai_minutes") // AI生成的结构化会议纪要
-  keyPoints    Json?    @map("key_points") // 关键要点
-  actionItems  Json?    @map("action_items") // 行动项
-  decisions    Json? // 决策记录
-  participants Json? // 参与者总结
+  // AI生成的结构化会议纪要，格式: { "sections": [{ "title": "string", "content": "string", "timestamp": "string" }] }
+  aiMinutes    Json?    @map("ai_minutes")
+  // 关键要点，格式: [{ "point": "string", "importance": "high|medium|low", "timestamp": "string" }]
+  keyPoints    Json?    @map("key_points")
+  // 行动项，格式: [{ "task": "string", "assignee": "string", "dueDate": "string", "status": "pending|in_progress|completed" }]
+  actionItems  Json?    @map("action_items")
+  // 决策记录，格式: [{ "decision": "string", "reason": "string", "votedBy": ["string"], "timestamp": "string" }]
+  decisions    Json?    @map("decisions")
+  // 参与者总结，格式: [{ "userId": "string", "name": "string", "role": "string", "contributions": ["string"] }]
+  participants Json?    @map("participants")
+  // 会议金句，格式：[{speaker: string, content: string, explanation: string, timestamp: string}]
+  goldenQuotes Json?    @map("golden_quotes")
   keywords     String[] @map("keywords") // 关键词
 
   // 元数据
