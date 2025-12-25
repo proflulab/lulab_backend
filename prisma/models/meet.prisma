@@ -65,23 +65,24 @@ model Meeting {
 }
 
 model MeetingRecording {
-  id        String @id @default(cuid())
-  meetingId String @map("meeting_id")
+  id String @id @default(cuid())
 
-  source  RecordingSource @default(PLATFORM_AUTO)
-  startAt DateTime?       @map("start_at") @db.Timestamptz(6)
-  endAt   DateTime?       @map("end_at") @db.Timestamptz(6)
-  status  RecordingStatus @default(RECORDING)
+  source RecordingSource @default(PLATFORM_AUTO)
+  status RecordingStatus @default(RECORDING)
 
-  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  meetingId String  @map("meeting_id")
+  meeting   Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 
+  // 关联字段
   recorderUserId String?       @map("recorder_user_id")
   recorderUser   PlatformUser? @relation("RecordingUser", fields: [recorderUserId], references: [id], onDelete: SetNull)
 
   files       MeetingRecordingFile[]
   transcripts Transcript[]
 
-  // 系统字段及时间
+  // 系统字段及时间字段
+  startAt   DateTime? @map("start_at") @db.Timestamptz(6)
+  endAt     DateTime? @map("end_at") @db.Timestamptz(6)
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6) // 软删除时间戳
@@ -91,15 +92,16 @@ model MeetingRecording {
 }
 
 model MeetingRecordingFile {
-  id           String            @id @default(cuid())
-  recordingId  String            @map("recording_id")
-  fileObjectId String            @map("file_object_id") @db.Uuid
-  fileType     RecordingFileType @default(VIDEO) @map("file_type")
-  durationMs   BigInt?           @map("duration_ms")
-  resolution   String?
+  id String @id @default(cuid())
 
-  recording MeetingRecording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
-  object    StorageObject    @relation(fields: [fileObjectId], references: [id], onDelete: Restrict)
+  fileType   RecordingFileType @default(VIDEO) @map("file_type")
+  durationMs BigInt?           @map("duration_ms")
+  resolution String?
+
+  recordingId  String           @map("recording_id")
+  recording    MeetingRecording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
+  fileObjectId String           @map("file_object_id") @db.Uuid
+  object       StorageObject    @relation(fields: [fileObjectId], references: [id], onDelete: Restrict)
 
   // 系统字段及时间
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -162,9 +164,9 @@ model MeetingSummary {
   transcript   Transcript? @relation(fields: [transcriptId], references: [id], onDelete: SetNull)
 
   // 系统字段及时间
-  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt      DateTime?     @map("deleted_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   @@index([meetingId], map: "idx_meeting_summary_meeting")
   @@index([isLatest], map: "idx_meeting_summary_is_latest")
