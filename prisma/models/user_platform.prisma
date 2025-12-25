@@ -29,7 +29,7 @@ model PlatformUser {
   hostedMeetings      Meeting[]            @relation("HostedMeetings") // 主持的会议
   paragraphs          Paragraph[]          @relation("Speaker") // 关联的段落
   createdSummaries    MeetingSummary[]     @relation("SummaryCreator") // 创建的总结
-  reviewedSummaries   MeetingSummary[]     @relation("ReviewedSummaries") // 审核的总结
+  approvedSummaries   MeetingSummary[]     @relation("ApprovedSummaries") // 审核的总结
   actions             MeetingUserAction[]  @relation("UserActions")
   meetingRecordings   MeetingRecording[]   @relation("RecordingUser")
   meetingParticipants MeetingParticipant[] @relation("ParticipantUser")

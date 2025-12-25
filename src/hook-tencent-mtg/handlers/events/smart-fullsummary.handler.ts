@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-25 05:15:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-25 06:09:44
+ * @LastEditTime: 2025-12-25 09:09:52
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/smart-fullsummary.handler.ts
  * @Description: 智能摘要完成事件处理器
  *
@@ -12,8 +12,7 @@
 import { Injectable } from '@nestjs/common';
 import { BaseEventHandler } from '../base/base-event.handler';
 import { TencentEventPayload } from '../../types';
-// import { MeetingBitableService } from '../../services/meeting-bitable.service';
-// import { MeetingDatabaseService } from '../../services/meeting-database.service';
+import { RecordingContentService } from '../../services/recording-content.service';
 
 /**
  * 智能摘要完成事件处理器
@@ -23,8 +22,9 @@ import { TencentEventPayload } from '../../types';
 export class SmartFullsummaryHandler extends BaseEventHandler {
   private readonly SUPPORTED_EVENT = 'smart.fullsummary';
 
-  constructor() {
-    // private readonly meetingDatabaseService: MeetingDatabaseService, // private readonly meetingBitableService: MeetingBitableService,
+  constructor(
+    private readonly recordingContentService: RecordingContentService,
+  ) {
     super();
   }
 
@@ -32,35 +32,33 @@ export class SmartFullsummaryHandler extends BaseEventHandler {
     return event === this.SUPPORTED_EVENT;
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async handle(payload: TencentEventPayload, index: number): Promise<void> {
-    // const { meeting_info, operator } = payload;
-
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
 
-    // // 使用 Promise.allSettled 并行执行所有操作，确保任何一个失败都不会影响其他操作
-    // await Promise.allSettled([
-    //   // 处理用户记录（操作者和创建者）- 飞书多维表格
-    //   this.meetingBitableService.upsertMeetingUserRecord(operator),
-    //   // 如果操作者和创建者不是同一人，也处理创建者记录
-    //   ...(operator.uuid !== meeting_info.creator.uuid
-    //     ? [
-    //         this.meetingBitableService.upsertMeetingUserRecord(
-    //           meeting_info.creator,
-    //         ),
-    //       ]
-    //     : []),
+    const { meeting_info, recording_files = [] } = payload;
+    const { meeting_id, sub_meeting_id } = meeting_info;
+    const creatorUserId = meeting_info.creator.userid || '';
 
-    //   // 更新会议记录 - 飞书多维表格
-    //   this.meetingBitableService.updateMeetingParticipants(
-    //     meeting_info,
-    //     operator,
-    //   ),
+    for (const file of recording_files) {
+      const fileId = file.record_file_id;
 
-    //   // 更新会议记录的智能摘要状态 - Prisma数据库
-    //   this.meetingDatabaseService.upsertMeetingRecord(payload),
-    // ]);
+      try {
+        // 获取智能摘要
+        let fullsummary = '';
+        // 获取录音转写内容
+        const [meetingContentResult] = await Promise.allSettled([
+          this.recordingContentService.fetchSmartSummary(fileId, creatorUserId),
+        ]);
 
-    return;
+        // 处理会议内容结果
+        if (meetingContentResult.status === 'fulfilled') {
+          fullsummary = meetingContentResult.value;
+        } else {
+          this.logger.warn(`获取会议内容失败: ${fileId}`);
+        }
+      } catch (error) {
+        this.logger.error(`处理录音文件 ${fileId} 时出错`, error);
+      }
+    }
   }
 }
