@@ -65,10 +65,14 @@ model Meeting {
 }
 
 model MeetingRecording {
-  id String @id @default(cuid())
+  id         String  @id @default(cuid())
+  externalId String? @map("external_id") @db.VarChar(100) // 外部系统录制ID，用于唯一标识
 
   source RecordingSource @default(PLATFORM_AUTO)
   status RecordingStatus @default(RECORDING)
+
+  // 元数据
+  metadata Json @default("{}") @db.JsonB
 
   meetingId String  @map("meeting_id")
   meeting   Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
@@ -79,6 +83,7 @@ model MeetingRecording {
 
   files       MeetingRecordingFile[]
   transcripts Transcript[]
+  summaries   MeetingSummary[]
 
   // 系统字段及时间字段
   startAt   DateTime? @map("start_at") @db.Timestamptz(6)
@@ -169,6 +174,10 @@ model MeetingSummary {
   // 关联转录
   transcriptId String?     @map("transcript_id")
   transcript   Transcript? @relation(fields: [transcriptId], references: [id], onDelete: SetNull)
+
+  // 关联录制
+  recordingId String?           @map("recording_id")
+  recording   MeetingRecording? @relation(fields: [recordingId], references: [id], onDelete: SetNull)
 
   // 系统字段及时间
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)

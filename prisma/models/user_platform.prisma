@@ -4,8 +4,9 @@ model PlatformUser {
 
   // 平台信息
   platform       Platform // 平台枚举
-  platformUserId String?   @map("platform_user_id") // 平台用户ID
+  platformUserId String?  @map("platform_user_id") // 平台用户ID
   platformUuid   String?  @map("platform_uuid") // 平台用户唯一标识符 (如腾讯会议的uuid)
+  externalId     String?  @map("external_id") @db.VarChar(100) // 外部系统ID
   // 平台特定数据
   platformData   Json?    @default("{}") @map("platform_data") @db.JsonB // 存储各平台特有的数据
 
