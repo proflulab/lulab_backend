@@ -13,7 +13,7 @@ import { Injectable } from '@nestjs/common';
 import { BaseEventHandler } from '../base/base-event.handler';
 import { TencentEventPayload } from '../../types';
 import { RecordingContentService } from '../../services/recording-content.service';
-import { PrismaService } from '@/prisma/prisma.service';
+import { TencentMeetingRepository } from '../../repositories/tencent-meeting.repository';
 import {
   RecordingSource,
   RecordingStatus,
@@ -32,7 +32,7 @@ export class SmartFullsummaryHandler extends BaseEventHandler {
 
   constructor(
     private readonly recordingContentService: RecordingContentService,
-    private readonly prisma: PrismaService,
+    private readonly tencentMeetingRepository: TencentMeetingRepository,
   ) {
     super();
   }
@@ -78,43 +78,28 @@ export class SmartFullsummaryHandler extends BaseEventHandler {
 
     this.logger.log(`开始处理录制文件: ${recordFileId}`);
 
-    const meeting = await this.prisma.meeting.findUnique({
-      where: {
-        platform_meetingId_subMeetingId: {
-          platform: MeetingPlatform.TENCENT_MEETING,
-          meetingId,
-          subMeetingId,
-        },
-      },
-    });
+    const meeting = await this.tencentMeetingRepository.findMeeting(
+      MeetingPlatform.TENCENT_MEETING,
+      meetingId,
+      subMeetingId,
+    );
 
     if (!meeting) {
       this.logger.warn(`未找到会议记录: ${meetingId}`);
       return;
     }
 
-    let recording = await this.prisma.meetingRecording.findFirst({
-      where: {
+    const recording =
+      await this.tencentMeetingRepository.upsertMeetingRecording({
         meetingId: meeting.id,
         externalId: recordFileId,
-      },
-    });
-
-    if (!recording) {
-      recording = await this.prisma.meetingRecording.create({
-        data: {
-          meetingId: meeting.id,
-          source: RecordingSource.PLATFORM_AUTO,
-          status: RecordingStatus.COMPLETED,
-          startAt: meeting.startAt,
-          endAt: meeting.endAt,
-          externalId: recordFileId,
-        },
+        source: RecordingSource.PLATFORM_AUTO,
+        status: RecordingStatus.COMPLETED,
+        startAt: meeting.startAt || undefined,
+        endAt: meeting.endAt || undefined,
       });
-      this.logger.log(`创建录制记录: ${recording.id}`);
-    } else {
-      this.logger.log(`找到已存在的录制记录: ${recording.id}`);
-    }
+
+    this.logger.log(`录制记录已创建/更新: ${recording.id}`);
 
     const summaryContent = await this.recordingContentService.fetchSmartSummary(
       recordFileId,
@@ -123,19 +108,17 @@ export class SmartFullsummaryHandler extends BaseEventHandler {
 
     const processingTime = Date.now() - startTime;
 
-    await this.prisma.meetingSummary.create({
-      data: {
-        meetingId: meeting.id,
-        recordingId: recording.id,
-        content: summaryContent,
-        generatedBy: GenerationMethod.AI,
-        aiModel: 'tencent-meeting-ai',
-        status: ProcessingStatus.COMPLETED,
-        processingTime,
-        language: 'zh-CN',
-        version: 1,
-        isLatest: true,
-      },
+    await this.tencentMeetingRepository.createMeetingSummary({
+      meetingId: meeting.id,
+      recordingId: recording.id,
+      content: summaryContent,
+      generatedBy: GenerationMethod.AI,
+      aiModel: 'tencent-meeting-ai',
+      status: ProcessingStatus.COMPLETED,
+      processingTime,
+      language: 'zh-CN',
+      version: 1,
+      isLatest: true,
     });
 
     this.logger.log(
