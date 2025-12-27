@@ -45,44 +45,19 @@ pnpm install
 cp .env.example .env
 ```
 
-编辑 `.env` 文件，配置以下关键参数：
+编辑 `.env` 文件，配置环境变量。详细配置说明和所有可用参数请参考项目根目录下的 `.env.example` 文件。
 
-```bash
-# 数据库配置
-DATABASE_URL="postgresql://username:password@localhost:5432/lulab_backend?schema=public"
+关键配置项包括：
+- 数据库连接配置（DATABASE_URL）
+- JWT 认证配置（JWT_SECRET 等）
+- 腾讯会议 API 配置（TENCENT_MEETING_*）
+- 飞书集成配置（LARK_*）
+- 阿里云短信服务配置（ALIYUN_SMS_*）
+- 邮件服务配置（SMTP_*）
+- Redis 配置（REDIS_*）
+- OpenAI API 配置（OPENAI_*）
 
-# JWT配置
-JWT_SECRET="your_jwt_secret_key"
-JWT_EXPIRES_IN="24h"
-
-# 腾讯会议配置
-TENCENT_MEETING_APP_ID="your_app_id"
-TENCENT_MEETING_SDK_ID="your_sdk_id"
-TENCENT_MEETING_SECRET_ID="your_secret_id"
-TENCENT_MEETING_SECRET_KEY="your_secret_key"
-TENCENT_MEETING_TOKEN="your_webhook_token"
-TENCENT_MEETING_ENCODING_AES_KEY="your_encoding_aes_key"
-
-# 飞书配置
-LARK_APP_ID="your_app_id"
-LARK_APP_SECRET="your_app_secret"
-LARK_BITABLE_APP_TOKEN="your_app_token"
-LARK_TABLE_MEETING="your_meeting_table_id"
-LARK_TABLE_MEETING_RECORD_FILE="your_recording_file_table_id"
-
-# 阿里云短信配置
-ALIYUN_ACCESS_KEY_ID="your_access_key_id"
-ALIYUN_ACCESS_KEY_SECRET="your_access_key_secret"
-ALIYUN_SMS_SIGN_NAME="your_sign_name"
-ALIYUN_SMS_TEMPLATE_CODE="your_template_code"
-
-# 邮件配置
-EMAIL_HOST="smtp.example.com"
-EMAIL_PORT=587
-EMAIL_SECURE=false
-EMAIL_USER="your_email@example.com"
-EMAIL_PASS="your_email_password"
-```
+请确保所有必需的配置项都已正确填写，特别是密钥和凭证信息。
 
 ### 4. 数据库设置
 
