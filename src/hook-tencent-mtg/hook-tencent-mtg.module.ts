@@ -29,6 +29,7 @@ import { RecordingContentService } from './services/recording-content.service';
 import { MeetingRepository } from '../meeting/repositories/meeting.repository';
 import { PlatformUserRepository } from '../user-platform/repositories/platform-user.repository';
 import { TencentMeetingRepository } from './repositories/tencent-meeting.repository';
+import { TranscriptRepository } from './repositories/transcript.repository';
 
 import {
   TencentUrlVerificationPipe,
@@ -41,6 +42,7 @@ import {
   RecordingCompletedHandler,
   MeetingParticipantJoinedHandler,
   SmartFullsummaryHandler,
+  SmartTranscriptsHandler,
 } from './handlers';
 
 @Module({
@@ -66,9 +68,11 @@ import {
     RecordingCompletedHandler,
     MeetingParticipantJoinedHandler,
     SmartFullsummaryHandler,
+    SmartTranscriptsHandler,
     PlatformUserRepository,
     MeetingRepository,
     TencentMeetingRepository,
+    TranscriptRepository,
     TencentUrlVerificationPipe,
     TencentWebhookDecryptionPipe,
     // 提供 BaseEventHandler 数组的依赖注入配置
@@ -80,12 +84,14 @@ import {
         recordingCompletedHandler: RecordingCompletedHandler,
         meetingParticipantJoinedHandler: MeetingParticipantJoinedHandler,
         smartFullsummaryHandler: SmartFullsummaryHandler,
+        smartTranscriptsHandler: SmartTranscriptsHandler,
       ) => [
         meetingStartedHandler,
         meetingEndedHandler,
         recordingCompletedHandler,
         meetingParticipantJoinedHandler,
         smartFullsummaryHandler,
+        smartTranscriptsHandler,
       ],
       inject: [
         MeetingStartedHandler,
@@ -93,6 +99,7 @@ import {
         RecordingCompletedHandler,
         MeetingParticipantJoinedHandler,
         SmartFullsummaryHandler,
+        SmartTranscriptsHandler,
       ],
     },
   ],

@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-18 20:10:49
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-23 02:07:40
+ * @LastEditTime: 2025-12-27 08:09:44
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/types/tencent-event.types.ts
  * @Description:
  *
@@ -42,6 +42,7 @@ export enum TencentMeetingEventType {
   RECORDING_END = 'recording.end',
   RECORDING_READY = 'recording.ready',
   SMART_FULLSUMMARY = 'smart.fullsummary', // 智能摘要完成事件
+  SMART_TRANSCRIPTS = 'smart.transcripts', // 录制转写生成事件
   MEETING_UPDATE = 'meeting.update', // 会议更新事件
   MEETING_DELETE = 'meeting.delete', // 会议删除事件
   SUB_MEETING_START = 'sub_meeting.start', // 子会议开始（周期性会议）
