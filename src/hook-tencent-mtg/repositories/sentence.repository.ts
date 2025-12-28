@@ -9,7 +9,7 @@ export class SentenceRepository {
   async create(
     tx: PrismaTransaction,
     data: {
-      sid: string;
+      sid: number;
       startTimeMs: bigint;
       endTimeMs: bigint;
       paragraphId: string;
@@ -24,7 +24,7 @@ export class SentenceRepository {
   async createMany(
     tx: PrismaTransaction,
     sentences: Array<{
-      sid: string;
+      sid: number;
       startTimeMs: bigint;
       endTimeMs: bigint;
       paragraphId: string;

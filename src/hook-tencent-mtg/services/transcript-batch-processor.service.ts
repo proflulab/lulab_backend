@@ -49,7 +49,7 @@ export class TranscriptBatchProcessor {
         );
 
         const createdParagraph = await this.paragraphRepository.create(tx, {
-          pid: paragraph.pid,
+          pid: parseInt(paragraph.pid, 10),
           startTimeMs: BigInt(paragraph.start_time),
           endTimeMs: BigInt(paragraph.end_time),
           speakerId,
@@ -95,7 +95,7 @@ export class TranscriptBatchProcessor {
   ): Promise<void> {
     for (const sentenceData of batch) {
       const createdSentence = await this.sentenceRepository.create(tx, {
-        sid: sentenceData.sentence.sid,
+        sid: parseInt(sentenceData.sentence.sid, 10),
         startTimeMs: BigInt(sentenceData.sentence.start_time),
         endTimeMs: BigInt(sentenceData.sentence.end_time),
         paragraphId: sentenceData.paragraphId,
@@ -103,7 +103,7 @@ export class TranscriptBatchProcessor {
       });
 
       const words = sentenceData.sentence.words.map((word) => ({
-        wid: word.wid,
+        wid: parseInt(word.wid, 10),
         startTimeMs: BigInt(word.start_time),
         endTimeMs: BigInt(word.end_time),
         text: word.text,

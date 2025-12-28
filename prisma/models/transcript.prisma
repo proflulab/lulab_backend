@@ -26,7 +26,7 @@ model Transcript {
 model Paragraph {
   id String @id @default(cuid())
 
-  pid         String
+  pid         Int
   startTimeMs BigInt @map("start_time_ms")
   endTimeMs   BigInt @map("end_time_ms")
 
@@ -52,7 +52,7 @@ model Paragraph {
 model Sentence {
   id String @id @default(cuid())
 
-  sid         String
+  sid         Int
   startTimeMs BigInt @map("start_time_ms")
   endTimeMs   BigInt @map("end_time_ms")
 
@@ -76,8 +76,7 @@ model Sentence {
 model Word {
   id String @id @default(cuid())
 
-  wid         String
-  order       Int? // 导入时按数组顺序写入
+  wid         Int
   startTimeMs BigInt @map("start_time_ms")
   endTimeMs   BigInt @map("end_time_ms")
   text        String

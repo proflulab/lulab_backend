@@ -19,7 +19,7 @@ export class WordRepository {
   async create(
     tx: PrismaTransaction,
     data: {
-      wid: string;
+      wid: number;
       order?: number;
       startTimeMs: bigint;
       endTimeMs: bigint;
@@ -35,7 +35,7 @@ export class WordRepository {
   async createMany(
     tx: PrismaTransaction,
     words: Array<{
-      wid: string;
+      wid: number;
       order?: number;
       startTimeMs: bigint;
       endTimeMs: bigint;

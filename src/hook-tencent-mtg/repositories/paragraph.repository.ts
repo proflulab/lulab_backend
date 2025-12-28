@@ -9,7 +9,7 @@ export class ParagraphRepository {
   async create(
     tx: PrismaTransaction,
     data: {
-      pid: string;
+      pid: number;
       startTimeMs: bigint;
       endTimeMs: bigint;
       speakerId?: string;
@@ -24,7 +24,7 @@ export class ParagraphRepository {
   async createMany(
     tx: PrismaTransaction,
     paragraphs: Array<{
-      pid: string;
+      pid: number;
       startTimeMs: bigint;
       endTimeMs: bigint;
       speakerId?: string;
