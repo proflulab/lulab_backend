@@ -1,98 +1,160 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+<h1 align="center">LuLab Backend</h1>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+基于 NestJS 的会议与用户服务后端。提供用户认证（JWT）、验证码（邮箱/短信）、邮件服务、会议记录管理与统计，并集成腾讯会议 Webhook/开放 API 与飞书多维表格（Bitable）同步。数据层使用 Prisma + PostgreSQL。
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+运行环境：Node.js 18+、pnpm、PostgreSQL。
 
-## Description
+## 功能特性
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- 认证与账户
+  - 注册/登录/刷新/登出（JWT），邮箱/短信验证码登录
+  - 用户资料获取与更新，登录失败限流与日志
+- 验证码与通知
+  - 邮箱：SMTP（nodemailer）发送与连通性校验
+  - 短信：阿里云短信发送与模板化场景（注册/登录/重置密码）
+- 会议管理（Meeting）
+  - 会议记录 CRUD、统计、重处理入口
+- 集成
+  - 腾讯会议：Webhook（URL 校验/事件接收）、开放 API（录制/参会/转写/智能能力）
+  - 飞书：多维表格 Bitable 同步（支持 upsert 去重）
 
-## Project setup
+## 技术栈
 
-```bash
-$ pnpm install
-```
+- NestJS + TypeScript
+- Prisma ORM + PostgreSQL
+- Swagger 文档（`/api`）
+- Jest + Supertest（unit/integration/e2e）
 
-## Compile and run the project
+## 项目结构（节选）
 
-```bash
-# development
-$ pnpm run start
+- `src/auth`
+  - `controllers`：`auth.controller.ts`
+  - `services`：已按用例拆分
+    - `register.service.ts`、`login.service.ts`、`password.service.ts`、`profile.service.ts`
+    - `token.service.ts`、`auth-policy.service.ts`
+    - `utils/`：`user-mapper.ts`、`password.util.ts`
+  - `repositories`：`user.repository.ts`、`login-log.repository.ts`
+  - `enums`：`auth-type.enum.ts`、`login-type.enum.ts`、`verification-type.enum.ts`（统一由 `index.ts` 导出）
+- `src/verification`：验证码控制器/服务、`enums`（`index.ts` 汇总）
+- `src/meeting`：会议业务模块
+- `src/tencent-meeting`：腾讯会议 Webhook 与业务对接
+- `src/lark-meeting`：Lark（飞书） Webhook 骨架（兼容旧路由 /webhooks/feishu）
+- `libs/`：第三方平台集成与共享库
+- `prisma/`：`schema.prisma`、migrations、`seed`
+- `test/`：unit/integration/system/e2e
 
-# watch mode
-$ pnpm run start:dev
+路径别名：`@/` → `src`，`@libs/` → `libs`。
 
-# production mode
-$ pnpm run start:prod
-```
+## 快速开始
 
-## Run tests
-
-```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+1) 安装依赖
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+pnpm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+2) 配置环境变量
 
-## Resources
+复制 `.env.example` 为 `.env`，并按环境补充：
 
-Check out a few resources that may come in handy when working with NestJS:
+- 数据库：`DATABASE_URL`
+- JWT：`JWT_SECRET`、`JWT_REFRESH_SECRET`、`JWT_EXPIRES_IN`、`JWT_REFRESH_EXPIRES_IN`
+- 邮件：`SMTP_HOST`、`SMTP_PORT`、`SMTP_USER`、`SMTP_PASS`、`SMTP_FROM`
+- 短信：`ALIBABA_CLOUD_ACCESS_KEY_ID`、`ALIBABA_CLOUD_ACCESS_KEY_SECRET`、`ALIYUN_SMS_SIGN_NAME`、模板变量
+- 腾讯会议：`TENCENT_MEETING_*`（APP/SDK/SecretId/SecretKey、Webhook Token/EncodingAESKey）
+- Lark（飞书）：`LARK_APP_ID`、`LARK_APP_SECRET`、`LARK_BITABLE_*`
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+3) 初始化数据库
 
-## Support
+```bash
+pnpm db:generate
+pnpm db:push      # 或 pnpm db:migrate
+pnpm db:seed      # 可选
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+4) 启动服务
 
-## Stay in touch
+```bash
+pnpm start:dev    # 开发
+pnpm build && pnpm start:prod
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+启动后：
 
-## License
+- 应用：`http://localhost:3000`
+- Swagger：`http://localhost:3000/api`
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## 常用脚本
+
+```bash
+# 质量
+pnpm lint
+pnpm format
+
+# 构建/运行
+pnpm build
+pnpm start:dev
+pnpm start:prod
+
+# 测试
+pnpm test            # unit
+pnpm test:e2e
+pnpm test:integration
+pnpm test:cov
+pnpm test:all        # unit/integration/system/e2e
+pnpm test:ci         # all + coverage
+
+# 数据库
+pnpm db:generate
+pnpm db:push | db:migrate | db:reset | db:seed | db:drop | db:backup
+```
+
+## API 概览（节选）
+
+- 文档：`/api`（需要 BearerAuth 的接口会在文档中标注）
+
+- 认证（`/api/auth`）
+  - `POST /register`、`POST /login`、`POST /reset-password`、`POST /refresh-token`、`POST /logout`
+  
+### Token 撤销（黑名单）
+
+- 为访问令牌与刷新令牌加入 `jti`（JWT ID），并提供基于内存的黑名单以支持登出后的令牌撤销。
+- `POST /auth/logout` 会将当前 `Authorization: Bearer <token>` 中的令牌加入黑名单，直至该令牌自然过期。
+- 刷新令牌接口会在签发新 Access Token 前检查刷新令牌是否在黑名单中。
+- 默认实现为单机内存；多实例部署需替换为共享存储（如 Redis）来共享撤销状态。
+- 验证码（`/api/verification`）
+  - `POST /send`、`POST /verify`
+- 用户（`/api/user`）
+  - `GET /profile`、`PUT /profile`
+- Webhooks
+  - 腾讯会议：`GET /webhooks/tencent`（URL 校验）、`POST /webhooks/tencent`（事件接收）
+  - Lark（飞书）：`POST /webhooks/lark`（保留兼容别名：`/webhooks/feishu`）
+
+## 腾讯会议开放 API 提示
+
+- 已封装录制、参会、转写与智能能力等调用
+- 腾讯 API 存在调用方 IP 白名单限制，若报错 `500125`，请在腾讯会议后台添加服务器出口 IP
+
+## 开发与规范
+
+- 代码风格：Prettier（2 空格、singleQuote、trailingComma: all）、ESLint with @typescript-eslint
+- 文件命名：kebab-case；类/接口：PascalCase；变量：camelCase
+- 测试：Jest，约定路径
+  - unit：`src/**/*.spec.ts`
+  - integration：`test/integration/**/*.int-spec.ts`
+  - e2e：`test/e2e/**/*.e2e-spec.ts`
+  - system：`test/system/**/*.spec.ts`
+- 覆盖率：unit 全局阈值 ≥ 80%
+- 提交信息：Conventional Commits（feat/fix/refactor/test/chore）
+
+## 安全与部署建议
+
+- 切勿提交 `.env`；基于 `.env.example` 新增配置
+- 生产环境务必更换并管理好 `JWT_*` 与第三方 Secret
+- 腾讯会议开放 API 建议配置服务器出口 IP 白名单
+
+## 许可
+
+UNLICENSED（私有项目）。
+
+—— 如需补充飞书 Webhook 的签名校验与完整事件处理，或添加新的会议平台接入，请创建 Issue/任务讨论与排期。

@@ -27,6 +27,7 @@ lerna-debug.log*
 *.launch
 .settings/
 *.sublime-workspace
+.qoder
 
 # IDE - VSCode
 .vscode/*
@@ -38,6 +39,7 @@ lerna-debug.log*
 # dotenv environment variable files
 .env
 .env.development.local
+.env.test
 .env.test.local
 .env.production.local
 .env.local
@@ -45,6 +47,10 @@ lerna-debug.log*
 # temp directory
 .temp
 .tmp
+
+# Database (if using local files)
+*.db
+*.db-journal
 
 # Runtime data
 pids
@@ -54,3 +60,14 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+/generated/prisma
+
+# Backup files
+/scripts/backups
+
+# Documentation (auto-generated)
+/documentation
+
+.codex/
+.specify/

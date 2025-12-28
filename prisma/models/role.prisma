@@ -1,0 +1,28 @@
+// 角色表
+model Role {
+  id          String   @id @default(cuid())
+  name        String // 角色名称
+  code        String   @unique // 角色编码
+  description String? // 角色描述
+  type        RoleType @default(CUSTOM) // 角色类型
+  level       Int      @default(1) // 角色级别，数字越小权限越高
+  active      Boolean  @default(true) // 是否启用
+  isDeleted   Boolean  @default(false)
+
+  // 关联关系
+  users           UserRole[]
+  permissions     RolePermission[]
+  dataPermissions RoleDataPermission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([code])
+  @@index([type])
+}
+
+// 角色类型枚举
+enum RoleType {
+  SYSTEM // 系统角色
+  CUSTOM // 自定义角色
+}
