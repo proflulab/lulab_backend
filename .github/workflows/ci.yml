@@ -78,6 +78,3 @@ jobs:
 
       - name: Run unit tests
         run: pnpm test:unit
-
-      - name: Run unit tests with coverage
-        run: pnpm test:unit:watch
