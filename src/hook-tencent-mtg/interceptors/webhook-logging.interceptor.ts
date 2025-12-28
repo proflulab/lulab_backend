@@ -2,9 +2,9 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-10-01 01:08:34
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-10-01 05:35:24
+ * @LastEditTime: 2025-12-23 01:21:48
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/interceptors/webhook-logging.interceptor.ts
- * @Description: 腾讯会议Webhook日志拦截器，记录所有Webhook请求的详细信息
+ * @Description: Tencent Meeting Webhook logging interceptor that records detailed information for all Webhook requests
  */
 
 import {
@@ -19,8 +19,8 @@ import { tap, catchError } from 'rxjs/operators';
 import { Request, Response } from 'express';
 
 /**
- * Webhook日志拦截器
- * 记录所有Webhook请求的详细信息，包括请求头、请求体、响应时间等
+ * Webhook logging interceptor
+ * Records detailed information for all Webhook requests, including headers, body, response time, etc.
  */
 @Injectable()
 export class WebhookLoggingInterceptor implements NestInterceptor {
@@ -33,7 +33,7 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
     const response = context.switchToHttp().getResponse<Response>();
     const startTime = Date.now();
 
-    // 提取关键信息（避免对潜在 any 的解构带来的不安全）
+    // Extract key information (avoid unsafe destructuring of potential any types)
     const method = request.method;
     const url = request.url;
     const headers = request.headers as Record<string, unknown>;
@@ -41,8 +41,8 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
     const query = request.query as Record<string, unknown>;
     const ip = request.ip;
 
-    // 记录请求开始
-    this.logger.log(`Webhook请求开始: ${method} ${url}`, {
+    // Log request start
+    this.logger.log(`Webhook request started: ${method} ${url}`, {
       ip,
       userAgent: headers['user-agent'],
       contentType: headers['content-type'],
@@ -51,15 +51,15 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
       timestamp: new Date().toISOString(),
     });
 
-    // 记录重要的请求头（过滤敏感信息）
+    // Log important headers (filter sensitive information)
     const importantHeaders = this.filterHeaders(headers);
     if (Object.keys(importantHeaders).length > 0) {
-      this.logger.debug('重要请求头:', importantHeaders);
+      this.logger.debug('Important headers:', importantHeaders);
     }
 
-    // 记录请求体（如果不是太大）
+    // Log request body (if not too large)
     if (body && this.shouldLogBody(body, headers)) {
-      this.logger.debug('请求体:', {
+      this.logger.debug('Request body:', {
         bodyType: typeof body,
         bodySize: JSON.stringify(body).length,
         body: this.sanitizeBody(body),
@@ -71,7 +71,7 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
         const duration = Date.now() - startTime;
 
         this.logger.log(
-          `Webhook请求成功: ${method} ${url} - ${response.statusCode} - ${duration}ms`,
+          `Webhook request succeeded: ${method} ${url} - ${response.statusCode} - ${duration}ms`,
           {
             statusCode: response.statusCode,
             duration,
@@ -81,9 +81,9 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
           },
         );
 
-        // 记录响应数据（如果有且不是太大）
+        // Log response data (if exists and not too large)
         if (data && this.shouldLogResponse(data)) {
-          this.logger.debug('响应数据:', {
+          this.logger.debug('Response data:', {
             data: this.sanitizeResponse(data),
           });
         }
@@ -96,13 +96,16 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
           stack?: string;
           status?: number;
         };
-        this.logger.error(`Webhook请求失败: ${method} ${url} - ${duration}ms`, {
-          error: err?.message,
-          stack: err?.stack,
-          statusCode: err?.status ?? 500,
-          duration,
-          timestamp: new Date().toISOString(),
-        });
+        this.logger.error(
+          `Webhook request failed: ${method} ${url} - ${duration}ms`,
+          {
+            error: err?.message,
+            stack: err?.stack,
+            statusCode: err?.status ?? 500,
+            duration,
+            timestamp: new Date().toISOString(),
+          },
+        );
 
         throw error;
       }),
@@ -110,14 +113,14 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
   }
 
   /**
-   * 过滤请求头，只保留重要的非敏感信息
+   * Filter request headers, keeping only important non-sensitive information
    */
   private filterHeaders(
     headers: Record<string, unknown>,
   ): Record<string, unknown> {
     const importantHeaders: Record<string, unknown> = {};
 
-    // 需要记录的重要头部
+    // Important headers to log
     const headersToLog = [
       'wechatwork-signature',
       'wechatwork-timestamp',
@@ -137,7 +140,7 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
       const lowerKey = key.toLowerCase();
       const value = headers[key] || headers[lowerKey];
       if (value) {
-        // 对签名进行部分遮蔽
+        // Partially mask signatures
         if (key.includes('signature')) {
           if (typeof value === 'string') {
             importantHeaders[key] = this.maskSignature(value);
@@ -152,20 +155,20 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
   }
 
   /**
-   * 判断是否应该记录请求体
+   * Determine whether to log request body
    */
   private shouldLogBody(
     body: unknown,
     headers: Record<string, unknown>,
   ): boolean {
-    // 不记录太大的请求体
+    // Don't log too large request body
     const bodySize = JSON.stringify(body).length;
     if (bodySize > 10000) {
-      // 10KB限制
+      // 10KB limit
       return false;
     }
 
-    // 不记录二进制内容
+    // Don't log binary content
     const ctRaw = headers['content-type'];
     const contentType = typeof ctRaw === 'string' ? ctRaw : '';
     if (
@@ -179,17 +182,17 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
   }
 
   /**
-   * 判断是否应该记录响应数据
+   * Determine whether to log response data
    */
   private shouldLogResponse(data: unknown): boolean {
     if (!data) return false;
 
     const dataSize = JSON.stringify(data).length;
-    return dataSize <= 5000; // 5KB限制
+    return dataSize <= 5000; // 5KB limit
   }
 
   /**
-   * 清理请求体中的敏感信息
+   * Clean sensitive information from request body
    */
   private sanitizeBody(body: unknown): unknown {
     if (typeof body !== 'object' || body === null) {
@@ -200,7 +203,7 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
       ...(body as Record<string, unknown>),
     };
 
-    // 移除或遮蔽敏感字段
+    // Remove or mask sensitive fields
     const sensitiveFields = [
       'password',
       'token',
@@ -216,7 +219,7 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
       }
     }
 
-    // 递归处理嵌套对象
+    // Recursively process nested objects
     for (const key in sanitized) {
       const val = sanitized[key];
       if (typeof val === 'object' && val !== null) {
@@ -228,7 +231,7 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
   }
 
   /**
-   * 清理响应数据中的敏感信息
+   * Clean sensitive information from response data
    */
   private sanitizeResponse(data: unknown): unknown {
     if (typeof data !== 'object' || data === null) {
@@ -239,7 +242,7 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
       ...(data as Record<string, unknown>),
     };
 
-    // 移除或遮蔽敏感字段
+    // Remove or mask sensitive fields
     const sensitiveFields = [
       'token',
       'secret',
@@ -258,7 +261,7 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
   }
 
   /**
-   * 遮蔽签名信息（只显示前后几位）
+   * Mask signature information (only show first and last few characters)
    */
   private maskSignature(signature: string): string {
     if (!signature || signature.length < 10) {
@@ -268,40 +271,5 @@ export class WebhookLoggingInterceptor implements NestInterceptor {
     const start = signature.substring(0, 4);
     const end = signature.substring(signature.length - 4);
     return `${start}***${end}`;
-  }
-
-  /**
-   * 格式化日志消息
-   */
-  private formatLogMessage(
-    method: string,
-    url: string,
-    statusCode: number,
-    duration: number,
-  ): string {
-    const status = statusCode >= 400 ? '❌' : '✅';
-    return `${status} ${method} ${url} ${statusCode} ${duration}ms`;
-  }
-
-  /**
-   * 检查是否为健康检查请求
-   */
-  private isHealthCheck(url: string): boolean {
-    return url.includes('/health') || url.includes('/ping');
-  }
-
-  /**
-   * 获取请求的唯一标识
-   */
-  private getRequestId(headers: Record<string, unknown>): string {
-    const reqId = headers['x-request-id'];
-    if (typeof reqId === 'string') {
-      return reqId;
-    }
-    const corrId = headers['x-correlation-id'];
-    if (typeof corrId === 'string') {
-      return corrId;
-    }
-    return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 }

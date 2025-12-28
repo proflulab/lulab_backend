@@ -3,10 +3,8 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type {
   CreateMeetingRecordData,
   UpdateMeetingRecordData,
-  CreateMeetingFileData,
-  UpdateMeetingFileData,
   GetMeetingRecordsParams,
-} from '@/meeting/types/meeting.types';
+} from '@/meeting/types';
 import { MeetingPlatform } from '@prisma/client';
 
 @Injectable()
@@ -14,83 +12,96 @@ export class MeetingRepository {
   constructor(private prisma: PrismaService) {}
 
   /**
-   * 根据平台和会议ID查找会议记录
+   * Find meeting record by platform and meeting ID
    */
   async findMeetingByPlatformId(
     platform: MeetingPlatform,
-    platformMeetingId: string,
+    meetingId: string,
+    subMeetingId: string,
   ) {
-    return this.prisma.meetings.findUnique({
+    return this.prisma.meeting.findUnique({
       where: {
-        platform_platformMeetingId: {
+        platform_meetingId_subMeetingId: {
           platform,
-          platformMeetingId,
+          meetingId,
+          subMeetingId,
         },
       },
     });
   }
 
   /**
-   * 根据ID查找会议记录
+   * Find meeting record by ID
    */
   async findMeetingById(id: string) {
-    return this.prisma.meetings.findUnique({
+    return this.prisma.meeting.findUnique({
       where: { id },
       include: {
-        files: true,
+        recordings: true,
       },
     });
   }
 
   /**
-   * 创建会议记录
+   * Create meeting record
    */
   async createMeetingRecord(data: CreateMeetingRecordData) {
-    return this.prisma.meetings.create({
+    return this.prisma.meeting.create({
       data,
     });
   }
 
   /**
-   * 更新会议记录
+   * Update meeting record
    */
   async updateMeetingRecord(id: string, data: UpdateMeetingRecordData) {
-    return this.prisma.meetings.update({
+    return this.prisma.meeting.update({
       where: { id },
       data,
     });
   }
 
   /**
-   * 创建会议文件
+   * Upsert meeting record - create if not exists, update if exists
    */
-  async createMeetingFile(data: CreateMeetingFileData) {
-    return this.prisma.meetingFile.create({
-      data,
+  async upsertMeetingRecord(
+    platform: MeetingPlatform,
+    meetingId: string,
+    subMeetingId: string,
+    data: Omit<
+      CreateMeetingRecordData,
+      'platform' | 'meetingId' | 'subMeetingId'
+    >,
+  ) {
+    return this.prisma.meeting.upsert({
+      where: {
+        platform_meetingId_subMeetingId: {
+          platform,
+          meetingId,
+          subMeetingId,
+        },
+      },
+      update: data,
+      create: {
+        platform,
+        meetingId,
+        subMeetingId,
+        ...data,
+      },
     });
   }
 
   /**
-   * 更新会议文件
-   */
-  async updateMeetingFile(id: string, data: UpdateMeetingFileData) {
-    return this.prisma.meetingFile.update({
-      where: { id },
-      data,
-    });
-  }
-
-  /**
-   * 删除会议记录
+   * Delete meeting record
    */
   async deleteMeetingRecord(id: string) {
-    return this.prisma.meetings.delete({
+    return this.prisma.meeting.delete({
       where: { id },
     });
   }
 
   /**
-   * 获取会议记录列表
+   * Get meeting records list
    */
   async getMeetingRecords(params: GetMeetingRecordsParams): Promise<{
     records: any[];
@@ -120,10 +131,10 @@ export class MeetingRepository {
     }
 
     const [records, total] = await Promise.all([
-      this.prisma.meetings.findMany({
+      this.prisma.meeting.findMany({
         where,
         include: {
-          files: true,
+          recordings: true,
         },
         orderBy: {
           createdAt: 'desc',
@@ -131,7 +142,7 @@ export class MeetingRepository {
         skip,
         take: limit,
       }),
-      this.prisma.meetings.count({ where }),
+      this.prisma.meeting.count({ where }),
     ]);
 
     return {

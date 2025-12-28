@@ -11,7 +11,7 @@ model Organization {
   active      Boolean @default(true) // 是否启用
 
   // 自关联
-  parent   Organization?  @relation("OrganizationHierarchy", fields: [parentId], references: [id])
+  parent   Organization?  @relation("OrganizationHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
   children Organization[] @relation("OrganizationHierarchy")
 
   // 关联关系
@@ -23,4 +23,7 @@ model Organization {
 
   @@index([parentId])
   @@index([code])
+  @@index([active]) // 活跃组织查询
+  @@index([parentId, sortOrder]) // 子组织排序查询
+  @@map("organizations")
 }

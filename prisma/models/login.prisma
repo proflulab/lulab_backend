@@ -28,6 +28,7 @@ model LoginLog {
   @@index([ip, createdAt]) // IP登录记录查询
   @@index([target, createdAt]) // 目标登录记录查询
   @@index([success, createdAt]) // 成功/失败记录查询
+  @@map("login_logs")
 }
 
 // 验证码发送限制模型
@@ -44,4 +45,5 @@ model CodeSendLimit {
   @@unique([target, ip]) // 每个目标和IP的组合唯一
   @@index([ip, lastSentAt]) // IP发送记录查询
   @@index([target, lastSentAt]) // 目标发送记录查询
+  @@map("code_send_limits")
 }

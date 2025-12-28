@@ -10,10 +10,7 @@ model User {
   phone           String? // 电话号码
   phoneVerifiedAt DateTime? // 电话验证时间
 
-  lastLoginAt DateTime? // 最后登录时间
-
-  active    Boolean   @default(true)
-  deletedAt DateTime? // 软删除时间戳
+  active Boolean @default(true)
 
   // 认证相关
   accounts      Account[]
@@ -42,16 +39,17 @@ model User {
   dataPermissions UserDataPermission[] // 用户数据权限
 
   // 会议相关关联
-  MeetingParticipation MeetingParticipation[]
-  platformUsers        PlatformUser[] // 平台用户关联
-  createdSummaries     MeetingSummary[]       @relation("SummaryCreator") // 创建的总结
-  reviewedSummaries    MeetingSummary[]       @relation("ReviewedSummaries") // 审核的总结
+  platformUsers          PlatformUser[] // 平台用户关联
+  uploadedStorageObjects StorageObject[]
 
   // 登录日志关联
   loginLogs LoginLog[] // 登录日志
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // 系统字段及时间
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  lastLoginAt DateTime? @map("last_login_at") @db.Timestamptz(6) // 最后登录时间
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6) // 软删除时间戳
 
   @@unique([countryCode, phone], name: "unique_phone_combination")
   @@index([username]) // 用户名登录优化
@@ -60,4 +58,6 @@ model User {
   @@index([active]) // 活跃用户查询
   @@index([deletedAt]) // 软删除查询索引
   @@index([lastLoginAt]) // 最后登录时间查询
+  @@index([active, deletedAt]) // 活跃用户查询优化
+  @@map("users")
 }

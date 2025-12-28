@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ProcessingStatus } from '@prisma/client';
 import { MeetingRepository } from './repositories/meeting.repository';
-import { GetMeetingRecordsParams } from './types/meeting.types';
+import { GetMeetingRecordsParams } from './types';
 import { MeetingRecordResponseDto } from './dto/meeting-record.dto';
 import { CreateMeetingRecordDto } from './dto/create-meeting-record.dto';
 import { UpdateMeetingRecordDto } from './dto/update-meeting-record.dto';
@@ -52,6 +52,7 @@ export class MeetingService {
     const existing = await this.meetingRepository.findMeetingByPlatformId(
       params.platform,
       params.platformMeetingId,
+      '', // Default empty subMeetingId
     );
 
     if (existing) {
@@ -64,12 +65,11 @@ export class MeetingService {
     // 转换DTO到repository数据格式
     const createData = {
       platform: params.platform,
-      platformMeetingId: params.platformMeetingId,
+      meetingId: params.platformMeetingId, // 改为 meetingId
       title: params.title,
       meetingCode: params.meetingCode || '',
       type: params.type,
-      hostUserId: params.hostUserId || '',
-      hostUserName: params.hostUserName,
+      hostPlatformUserId: params.hostUserId || '', // 改为 hostPlatformUserId
       startTime: params.actualStartAt
         ? new Date(params.actualStartAt)
         : new Date(),
@@ -104,8 +104,6 @@ export class MeetingService {
       updateData.processingStatus = params.processingStatus;
     if (params.participantCount !== undefined)
       updateData.participantCount = params.participantCount;
-    if (params.participantList !== undefined)
-      updateData.participantList = params.participantList;
     if (params.transcript !== undefined)
       updateData.transcript = params.transcript;
     if (params.summary !== undefined) updateData.summary = params.summary;
@@ -121,19 +119,16 @@ export class MeetingService {
       updateData.type = params.type;
     }
     if (params.hostUserId !== undefined) {
-      updateData.hostUserId = params.hostUserId;
-    }
-    if (params.hostUserName !== undefined) {
-      updateData.hostUserName = params.hostUserName;
+      updateData.hostPlatformUserId = params.hostUserId; // 改为 hostPlatformUserId
     }
     if (params.actualStartAt !== undefined) {
-      updateData.actualStartAt = new Date(params.actualStartAt);
+      updateData.startAt = new Date(params.actualStartAt); // 改为 startAt
     }
     if (params.endedAt !== undefined) {
-      updateData.endedAt = new Date(params.endedAt);
+      updateData.endAt = new Date(params.endedAt); // 改为 endAt
     }
     if (params.duration !== undefined) {
-      updateData.duration = params.duration;
+      updateData.durationSeconds = params.duration; // 改为 durationSeconds
     }
     if (params.metadata !== undefined) {
       updateData.metadata = params.metadata as unknown;
