@@ -5,8 +5,6 @@ import {
   UpdateRecordResponse,
   SearchRecordRequest,
   SearchRecordResponse,
-  ListRecordRequest,
-  ListRecordResponse,
   BitableField,
   SearchFilter,
   SearchSort,
@@ -50,6 +48,27 @@ export class BitableService {
     });
 
     return formattedFields;
+  }
+
+  /**
+   * List fields of a table (for debugging/schema inspection)
+   */
+  async listTableFields(appToken: string, tableId: string): Promise<any> {
+    try {
+      this.logger.debug(
+        `Listing Bitable fields in app: ${appToken}, table: ${tableId}`,
+      );
+      const response = await this.larkClient.bitable.v1.appTableField.list({
+        path: {
+          app_token: appToken,
+          table_id: tableId,
+        },
+      });
+      return response;
+    } catch (error) {
+      this.logger.error('Failed to list Bitable table fields', error);
+      throw error;
+    }
   }
 
   /**
@@ -238,192 +257,6 @@ export class BitableService {
       );
       throw error;
     }
-  }
-
-  /**
-   * List records in a table
-   */
-  async listRecords(
-    appToken: string,
-    tableId: string,
-    options?: {
-      viewId?: string;
-      fieldNames?: string; // Note: List API expects comma-separated string
-      filter?: string;
-      sort?: string; // Note: List API expects string format
-      pageSize?: number;
-      pageToken?: string;
-      textFieldAsArray?: boolean;
-      userIdType?: 'user_id' | 'union_id' | 'open_id';
-      displayFormulaRef?: boolean;
-      automaticFields?: boolean;
-    },
-  ): Promise<ListRecordResponse> {
-    try {
-      this.logger.debug(
-        `Listing Bitable records in app: ${appToken}, table: ${tableId}`,
-      );
-
-      const request: ListRecordRequest = {
-        app_token: appToken,
-        table_id: tableId,
-        ...(options?.viewId && { view_id: options.viewId }),
-        ...(options?.fieldNames && { field_names: options.fieldNames }),
-        ...(options?.filter && { filter: options.filter }),
-        ...(options?.sort && { sort: options.sort }),
-        ...(options?.pageSize && { page_size: options.pageSize }),
-        ...(options?.pageToken && { page_token: options.pageToken }),
-        ...(options?.textFieldAsArray !== undefined && {
-          text_field_as_array: options.textFieldAsArray,
-        }),
-        ...(options?.userIdType && { user_id_type: options.userIdType }),
-        ...(options?.displayFormulaRef !== undefined && {
-          display_formula_ref: options.displayFormulaRef,
-        }),
-        ...(options?.automaticFields !== undefined && {
-          automatic_fields: options.automaticFields,
-        }),
-      };
-
-      const response = await this.larkClient.bitable.v1.appTableRecord.list({
-        path: {
-          app_token: request.app_token,
-          table_id: request.table_id,
-        },
-        params: {
-          page_size: request.page_size || 20,
-          ...(request.page_token && { page_token: request.page_token }),
-          ...(request.view_id && { view_id: request.view_id }),
-          ...(request.field_names && { field_names: request.field_names }),
-          ...(request.filter && { filter: request.filter }),
-          ...(request.sort && { sort: request.sort }),
-          ...(request.text_field_as_array !== undefined && {
-            text_field_as_array: request.text_field_as_array,
-          }),
-          ...(request.user_id_type && { user_id_type: request.user_id_type }),
-          ...(request.display_formula_ref !== undefined && {
-            display_formula_ref: request.display_formula_ref,
-          }),
-          ...(request.automatic_fields !== undefined && {
-            automatic_fields: request.automatic_fields,
-          }),
-        },
-      });
-
-      this.logger.debug(`Listed ${response.data?.items?.length || 0} records`);
-      return response as ListRecordResponse;
-    } catch (error) {
-      this.logger.error('Failed to list Bitable records', error);
-      throw error;
-    }
-  }
-
-  /**
-   * List records with iterator for handling large datasets
-   */
-  async *listRecordsIterator(
-    appToken: string,
-    tableId: string,
-    options?: {
-      viewId?: string;
-      fieldNames?: string; // Note: List API expects comma-separated string
-      filter?: string;
-      sort?: string; // Note: List API expects string format
-      pageSize?: number;
-      textFieldAsArray?: boolean;
-      userIdType?: 'user_id' | 'union_id' | 'open_id';
-      displayFormulaRef?: boolean;
-      automaticFields?: boolean;
-    },
-  ): AsyncGenerator<LarkRecord, void, unknown> {
-    try {
-      this.logger.debug(
-        `Listing Bitable records with iterator in app: ${appToken}, table: ${tableId}`,
-      );
-
-      const request: ListRecordRequest = {
-        app_token: appToken,
-        table_id: tableId,
-        ...(options?.viewId && { view_id: options.viewId }),
-        ...(options?.fieldNames && { field_names: options.fieldNames }),
-        ...(options?.filter && { filter: options.filter }),
-        ...(options?.sort && { sort: options.sort }),
-        ...(options?.pageSize && { page_size: options.pageSize }),
-        ...(options?.textFieldAsArray !== undefined && {
-          text_field_as_array: options.textFieldAsArray,
-        }),
-        ...(options?.userIdType && { user_id_type: options.userIdType }),
-        ...(options?.displayFormulaRef !== undefined && {
-          display_formula_ref: options.displayFormulaRef,
-        }),
-        ...(options?.automaticFields !== undefined && {
-          automatic_fields: options.automaticFields,
-        }),
-      };
-
-      const iteratorPromise =
-        this.larkClient.bitable.v1.appTableRecord.listWithIterator({
-          path: {
-            app_token: request.app_token,
-            table_id: request.table_id,
-          },
-          params: {
-            page_size: request.page_size || 20,
-            ...(request.view_id && { view_id: request.view_id }),
-            ...(request.field_names && { field_names: request.field_names }),
-            ...(request.filter && { filter: request.filter }),
-            ...(request.sort && { sort: request.sort }),
-            ...(request.text_field_as_array !== undefined && {
-              text_field_as_array: request.text_field_as_array,
-            }),
-            ...(request.user_id_type && { user_id_type: request.user_id_type }),
-            ...(request.display_formula_ref !== undefined && {
-              display_formula_ref: request.display_formula_ref,
-            }),
-            ...(request.automatic_fields !== undefined && {
-              automatic_fields: request.automatic_fields,
-            }),
-          },
-        });
-
-      const iterator = await iteratorPromise;
-      for await (const item of iterator) {
-        yield item as LarkRecord;
-      }
-    } catch (error) {
-      this.logger.error('Failed to list Bitable records with iterator', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get all records from a table using iterator (convenience method)
-   */
-  async getAllRecords(
-    appToken: string,
-    tableId: string,
-    options?: {
-      viewId?: string;
-      fieldNames?: string;
-      filter?: string;
-      sort?: string;
-      pageSize?: number;
-    },
-  ): Promise<LarkRecord[]> {
-    const records: LarkRecord[] = [];
-
-    for await (const record of this.listRecordsIterator(
-      appToken,
-      tableId,
-      options,
-    )) {
-      records.push(record);
-    }
-
-    this.logger.debug(
-      `Retrieved ${records.length} records from table ${tableId}`,
-    );
-    return records;
   }
 
   /**

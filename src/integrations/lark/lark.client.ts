@@ -33,6 +33,9 @@ export class LarkClient {
   public readonly task: lark.Client['task'];
   public readonly tenant: lark.Client['tenant'];
   public readonly wiki: lark.Client['wiki'];
+  public readonly vc: lark.Client['vc'];
+  public readonly minutes: lark.Client['minutes'];
+  public readonly wsClient: lark.WSClient;
 
   constructor(
     @Inject(larkConfig.KEY) private readonly cfg: ConfigType<typeof larkConfig>,
@@ -78,6 +81,12 @@ export class LarkClient {
     this.task = this.client.task;
     this.tenant = this.client.tenant;
     this.wiki = this.client.wiki;
+    this.vc = this.client.vc;
+    this.minutes = this.client.minutes;
+    this.wsClient = new lark.WSClient({
+      appId: config.appId,
+      appSecret: config.appSecret,
+    });
 
     this.logger.log('Lark client initialized successfully');
   }
