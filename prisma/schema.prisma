@@ -4,13 +4,18 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+// How to use Prisma ORM and Prisma Postgres with NestJS
+// https://www.prisma.io/docs/guides/nestjs?utm_source=cli&utm_medium=promo-generate-v5-17&utm_campaign=tip-4-nohints
+
+// Using multi-file schemas
+// https://www.prisma.io/docs/orm/reference/prisma-config-reference#using-multi-file-schemas
+
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]
-  // output   = "../generated/prisma"
+  // output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
