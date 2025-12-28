@@ -371,8 +371,8 @@ async function createMeetingSummary(
       meetingId,
       ...summaryData,
       transcriptId,
-      createdBy: creatorPlatformUserId, // MUST be PlatformUser.id
-      processingTime: 30000, // 30秒
+      createdId: creatorPlatformUserId,
+      processingTime: 30000,
       status: ProcessingStatus.COMPLETED,
     },
   });
