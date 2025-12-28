@@ -1,19 +1,19 @@
 model Transcript {
-  id         String    @id @default(cuid())
-  source     String? // 文件名/来源
-  rawJson    Json? // 可选：整份原始 JSON 备份
-  language   String    @default("zh-CN")
-  status     Int       @default(0) @db.SmallInt
-  startedAt  DateTime? @map("started_at") @db.Timestamptz(6)
-  finishedAt DateTime? @map("finished_at") @db.Timestamptz(6)
+  id       String  @id @default(cuid())
+  source   String? // 文件名/来源
+  rawJson  Json? // 可选：整份原始 JSON 备份
+  language String  @default("zh-CN")
+  status   Int     @default(0) @db.SmallInt
 
   recordingId String?           @map("recording_id")
   recording   MeetingRecording? @relation(fields: [recordingId], references: [id], onDelete: Cascade)
   summaries   MeetingSummary[]
+  paragraphs  Paragraph[]
 
-  paragraphs Paragraph[]
+  // 时间及系统字段
+  startedAt  DateTime? @map("started_at") @db.Timestamptz(6)
+  finishedAt DateTime? @map("finished_at") @db.Timestamptz(6)
 
-  // 系统字段及时间
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
@@ -77,7 +77,7 @@ model Word {
   id String @id @default(cuid())
 
   wid         String
-  order       Int // 导入时按数组顺序写入
+  order       Int? // 导入时按数组顺序写入
   startTimeMs BigInt @map("start_time_ms")
   endTimeMs   BigInt @map("end_time_ms")
   text        String
@@ -91,7 +91,6 @@ model Word {
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   @@unique([sentenceId, wid])
-  @@unique([sentenceId, order])
   @@index([text])
   @@map("transcript_words")
 }

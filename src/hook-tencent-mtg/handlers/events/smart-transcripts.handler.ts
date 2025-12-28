@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-27
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-27 11:32:21
+ * @LastEditTime: 2025-12-29 04:09:40
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/smart-transcripts.handler.ts
  * @Description: 录制转写生成事件处理器
  *
@@ -14,8 +14,13 @@ import { BaseEventHandler } from '../base/base-event.handler';
 import { TencentEventPayload } from '../../types';
 import { TranscriptService } from '../../services/transcript.service';
 import { MeetingParticipantService } from '../../services/meeting-participant.service';
+import { TranscriptBatchProcessor } from '../../services/transcript-batch-processor.service';
+import { PrismaService } from '@/prisma/prisma.service';
 import { TranscriptRepository } from '../../repositories/transcript.repository';
+import { TencentMeetingRepository } from '../../repositories/tencent-meeting.repository';
 import { RecordingTranscriptResponse } from '@/integrations/tencent-meeting/types';
+import { Prisma } from '@prisma/client';
+import { MeetingParticipantDetail } from '@/integrations/tencent-meeting/types';
 
 /**
  * 录制转写生成事件处理器
@@ -27,7 +32,10 @@ export class SmartTranscriptsHandler extends BaseEventHandler {
   constructor(
     private readonly transcriptService: TranscriptService,
     private readonly participantService: MeetingParticipantService,
+    private readonly prisma: PrismaService,
     private readonly transcriptRepository: TranscriptRepository,
+    private readonly tencentMeetingRepository: TencentMeetingRepository,
+    private readonly batchProcessor: TranscriptBatchProcessor,
   ) {
     super();
   }
@@ -87,7 +95,7 @@ export class SmartTranscriptsHandler extends BaseEventHandler {
   private async saveTranscriptToDatabase(
     recordFileId: string,
     transcriptResponse: RecordingTranscriptResponse,
-    participants: Array<{ uuid: string; user_name: string }>,
+    participants: MeetingParticipantDetail[],
     meetingId: string,
     subMeetingId?: string,
   ): Promise<void> {
@@ -98,12 +106,51 @@ export class SmartTranscriptsHandler extends BaseEventHandler {
       return;
     }
 
-    await this.transcriptRepository.createTranscript(
-      recordFileId,
-      transcriptResponse,
+    const { transcriptId, exists } = await this.prisma.$transaction(
+      async (tx) => {
+        const recordingId =
+          await this.tencentMeetingRepository.findOrCreateRecordingByFileId(
+            tx,
+            recordFileId,
+            meetingId,
+            subMeetingId,
+          );
+
+        const existingTranscript =
+          await this.transcriptRepository.findByRecordingId(recordingId);
+
+        if (existingTranscript) {
+          return {
+            transcriptId: existingTranscript.id,
+            recordingId,
+            exists: true,
+          };
+        }
+
+        const transcript = await this.transcriptRepository.create(tx, {
+          source: `tencent-meeting:${recordFileId}`,
+          rawJson: transcriptResponse as unknown as Prisma.InputJsonValue,
+          status: 2,
+          recordingId: recordingId,
+        });
+
+        return {
+          transcriptId: transcript.id,
+          recordingId,
+          exists: false,
+        };
+      },
+    );
+
+    if (exists) {
+      this.logger.log(`转写记录已存在，跳过处理: ${recordFileId}`);
+      return;
+    }
+
+    await this.batchProcessor.processParagraphsInBatches(
+      paragraphs,
+      transcriptId,
       participants,
-      meetingId,
-      subMeetingId,
     );
   }
 }
