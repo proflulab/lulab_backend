@@ -16,12 +16,26 @@
 
 ## 2. 测试分层定义
 
-| 类型 | 目的 | 依赖 | 速度 | 覆盖重点 |
-|---|---|---|---|---|
-| Unit | 验证单个类/函数逻辑 | Mock 外部依赖 | 极快 | Service、UseCase、Util |
-| Integration | 验证模块协作 | 真实 DB/Redis 等 | 中 | Repository、Module wiring |
-| System | 验证系统级业务链路 | 多组件一起跑 | 慢 | 核心业务流程、幂等 |
-| E2E | 验证对外 API 行为 | HTTP + 全量依赖 | 最慢 | Controller、鉴权、契约 |
+| 类型 | 目的 | 依赖 | 速度 | 覆盖重点 | 典型场景 |
+|---|---|---|---|---|---|
+| Unit | 验证单个类/函数逻辑 | Mock外部依赖 | 极快 | Service、UseCase、Util、Pipe、Guard、Controller | 业务逻辑计算、数据转换、验证规则 |
+| Integration | 验证模块与基础设施协作 | 真实DB/Redis等 | 中 | Repository + DB、Service + DB、多Service协作 | 数据库操作、缓存读写、第三方API调用 |
+| System | 验证跨模块业务链路 | 多组件 + 基础设施 | 慢 | Webhook处理、MQ消息、缓存一致性、跨模块事务 | Webhook接收→处理→存储、定时任务执行 |
+| E2E | 验证完整HTTP请求链路 | HTTP + 全量依赖 | 最慢 | API契约、鉴权流程、错误处理、性能 | 完整API调用、认证授权、端到端业务流程 |
+
+### 测试边界说明
+
+- **Controller测试**：
+  - Unit测试：单独测试Controller逻辑（验证、路由、响应格式）
+  - E2E测试：测试完整HTTP请求链路（包括中间件、Guard、异常处理）
+
+- **Module wiring**：
+  - Integration测试：验证模块依赖注入、Provider配置
+  - System测试：验证模块间协作、跨模块调用
+
+- **幂等性测试**：
+  - 作为测试关注点，可在Integration/System中验证
+  - 不是独立的测试类型
 
 ---
 
@@ -39,15 +53,18 @@
 
 ```
 src/
+  *.spec.ts                    # Unit测试（与源码放在一起）
 test/
-  unit/
-    *.spec.ts
   integration/
-    *.int-spec.ts
+    *.int-spec.ts              # Integration测试
   system/
-    *.sys-spec.ts
+    *.spec.ts                  # System测试
   e2e/
-    *.e2e-spec.ts
+    *.e2e-spec.ts               # E2E测试
+  fixtures/
+    *.ts                       # 测试数据工厂
+  helpers/
+    *.ts                       # 测试辅助工具
 ```
 
 ---
@@ -56,18 +73,43 @@ test/
 
 ### 范围
 - Service / UseCase（强制）
-- Util、Pipe、Guard（推荐）
+- Util、Pipe、Guard、Controller（推荐）
 
 ### 规则
 - 不访问真实 DB / Redis / 网络
 - 只测试行为，不测试实现细节
 - Mock 依赖必须显式声明
+- Controller测试只验证路由、验证、响应格式，不测试完整HTTP链路
 
 ### 示例
 ```ts
 describe('UserService (unit)', () => {
+  let service: UserService;
+  let prismaService: PrismaService;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        UserService,
+        {
+          provide: PrismaService,
+          useValue: {
+            user: {
+              findUnique: jest.fn(),
+              create: jest.fn(),
+            },
+          },
+        },
+      ],
+    }).compile();
+
+    service = module.get<UserService>(UserService);
+    prismaService = module.get<PrismaService>(PrismaService);
+  });
+
   it('should throw when user not found', async () => {
-    // Arrange / Act / Assert
+    prismaService.user.findUnique.mockResolvedValue(null);
+    await expect(service.findById('123')).rejects.toThrow(NotFoundException);
   });
 });
 ```
@@ -79,66 +121,306 @@ describe('UserService (unit)', () => {
 ### 范围
 - Repository + DB
 - Service + DB
-- Module 依赖关系
+- 多个Service协作
+- 第三方API集成（真实API调用）
+- Module依赖关系验证
 
 ### 规则
-- 使用真实基础设施（容器化）
-- 不 mock DB
-- 每个 suite 独立数据隔离
+- 使用真实基础设施（容器化DB/Redis）
+- 不mock DB，但可mock外部网络依赖（如第三方API）
+- 每个suite独立数据隔离
+- 使用真实配置（通过.env.test）
+
+### 示例
+```ts
+describe('MeetingRepository (integration)', () => {
+  let prismaService: PrismaService;
+
+  beforeAll(async () => {
+    prismaService = new PrismaService();
+    await prismaService.$connect();
+  });
+
+  afterAll(async () => {
+    await prismaService.$disconnect();
+  });
+
+  beforeEach(async () => {
+    await prismaService.meeting.deleteMany();
+  });
+
+  it('should create and retrieve meeting', async () => {
+    const meeting = await prismaService.meeting.create({
+      data: {
+        platform: MeetingPlatform.TENCENT_MEETING,
+        meetingId: 'test-123',
+        title: 'Test Meeting',
+      },
+    });
+
+    const found = await prismaService.meeting.findUnique({
+      where: { id: meeting.id },
+    });
+
+    expect(found).toBeDefined();
+    expect(found?.title).toBe('Test Meeting');
+  });
+});
+```
 
 ---
 
 ## 7. System 测试规范
 
 ### 定义
-验证多个内部组件协作完成一条业务链路，例如：
-- API + DB + MQ
-- 缓存一致性
-- 幂等与事务
+验证多个内部组件协作完成一条完整业务链路，包括：
+- Webhook接收 → 签名验证 → 业务处理 → 数据存储
+- MQ消息消费 → 业务处理 → 状态更新
+- 定时任务触发 → 数据处理 → 结果存储
+- 跨模块事务与数据一致性
+- 缓存与数据库同步
 
 ### 规则
-- 用例数量少但关键
-- 关注业务结果与副作用
-- 明确异步超时与重试
+- 用例数量少但关键，只覆盖核心业务流程
+- 关注业务结果与副作用，不关注内部实现
+- 明确异步超时与重试机制
+- 验证幂等性与事务完整性
+
+### 示例
+```ts
+describe('Tencent Webhook System Test', () => {
+  let app: INestApplication;
+  let prismaService: PrismaService;
+
+  beforeAll(async () => {
+    const module = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = module.createNestApplication();
+    await app.init();
+    prismaService = app.get(PrismaService);
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('should process meeting started webhook end-to-end', async () => {
+    const payload = {
+      event_type: 'meeting.started',
+      meeting_id: 'test-meeting-123',
+      start_time: Date.now(),
+    };
+
+    const signature = generateSignature(payload);
+
+    const response = await request(app.getHttpServer())
+      .post('/webhooks/tencent')
+      .set('X-TC-Signature', signature)
+      .send(payload)
+      .expect(200);
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const meeting = await prismaService.meeting.findUnique({
+      where: { meetingId: payload.meeting_id },
+    });
+
+    expect(meeting).toBeDefined();
+    expect(meeting?.status).toBe('STARTED');
+  });
+});
+```
 
 ---
 
 ## 8. E2E 测试规范
 
 ### 范围
-- HTTP → Service → DB 的完整路径
-- 鉴权、校验、异常映射
+- 完整HTTP请求链路（Controller → Service → Repository → DB）
+- API契约验证（请求/响应格式）
+- 鉴权与授权流程
+- 错误处理与异常映射
+- 性能指标（响应时间、并发）
 
 ### 规则
-- 每个接口至少覆盖成功 + 常见失败
-- 断言返回状态码与响应结构
-- 不断言内部实现
+- 每个接口至少覆盖成功 + 常见失败场景
+- 断言HTTP状态码、响应结构、业务数据
+- 不断言内部实现细节
+- 使用真实认证流程（JWT）
+- 验证幂等性（POST/PUT/PATCH）
+
+### 示例
+```ts
+describe('Auth API (e2e)', () => {
+  let app: INestApplication;
+  let accessToken: string;
+
+  beforeAll(async () => {
+    const module = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = module.createNestApplication();
+    await app.init();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  describe('POST /auth/login', () => {
+    it('should login with valid credentials', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: 'test@example.com',
+          password: 'password123',
+        })
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('accessToken');
+          expect(res.body).toHaveProperty('user');
+          expect(res.body.user).not.toHaveProperty('password');
+        });
+    });
+
+    it('should return 401 with invalid credentials', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: 'test@example.com',
+          password: 'wrongpassword',
+        })
+        .expect(401)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('statusCode', 401);
+          expect(res.body).toHaveProperty('message');
+        });
+    });
+  });
+
+  describe('GET /users/profile', () => {
+    it('should return user profile with valid token', async () => {
+      const loginRes = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: 'test@example.com',
+          password: 'password123',
+        });
+
+      accessToken = loginRes.body.accessToken;
+
+      return request(app.getHttpServer())
+        .get('/users/profile')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('id');
+          expect(res.body).toHaveProperty('email');
+        });
+    });
+
+    it('should return 401 without token', async () => {
+      return request(app.getHttpServer())
+        .get('/users/profile')
+        .expect(401);
+    });
+  });
+});
+```
 
 ---
 
 ## 9. 数据与环境隔离
 
+### 隔离策略
 推荐方案（三选一）：
-1. 事务回滚
-2. truncate 清表
-3. schema / database 重建
+1. **事务回滚**：测试在事务中执行，测试后自动回滚
+2. **清空表**：每个suite前清空相关表（truncate）
+3. **重建schema**：每个suite前重建测试数据库
 
-要求：
-- 不依赖已有数据
-- 使用 factory 统一生成测试数据
+### 数据管理
+- 不依赖已有数据，每个测试自给自足
+- 使用Factory模式统一生成测试数据
+- 使用唯一标识避免数据冲突（如时间戳、UUID）
+
+### Factory示例
+```ts
+// test/factories/user.factory.ts
+export class UserFactory {
+  static create(overrides = {}) {
+    return {
+      email: `test${Date.now()}@example.com`,
+      password: 'hashedPassword',
+      name: 'Test User',
+      ...overrides,
+    };
+  }
+
+  static async createInDb(prisma: PrismaService, overrides = {}) {
+    return prisma.user.create({
+      data: this.create(overrides),
+    });
+  }
+}
+
+// test/factories/meeting.factory.ts
+export class MeetingFactory {
+  static create(overrides = {}) {
+    return {
+      platform: MeetingPlatform.TENCENT_MEETING,
+      meetingId: `meeting-${Date.now()}`,
+      title: 'Test Meeting',
+      startTime: new Date(),
+      endTime: new Date(Date.now() + 3600000),
+      ...overrides,
+    };
+  }
+}
+
+// 在测试中使用
+describe('MeetingService (integration)', () => {
+  it('should create meeting', async () => {
+    const meetingData = MeetingFactory.create({ title: 'Custom Meeting' });
+    const meeting = await service.create(meetingData);
+    expect(meeting.title).toBe('Custom Meeting');
+  });
+});
+```
 
 ---
 
 ## 10. 覆盖率与 CI 门禁
 
-建议：
-- Unit：line ≥ 80%，branch ≥ 70%
-- Integration：核心模块必须覆盖
-- System/E2E：关键业务链路必须覆盖
+### 覆盖率要求
+- **Unit测试**：branches ≥ 80%, functions ≥ 80%, lines ≥ 80%, statements ≥ 80%
+- **Integration测试**：核心模块必须覆盖，无强制覆盖率要求
+- **System/E2E测试**：关键业务链路必须覆盖，无强制覆盖率要求
 
-CI：
-- PR：Unit + Integration
-- main/nightly：System + E2E
+### CI 门禁
+- **PR阶段**：运行 Unit + Integration 测试
+- **main分支**：运行所有测试（Unit + Integration + System + E2E）
+- **Nightly构建**：运行完整测试套件 + 覆盖率报告
+
+### 测试命令
+```bash
+# 运行所有测试
+pnpm test:all
+
+# 运行特定测试类型
+pnpm test:unit          # Unit测试
+pnpm test:integration   # Integration测试
+pnpm test:system        # System测试
+pnpm test:e2e           # E2E测试
+
+# 生成覆盖率报告
+pnpm test:cov
+
+# CI模式（所有测试 + 覆盖率）
+pnpm test:ci
+```
 
 ---
 
