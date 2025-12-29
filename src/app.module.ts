@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-06 05:06:37
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2026-01-03 20:55:16
+ * @LastEditTime: 2026-01-04 08:56:20
  * @FilePath: /lulab_backend/src/app.module.ts
  * @Description: Application module that defines the application's entry point and dependency injection
  *
@@ -31,6 +31,7 @@ import { OpenaiModule } from './integrations/openai/openai.module';
 import { BullModule } from '@nestjs/bullmq';
 import { redisConfig } from './configs';
 import { TasksModule } from './task/tasks.module';
+import { McpServerModule } from './mcp-server/mcp-server.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { TasksModule } from './task/tasks.module';
     LarkMeetingModule,
     VerificationModule,
     OpenaiModule,
+    McpServerModule,
   ],
   controllers: [AppController],
   providers: [
