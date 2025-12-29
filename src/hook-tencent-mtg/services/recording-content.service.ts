@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-24 00:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-25 04:52:55
+ * @LastEditTime: 2025-12-26 21:02:32
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/recording-content.service.ts
  * @Description: 录制内容服务，负责获取会议内容（摘要、纪要、转写等）
  *
@@ -126,7 +126,7 @@ export class RecordingContentService {
    * @param userId 用户ID
    * @returns 解码后的摘要内容
    */
-  private async fetchSmartSummary(
+  async fetchSmartSummary(
     recordFileId: string,
     userId: string,
   ): Promise<string> {

@@ -6,6 +6,9 @@ import {
   PrismaClient,
   MeetingType,
   ProcessingStatus,
+  RecordingSource,
+  RecordingStatus,
+  GenerationMethod,
   Prisma,
 } from '@prisma/client';
 
@@ -140,7 +143,6 @@ export class TencentMeetingRepository {
       platformData?: Prisma.InputJsonValue;
     },
   ) {
-    // First, check if a user with this platformUuid already exists
     const existingUser = await tx.platformUser.findFirst({
       where: {
         platform,
@@ -149,7 +151,6 @@ export class TencentMeetingRepository {
     });
 
     if (existingUser) {
-      // If exists, update it
       return tx.platformUser.update({
         where: { id: existingUser.id },
         data: {
@@ -158,7 +159,6 @@ export class TencentMeetingRepository {
         },
       });
     } else {
-      // If not exists, create it
       return tx.platformUser.create({
         data: {
           platform,
@@ -172,5 +172,107 @@ export class TencentMeetingRepository {
         },
       });
     }
+  }
+
+  /**
+   * Find meeting by platform and meeting identifiers
+   */
+  async findMeeting(
+    platform: MeetingPlatform,
+    meetingId: string,
+    subMeetingId: string,
+  ) {
+    return this.prisma.meeting.findUnique({
+      where: {
+        platform_meetingId_subMeetingId: {
+          platform,
+          meetingId,
+          subMeetingId,
+        },
+      },
+    });
+  }
+
+  /**
+   * Find recording by meeting ID and external ID
+   */
+  async findRecording(meetingId: string, externalId: string) {
+    return this.prisma.meetingRecording.findFirst({
+      where: {
+        meetingId,
+        externalId,
+      },
+    });
+  }
+
+  /**
+   * Upsert meeting recording
+   */
+  async upsertMeetingRecording(data: {
+    meetingId: string;
+    externalId: string;
+    source?: RecordingSource;
+    status?: RecordingStatus;
+    startAt?: Date;
+    endAt?: Date;
+  }) {
+    const existingRecording = await this.findRecording(
+      data.meetingId,
+      data.externalId,
+    );
+
+    if (existingRecording) {
+      return this.prisma.meetingRecording.update({
+        where: { id: existingRecording.id },
+        data: {
+          source: data.source,
+          status: data.status,
+          startAt: data.startAt,
+          endAt: data.endAt,
+        },
+      });
+    } else {
+      return this.prisma.meetingRecording.create({
+        data: {
+          meetingId: data.meetingId,
+          externalId: data.externalId,
+          source: data.source || RecordingSource.PLATFORM_AUTO,
+          status: data.status || RecordingStatus.COMPLETED,
+          startAt: data.startAt,
+          endAt: data.endAt,
+        },
+      });
+    }
+  }
+
+  /**
+   * Create meeting summary
+   */
+  async createMeetingSummary(data: {
+    meetingId: string;
+    recordingId: string;
+    content: string;
+    generatedBy?: GenerationMethod;
+    aiModel?: string;
+    status?: ProcessingStatus;
+    processingTime?: number;
+    language?: string;
+    version?: number;
+    isLatest?: boolean;
+  }) {
+    return this.prisma.meetingSummary.create({
+      data: {
+        meetingId: data.meetingId,
+        recordingId: data.recordingId,
+        content: data.content,
+        generatedBy: data.generatedBy || GenerationMethod.AI,
+        aiModel: data.aiModel || 'tencent-meeting-ai',
+        status: data.status || ProcessingStatus.COMPLETED,
+        processingTime: data.processingTime,
+        language: data.language || 'zh-CN',
+        version: data.version || 1,
+        isLatest: data.isLatest !== undefined ? data.isLatest : true,
+      },
+    });
   }
 }
