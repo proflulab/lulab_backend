@@ -253,6 +253,7 @@ async function createMeeting(
   const { hostUserName, meetingId, ...restConfig } = meetingConfig;
 
   // 根据 model: @@unique([platform, meetingId, subMeetingId])
+  // Use upsert with the unique constraint directly
   return prisma.meeting.upsert({
     where: {
       platform_meetingId_subMeetingId: {
@@ -262,6 +263,7 @@ async function createMeeting(
       },
     },
     update: {
+      ...restConfig,
       hostId: hostPlatformUserId,
       updatedAt: new Date(),
     },
@@ -278,6 +280,7 @@ async function createMeeting(
       recordingStatus: ProcessingStatus.COMPLETED,
       processingStatus: ProcessingStatus.COMPLETED,
       timezone: 'Asia/Shanghai',
+      subMeetingId: '', // Explicitly set subMeetingId
     },
   });
 }
