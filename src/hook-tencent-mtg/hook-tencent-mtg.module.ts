@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-01-03 10:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-25 06:29:59
+ * @LastEditTime: 2025-12-29 02:42:24
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/hook-tencent-mtg.module.ts
  * @Description: 腾讯会议模块，处理腾讯会议相关的Webhook事件
  *
@@ -29,6 +29,12 @@ import { RecordingContentService } from './services/recording-content.service';
 import { MeetingRepository } from '../meeting/repositories/meeting.repository';
 import { PlatformUserRepository } from '../user-platform/repositories/platform-user.repository';
 import { TencentMeetingRepository } from './repositories/tencent-meeting.repository';
+import { TranscriptRepository } from './repositories/transcript.repository';
+import { ParagraphRepository } from './repositories/paragraph.repository';
+import { SentenceRepository } from './repositories/sentence.repository';
+import { WordRepository } from './repositories/word.repository';
+import { SpeakerService } from './services/speaker.service';
+import { TranscriptBatchProcessor } from './services/transcript-batch-processor.service';
 
 import {
   TencentUrlVerificationPipe,
@@ -41,6 +47,7 @@ import {
   RecordingCompletedHandler,
   MeetingParticipantJoinedHandler,
   SmartFullsummaryHandler,
+  SmartTranscriptsHandler,
 } from './handlers';
 
 @Module({
@@ -61,14 +68,21 @@ import {
     TranscriptService,
     TranscriptFormatterService,
     RecordingContentService,
+    SpeakerService,
+    TranscriptBatchProcessor,
     MeetingStartedHandler,
     MeetingEndedHandler,
     RecordingCompletedHandler,
     MeetingParticipantJoinedHandler,
     SmartFullsummaryHandler,
+    SmartTranscriptsHandler,
     PlatformUserRepository,
     MeetingRepository,
     TencentMeetingRepository,
+    TranscriptRepository,
+    ParagraphRepository,
+    SentenceRepository,
+    WordRepository,
     TencentUrlVerificationPipe,
     TencentWebhookDecryptionPipe,
     // 提供 BaseEventHandler 数组的依赖注入配置
@@ -80,12 +94,14 @@ import {
         recordingCompletedHandler: RecordingCompletedHandler,
         meetingParticipantJoinedHandler: MeetingParticipantJoinedHandler,
         smartFullsummaryHandler: SmartFullsummaryHandler,
+        smartTranscriptsHandler: SmartTranscriptsHandler,
       ) => [
         meetingStartedHandler,
         meetingEndedHandler,
         recordingCompletedHandler,
         meetingParticipantJoinedHandler,
         smartFullsummaryHandler,
+        smartTranscriptsHandler,
       ],
       inject: [
         MeetingStartedHandler,
@@ -93,6 +109,7 @@ import {
         RecordingCompletedHandler,
         MeetingParticipantJoinedHandler,
         SmartFullsummaryHandler,
+        SmartTranscriptsHandler,
       ],
     },
   ],

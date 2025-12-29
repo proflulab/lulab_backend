@@ -112,4 +112,5 @@ export interface TencentEventMeetingInfo {
 // 录制文件信息
 export interface TencentRecordingFile {
   record_file_id: string; // 录制文件ID
+  lang?: string; // 转写语言
 }

@@ -280,7 +280,7 @@ async function createMeeting(
       recordingStatus: ProcessingStatus.COMPLETED,
       processingStatus: ProcessingStatus.COMPLETED,
       timezone: 'Asia/Shanghai',
-      subMeetingId: '', // Explicitly set subMeetingId
+      subMeetingId: '__ROOT__', // Explicitly set subMeetingId
     },
   });
 }
@@ -371,8 +371,8 @@ async function createMeetingSummary(
       meetingId,
       ...summaryData,
       transcriptId,
-      createdBy: creatorPlatformUserId, // MUST be PlatformUser.id
-      processingTime: 30000, // 30秒
+      createdId: creatorPlatformUserId,
+      processingTime: 30000,
       status: ProcessingStatus.COMPLETED,
     },
   });
