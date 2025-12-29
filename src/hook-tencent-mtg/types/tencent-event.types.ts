@@ -41,6 +41,7 @@ export enum TencentMeetingEventType {
   RECORDING_START = 'recording.start',
   RECORDING_END = 'recording.end',
   RECORDING_READY = 'recording.ready',
+  SMART_FULLSUMMARY = 'smart.fullsummary', // 智能摘要完成事件
   MEETING_UPDATE = 'meeting.update', // 会议更新事件
   MEETING_DELETE = 'meeting.delete', // 会议删除事件
   SUB_MEETING_START = 'sub_meeting.start', // 子会议开始（周期性会议）
