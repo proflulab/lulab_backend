@@ -48,6 +48,7 @@ import {
   MeetingParticipantJoinedHandler,
   SmartFullsummaryHandler,
   SmartTranscriptsHandler,
+  SmartMinutesHandler,
 } from './handlers';
 
 @Module({
@@ -76,6 +77,7 @@ import {
     MeetingParticipantJoinedHandler,
     SmartFullsummaryHandler,
     SmartTranscriptsHandler,
+    SmartMinutesHandler,
     PlatformUserRepository,
     MeetingRepository,
     TencentMeetingRepository,
@@ -95,6 +97,7 @@ import {
         meetingParticipantJoinedHandler: MeetingParticipantJoinedHandler,
         smartFullsummaryHandler: SmartFullsummaryHandler,
         smartTranscriptsHandler: SmartTranscriptsHandler,
+        smartMinutesHandler: SmartMinutesHandler,
       ) => [
         meetingStartedHandler,
         meetingEndedHandler,
@@ -102,6 +105,7 @@ import {
         meetingParticipantJoinedHandler,
         smartFullsummaryHandler,
         smartTranscriptsHandler,
+        smartMinutesHandler,
       ],
       inject: [
         MeetingStartedHandler,
@@ -110,6 +114,7 @@ import {
         MeetingParticipantJoinedHandler,
         SmartFullsummaryHandler,
         SmartTranscriptsHandler,
+        SmartMinutesHandler,
       ],
     },
   ],
