@@ -1,10 +1,10 @@
 /*
  * @Author: 杨仕明 shiming.y@qq.com
- * @Date: 2025-12-25 05:15:00
+ * @Date: 2025-12-30 00:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-30 20:21:23
- * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/smart-fullsummary.handler.ts
- * @Description: 智能摘要完成事件处理器
+ * @LastEditTime: 2025-12-30 19:59:00
+ * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/smart-minutes.handler.ts
+ * @Description: 智能纪要完成事件处理器
  *
  * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
  */
@@ -24,12 +24,11 @@ import {
 } from '@prisma/client';
 
 /**
- * 智能摘要完成事件处理器
+ * 智能纪要完成事件处理器
  */
-
 @Injectable()
-export class SmartFullsummaryHandler extends BaseEventHandler {
-  private readonly SUPPORTED_EVENT = 'smart.fullsummary';
+export class SmartMinutesHandler extends BaseEventHandler {
+  private readonly SUPPORTED_EVENT = 'smart.minutes';
 
   constructor(
     private readonly recordingContentService: RecordingContentService,
@@ -63,7 +62,7 @@ export class SmartFullsummaryHandler extends BaseEventHandler {
         );
       } catch (error: unknown) {
         this.logger.error(
-          `处理智能摘要失败: ${recordFileId}`,
+          `处理智能纪要失败: ${recordFileId}`,
           error instanceof Error ? error.stack : undefined,
         );
       }
@@ -103,17 +102,19 @@ export class SmartFullsummaryHandler extends BaseEventHandler {
 
     this.logger.log(`录制记录已创建/更新: ${recording.id}`);
 
-    const summaryContent = await this.recordingContentService.fetchSmartSummary(
-      recordFileId,
-      userId,
-    );
+    const { minutes, todo } =
+      await this.recordingContentService.fetchMeetingMinutes(
+        recordFileId,
+        userId,
+      );
 
     const processingTime = Date.now() - startTime;
 
     await this.meetingSummaryRepository.upsertMeetingSummary({
       meetingId: meeting.id,
       recordingId: recording.id,
-      content: summaryContent,
+      aiMinutes: minutes ? { content: minutes } : undefined,
+      actionItems: todo ? { items: todo } : undefined,
       generatedBy: GenerationMethod.AI,
       aiModel: 'tencent-meeting-ai',
       status: ProcessingStatus.COMPLETED,
@@ -124,7 +125,7 @@ export class SmartFullsummaryHandler extends BaseEventHandler {
     });
 
     this.logger.log(
-      `智能摘要处理完成: ${recordFileId}, 耗时: ${processingTime}ms`,
+      `智能纪要处理完成: ${recordFileId}, 耗时: ${processingTime}ms`,
     );
   }
 }

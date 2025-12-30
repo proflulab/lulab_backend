@@ -1,3 +1,13 @@
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2025-12-30 06:21:51
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2025-12-30 20:22:47
+ * @FilePath: /lulab_backend/src/hook-tencent-mtg/repositories/paragraph.repository.ts
+ * @Description:
+ *
+ * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
+ */
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { PrismaTransaction } from '@/hook-tencent-mtg/types';

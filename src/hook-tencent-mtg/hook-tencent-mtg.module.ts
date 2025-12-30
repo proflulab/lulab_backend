@@ -28,11 +28,14 @@ import { TranscriptFormatterService } from './services/transcript-formatter.serv
 import { RecordingContentService } from './services/recording-content.service';
 import { MeetingRepository } from '../meeting/repositories/meeting.repository';
 import { PlatformUserRepository } from '../user-platform/repositories/platform-user.repository';
-import { TencentMeetingRepository } from './repositories/tencent-meeting.repository';
-import { TranscriptRepository } from './repositories/transcript.repository';
-import { ParagraphRepository } from './repositories/paragraph.repository';
-import { SentenceRepository } from './repositories/sentence.repository';
-import { WordRepository } from './repositories/word.repository';
+import {
+  TencentMeetingRepository,
+  MeetingSummaryRepository,
+  TranscriptRepository,
+  ParagraphRepository,
+  SentenceRepository,
+  WordRepository,
+} from './repositories';
 import { SpeakerService } from './services/speaker.service';
 import { TranscriptBatchProcessor } from './services/transcript-batch-processor.service';
 
@@ -48,6 +51,7 @@ import {
   MeetingParticipantJoinedHandler,
   SmartFullsummaryHandler,
   SmartTranscriptsHandler,
+  SmartMinutesHandler,
 } from './handlers';
 
 @Module({
@@ -76,9 +80,11 @@ import {
     MeetingParticipantJoinedHandler,
     SmartFullsummaryHandler,
     SmartTranscriptsHandler,
+    SmartMinutesHandler,
     PlatformUserRepository,
     MeetingRepository,
     TencentMeetingRepository,
+    MeetingSummaryRepository,
     TranscriptRepository,
     ParagraphRepository,
     SentenceRepository,
@@ -95,6 +101,7 @@ import {
         meetingParticipantJoinedHandler: MeetingParticipantJoinedHandler,
         smartFullsummaryHandler: SmartFullsummaryHandler,
         smartTranscriptsHandler: SmartTranscriptsHandler,
+        smartMinutesHandler: SmartMinutesHandler,
       ) => [
         meetingStartedHandler,
         meetingEndedHandler,
@@ -102,6 +109,7 @@ import {
         meetingParticipantJoinedHandler,
         smartFullsummaryHandler,
         smartTranscriptsHandler,
+        smartMinutesHandler,
       ],
       inject: [
         MeetingStartedHandler,
@@ -110,6 +118,7 @@ import {
         MeetingParticipantJoinedHandler,
         SmartFullsummaryHandler,
         SmartTranscriptsHandler,
+        SmartMinutesHandler,
       ],
     },
   ],

@@ -151,7 +151,7 @@ export class RecordingContentService {
    * @param userId 用户ID
    * @returns 包含纪要和待办事项的对象
    */
-  private async fetchMeetingMinutes(
+  async fetchMeetingMinutes(
     recordFileId: string,
     userId: string,
   ): Promise<{ minutes: string; todo: string }> {

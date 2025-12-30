@@ -22,3 +22,4 @@ export { MeetingParticipantJoinedHandler } from './events/meeting-participant-jo
 export { RecordingCompletedHandler } from './events/recording-completed.handler';
 export { SmartFullsummaryHandler } from './events/smart-fullsummary.handler';
 export { SmartTranscriptsHandler } from './events/smart-transcripts.handler';
+export { SmartMinutesHandler } from './events/smart-minutes.handler';
