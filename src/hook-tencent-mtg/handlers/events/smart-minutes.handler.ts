@@ -14,6 +14,7 @@ import { BaseEventHandler } from '../base/base-event.handler';
 import { TencentEventPayload } from '../../types';
 import { RecordingContentService } from '../../services/recording-content.service';
 import { TencentMeetingRepository } from '../../repositories/tencent-meeting.repository';
+import { MeetingSummaryRepository } from '../../repositories/meeting-summary.repository';
 import {
   RecordingSource,
   RecordingStatus,
@@ -32,6 +33,7 @@ export class SmartMinutesHandler extends BaseEventHandler {
   constructor(
     private readonly recordingContentService: RecordingContentService,
     private readonly tencentMeetingRepository: TencentMeetingRepository,
+    private readonly meetingSummaryRepository: MeetingSummaryRepository,
   ) {
     super();
   }
@@ -108,7 +110,7 @@ export class SmartMinutesHandler extends BaseEventHandler {
 
     const processingTime = Date.now() - startTime;
 
-    await this.tencentMeetingRepository.upsertMeetingSummary({
+    await this.meetingSummaryRepository.upsertMeetingSummary({
       meetingId: meeting.id,
       recordingId: recording.id,
       aiMinutes: minutes ? { content: minutes } : undefined,

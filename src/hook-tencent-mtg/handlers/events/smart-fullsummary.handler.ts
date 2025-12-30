@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-25 05:15:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-27 03:45:50
+ * @LastEditTime: 2025-12-30 20:21:23
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/smart-fullsummary.handler.ts
  * @Description: 智能摘要完成事件处理器
  *
@@ -14,6 +14,7 @@ import { BaseEventHandler } from '../base/base-event.handler';
 import { TencentEventPayload } from '../../types';
 import { RecordingContentService } from '../../services/recording-content.service';
 import { TencentMeetingRepository } from '../../repositories/tencent-meeting.repository';
+import { MeetingSummaryRepository } from '../../repositories/meeting-summary.repository';
 import {
   RecordingSource,
   RecordingStatus,
@@ -33,6 +34,7 @@ export class SmartFullsummaryHandler extends BaseEventHandler {
   constructor(
     private readonly recordingContentService: RecordingContentService,
     private readonly tencentMeetingRepository: TencentMeetingRepository,
+    private readonly meetingSummaryRepository: MeetingSummaryRepository,
   ) {
     super();
   }
@@ -108,7 +110,7 @@ export class SmartFullsummaryHandler extends BaseEventHandler {
 
     const processingTime = Date.now() - startTime;
 
-    await this.tencentMeetingRepository.createMeetingSummary({
+    await this.meetingSummaryRepository.upsertMeetingSummary({
       meetingId: meeting.id,
       recordingId: recording.id,
       content: summaryContent,
