@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-06 05:06:37
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-23 02:01:59
+ * @LastEditTime: 2025-12-30 19:14:29
  * @FilePath: /lulab_backend/src/app.module.ts
  * @Description: Application module that defines the application's entry point and dependency injection
  *
@@ -31,6 +31,7 @@ import { OpenaiModule } from './integrations/openai/openai.module';
 import { BullModule } from '@nestjs/bullmq';
 import { redisConfig } from './configs';
 import { TasksModule } from './task/tasks.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { TasksModule } from './task/tasks.module';
     }),
     TasksModule,
     ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot(),
     PrismaModule,
     MailModule,
     AuthModule,
