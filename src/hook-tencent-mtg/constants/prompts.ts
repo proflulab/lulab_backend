@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-24 00:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-24 00:00:00
+ * @LastEditTime: 2025-12-31 20:33:24
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/constants/prompts.ts
  * @Description: 提示词常量
  *
@@ -51,6 +51,7 @@ ${transcript}
 2. 与该参会者相关的重要讨论
 3. 该参会者需要关注的待办事项
 4. 后续行动建议
+5. 其他重要内容
 
 请用中文回答，保持简洁专业。
   `.trim();
