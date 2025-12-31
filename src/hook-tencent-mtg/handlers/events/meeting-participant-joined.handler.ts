@@ -39,15 +39,15 @@ export class MeetingParticipantJoinedHandler extends BaseEventHandler {
 
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
 
-    // 使用 Promise.allSettled 并行执行四个操作
-    await Promise.allSettled([
-      // (Prisma)创建或更新会议参与者信息
-      this.meetingDatabaseService.upsertPlatformUser(operator),
+    if (!meeting_info || !operator) {
+      this.logger.warn('Missing required meeting_info or operator in payload');
+      return;
+    }
 
-      // (Bitable)创建或更新会议创建者信息
+    await Promise.allSettled([
+      this.meetingDatabaseService.upsertPlatformUser(operator),
       this.meetingBitableService.upsertMeetingUserRecord(meeting_info.creator),
       this.meetingBitableService.upsertMeetingUserRecord(operator),
-      // (Bitable)更新会议记录的参与者列表
       this.meetingBitableService.updateMeetingParticipants(
         meeting_info,
         operator,

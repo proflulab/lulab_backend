@@ -33,6 +33,12 @@ export class MeetingBitableService {
   async upsertMeetingUserRecord(
     user: TencentEventOperator | TencentMeetingCreator,
   ): Promise<string> {
+    if (!user.uuid) {
+      throw new Error(
+        `User UUID is required but not provided for user ${user.user_name || 'unknown'}`,
+      );
+    }
+
     try {
       const result = await this.meetingUserBitable.upsertMeetingUserRecord({
         uuid: user.uuid,
@@ -155,7 +161,7 @@ export class MeetingBitableService {
       // 查找操作者记录ID
       let operator_id: string | undefined;
 
-      if (operator) {
+      if (operator && operator.uuid) {
         const userRecord = await this.findMeetingUserByUuid(operator.uuid);
         operator_id = userRecord.data?.items?.[0]?.record_id;
 

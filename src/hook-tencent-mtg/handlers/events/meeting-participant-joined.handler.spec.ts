@@ -3,7 +3,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-23 04:23:42
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-24 05:01:01
+ * @LastEditTime: 2025-12-31 12:07:06
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/meeting-participant-joined.handler.spec.ts
  * @Description:
  *
@@ -92,7 +92,7 @@ describe('MeetingParticipantJoinedHandler', () => {
       payload.operator,
     );
     expect(meetingRecordService.upsertMeetingUserRecord).toHaveBeenCalledWith(
-      payload.meeting_info.creator,
+      payload.meeting_info?.creator,
     );
     expect(
       meetingRecordService.updateMeetingParticipants,
@@ -132,7 +132,52 @@ describe('MeetingParticipantJoinedHandler', () => {
       new Error('Service error'),
     );
 
-    // Should not throw error due to Promise.allSettled
     await expect(handler.handle(payload, 1)).resolves.not.toThrow();
+  });
+
+  it('should handle missing meeting_info gracefully', async () => {
+    const payload: TencentEventPayload = {
+      operate_time: Date.now(),
+      operator: {
+        userid: 'operator123',
+        uuid: 'operator-uuid',
+        user_name: 'Test Operator',
+        instance_id: '1',
+      },
+    };
+
+    await handler.handle(payload, 1);
+
+    expect(meetingRecordService.upsertMeetingUserRecord).not.toHaveBeenCalled();
+    expect(
+      meetingRecordService.updateMeetingParticipants,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('should handle missing operator gracefully', async () => {
+    const payload: TencentEventPayload = {
+      operate_time: Date.now(),
+      meeting_info: {
+        meeting_id: 'meeting123',
+        sub_meeting_id: 'sub123',
+        meeting_code: '123456',
+        subject: 'Test Meeting',
+        start_time: Date.now() / 1000,
+        end_time: Date.now() / 1000 + 3600,
+        meeting_type: 0,
+        creator: {
+          userid: 'creator123',
+          uuid: 'creator-uuid',
+          user_name: 'Test Creator',
+        },
+      },
+    };
+
+    await handler.handle(payload, 1);
+
+    expect(meetingRecordService.upsertMeetingUserRecord).not.toHaveBeenCalled();
+    expect(
+      meetingRecordService.updateMeetingParticipants,
+    ).not.toHaveBeenCalled();
   });
 });

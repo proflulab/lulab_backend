@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-27
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-29 04:09:40
+ * @LastEditTime: 2025-12-31 12:00:05
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/smart-transcripts.handler.ts
  * @Description: 录制转写生成事件处理器
  *
@@ -48,6 +48,12 @@ export class SmartTranscriptsHandler extends BaseEventHandler {
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
 
     const { meeting_info, recording_files = [] } = payload;
+
+    if (!meeting_info) {
+      this.logger.warn('Missing required meeting_info in payload');
+      return;
+    }
+
     const { meeting_id, sub_meeting_id } = meeting_info;
     const creatorUserId = meeting_info.creator.userid || '';
 

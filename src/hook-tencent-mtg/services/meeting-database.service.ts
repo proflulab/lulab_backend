@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-24
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-24 04:58:37
+ * @LastEditTime: 2025-12-31 12:01:27
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/meeting-database.service.ts
  * @Description: 会议数据库服务，处理会议记录的创建和更新
  *
@@ -37,6 +37,11 @@ export class MeetingDatabaseService {
    */
   async upsertMeetingRecord(payload: TencentEventPayload): Promise<void> {
     const { meeting_info } = payload;
+
+    if (!meeting_info) {
+      throw new Error('Meeting info is required but not provided');
+    }
+
     const { creator } = meeting_info;
 
     const meetingType = TencentEventUtils.convertMeetingType(
@@ -80,6 +85,12 @@ export class MeetingDatabaseService {
    * @param user 用户信息
    */
   async upsertPlatformUser(user: TencentEventOperator | TencentMeetingCreator) {
+    if (!user.uuid) {
+      throw new Error(
+        `User UUID is required but not provided for user ${user.user_name || 'unknown'}`,
+      );
+    }
+
     try {
       await this.platformUserRepository.upsertPlatformUser(
         {

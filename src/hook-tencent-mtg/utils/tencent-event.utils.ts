@@ -1,13 +1,13 @@
 import {
-  TencentEventMeetingInfo,
   TencentMeetingCreateFrom,
   TencentMeetingType,
   TencentInstanceType,
   TencentMeetingIdType,
-} from '../types/tencent-base.types';
+  TencentMeetingEventType,
+} from '../enums/tencent-base.enum';
 import {
   TencentMeetingEvent,
-  TencentMeetingEventType,
+  TencentEventMeetingInfo,
 } from '../types/tencent-event.types';
 import { MeetingType } from '@prisma/client';
 
@@ -177,20 +177,28 @@ export class TencentEventUtils {
     const eventType = event.event as TencentMeetingEventType;
     switch (eventType) {
       case TencentMeetingEventType.MEETING_START:
-        return `会议「${meetingInfo.subject}」开始，由 ${operator.user_name} 触发`;
+        if (!meetingInfo || !operator) return '会议开始';
+        return `会议「${meetingInfo.subject}」开始，由 ${operator.user_name || '未知用户'} 触发`;
       case TencentMeetingEventType.MEETING_END:
-        return `会议「${meetingInfo.subject}」结束，由 ${operator.user_name} 触发`;
+        if (!meetingInfo || !operator) return '会议结束';
+        return `会议「${meetingInfo.subject}」结束，由 ${operator.user_name || '未知用户'} 触发`;
       case TencentMeetingEventType.MEETING_JOIN:
-        return `${operator.user_name} 加入会议「${meetingInfo.subject}」`;
+        if (!meetingInfo || !operator) return '用户加入会议';
+        return `${operator.user_name || '未知用户'} 加入会议「${meetingInfo.subject}」`;
       case TencentMeetingEventType.MEETING_LEAVE:
-        return `${operator.user_name} 离开会议「${meetingInfo.subject}」`;
+        if (!meetingInfo || !operator) return '用户离开会议';
+        return `${operator.user_name || '未知用户'} 离开会议「${meetingInfo.subject}」`;
       case TencentMeetingEventType.RECORDING_START:
+        if (!meetingInfo) return '会议开始录制';
         return `会议「${meetingInfo.subject}」开始录制`;
       case TencentMeetingEventType.RECORDING_END:
+        if (!meetingInfo) return '会议结束录制';
         return `会议「${meetingInfo.subject}」结束录制`;
       case TencentMeetingEventType.RECORDING_READY:
+        if (!meetingInfo) return '会议录制文件已就绪';
         return `会议「${meetingInfo.subject}」录制文件已就绪`;
       default:
+        if (!meetingInfo) return `${event.event}事件`;
         return `会议「${meetingInfo.subject}」${event.event}事件`;
     }
   }

@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-30 00:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-30 19:59:00
+ * @LastEditTime: 2025-12-31 12:02:26
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/smart-minutes.handler.ts
  * @Description: 智能纪要完成事件处理器
  *
@@ -46,6 +46,11 @@ export class SmartMinutesHandler extends BaseEventHandler {
     const { meeting_info, recording_files = [] } = payload;
 
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
+
+    if (!meeting_info) {
+      this.logger.warn('Missing required meeting_info in payload');
+      return;
+    }
 
     const { meeting_id, sub_meeting_id } = meeting_info;
     const creatorUserId = meeting_info.creator.userid || '';

@@ -48,6 +48,11 @@ export class SmartFullsummaryHandler extends BaseEventHandler {
 
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
 
+    if (!meeting_info) {
+      this.logger.warn('Missing required meeting_info in payload');
+      return;
+    }
+
     const { meeting_id, sub_meeting_id } = meeting_info;
     const creatorUserId = meeting_info.creator.userid || '';
 
