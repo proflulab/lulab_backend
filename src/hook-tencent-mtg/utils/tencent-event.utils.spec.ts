@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-19 19:25:35
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-19 19:25:37
+ * @LastEditTime: 2025-12-31 11:37:02
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/utils/tencent-event.utils.spec.ts
  * @Description:
  *
@@ -11,7 +11,7 @@
 
 import { TencentEventUtils } from './tencent-event.utils';
 import { MeetingType } from '@prisma/client';
-import { TencentMeetingType } from '../types/tencent-base.types';
+import { TencentMeetingType } from '../enums/tencent-base.enum';
 
 describe('TencentEventUtils', () => {
   describe('convertMeetingType', () => {
