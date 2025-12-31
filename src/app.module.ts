@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-06 05:06:37
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-30 10:54:06
+ * @LastEditTime: 2026-01-01 05:53:34
  * @FilePath: /lulab_backend/src/app.module.ts
  * @Description: Application module that defines the application's entry point and dependency injection
  *
@@ -63,7 +63,23 @@ import 'winston-daily-rotate-file';
             dirname: 'daily-log',
             filename: 'log-%DATE%.log',
             datePattern: 'YYYY-MM-DD',
-            maxSize: '10k',
+            maxSize: '10m',
+            format: winston.format.combine(
+              winston.format.timestamp(),
+              winston.format.ms(),
+              winston.format.printf((info) => {
+                const { timestamp, level, context, message, ms } = info;
+                const logData: Record<string, unknown> = {
+                  pid: process.pid,
+                  timestamp,
+                  level,
+                  context,
+                  message,
+                };
+                if (ms) logData.ms = ms;
+                return JSON.stringify(logData);
+              }),
+            ),
           }),
           // new winston.transports.File({
           //   filename: `${process.cwd()}/log`,
