@@ -2,8 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import {
   TencentEventOperator,
   TencentEventMeetingInfo,
-  TencentMeetingCreator,
-} from '../types';
+} from '../types/tencent-event.types';
 import { TencentEventUtils } from '../utils/tencent-event.utils';
 import {
   MeetingBitableRepository,
@@ -30,9 +29,7 @@ export class MeetingBitableService {
    * 创建或更新会议用户记录
    * @param user 用户信息
    */
-  async upsertMeetingUserRecord(
-    user: TencentEventOperator | TencentMeetingCreator,
-  ): Promise<string> {
+  async upsertMeetingUserRecord(user: TencentEventOperator): Promise<string> {
     if (!user.uuid) {
       throw new Error(
         `User UUID is required but not provided for user ${user.user_name || 'unknown'}`,

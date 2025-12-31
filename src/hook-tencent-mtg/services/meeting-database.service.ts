@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-24
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-31 12:01:27
+ * @LastEditTime: 2025-12-31 18:01:23
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/meeting-database.service.ts
  * @Description: 会议数据库服务，处理会议记录的创建和更新
  *
@@ -11,10 +11,9 @@
 
 import { Injectable } from '@nestjs/common';
 import {
-  TencentEventPayload,
-  TencentEventOperator,
-  TencentMeetingCreator,
-} from '../types';
+  TencentMeetingInfoPayload,
+  Meetuser,
+} from '../types/tencent-event.types';
 import { TencentEventUtils } from '../utils/tencent-event.utils';
 import { TencentMeetingRepository } from '../repositories/tencent-meeting.repository';
 import { PlatformUserRepository } from '@/user-platform/repositories/platform-user.repository';
@@ -35,7 +34,7 @@ export class MeetingDatabaseService {
    * 创建或更新会议记录
    * @param payload 腾讯会议事件载荷
    */
-  async upsertMeetingRecord(payload: TencentEventPayload): Promise<void> {
+  async upsertMeetingRecord(payload: TencentMeetingInfoPayload): Promise<void> {
     const { meeting_info } = payload;
 
     if (!meeting_info) {
@@ -84,7 +83,7 @@ export class MeetingDatabaseService {
    * 创建或更新平台用户记录
    * @param user 用户信息
    */
-  async upsertPlatformUser(user: TencentEventOperator | TencentMeetingCreator) {
+  async upsertPlatformUser(user: Meetuser) {
     if (!user.uuid) {
       throw new Error(
         `User UUID is required but not provided for user ${user.user_name || 'unknown'}`,
@@ -104,7 +103,6 @@ export class MeetingDatabaseService {
           userName: user.user_name,
           platformData: {
             instance_id: user.instance_id,
-            open_id: user.open_id,
             ms_open_id: user.ms_open_id,
           },
         },
@@ -113,7 +111,6 @@ export class MeetingDatabaseService {
           userName: user.user_name,
           platformData: {
             instance_id: user.instance_id,
-            open_id: user.open_id,
             ms_open_id: user.ms_open_id,
           },
         },

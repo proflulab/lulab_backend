@@ -3,7 +3,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-23 04:23:42
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-31 12:07:06
+ * @LastEditTime: 2025-12-31 19:22:18
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/meeting-participant-joined.handler.spec.ts
  * @Description:
  *
@@ -14,7 +14,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MeetingParticipantJoinedHandler } from './meeting-participant-joined.handler';
 import { MeetingBitableService } from '../../services/meeting-bitable.service';
 import { MeetingDatabaseService } from '../../services/meeting-database.service';
-import { TencentEventPayload } from '../../types/tencent-event.types';
+import { ParticipantJoinedPayload } from '../../types';
 
 describe('MeetingParticipantJoinedHandler', () => {
   let handler: MeetingParticipantJoinedHandler;
@@ -56,13 +56,14 @@ describe('MeetingParticipantJoinedHandler', () => {
   });
 
   it('should handle meeting participant joined event', async () => {
-    const payload: TencentEventPayload = {
+    const payload: ParticipantJoinedPayload = {
       operate_time: Date.now(),
       operator: {
         userid: 'operator123',
         uuid: 'operator-uuid',
         user_name: 'Test Operator',
         instance_id: '1',
+        ms_open_id: 'operator-ms-open-id',
       },
       meeting_info: {
         meeting_id: 'meeting123',
@@ -76,6 +77,8 @@ describe('MeetingParticipantJoinedHandler', () => {
           userid: 'creator123',
           uuid: 'creator-uuid',
           user_name: 'Test Creator',
+          instance_id: '1',
+          ms_open_id: 'creator-ms-open-id',
         },
       },
     };
@@ -104,13 +107,14 @@ describe('MeetingParticipantJoinedHandler', () => {
   });
 
   it('should handle errors gracefully', async () => {
-    const payload: TencentEventPayload = {
+    const payload: ParticipantJoinedPayload = {
       operate_time: Date.now(),
       operator: {
         userid: 'operator123',
         uuid: 'operator-uuid',
         user_name: 'Test Operator',
         instance_id: '1',
+        ms_open_id: 'operator-ms-open-id',
       },
       meeting_info: {
         meeting_id: 'meeting123',
@@ -124,6 +128,8 @@ describe('MeetingParticipantJoinedHandler', () => {
           userid: 'creator123',
           uuid: 'creator-uuid',
           user_name: 'Test Creator',
+          instance_id: '1',
+          ms_open_id: 'creator-ms-open-id',
         },
       },
     };
@@ -136,15 +142,16 @@ describe('MeetingParticipantJoinedHandler', () => {
   });
 
   it('should handle missing meeting_info gracefully', async () => {
-    const payload: TencentEventPayload = {
+    const payload = {
       operate_time: Date.now(),
       operator: {
         userid: 'operator123',
         uuid: 'operator-uuid',
         user_name: 'Test Operator',
         instance_id: '1',
+        ms_open_id: 'operator-ms-open-id',
       },
-    };
+    } as ParticipantJoinedPayload;
 
     await handler.handle(payload, 1);
 
@@ -155,7 +162,7 @@ describe('MeetingParticipantJoinedHandler', () => {
   });
 
   it('should handle missing operator gracefully', async () => {
-    const payload: TencentEventPayload = {
+    const payload = {
       operate_time: Date.now(),
       meeting_info: {
         meeting_id: 'meeting123',
@@ -169,9 +176,11 @@ describe('MeetingParticipantJoinedHandler', () => {
           userid: 'creator123',
           uuid: 'creator-uuid',
           user_name: 'Test Creator',
+          instance_id: '1',
+          ms_open_id: 'creator-ms-open-id',
         },
       },
-    };
+    } as ParticipantJoinedPayload;
 
     await handler.handle(payload, 1);
 

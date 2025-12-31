@@ -42,13 +42,23 @@ export abstract class BaseEventHandler {
     payload: TencentEventPayload,
     index: number,
   ): void {
-    this.logger.log(`Processing ${eventName} event [${index}]`, {
+    const logData: Record<string, unknown> = {
       event: eventName,
       index,
-      meetingId: payload.meeting_info?.meeting_id,
-      operatorId: payload.operator?.userid,
       operateTime: new Date(payload.operate_time).toISOString(),
       timestamp: new Date().toISOString(),
-    });
+    };
+
+    if ('meeting_info' in payload && payload.meeting_info) {
+      logData.meetingId = payload.meeting_info.meeting_id;
+    }
+
+    if ('operator' in payload && payload.operator) {
+      if ('userid' in payload.operator) {
+        logData.operatorId = payload.operator.userid;
+      }
+    }
+
+    this.logger.log(`Processing ${eventName} event [${index}]`, logData);
   }
 }

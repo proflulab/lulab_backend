@@ -11,7 +11,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { BaseEventHandler } from '../base/base-event.handler';
-import { TencentEventPayload } from '../../types';
+import { MeetingEndPayload } from '../../types/tencent-event.types';
 import { MeetingBitableService } from '../../services/meeting-bitable.service';
 import { MeetingDatabaseService } from '../../services/meeting-database.service';
 
@@ -33,7 +33,7 @@ export class MeetingEndedHandler extends BaseEventHandler {
     return event === this.SUPPORTED_EVENT;
   }
 
-  async handle(payload: TencentEventPayload, index: number): Promise<void> {
+  async handle(payload: MeetingEndPayload, index: number): Promise<void> {
     const { meeting_info, operator } = payload;
 
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);

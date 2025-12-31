@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-23 09:15:35
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-31 11:58:54
+ * @LastEditTime: 2025-12-31 17:53:44
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/meeting-started.handler.ts
  * @Description:
  *
@@ -11,7 +11,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { BaseEventHandler } from '../base/base-event.handler';
-import { TencentEventPayload } from '../../types';
+import { StartedPayload } from '../../types/tencent-event.types';
 import { MeetingBitableService } from '../../services/meeting-bitable.service';
 import { MeetingDatabaseService } from '../../services/meeting-database.service';
 
@@ -33,7 +33,7 @@ export class MeetingStartedHandler extends BaseEventHandler {
     return event === this.SUPPORTED_EVENT;
   }
 
-  async handle(payload: TencentEventPayload, index: number): Promise<void> {
+  async handle(payload: StartedPayload, index: number): Promise<void> {
     const { meeting_info, operator } = payload;
 
     this.logEventProcessing(this.SUPPORTED_EVENT, payload, index);
