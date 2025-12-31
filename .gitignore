@@ -47,6 +47,7 @@ lerna-debug.log*
 # temp directory
 .temp
 .tmp
+/temp-data
 
 # Database (if using local files)
 *.db
