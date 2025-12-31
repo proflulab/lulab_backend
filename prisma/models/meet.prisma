@@ -85,6 +85,7 @@ model MeetingRecording {
   files       MeetingRecordingFile[]
   transcripts Transcript[]
   summaries   MeetingSummary[]
+  participantSummaries ParticipantSummary[] @relation("RecordingParticipantSummaries")
 
   // 系统字段及时间字段
   startAt   DateTime? @map("start_at") @db.Timestamptz(6)

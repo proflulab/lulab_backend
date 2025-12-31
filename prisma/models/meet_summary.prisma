@@ -12,6 +12,9 @@ model ParticipantSummary {
   meetingId String?  @map("meeting_id") // 对应 Meeting 的 ID
   meeting   Meeting? @relation("MeetingParticipantSummaries", fields: [meetingId], references: [id], onDelete: SetNull)
 
+  meetingRecordingId String?             @map("meeting_recording_id")
+  meetingRecording   MeetingRecording?   @relation("RecordingParticipantSummaries", fields: [meetingRecordingId], references: [id], onDelete: SetNull)
+
   userName    String   @map("user_name") @db.VarChar(100) // 参会人信息 
   partSummary String   @map("part_summary") @db.Text // 总结内容
   keywords    String[] @map("keywords") // 关键词标签
