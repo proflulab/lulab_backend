@@ -39,9 +39,10 @@ model Meeting {
   metadata Json @default("{}") @db.JsonB // 平台特定的元数据
 
   // 关联关系
-  participants MeetingParticipant[] // 参会记录
-  recordings   MeetingRecording[] // 关联的录制
-  summaries    MeetingSummary[] // 关联的总结记录
+  participants         MeetingParticipant[] // 参会记录
+  recordings           MeetingRecording[] // 关联的录制
+  summaries            MeetingSummary[] // 关联的总结记录
+  participantSummaries ParticipantSummary[] @relation("MeetingParticipantSummaries") // 参与者总结
 
   // 系统字段及时间
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -84,6 +85,7 @@ model MeetingRecording {
   files       MeetingRecordingFile[]
   transcripts Transcript[]
   summaries   MeetingSummary[]
+  participantSummaries ParticipantSummary[] @relation("RecordingParticipantSummaries")
 
   // 系统字段及时间字段
   startAt   DateTime? @map("start_at") @db.Timestamptz(6)
@@ -267,13 +269,6 @@ enum RecordingFileType {
   AUDIO // 音频
   TRANSCRIPT // 转录文本
   CHAT // 聊天记录
-}
-
-// 生成方式枚举
-enum GenerationMethod {
-  AI // AI生成
-  MANUAL // 手动创建
-  HYBRID // 混合方式
 }
 
 // 会议平台枚举
