@@ -42,7 +42,7 @@ export class PlatformUserRepository {
     where: { platform: Platform; platformUuid: string },
     create: Omit<
       PlatformUserCreateInput,
-      'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
+      'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'platform'
     >,
     update: Partial<
       Omit<
@@ -89,6 +89,18 @@ export class PlatformUserRepository {
       where: {
         platform,
         platformUserId,
+      },
+    });
+  }
+
+  async findPlatformUserByPlatformAndUuid(
+    platform: Platform,
+    platformUuid: string,
+  ): Promise<PlatformUser | null> {
+    return this.prisma.platformUser.findFirst({
+      where: {
+        platform,
+        platformUuid,
       },
     });
   }

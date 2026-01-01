@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-31 19:22:25
+ * @LastEditTime: 2026-01-02 00:52:59
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -20,14 +20,18 @@ import { TranscriptService } from '../../services/transcript.service';
 import { MeetingBitableService } from '../../services/meeting-bitable.service';
 import { MeetingParticipantService } from '../../services/meeting-participant.service';
 import { TencentMeetingRepository } from '../../repositories/tencent-meeting.repository';
+import { MeetingRecordingRepository } from '../../repositories/meeting-recording.repository';
 import { PARTICIPANT_SUMMARY_PROMPT } from '../../constants/prompts';
+import { ParticipantSummaryRepository } from '../../repositories/participant-summary.repository';
 import { MeetingSummaryRepository } from '../../repositories/meeting-summary.repository';
 import { TranscriptBatchProcessor } from '../../services/transcript-batch-processor.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { TranscriptRepository } from '../../repositories/transcript.repository';
 import { RecordingTranscriptResponse } from '@/integrations/tencent-meeting/types';
+import { PlatformUserRepository } from '@/user-platform/repositories/platform-user.repository';
 import {
   Prisma,
+  MeetingRecording,
   RecordingSource,
   RecordingStatus,
   GenerationMethod,
@@ -51,10 +55,13 @@ export class RecordingCompletedHandler extends BaseEventHandler {
     private readonly bitableService: MeetingBitableService,
     private readonly participantService: MeetingParticipantService,
     private readonly tencentMeetingRepository: TencentMeetingRepository,
+    private readonly meetingRecordingRepository: MeetingRecordingRepository,
+    private readonly participantSummaryRepository: ParticipantSummaryRepository,
     private readonly meetingSummaryRepository: MeetingSummaryRepository,
     private readonly prisma: PrismaService,
     private readonly transcriptRepository: TranscriptRepository,
     private readonly batchProcessor: TranscriptBatchProcessor,
+    private readonly platformUserRepository: PlatformUserRepository,
   ) {
     super();
   }
@@ -142,12 +149,14 @@ export class RecordingCompletedHandler extends BaseEventHandler {
           sub_meeting_id || '__ROOT__',
         );
 
+        let recording: MeetingRecording | null = null;
+
         if (meeting) {
           this.logger.warn(
             `找到会议记录: ${meeting_id} ${sub_meeting_id || '__ROOT__'}`,
           );
-          const recording =
-            await this.tencentMeetingRepository.upsertMeetingRecording({
+          recording =
+            await this.meetingRecordingRepository.upsertMeetingRecording({
               meetingId: meeting.id,
               externalId: fileId,
               source: RecordingSource.PLATFORM_AUTO,
@@ -213,6 +222,54 @@ export class RecordingCompletedHandler extends BaseEventHandler {
               record_file: [recordingRecordId ?? ''],
             });
             this.logger.log(`参会者 ${u.user_name}总结记录已保存`);
+
+            // 同步保存参会者总结到数据库
+            if (meeting && recording) {
+              const platformUser =
+                await this.platformUserRepository.upsertPlatformUser(
+                  {
+                    platform: MeetingPlatform.TENCENT_MEETING,
+                    platformUuid: u.uuid,
+                  },
+                  {
+                    platformUserId: u.userid,
+                    userName: u.user_name,
+                    phone: u.phone,
+                    platformData: {
+                      instanceid: u.instanceid,
+                      user_role: u.user_role,
+                      join_time: u.join_time,
+                      left_time: u.left_time,
+                      ip: u.ip,
+                      location: u.location,
+                      link_type: u.link_type,
+                      join_type: u.join_type,
+                      net: u.net,
+                      app_version: u.app_version,
+                      audio_state: u.audio_state,
+                    },
+                  },
+                  {
+                    userName: u.user_name,
+                    phone: u.phone,
+                    lastSeenAt: new Date(),
+                  },
+                );
+
+              await this.participantSummaryRepository.upsertParticipantSummary({
+                periodType: 'SINGLE',
+                platformUserId: platformUser.id,
+                meetingId: meeting.id,
+                meetingRecordingId: recording.id,
+                userName: u.user_name,
+                partSummary: participantSummary,
+                generatedBy: GenerationMethod.AI,
+                aiModel: 'tencent-meeting-ai',
+                version: 1,
+                isLatest: true,
+              });
+              this.logger.log(`参会者 ${u.user_name}总结已同步到数据库`);
+            }
           }
         }
       } catch (error: unknown) {
@@ -242,7 +299,7 @@ export class RecordingCompletedHandler extends BaseEventHandler {
     const { transcriptId, exists } = await this.prisma.$transaction(
       async (tx) => {
         const recordingId =
-          await this.tencentMeetingRepository.findOrCreateRecordingByFileId(
+          await this.meetingRecordingRepository.findOrCreateRecordingByFileId(
             tx,
             recordFileId,
             meetingId,
