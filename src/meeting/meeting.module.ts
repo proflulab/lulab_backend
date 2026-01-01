@@ -13,6 +13,7 @@ import { Module } from '@nestjs/common';
 import { MeetingController } from './meeting.controller';
 import { MeetingService } from './meeting.service';
 import { MeetingRepository } from './repositories/meeting.repository';
+import { MeetingRecordingRepository } from './repositories/meeting-recording.repository';
 import { MeetingFileRepository } from './repositories/meeting-file.repository';
 import { HttpModule } from '@nestjs/axios';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -21,7 +22,17 @@ import { TencentModule } from '../integrations/tencent-meeting/tencent.module';
 @Module({
   imports: [HttpModule, PrismaModule, TencentModule],
   controllers: [MeetingController],
-  providers: [MeetingService, MeetingRepository, MeetingFileRepository],
-  exports: [MeetingService, MeetingRepository, MeetingFileRepository],
+  providers: [
+    MeetingService,
+    MeetingRepository,
+    MeetingRecordingRepository,
+    MeetingFileRepository,
+  ],
+  exports: [
+    MeetingService,
+    MeetingRepository,
+    MeetingRecordingRepository,
+    MeetingFileRepository,
+  ],
 })
 export class MeetingModule {}

@@ -4,9 +4,9 @@
  * @LastEditors: 杨仕明 shiming.y@qq.com
  * @LastEditTime: 2026-01-01 09:42:13
  * @FilePath: /lulab_backend/src/meeting/types/meeting-record.types.ts
- * @Description: 
- * 
- * Copyright (c) 2026 by LuLab-Team, All Rights Reserved. 
+ * @Description:
+ *
+ * Copyright (c) 2026 by LuLab-Team, All Rights Reserved.
  */
 import { MeetingPlatform, MeetingType, ProcessingStatus } from '@prisma/client';
 

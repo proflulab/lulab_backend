@@ -8,6 +8,7 @@ import {
   MeetingPlatform,
 } from '@prisma/client';
 import { MeetingRepository } from './repositories/meeting.repository';
+import { MeetingRecordingRepository } from './repositories/meeting-recording.repository';
 import { GetMeetingRecordsParams } from './types';
 import { MeetingRecordResponseDto } from './dto/meeting-record.dto';
 import { CreateMeetingRecordDto } from './dto/create-meeting-record.dto';
@@ -34,6 +35,7 @@ export class MeetingService {
 
   constructor(
     private readonly meetingRepository: MeetingRepository,
+    private readonly meetingRecordingRepository: MeetingRecordingRepository,
     private readonly tencentApiService: TencentApiService,
   ) {}
 
@@ -472,7 +474,7 @@ export class MeetingService {
   ): Promise<void> {
     const { record_file_id, record_start_time, record_end_time } = recordFile;
 
-    await this.meetingRepository.upsertMeetingRecording({
+    await this.meetingRecordingRepository.upsertMeetingRecording({
       meetingId,
       externalId: record_file_id,
       source: RecordingSource.PLATFORM_AUTO,
