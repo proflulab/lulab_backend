@@ -2,15 +2,52 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2026-01-01 07:20:14
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2026-01-01 07:20:51
+ * @LastEditTime: 2026-01-01 20:36:46
  * @FilePath: /lulab_backend/src/meeting/dto/sync-recordings.dto.ts
  * @Description:
  *
  * Copyright (c) 2026 by LuLab-Team, All Rights Reserved.
  */
-import { IsNumber, IsOptional, Min, Max } from 'class-validator';
+import {
+  IsNumber,
+  IsOptional,
+  Min,
+  Max,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+  ValidationOptions,
+  registerDecorator,
+  ValidationArguments,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
+
+@ValidatorConstraint({ name: 'isEndTimeAfterStartTime', async: false })
+export class IsEndTimeAfterStartTimeConstraint
+  implements ValidatorConstraintInterface
+{
+  validate(endTime: number, args: ValidationArguments) {
+    const startTime = (args.object as Record<string, unknown>)
+      .startTime as number;
+    return endTime > startTime;
+  }
+
+  defaultMessage(): string {
+    return 'endTime must be greater than startTime';
+  }
+}
+
+export function IsEndTimeAfterStartTime(validationOptions?: ValidationOptions) {
+  return function (object: object, propertyName: string) {
+    registerDecorator({
+      target: object.constructor,
+      propertyName: propertyName,
+      options: validationOptions,
+      constraints: [],
+      validator: IsEndTimeAfterStartTimeConstraint,
+    });
+  };
+}
 
 /**
  * 同步腾讯会议录制记录请求DTO
@@ -31,6 +68,7 @@ export class SyncTencentRecordingsDto {
   })
   @IsNumber()
   @Min(0)
+  @IsEndTimeAfterStartTime({ message: '结束时间必须大于开始时间' })
   @Transform(({ value }) => parseInt(String(value)))
   endTime: number;
 

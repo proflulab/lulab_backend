@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-07 03:42:31
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2026-01-01 07:22:37
+ * @LastEditTime: 2026-01-01 20:32:53
  * @FilePath: /lulab_backend/src/meeting/meeting.module.ts
  * @Description:
  *
@@ -10,26 +10,30 @@
  */
 
 import { Module } from '@nestjs/common';
-import { MeetingController } from './meeting.controller';
-import { MeetingService } from './meeting.service';
-import { MeetingRepository } from './repositories/meeting.repository';
-import { MeetingRecordingRepository } from './repositories/meeting-recording.repository';
-import { MeetingFileRepository } from './repositories/meeting-file.repository';
 import { HttpModule } from '@nestjs/axios';
+import { TencentModule } from '@/integrations';
 import { PrismaModule } from '../prisma/prisma.module';
-import { TencentModule } from '../integrations/tencent-meeting/tencent.module';
+import { MeetingController } from './meeting.controller';
+import { MeetingService, TencentRecordingSyncService } from './services';
+import {
+  MeetingRepository,
+  MeetingFileRepository,
+  MeetingRecordingRepository,
+} from './repositories';
 
 @Module({
   imports: [HttpModule, PrismaModule, TencentModule],
   controllers: [MeetingController],
   providers: [
     MeetingService,
+    TencentRecordingSyncService,
     MeetingRepository,
     MeetingRecordingRepository,
     MeetingFileRepository,
   ],
   exports: [
     MeetingService,
+    TencentRecordingSyncService,
     MeetingRepository,
     MeetingRecordingRepository,
     MeetingFileRepository,

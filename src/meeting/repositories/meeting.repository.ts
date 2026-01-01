@@ -5,7 +5,7 @@ import type {
   UpdateMeetingRecordData,
   GetMeetingRecordsParams,
 } from '@/meeting/types';
-import { Prisma, MeetingPlatform } from '@prisma/client';
+import { MeetingPlatform } from '@prisma/client';
 
 @Injectable()
 export class MeetingRepository {

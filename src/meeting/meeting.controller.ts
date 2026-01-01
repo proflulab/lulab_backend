@@ -25,7 +25,8 @@ import {
   ApiHealthCheckDocs,
   ApiSyncTencentRecordingsDocs,
 } from './decorators/meeting-record.decorators';
-import { MeetingService } from './meeting.service';
+import { MeetingService } from './services/meeting.service';
+import { TencentRecordingSyncService } from './services/tencent-recording-sync.service';
 import {
   QueryMeetingRecordsDto,
   MeetingRecordResponseDto,
@@ -48,7 +49,10 @@ import {
 export class MeetingController {
   private readonly logger = new Logger(MeetingController.name);
 
-  constructor(private readonly meetingService: MeetingService) {}
+  constructor(
+    private readonly meetingService: MeetingService,
+    private readonly tencentRecordingSyncService: TencentRecordingSyncService,
+  ) {}
 
   /**
    * 获取会议记录列表
@@ -260,12 +264,13 @@ export class MeetingController {
     });
 
     try {
-      const result = await this.meetingService.syncTencentRecordings(
-        syncParams.startTime,
-        syncParams.endTime,
-        syncParams.pageSize,
-        syncParams.operatorId,
-      );
+      const result =
+        await this.tencentRecordingSyncService.syncTencentRecordings(
+          syncParams.startTime,
+          syncParams.endTime,
+          syncParams.pageSize,
+          syncParams.operatorId,
+        );
 
       this.logger.log(
         `同步腾讯会议录制记录成功: 新增 ${result.createdCount} 条, 更新 ${result.updatedCount} 条`,
