@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-01-03 10:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-29 02:42:24
+ * @LastEditTime: 2026-01-02 01:21:14
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/hook-tencent-mtg.module.ts
  * @Description: 腾讯会议模块，处理腾讯会议相关的Webhook事件
  *
@@ -11,12 +11,11 @@
 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { tencentMeetingConfig } from '../configs/tencent-mtg.config';
-
+import { TencentModule } from '@/integrations';
+import { tencentMeetingConfig } from '@/configs/tencent-mtg.config';
 import { PrismaModule } from '../prisma/prisma.module';
-import { LarkModule } from '../integrations/lark/lark.module';
-import { OpenaiModule } from '../integrations/openai/openai.module';
-import { TencentModule } from '../integrations/tencent-meeting/tencent.module';
+import { LarkModule } from '@/integrations/lark/lark.module';
+import { OpenaiModule } from '@/integrations/openai/openai.module';
 
 import { TencentWebhookController } from './controllers/tencent-webhook.controller';
 import { TencentEventHandlerService } from './services/event-handler.service';
@@ -26,11 +25,13 @@ import { MeetingParticipantService } from './services/meeting-participant.servic
 import { TranscriptService } from './services/transcript.service';
 import { TranscriptFormatterService } from './services/transcript-formatter.service';
 import { RecordingContentService } from './services/recording-content.service';
-import { MeetingRepository } from '../meeting/repositories/meeting.repository';
-import { PlatformUserRepository } from '../user-platform/repositories/platform-user.repository';
+import { MeetingRepository } from '@/meeting/repositories/meeting.repository';
+import { PlatformUserRepository } from '@/user-platform/repositories/platform-user.repository';
 import {
   TencentMeetingRepository,
+  MeetingRecordingRepository,
   MeetingSummaryRepository,
+  ParticipantSummaryRepository,
   TranscriptRepository,
   ParagraphRepository,
   SentenceRepository,
@@ -84,7 +85,9 @@ import {
     PlatformUserRepository,
     MeetingRepository,
     TencentMeetingRepository,
+    MeetingRecordingRepository,
     MeetingSummaryRepository,
+    ParticipantSummaryRepository,
     TranscriptRepository,
     ParagraphRepository,
     SentenceRepository,
