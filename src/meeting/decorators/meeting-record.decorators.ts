@@ -8,6 +8,7 @@ import {
 } from '@nestjs/swagger';
 import { MeetingPlatform, MeetingType, ProcessingStatus } from '@prisma/client';
 import { MeetingRecordListResponseDto } from '../dto/meeting-record.dto';
+import { SyncRecordingsResponseDto } from '../dto/sync-recordings.dto';
 
 /**
  * 获取会议记录列表装饰器
@@ -264,4 +265,57 @@ export const ApiHealthCheckDocs = () =>
       },
     }),
     ApiResponse({ status: 500, description: '服务器内部错误' }),
+  );
+
+export const ApiSyncTencentRecordingsDocs = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: '同步腾讯会议录制记录',
+      description:
+        '从腾讯会议API获取指定时间范围内的所有录制记录，并同步到本地数据库。支持循环获取全部数据。',
+    }),
+    ApiBody({
+      description: '同步录制记录参数',
+      schema: {
+        type: 'object',
+        properties: {
+          startTime: {
+            type: 'number',
+            description: '开始时间（Unix时间戳，秒）',
+            example: 1704067200,
+          },
+          endTime: {
+            type: 'number',
+            description: '结束时间（Unix时间戳，秒）',
+            example: 1706745600,
+          },
+          pageSize: {
+            type: 'number',
+            description: '每页数量（最大20，默认10）',
+            example: 10,
+            minimum: 1,
+            maximum: 20,
+          },
+          operatorId: {
+            type: 'string',
+            description: '操作员ID（可选）',
+            example: 'operator123',
+          },
+        },
+        required: ['startTime', 'endTime'],
+      },
+    }),
+    ApiResponse({
+      status: 200,
+      description: '同步成功',
+      type: SyncRecordingsResponseDto,
+    }),
+    ApiResponse({
+      status: 400,
+      description: '请求参数错误',
+    }),
+    ApiResponse({
+      status: 500,
+      description: '服务器内部错误',
+    }),
   );

@@ -23,6 +23,7 @@ import {
   ApiGetMeetingStatsDocs,
   ApiReprocessMeetingRecordDocs,
   ApiHealthCheckDocs,
+  ApiSyncTencentRecordingsDocs,
 } from './decorators/meeting-record.decorators';
 import { MeetingService } from './meeting.service';
 import {
@@ -32,6 +33,10 @@ import {
 } from './dto/meeting-record.dto';
 import { CreateMeetingRecordDto } from './dto/create-meeting-record.dto';
 import { UpdateMeetingRecordDto } from './dto/update-meeting-record.dto';
+import {
+  SyncTencentRecordingsDto,
+  SyncRecordingsResponseDto,
+} from './dto/sync-recordings.dto';
 
 /**
  * 会议记录控制器
@@ -236,5 +241,39 @@ export class MeetingController {
       timestamp: new Date().toISOString(),
       service: 'meeting-service',
     };
+  }
+
+  /**
+   * 同步腾讯会议录制记录
+   */
+  @Post('sync-tencent-recordings')
+  @HttpCode(HttpStatus.OK)
+  @ApiSyncTencentRecordingsDocs()
+  async syncTencentRecordings(
+    @Body(new ValidationPipe()) syncParams: SyncTencentRecordingsDto,
+  ): Promise<SyncRecordingsResponseDto> {
+    this.logger.log('同步腾讯会议录制记录', {
+      startTime: syncParams.startTime,
+      endTime: syncParams.endTime,
+      pageSize: syncParams.pageSize,
+      operatorId: syncParams.operatorId,
+    });
+
+    try {
+      const result = await this.meetingService.syncTencentRecordings(
+        syncParams.startTime,
+        syncParams.endTime,
+        syncParams.pageSize,
+        syncParams.operatorId,
+      );
+
+      this.logger.log(
+        `同步腾讯会议录制记录成功: 新增 ${result.createdCount} 条, 更新 ${result.updatedCount} 条`,
+      );
+      return result;
+    } catch (error: unknown) {
+      this.logger.error('同步腾讯会议录制记录失败', (error as Error).stack);
+      throw error;
+    }
   }
 }

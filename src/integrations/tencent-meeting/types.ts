@@ -49,6 +49,7 @@ export interface RecordMeeting {
   media_start_time: number;
   subject: string;
   state: number;
+  record_type: number;
   record_files?: RecordFile[];
 }
 
@@ -111,7 +112,9 @@ export interface MeetingParticipantsResponse {
 
 export interface User {
   userid: string;
-  user_name: string;
+  user_name?: string;
+  operator_id_type?: number;
+  operator_id?: string;
 }
 
 export interface Setting {
@@ -125,6 +128,12 @@ export interface Setting {
   enable_pause_all_video?: boolean;
   enable_enter_mute?: boolean;
   enable_waiting_room?: boolean;
+  mute_enable_type_join?: number;
+  play_ivr_on_leave?: boolean;
+  allow_screen_shared_watermark?: boolean;
+  only_allow_enterprise_user_join?: boolean;
+  only_user_join_type?: number;
+  audio_watermark?: boolean;
 }
 
 export interface RecurringRule {
@@ -139,9 +148,15 @@ export interface RecurringRule {
 
 export interface SubMeeting {
   sub_meeting_id: string;
-  status: string;
+  status: number;
   start_time: string;
   end_time: string;
+}
+
+export interface Guest {
+  area: string;
+  phone_number: string;
+  guest_name: string;
 }
 
 export interface LiveConfig {
@@ -154,6 +169,10 @@ export interface LiveConfig {
   enable_live_share: boolean;
   enable_live_replay: boolean;
   allow_participant_start_live: boolean;
+  live_addr?: string;
+  live_watermark?: {
+    watermark_opt: number;
+  };
 }
 
 export interface MeetingDetailResponse {
@@ -186,37 +205,10 @@ export interface MeetingDetailResponse {
     guest_modify_permission?: boolean;
     allow_anonymous_user?: boolean;
     allow_anonymous_start_meeting?: boolean;
+    guests?: Guest[];
+    enable_host_key?: boolean;
+    host_key?: string;
   }>;
-  meeting_id?: string;
-  meeting_code?: string;
-  subject?: string;
-  description?: string;
-  start_time?: string;
-  end_time?: string;
-  creator?: User;
-  meeting_type?: number;
-  sub_meeting_id?: string;
-  password?: string;
-  need_password?: boolean;
-  status?: string;
-  type?: number;
-  join_url?: string;
-  hosts?: User[];
-  current_hosts?: User[];
-  current_co_hosts?: User[];
-  participants?: User[];
-  settings?: Setting;
-  recurring_rule?: RecurringRule;
-  sub_meetings?: SubMeeting[];
-  has_more_sub_meeting?: number;
-  remain_sub_meetings?: number;
-  current_sub_meeting_id?: string;
-  enable_live?: boolean;
-  live_config?: LiveConfig;
-  enable_doc_upload_permission?: boolean;
-  guest_modify_permission?: boolean;
-  allow_anonymous_user?: boolean;
-  allow_anonymous_start_meeting?: boolean;
   error_info?: {
     error_code: number;
     new_error_code?: number;
