@@ -69,11 +69,11 @@ export class LoginService {
           throw new UnauthorizedException(verifyResult.message);
         }
       } else {
-        if (!user.password) {
+        if (!user.passwordHash) {
           failureReason = '该账户未设置密码，请使用验证码登录';
           throw new UnauthorizedException(failureReason);
         }
-        const isPasswordValid = await bcrypt.compare(password!, user.password);
+        const isPasswordValid = await bcrypt.compare(password!, user.passwordHash);
         if (!isPasswordValid) {
           failureReason = '密码错误';
           throw new UnauthorizedException('用户名或密码错误');

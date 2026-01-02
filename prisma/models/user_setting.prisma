@@ -1,0 +1,13 @@
+model UserSettings {
+  id String @id @default(cuid())
+
+  language String @default("zh-CN")
+  timezone String @default("Asia/Shanghai")
+  theme    String @default("light")
+
+  emailNotification Boolean @default(true) @map("email_notification")
+  smsNotification   Boolean @default(false) @map("sms_notification")
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
