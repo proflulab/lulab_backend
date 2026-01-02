@@ -23,16 +23,14 @@ export class TranscriptRepository {
     });
   }
 
-  async createDirect(
-    data: {
-      source: string;
-      rawJson: Prisma.InputJsonValue;
-      status: number;
-      startedAt?: Date;
-      finishedAt?: Date;
-      recordingId: string;
-    },
-  ) {
+  async createDirect(data: {
+    source: string;
+    rawJson: Prisma.InputJsonValue;
+    status: number;
+    startedAt?: Date;
+    finishedAt?: Date;
+    recordingId: string;
+  }) {
     return this.prisma.transcript.create({
       data,
     });

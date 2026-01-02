@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import {
-  GenerationMethod,
-  PeriodType,
-} from '@prisma/client';
+import { GenerationMethod, PeriodType } from '@prisma/client';
 
 @Injectable()
 export class ParticipantSummaryRepository {

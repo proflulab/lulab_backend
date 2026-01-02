@@ -36,9 +36,7 @@ export interface GenerateParticipantSummariesResult {
 export class ParticipantSummaryService {
   private readonly logger = new Logger(ParticipantSummaryService.name);
 
-  constructor(
-    private readonly openaiService: OpenaiService,
-  ) {}
+  constructor(private readonly openaiService: OpenaiService) {}
 
   async generateParticipantSummaries(
     meetingInfo: StartedMeetingInfo,
@@ -92,7 +90,7 @@ export class ParticipantSummaryService {
       .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
       .map((r, index) => ({
         user: users[index],
-        reason: r.reason,
+        reason: r.reason as Error,
       }));
 
     this.logger.log(

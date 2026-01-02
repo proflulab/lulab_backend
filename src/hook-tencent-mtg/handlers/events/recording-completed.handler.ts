@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2026-01-02 11:01:14
+ * @LastEditTime: 2026-01-02 20:43:46
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -79,25 +79,22 @@ export class RecordingCompletedHandler extends BaseEventHandler {
       sub_meeting_id,
     );
 
-    await Promise.allSettled(
-      aggregate.uniqueParticipants.map((participant) =>
-        this.platformUserRepository.upsertPlatformUser(
-          {
-            platform: MeetingPlatform.TENCENT_MEETING,
-            platformUuid: participant.uuid,
-          },
-          {
-            platformUserId: participant.userid,
-            userName: participant.user_name,
-            phone: participant.phone,
-          },
-          {
-            userName: participant.user_name,
-            phone: participant.phone,
-            lastSeenAt: new Date(),
-          },
-        ),
-      ),
+    await this.platformUserRepository.batchUpsert(
+      aggregate.uniqueParticipants.map((participant) => ({
+        where: {
+          platform: MeetingPlatform.TENCENT_MEETING,
+          platformUuid: participant.uuid,
+        },
+        create: {
+          platformUserId: participant.userid,
+          userName: participant.user_name,
+          phone: participant.phone,
+        },
+        update: {
+          userName: participant.user_name,
+          phone: participant.phone,
+        },
+      })),
     );
 
     for (const recording of aggregate.recordings) {
@@ -166,28 +163,26 @@ export class RecordingCompletedHandler extends BaseEventHandler {
       const matchedUuids = recording.matchedParticipants.map((p) => p.uuid);
 
       const platformUserMap =
-        await this.platformUserRepository.findPlatformUsersByPlatformAndUuids(
+        await this.platformUserRepository.findManyByPlatformAndUuids(
           MeetingPlatform.TENCENT_MEETING,
           matchedUuids,
         );
 
-      const participantSummariesData = await Promise.all(
-        result.success.map(async (item) => {
-          let platformUser = platformUserMap.get(item.uuid);
-          return {
-            periodType: 'SINGLE' as const,
-            platformUserId: platformUser?.id || '',
-            meetingId: meeting.id,
-            meetingRecordingId: record.id,
-            userName: item.user_name,
-            partSummary: item.participantSummary,
-            generatedBy: GenerationMethod.AI,
-            aiModel: 'deepseek',
-            version: 1,
-            isLatest: true,
-          };
-        }),
-      );
+      const participantSummariesData = result.success.map((item) => {
+        const platformUser = platformUserMap.get(item.uuid);
+        return {
+          periodType: 'SINGLE' as const,
+          platformUserId: platformUser?.id || '',
+          meetingId: meeting.id,
+          meetingRecordingId: record.id,
+          userName: item.user_name,
+          partSummary: item.participantSummary,
+          generatedBy: GenerationMethod.AI,
+          aiModel: 'deepseek',
+          version: 1,
+          isLatest: true,
+        };
+      });
 
       await this.participantSummaryRepository.createMany(
         participantSummariesData,
