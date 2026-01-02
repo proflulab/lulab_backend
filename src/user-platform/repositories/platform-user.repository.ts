@@ -18,7 +18,7 @@ export class PlatformUserRepository {
     return this.prisma.platformUser.create({
       data: {
         ...data,
-        isActive: data.isActive ?? true,
+        active: data.active ?? true,
       },
     });
   }
@@ -39,7 +39,7 @@ export class PlatformUserRepository {
   }
 
   async upsertPlatformUser(
-    where: { platform: Platform; platformUuid: string },
+    where: { platform: Platform; ptUnionId: string },
     create: Omit<
       PlatformUserCreateInput,
       'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'platform'
@@ -51,16 +51,14 @@ export class PlatformUserRepository {
       >
     >,
   ): Promise<PlatformUser> {
-    // 首先查找是否存在相同 platformUuid 的记录
     const existingUser = await this.prisma.platformUser.findFirst({
       where: {
         platform: where.platform,
-        platformUuid: where.platformUuid,
+        ptUnionId: where.ptUnionId,
       },
     });
 
     if (existingUser) {
-      // 如果存在，则更新
       return this.prisma.platformUser.update({
         where: { id: existingUser.id },
         data: {
@@ -69,12 +67,11 @@ export class PlatformUserRepository {
         },
       });
     } else {
-      // 如果不存在，则创建
       return this.prisma.platformUser.create({
         data: {
           ...create,
           platform: where.platform,
-          platformUuid: where.platformUuid,
+          ptUnionId: where.ptUnionId,
           lastSeenAt: new Date(),
         },
       });
@@ -83,24 +80,24 @@ export class PlatformUserRepository {
 
   async findPlatformUserByPlatformAndId(
     platform: Platform,
-    platformUserId: string,
+    ptUnionId: string,
   ): Promise<PlatformUser | null> {
     return this.prisma.platformUser.findFirst({
       where: {
         platform,
-        platformUserId,
+        ptUnionId,
       },
     });
   }
 
   async findPlatformUserByPlatformAndUuid(
     platform: Platform,
-    platformUuid: string,
+    ptUnionId: string,
   ): Promise<PlatformUser | null> {
     return this.prisma.platformUser.findFirst({
       where: {
         platform,
-        platformUuid,
+        ptUnionId,
       },
     });
   }
@@ -113,7 +110,7 @@ export class PlatformUserRepository {
 
   async findPlatformUserByUserId(userId: string): Promise<PlatformUser[]> {
     return this.prisma.platformUser.findMany({
-      where: { userId },
+      where: { user: { id: userId } },
     });
   }
 
@@ -123,7 +120,7 @@ export class PlatformUserRepository {
     return this.prisma.platformUser.findMany({
       where: {
         platform,
-        isActive: true,
+        active: true,
       },
     });
   }
@@ -138,14 +135,14 @@ export class PlatformUserRepository {
   async deactivatePlatformUser(id: string): Promise<PlatformUser> {
     return this.prisma.platformUser.update({
       where: { id },
-      data: { isActive: false },
+      data: { active: false },
     });
   }
 
   async activatePlatformUser(id: string): Promise<PlatformUser> {
     return this.prisma.platformUser.update({
       where: { id },
-      data: { isActive: true },
+      data: { active: true },
     });
   }
 }

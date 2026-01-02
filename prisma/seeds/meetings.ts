@@ -84,45 +84,45 @@ const MEETING_CONFIGS: Record<string, MeetingConfig> = {
 const PLATFORM_USER_CONFIGS: Record<string, PlatformUserConfig> = {
   host1: {
     platform: Platform.TENCENT_MEETING,
-    platformUserId: 'user_12345',
-    userName: '张三',
+    ptUserId: 'user_12345',
+    displayName: '张三',
     email: 'zhangsan@company.com',
-    isActive: true,
+    active: true,
   },
   host2: {
     platform: Platform.ZOOM,
-    platformUserId: 'user_67890',
-    userName: '李四',
+    ptUserId: 'user_67890',
+    displayName: '李四',
     email: 'lisi@company.com',
-    isActive: true,
+    active: true,
   },
   host3: {
     platform: Platform.TENCENT_MEETING,
-    platformUserId: 'user_54321',
-    userName: '王五',
+    ptUserId: 'user_54321',
+    displayName: '王五',
     email: 'wangwu@company.com',
-    isActive: true,
+    active: true,
   },
   host4: {
     platform: Platform.DINGTALK,
-    platformUserId: 'user_98765',
-    userName: '赵六',
+    ptUserId: 'user_98765',
+    displayName: '赵六',
     email: 'zhaoliu@company.com',
-    isActive: true,
+    active: true,
   },
   participant1: {
     platform: Platform.TENCENT_MEETING,
-    platformUserId: 'participant_001',
-    userName: '参与者1',
+    ptUserId: 'participant_001',
+    displayName: '参与者1',
     email: 'participant1@company.com',
-    isActive: true,
+    active: true,
   },
   participant2: {
     platform: Platform.TENCENT_MEETING,
-    platformUserId: 'participant_002',
-    userName: '参与者2',
+    ptUserId: 'participant_002',
+    displayName: '参与者2',
     email: 'participant2@company.com',
-    isActive: true,
+    active: true,
   },
 };
 
@@ -204,34 +204,31 @@ async function createPlatformUser(
   prisma: PrismaClient,
   config: PlatformUserConfig,
 ) {
-  // 先查找是否已存在相同的平台用户
   const existingUser = await prisma.platformUser.findFirst({
     where: {
       platform: config.platform,
-      platformUserId: config.platformUserId,
+      ptUserId: config.ptUserId,
     },
   });
 
   if (existingUser) {
-    // 如果存在，更新并返回
     return prisma.platformUser.update({
       where: { id: existingUser.id },
       data: {
-        userName: config.userName,
+        displayName: config.displayName,
         email: config.email,
-        isActive: config.isActive,
+        active: config.active,
         lastSeenAt: new Date(),
       },
     });
   } else {
-    // 如果不存在，创建新用户
     return prisma.platformUser.create({
       data: {
         platform: config.platform,
-        platformUserId: config.platformUserId,
-        userName: config.userName,
+        ptUserId: config.ptUserId,
+        displayName: config.displayName,
         email: config.email,
-        isActive: config.isActive,
+        active: config.active,
         lastSeenAt: new Date(),
       },
     });

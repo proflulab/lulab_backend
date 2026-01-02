@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2026-01-02 00:52:59
+ * @LastEditTime: 2026-01-03 01:42:20
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -229,11 +229,11 @@ export class RecordingCompletedHandler extends BaseEventHandler {
                 await this.platformUserRepository.upsertPlatformUser(
                   {
                     platform: MeetingPlatform.TENCENT_MEETING,
-                    platformUuid: u.uuid,
+                    ptUnionId: u.uuid,
                   },
                   {
-                    platformUserId: u.userid,
-                    userName: u.user_name,
+                    ptUserId: u.userid,
+                    displayName: u.user_name,
                     phone: u.phone,
                     platformData: {
                       instanceid: u.instanceid,
@@ -250,7 +250,7 @@ export class RecordingCompletedHandler extends BaseEventHandler {
                     },
                   },
                   {
-                    userName: u.user_name,
+                    displayName: u.user_name,
                     phone: u.phone,
                     lastSeenAt: new Date(),
                   },
