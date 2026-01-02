@@ -57,7 +57,6 @@ export class ParticipantSummaryRepository {
         platformUserId: data.platformUserId,
         meetingId: data.meetingId,
         meetingRecordingId: data.meetingRecordingId,
-        userName: data.userName,
         periodType: data.periodType,
         isLatest: true,
       },
