@@ -132,7 +132,7 @@ export class TencentMeetingRepository {
   private async upsertPlatformUserByUuid(
     tx: PrismaTransaction,
     platform: Platform,
-    platformUuid: string,
+    ptUnionId: string,
     data: {
       platformUserId?: string;
       userName?: string;
@@ -143,7 +143,7 @@ export class TencentMeetingRepository {
     const existingUser = await tx.platformUser.findFirst({
       where: {
         platform,
-        platformUuid,
+        ptUnionId,
       },
     });
 
@@ -159,13 +159,13 @@ export class TencentMeetingRepository {
       return tx.platformUser.create({
         data: {
           platform,
-          platformUuid,
-          platformUserId: data.platformUserId,
-          userName: data.userName,
+          ptUnionId,
+          ptUserId: data.platformUserId,
+          displayName: data.userName,
           email: data.email,
           platformData: data.platformData,
           lastSeenAt: new Date(),
-          isActive: true,
+          active: true,
         },
       });
     }

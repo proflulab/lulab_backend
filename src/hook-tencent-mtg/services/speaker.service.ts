@@ -2,11 +2,11 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-29 01:59:25
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-29 03:16:52
+ * @LastEditTime: 2026-01-03 01:41:59
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/speaker.service.ts
  * @Description:
  *
- * Copyright (c) 2025 by LuLab-Team, All Rights Reserved.
+ * Copyright (c) 2026 by LuLab-Team, All Rights Reserved.
  */
 
 import { Injectable } from '@nestjs/common';
@@ -56,7 +56,7 @@ export class SpeakerService {
     const speaker = await tx.platformUser.findFirst({
       where: {
         platform: Platform.TENCENT_MEETING,
-        platformUuid: speakerUuid,
+        ptUnionId: speakerUuid,
       },
     });
 
@@ -69,9 +69,9 @@ export class SpeakerService {
       const newSpeaker = await tx.platformUser.create({
         data: {
           platform: Platform.TENCENT_MEETING,
-          platformUuid: speakerUuid,
-          userName: participant.user_name,
-          isActive: true,
+          ptUnionId: speakerUuid,
+          displayName: participant.user_name,
+          active: true,
         },
       });
       return newSpeaker.id;

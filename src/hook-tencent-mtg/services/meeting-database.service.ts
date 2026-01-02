@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-24
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2026-01-02 01:12:02
+ * @LastEditTime: 2026-01-03 01:44:19
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/meeting-database.service.ts
  * @Description: 会议数据库服务，处理会议记录的创建和更新
  *
@@ -94,20 +94,20 @@ export class MeetingDatabaseService {
       await this.platformUserRepository.upsertPlatformUser(
         {
           platform: Platform.TENCENT_MEETING,
-          platformUuid: user.uuid,
+          ptUnionId: user.uuid,
         },
         {
-          platformUuid: user.uuid,
-          platformUserId: user.userid,
-          userName: user.user_name,
+          ptUnionId: user.uuid,
+          ptUserId: user.userid,
+          displayName: user.user_name,
           platformData: {
             instance_id: user.instance_id,
             ms_open_id: user.ms_open_id,
           },
         },
         {
-          platformUserId: user.userid,
-          userName: user.user_name,
+          ptUserId: user.userid,
+          displayName: user.user_name,
           platformData: {
             instance_id: user.instance_id,
             ms_open_id: user.ms_open_id,
