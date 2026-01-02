@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-07-06 05:06:37
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2026-01-01 05:53:34
+ * @LastEditTime: 2026-01-03 03:08:51
  * @FilePath: /lulab_backend/src/app.module.ts
  * @Description: Application module that defines the application's entry point and dependency injection
  *
@@ -60,7 +60,7 @@ import 'winston-daily-rotate-file';
         transports: [
           new winston.transports.DailyRotateFile({
             level: 'debug',
-            dirname: 'daily-log',
+            dirname: process.env.LOG_DIR || 'daily-log',
             filename: 'log-%DATE%.log',
             datePattern: 'YYYY-MM-DD',
             maxSize: '10m',
