@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-24
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2026-01-02 01:12:02
+ * @LastEditTime: 2026-01-02 08:22:11
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/meeting-database.service.ts
  * @Description: 会议数据库服务，处理会议记录的创建和更新
  *
@@ -36,12 +36,11 @@ export class MeetingDatabaseService {
    */
   async upsertMeetingRecord(payload: TencentMeetingInfoPayload): Promise<void> {
     const { meeting_info } = payload;
+    const { creator } = meeting_info;
 
     if (!meeting_info) {
       throw new Error('Meeting info is required but not provided');
     }
-
-    const { creator } = meeting_info;
 
     const meetingType = TencentEventUtils.convertMeetingType(
       meeting_info.meeting_type as number,

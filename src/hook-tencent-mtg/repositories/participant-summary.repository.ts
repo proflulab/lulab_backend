@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import { GenerationMethod, PeriodType } from '@prisma/client';
+import {
+  GenerationMethod,
+  PeriodType,
+} from '@prisma/client';
 
 @Injectable()
 export class ParticipantSummaryRepository {
@@ -35,6 +38,40 @@ export class ParticipantSummaryRepository {
         version: data.version || 1,
         isLatest: data.isLatest !== undefined ? data.isLatest : true,
       },
+    });
+  }
+
+  async createMany(
+    data: Array<{
+      periodType: PeriodType;
+      platformUserId?: string;
+      meetingId?: string;
+      meetingRecordingId?: string;
+      userName: string;
+      partSummary: string;
+      keywords?: string[];
+      generatedBy?: GenerationMethod;
+      aiModel?: string;
+      confidence?: number;
+      version?: number;
+      isLatest?: boolean;
+    }>,
+  ) {
+    return this.prisma.participantSummary.createMany({
+      data: data.map((item) => ({
+        periodType: item.periodType,
+        platformUserId: item.platformUserId,
+        meetingId: item.meetingId,
+        meetingRecordingId: item.meetingRecordingId,
+        userName: item.userName,
+        partSummary: item.partSummary,
+        keywords: item.keywords || [],
+        generatedBy: item.generatedBy || GenerationMethod.AI,
+        aiModel: item.aiModel || 'tencent-meeting-ai',
+        confidence: item.confidence,
+        version: item.version || 1,
+        isLatest: item.isLatest !== undefined ? item.isLatest : true,
+      })),
     });
   }
 

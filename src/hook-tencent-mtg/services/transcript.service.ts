@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-24 00:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-24 19:05:00
+ * @LastEditTime: 2026-01-02 04:43:07
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/transcript.service.ts
  * @Description: 转写服务，负责获取和格式化录音转写内容
  *
@@ -11,7 +11,10 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { TencentApiService } from '@/integrations/tencent-meeting/api.service';
-import { RecordingTranscriptResponse } from '@/integrations/tencent-meeting/types';
+import {
+  RecordingTranscriptResponse,
+  SpeakerInfo,
+} from '@/integrations/tencent-meeting/types';
 import { TranscriptFormatterService } from './transcript-formatter.service';
 
 /**
@@ -21,6 +24,8 @@ export interface TranscriptResult {
   transcriptResponse: RecordingTranscriptResponse | null;
   uniqueUsernames: string[];
   formattedTranscript: string;
+  keywords: string[];
+  speakerInfos: SpeakerInfo[];
 }
 
 /**
@@ -61,6 +66,9 @@ export class TranscriptService {
       // 提取唯一用户名
       const uniqueUsernames = this.extractUniqueUsernames(transcriptResponse);
 
+      // 提取所有发言人信息
+      const speakerInfos = this.extractSpeakerInfos(transcriptResponse);
+
       // 格式化转写内容
       const formattedTranscript =
         this.transcriptFormatterService.formatTranscript(transcriptResponse);
@@ -70,6 +78,7 @@ export class TranscriptService {
         ...context,
         duration,
         uniqueUsernamesCount: uniqueUsernames.length,
+        speakerInfosCount: speakerInfos.length,
         formattedLinesCount: formattedTranscript
           ? formattedTranscript.split('\n\n').length
           : 0,
@@ -79,6 +88,8 @@ export class TranscriptService {
         transcriptResponse,
         uniqueUsernames,
         formattedTranscript,
+        keywords: transcriptResponse?.minutes?.keywords || [],
+        speakerInfos,
       };
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
@@ -92,6 +103,8 @@ export class TranscriptService {
         transcriptResponse: null,
         uniqueUsernames: [],
         formattedTranscript: '',
+        keywords: [],
+        speakerInfos: [],
       };
     }
   }
@@ -116,6 +129,30 @@ export class TranscriptService {
     }
 
     return Array.from(uniqueUsernames);
+  }
+
+  /**
+   * 提取所有发言人信息
+   * @param transcriptResponse 转写响应数据
+   * @returns 发言人信息数组
+   */
+  private extractSpeakerInfos(
+    transcriptResponse?: RecordingTranscriptResponse,
+  ): SpeakerInfo[] {
+    if (!transcriptResponse?.minutes?.paragraphs) {
+      return [];
+    }
+
+    const speakerMap = new Map<string, SpeakerInfo>();
+
+    for (const paragraph of transcriptResponse.minutes.paragraphs) {
+      const speakerInfo = paragraph.speaker_info;
+      if (speakerInfo) {
+        speakerMap.set(speakerInfo.username, speakerInfo);
+      }
+    }
+
+    return Array.from(speakerMap.values());
   }
 
   /**

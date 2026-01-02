@@ -8,3 +8,6 @@ export * from './tencent-event.types';
 
 // 转录相关类型定义
 export * from './transcript.types';
+
+// 录制聚合类型定义
+export * from './recording-aggregate.types';

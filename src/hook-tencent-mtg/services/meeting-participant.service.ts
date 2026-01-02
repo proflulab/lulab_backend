@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-24 00:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-25 04:54:10
+ * @LastEditTime: 2026-01-02 03:32:01
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/meeting-participant.service.ts
  * @Description: 会议参与者服务，负责处理会议参与者相关逻辑
  *
@@ -13,6 +13,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { TencentApiService } from '@/integrations/tencent-meeting/api.service';
 import { MeetingParticipantDetail } from '@/integrations/tencent-meeting/types';
 import { MeetingUserBitableRepository } from '@/integrations/lark/repositories';
+
+interface ParticipantsResult {
+  participants: MeetingParticipantDetail[];
+  uniqueParticipants: MeetingParticipantDetail[];
+}
 
 /**
  * 会议参与者服务
@@ -25,17 +30,17 @@ export class MeetingParticipantService {
   constructor(private readonly tencentMeetingApi: TencentApiService) {}
 
   /**
-   * 获取唯一的会议参与者列表
+   * 获取会议参与者列表
    * @param meetingId 会议ID
    * @param userId 用户ID
    * @param subMeetingId 子会议ID
-   * @returns 去重后的参与者列表
+   * @returns 包含去重和未去重参与者列表的结果
    */
   async getUniqueParticipants(
     meetingId: string,
     userId: string,
     subMeetingId?: string,
-  ): Promise<MeetingParticipantDetail[]> {
+  ): Promise<ParticipantsResult> {
     try {
       const response = await this.tencentMeetingApi.getParticipants(
         meetingId,
@@ -43,31 +48,30 @@ export class MeetingParticipantService {
         subMeetingId,
       );
 
-      // 根据 uuid 去重
+      const participants = response.participants.map((participant) => ({
+        ...participant,
+        user_name: Buffer.from(participant.user_name, 'base64').toString(
+          'utf-8',
+        ),
+      }));
+
       const seenUuids = new Set<string>();
-      const uniqueParticipants = response.participants
-        .filter((participant) => {
-          if (seenUuids.has(participant.uuid)) {
-            return false;
-          }
-          seenUuids.add(participant.uuid);
-          return true;
-        })
-        .map((participant) => ({
-          ...participant,
-          user_name: Buffer.from(participant.user_name, 'base64').toString(
-            'utf-8',
-          ),
-        }));
+      const uniqueParticipants = participants.filter((participant) => {
+        if (seenUuids.has(participant.uuid)) {
+          return false;
+        }
+        seenUuids.add(participant.uuid);
+        return true;
+      });
 
       this.logger.log(
-        `获取会议参与者成功: ${meetingId}, 共 ${uniqueParticipants.length} 个唯一参与者`,
+        `获取会议参与者成功: ${meetingId}, 共 ${participants.length} 个参与者, ${uniqueParticipants.length} 个唯一参与者`,
       );
 
-      return uniqueParticipants;
+      return { participants, uniqueParticipants };
     } catch (error: unknown) {
       this.logger.warn(`获取会议参与者失败: ${meetingId}`, error);
-      return [];
+      return { participants: [], uniqueParticipants: [] };
     }
   }
 

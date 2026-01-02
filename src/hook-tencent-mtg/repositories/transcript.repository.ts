@@ -23,6 +23,21 @@ export class TranscriptRepository {
     });
   }
 
+  async createDirect(
+    data: {
+      source: string;
+      rawJson: Prisma.InputJsonValue;
+      status: number;
+      startedAt?: Date;
+      finishedAt?: Date;
+      recordingId: string;
+    },
+  ) {
+    return this.prisma.transcript.create({
+      data,
+    });
+  }
+
   async findById(id: string) {
     return this.prisma.transcript.findUnique({
       where: { id },

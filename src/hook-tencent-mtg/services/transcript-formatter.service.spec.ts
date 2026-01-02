@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-24 00:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-24 08:26:07
+ * @LastEditTime: 2026-01-02 11:08:37
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/transcript-formatter.service.spec.ts
  * @Description: 转写格式化服务测试
  *
@@ -29,7 +29,10 @@ describe('TranscriptFormatterService', () => {
 
     it('should return empty string when transcript has no minutes or paragraphs', () => {
       expect(
-        service.formatTranscript({ minutes: { paragraphs: [] }, more: false }),
+        service.formatTranscript({
+          minutes: { paragraphs: [], keywords: [], audio_detect: 0 },
+          more: false,
+        }),
       ).toBe('');
     });
 
@@ -106,6 +109,8 @@ describe('TranscriptFormatterService', () => {
               ],
             },
           ],
+          keywords: [],
+          audio_detect: 0,
         },
         more: false,
       };
@@ -200,6 +205,8 @@ describe('TranscriptFormatterService', () => {
               ],
             },
           ],
+          keywords: [],
+          audio_detect: 0,
         },
         more: false,
       };
@@ -301,6 +308,8 @@ describe('TranscriptFormatterService', () => {
               ],
             },
           ],
+          keywords: [],
+          audio_detect: 0,
         },
         more: false,
       };
@@ -349,6 +358,8 @@ describe('TranscriptFormatterService', () => {
               ],
             },
           ],
+          keywords: [],
+          audio_detect: 0,
         },
         more: false,
       };
@@ -394,6 +405,8 @@ describe('TranscriptFormatterService', () => {
               ],
             },
           ],
+          keywords: [],
+          audio_detect: 0,
         },
         more: false,
       };
@@ -419,6 +432,8 @@ describe('TranscriptFormatterService', () => {
               sentences: [],
             },
           ],
+          keywords: [],
+          audio_detect: 0,
         },
         more: false,
       };
@@ -451,6 +466,8 @@ describe('TranscriptFormatterService', () => {
               ],
             },
           ],
+          keywords: [],
+          audio_detect: 0,
         },
         more: false,
       };

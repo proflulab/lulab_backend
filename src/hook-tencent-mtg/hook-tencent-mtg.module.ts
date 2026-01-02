@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-01-03 10:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2026-01-02 01:21:14
+ * @LastEditTime: 2026-01-02 10:45:47
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/hook-tencent-mtg.module.ts
  * @Description: 腾讯会议模块，处理腾讯会议相关的Webhook事件
  *
@@ -25,6 +25,8 @@ import { MeetingParticipantService } from './services/meeting-participant.servic
 import { TranscriptService } from './services/transcript.service';
 import { TranscriptFormatterService } from './services/transcript-formatter.service';
 import { RecordingContentService } from './services/recording-content.service';
+import { RecordingProcessorService } from './services/recording-processor.service';
+import { ParticipantSummaryService } from './services/participant-summary.service';
 import { MeetingRepository } from '@/meeting/repositories/meeting.repository';
 import { PlatformUserRepository } from '@/user-platform/repositories/platform-user.repository';
 import {
@@ -73,6 +75,8 @@ import {
     TranscriptService,
     TranscriptFormatterService,
     RecordingContentService,
+    RecordingProcessorService,
+    ParticipantSummaryService,
     SpeakerService,
     TranscriptBatchProcessor,
     MeetingStartedHandler,

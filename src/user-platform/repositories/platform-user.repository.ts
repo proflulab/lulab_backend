@@ -148,4 +148,25 @@ export class PlatformUserRepository {
       data: { isActive: true },
     });
   }
+
+  async findPlatformUsersByPlatformAndUuids(
+    platform: Platform,
+    platformUuids: string[],
+  ): Promise<Map<string, PlatformUser>> {
+    const users = await this.prisma.platformUser.findMany({
+      where: {
+        platform,
+        platformUuid: { in: platformUuids },
+      },
+    });
+
+    const userMap = new Map<string, PlatformUser>();
+    users.forEach((user) => {
+      if (user.platformUuid) {
+        userMap.set(user.platformUuid, user);
+      }
+    });
+
+    return userMap;
+  }
 }

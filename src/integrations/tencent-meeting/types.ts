@@ -304,6 +304,8 @@ export interface RecordingTranscriptParagraph {
 
 export interface RecordingTranscriptData {
   paragraphs: RecordingTranscriptParagraph[];
+  keywords: string[];
+  audio_detect: number;
 }
 
 export interface RecordingTranscriptResponse {
