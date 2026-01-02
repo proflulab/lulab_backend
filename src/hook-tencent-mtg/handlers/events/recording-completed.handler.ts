@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2026-01-03 01:42:20
+ * @LastEditTime: 2026-01-03 04:34:39
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -225,36 +225,17 @@ export class RecordingCompletedHandler extends BaseEventHandler {
 
             // 同步保存参会者总结到数据库
             if (meeting && recording) {
-              const platformUser =
-                await this.platformUserRepository.upsertPlatformUser(
-                  {
-                    platform: MeetingPlatform.TENCENT_MEETING,
-                    ptUnionId: u.uuid,
-                  },
-                  {
-                    ptUserId: u.userid,
-                    displayName: u.user_name,
-                    phone: u.phone,
-                    platformData: {
-                      instanceid: u.instanceid,
-                      user_role: u.user_role,
-                      join_time: u.join_time,
-                      left_time: u.left_time,
-                      ip: u.ip,
-                      location: u.location,
-                      link_type: u.link_type,
-                      join_type: u.join_type,
-                      net: u.net,
-                      app_version: u.app_version,
-                      audio_state: u.audio_state,
-                    },
-                  },
-                  {
-                    displayName: u.user_name,
-                    phone: u.phone,
-                    lastSeenAt: new Date(),
-                  },
-                );
+              const platformUser = await this.platformUserRepository.upsert(
+                {
+                  platform: MeetingPlatform.TENCENT_MEETING,
+                  ptUnionId: u.uuid,
+                },
+                {
+                  ptUserId: u.userid,
+                  displayName: u.user_name,
+                  phone: u.phone,
+                },
+              );
 
               await this.participantSummaryRepository.upsertParticipantSummary({
                 periodType: 'SINGLE',
