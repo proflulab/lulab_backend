@@ -256,7 +256,7 @@ async function createMeeting(
       platform_meetingId_subMeetingId: {
         platform: meetingConfig.platform,
         meetingId: meetingId!,
-        subMeetingId: '', // Default empty subMeetingId for seed data
+        subMeetingId: '__ROOT__', // Match the create clause value
       },
     },
     update: {

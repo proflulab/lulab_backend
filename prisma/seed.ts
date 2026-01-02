@@ -441,13 +441,13 @@ async function seedDatabase(): Promise<void> {
  * 创建基础数据结构
  */
 async function createBasicData() {
-  // 1. 创建用户和基础角色
-  console.log('\n📝 步骤 1: 创建用户和基础角色');
-  const userData = await createUsers(prisma);
-
-  // 2. 创建权限和完整角色体系
-  console.log('\n🔐 步骤 2: 创建权限和完整角色体系');
+  // 1. 创建权限和完整角色体系
+  console.log('\n� 步骤 1: 创建权限和完整角色体系');
   const permissionData = await createPermissions(prisma);
+
+  // 2. 创建用户并分配角色
+  console.log('\n� 步骤 2: 创建用户并分配角色');
+  const userData = await createUsers(prisma, permissionData.roles);
 
   // 3. 创建组织和部门结构
   console.log('\n🏢 步骤 3: 创建组织和部门结构');
@@ -461,7 +461,12 @@ async function createBasicData() {
 
   // 3.2 创建其他关联表数据
   console.log('\n🔗 步骤 3.2: 创建关联表数据');
-  await createAllRelations(prisma, organization.id, userData);
+  await createAllRelations(
+    prisma,
+    organization.id,
+    userData,
+    permissionData.roles,
+  );
 
   // 4. 创建渠道数据
   console.log('\n📺 步骤 4: 创建渠道数据');

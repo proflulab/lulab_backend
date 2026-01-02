@@ -106,49 +106,11 @@ const NORMAL_USER_PROFILES = [
   },
 ] as const;
 
-// 角色配置
-const ROLE_CONFIGS = {
-  admin: {
-    code: 'ADMIN',
-    name: '管理员',
-    description: '系统管理员，拥有大部分管理权限',
-    level: 1,
-    type: $Enums.RoleType.SYSTEM,
-  },
-  finance: {
-    code: 'FINANCE',
-    name: '财务',
-    description: '财务人员，拥有财务相关权限',
-    level: 3,
-    type: $Enums.RoleType.CUSTOM,
-  },
-  customerService: {
-    code: 'CUSTOMER_SERVICE',
-    name: '客服',
-    description: '客服人员，拥有客户服务权限',
-    level: 4,
-    type: $Enums.RoleType.CUSTOM,
-  },
-  user: {
-    code: 'USER',
-    name: '普通用户',
-    description: '普通用户，基础查看权限',
-    level: 5,
-    type: $Enums.RoleType.CUSTOM,
-  },
-} as const;
-
 export interface CreatedUsers {
   adminUser: User;
   financeUser: User;
   customerServiceUser: User;
   normalUsers: User[];
-  roles: {
-    admin: Role;
-    finance: Role;
-    customerService: Role;
-    user: Role;
-  };
 }
 
 /**
@@ -187,30 +149,6 @@ async function createUserWithProfile(
 }
 
 /**
- * 创建角色
- */
-async function createRole(
-  prisma: PrismaClient,
-  code: string,
-  name: string,
-  description: string,
-  level: number,
-  type: $Enums.RoleType,
-): Promise<Role> {
-  return prisma.role.upsert({
-    where: { code },
-    update: {},
-    create: {
-      code,
-      name,
-      description,
-      level,
-      type,
-    },
-  });
-}
-
-/**
  * 分配用户角色
  */
 async function assignUserRole(
@@ -233,7 +171,15 @@ async function assignUserRole(
   });
 }
 
-export async function createUsers(prisma: PrismaClient): Promise<CreatedUsers> {
+export async function createUsers(
+  prisma: PrismaClient,
+  roles: {
+    admin: Role;
+    finance: Role;
+    customerService: Role;
+    user: Role;
+  },
+): Promise<CreatedUsers> {
   // 并行生成密码哈希
   const [adminPasswordHash, userPasswordHash] = await Promise.all([
     bcrypt.hash(PASSWORDS.admin, 10),
@@ -286,42 +232,6 @@ export async function createUsers(prisma: PrismaClient): Promise<CreatedUsers> {
 
   const normalUsers = await Promise.all(normalUserPromises);
 
-  // 并行创建角色
-  const roles = {
-    admin: await createRole(
-      prisma,
-      ROLE_CONFIGS.admin.code,
-      ROLE_CONFIGS.admin.name,
-      ROLE_CONFIGS.admin.description,
-      ROLE_CONFIGS.admin.level,
-      ROLE_CONFIGS.admin.type,
-    ),
-    finance: await createRole(
-      prisma,
-      ROLE_CONFIGS.finance.code,
-      ROLE_CONFIGS.finance.name,
-      ROLE_CONFIGS.finance.description,
-      ROLE_CONFIGS.finance.level,
-      ROLE_CONFIGS.finance.type,
-    ),
-    customerService: await createRole(
-      prisma,
-      ROLE_CONFIGS.customerService.code,
-      ROLE_CONFIGS.customerService.name,
-      ROLE_CONFIGS.customerService.description,
-      ROLE_CONFIGS.customerService.level,
-      ROLE_CONFIGS.customerService.type,
-    ),
-    user: await createRole(
-      prisma,
-      ROLE_CONFIGS.user.code,
-      ROLE_CONFIGS.user.name,
-      ROLE_CONFIGS.user.description,
-      ROLE_CONFIGS.user.level,
-      ROLE_CONFIGS.user.type,
-    ),
-  };
-
   // 并行分配角色
   await Promise.all([
     assignUserRole(prisma, adminUser.id, roles.admin.id),
@@ -337,6 +247,5 @@ export async function createUsers(prisma: PrismaClient): Promise<CreatedUsers> {
     financeUser,
     customerServiceUser,
     normalUsers,
-    roles,
   };
 }
