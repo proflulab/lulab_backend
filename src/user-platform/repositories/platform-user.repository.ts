@@ -113,7 +113,7 @@ export class PlatformUserRepository {
 
   async findPlatformUserByUserId(userId: string): Promise<PlatformUser[]> {
     return this.prisma.platformUser.findMany({
-      where: { userId },
+      where: { user: { id: userId } },
     });
   }
 

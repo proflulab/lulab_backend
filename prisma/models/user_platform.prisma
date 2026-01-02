@@ -14,6 +14,7 @@ model PlatformUser {
 
   // 用户基本信息
   displayName String? @map("display_name") // 用户显示名称
+  userName    String? @map("user_name") // 用户名
   email       String? // 用户邮箱
   avatarUrl   String? @map("avatar_url") // 用户头像URL
   countryCode String? @map("country_code") // 国家代码 如 +86
@@ -25,7 +26,8 @@ model PlatformUser {
   user        User?   @relation(fields: [localUserId], references: [id], onDelete: SetNull)
 
   // 用户状态
-  active Boolean @default(true)
+  isActive Boolean @default(true) @map("is_active") // 是否活跃
+  active   Boolean @default(true)
 
   // 关联关系
   createdMeetings      Meeting[]            @relation("MeetingCreator") // 创建的会议
