@@ -166,7 +166,7 @@ async function createUserWithProfile(
     update: {},
     create: {
       email,
-      password,
+      passwordHash: password,
       emailVerifiedAt: new Date(),
       countryCode: COUNTRY_CODE,
       phone,

@@ -82,10 +82,10 @@ model MeetingRecording {
   recorderUserId String?       @map("recorder_user_id")
   recorderUser   PlatformUser? @relation("RecordingUser", fields: [recorderUserId], references: [id], onDelete: SetNull)
 
-  files       MeetingRecordingFile[]
-  transcripts Transcript[]
-  summaries   MeetingSummary[]
-  participantSummaries ParticipantSummary[] @relation("RecordingParticipantSummaries")
+  files                MeetingRecordingFile[]
+  transcripts          Transcript[]
+  summaries            MeetingSummary[]
+  participantSummaries ParticipantSummary[]   @relation("RecordingParticipantSummaries")
 
   // 系统字段及时间字段
   startAt   DateTime? @map("start_at") @db.Timestamptz(6)
