@@ -38,66 +38,60 @@ export class PlatformUserRepository {
     });
   }
 
-  async upsertPlatformUser(
+  async upsert(
     where: { platform: Platform; ptUnionId: string },
-    create: Omit<
+    data: Omit<
       PlatformUserCreateInput,
-      'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'platform'
-    >,
-    update: Partial<
-      Omit<
-        PlatformUserUpdateInput,
-        'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
-      >
+      'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'platform' | 'ptUnionId'
     >,
   ): Promise<PlatformUser> {
-    const existingUser = await this.prisma.platformUser.findFirst({
-      where: {
-        platform: where.platform,
-        ptUnionId: where.ptUnionId,
-      },
-    });
-
-    if (existingUser) {
-      return this.prisma.platformUser.update({
-        where: { id: existingUser.id },
-        data: {
-          ...update,
-          lastSeenAt: new Date(),
-        },
-      });
-    } else {
-      return this.prisma.platformUser.create({
-        data: {
-          ...create,
-          platform: where.platform,
-          ptUnionId: where.ptUnionId,
-          lastSeenAt: new Date(),
-        },
-      });
-    }
-  }
-
-  async findPlatformUserByPlatformAndId(
-    platform: Platform,
-    ptUnionId: string,
-  ): Promise<PlatformUser | null> {
-    return this.prisma.platformUser.findFirst({
-      where: {
-        platform,
-        ptUnionId,
-      },
+    const now = new Date();
+    const { platform, ptUnionId } = where;
+    return this.prisma.platformUser.upsert({
+      where: { unique_platform_union_user: { platform, ptUnionId } },
+      create: { ...data, platform, ptUnionId, lastSeenAt: now },
+      update: { ...data, lastSeenAt: now },
     });
   }
 
-  async findPlatformUserByPlatformAndUuid(
+  async upsertMany(
+    items: Array<{
+      where: { platform: Platform; ptUnionId: string };
+      data: Omit<
+        PlatformUserCreateInput,
+        | 'id'
+        | 'createdAt'
+        | 'updatedAt'
+        | 'deletedAt'
+        | 'platform'
+        | 'ptUnionId'
+      >;
+    }>,
+  ): Promise<PlatformUser[]> {
+    const now = new Date();
+
+    return this.prisma.$transaction(
+      items.map(({ where, data }) => {
+        const { platform, ptUnionId } = where;
+        return this.prisma.platformUser.upsert({
+          where: { unique_platform_union_user: { platform, ptUnionId } },
+          create: { ...data, platform, ptUnionId, lastSeenAt: now },
+          update: { ...data, lastSeenAt: now },
+        });
+      }),
+    );
+  }
+
+  async findPlatformUserByPlatformAndUnionId(
     platform: Platform,
     ptUnionId: string,
   ): Promise<PlatformUser | null> {
-    return this.prisma.platformUser.findFirst({
+    return this.prisma.platformUser.findUnique({
       where: {
-        platform,
-        ptUnionId,
+        unique_platform_union_user: {
+          platform,
+          ptUnionId,
+        },
       },
     });
   }
