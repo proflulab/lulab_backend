@@ -1,53 +1,31 @@
-/*
- * @Author: 杨仕明 shiming.y@qq.com
- * @Date: 2025-12-16 10:00:00
- * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-16 17:42:01
- * @FilePath: /lulab_backend/prisma/seeds/curriculums.ts
- * @Description: 课程数据种子模块 - 优化版本
- *
- * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved.
- */
-
 import { PrismaClient, Curriculum, Project, Prisma } from '@prisma/client';
 
-// ==================== 类型定义 ====================
-
-/**
- * 创建课程所需的参数
- */
 export interface CreateCurriculumsParams {
   projects: Project[];
 }
 
-/**
- * 创建课程后返回的数据
- */
 export interface CreatedCurriculums {
   curriculums: Curriculum[];
 }
 
-/**
- * 课程配置数据类型
- */
 interface CurriculumConfig {
   id: string;
   projectId: string;
   title: string;
   description: string;
   week: number;
-  topics: string[];
-  goals: string[];
+  topics: readonly string[];
+  goals: readonly string[];
 }
 
-// ==================== 课程配置数据 ====================
+class CurriculumSeedError extends Error {
+  constructor(message: string, public readonly context?: unknown) {
+    super(message);
+    this.name = 'CurriculumSeedError';
+  }
+}
 
-/**
- * 课程配置数据
- * 注意: topics 和 goals 在存储时会转换为 JSON 格式
- */
-const CURRICULUM_CONFIGS: CurriculumConfig[] = [
-  // Python数据分析实战项目课程
+const CURRICULUM_CONFIGS: readonly CurriculumConfig[] = [
   {
     id: 'curr_001_01',
     projectId: 'proj_001',
@@ -128,7 +106,6 @@ const CURRICULUM_CONFIGS: CurriculumConfig[] = [
       '理解可视化设计原则',
     ],
   },
-  // 机器学习算法实践课程
   {
     id: 'curr_002_01',
     projectId: 'proj_002',
@@ -169,7 +146,6 @@ const CURRICULUM_CONFIGS: CurriculumConfig[] = [
       '理解模型评估方法',
     ],
   },
-  // 深度学习与神经网络课程
   {
     id: 'curr_003_01',
     projectId: 'proj_003',
@@ -190,7 +166,6 @@ const CURRICULUM_CONFIGS: CurriculumConfig[] = [
       '熟悉激活函数作用',
     ],
   },
-  // Web全栈开发实战课程
   {
     id: 'curr_004_01',
     projectId: 'proj_004',
@@ -231,7 +206,6 @@ const CURRICULUM_CONFIGS: CurriculumConfig[] = [
       '掌握中间件概念',
     ],
   },
-  // 移动应用开发课程
   {
     id: 'curr_005_01',
     projectId: 'proj_005',
@@ -252,37 +226,56 @@ const CURRICULUM_CONFIGS: CurriculumConfig[] = [
       '掌握导航配置',
     ],
   },
-];
+] as const;
 
-// ==================== 辅助函数 ====================
+function validateProjectReferences(
+  projects: readonly Project[],
+  configs: readonly CurriculumConfig[],
+): string[] {
+  const projectIds = new Set(projects.map((p) => p.id));
+  const missingIds: string[] = [];
 
-/**
- * 将课程配置转换为 Prisma 创建输入格式
- * topics 和 goals 转换为 JSON 格式以符合 Prisma 模型定义
- */
-function convertToCurriculumCreateInput(
+  for (const config of configs) {
+    if (!projectIds.has(config.projectId)) {
+      missingIds.push(config.projectId);
+    }
+  }
+
+  return missingIds;
+}
+
+function convertToPrismaInput(
   config: CurriculumConfig,
-): Prisma.CurriculumUncheckedCreateInput {
+): Prisma.CurriculumCreateInput {
   return {
     id: config.id,
-    projectId: config.projectId,
+    project: {
+      connect: { id: config.projectId },
+    },
     title: config.title,
     description: config.description,
     week: config.week,
-    topics: config.topics as unknown as Prisma.InputJsonValue,
-    goals: config.goals as unknown as Prisma.InputJsonValue,
+    topics: config.topics as Prisma.InputJsonValue,
+    goals: config.goals as Prisma.InputJsonValue,
   };
 }
 
-// ==================== 主函数 ====================
+function logCurriculumCreation(curriculum: Curriculum): void {
+  console.log(`✅ 创建课程: ${curriculum.title} (第${curriculum.week}周)`);
+}
 
-/**
- * 创建课程数据
- *
- * @param prisma - Prisma 客户端实例
- * @param params - 创建参数，包含项目列表
- * @returns 创建的课程数据
- */
+function logMissingProjects(missingIds: readonly string[]): void {
+  if (missingIds.length > 0) {
+    console.warn(
+      `⚠️ 警告: 以下课程引用了不存在的项目ID: ${missingIds.join(', ')}`,
+    );
+  }
+}
+
+function logSummary(count: number): void {
+  console.log(`📚 课程数据创建完成，共 ${count} 个课程`);
+}
+
 export async function createCurriculums(
   prisma: PrismaClient,
   { projects }: CreateCurriculumsParams,
@@ -290,29 +283,11 @@ export async function createCurriculums(
   console.log('📖 开始创建课程数据...');
 
   try {
-    // 验证课程配置中引用的项目ID是否存在于提供的项目列表中
-    const projectIds = new Set(projects.map((p) => p.id));
-    const curriculumProjectIds = new Set(
-      CURRICULUM_CONFIGS.map((c) => c.projectId),
-    );
+    const missingProjectIds = validateProjectReferences(projects, CURRICULUM_CONFIGS);
+    logMissingProjects(missingProjectIds);
 
-    // 检查是否有课程引用了不存在的项目
-    const missingProjectIds: string[] = [];
-    curriculumProjectIds.forEach((id) => {
-      if (!projectIds.has(id)) {
-        missingProjectIds.push(id);
-      }
-    });
-
-    if (missingProjectIds.length > 0) {
-      console.warn(
-        `⚠️ 警告: 以下课程引用了不存在的项目ID: ${missingProjectIds.join(', ')}`,
-      );
-    }
-
-    // 并行创建所有课程
     const curriculumPromises = CURRICULUM_CONFIGS.map((config) => {
-      const createInput = convertToCurriculumCreateInput(config);
+      const createInput = convertToPrismaInput(config);
 
       return prisma.curriculum.upsert({
         where: { id: config.id },
@@ -323,15 +298,15 @@ export async function createCurriculums(
 
     const curriculums = await Promise.all(curriculumPromises);
 
-    // 输出创建结果
-    curriculums.forEach((curriculum) => {
-      console.log(`✅ 创建课程: ${curriculum.title} (第${curriculum.week}周)`);
-    });
+    curriculums.forEach(logCurriculumCreation);
+    logSummary(curriculums.length);
 
-    console.log(`📚 课程数据创建完成，共 ${curriculums.length} 个课程`);
     return { curriculums };
   } catch (error) {
     console.error('❌ 创建课程数据失败:', error);
-    throw error;
+    throw new CurriculumSeedError(
+      'Failed to create curriculum data',
+      error,
+    );
   }
 }
