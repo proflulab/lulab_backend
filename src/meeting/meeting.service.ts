@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProcessingStatus } from '@prisma/client';
+import { ProcessingStatus, Prisma } from '@prisma/client';
 import { MeetingRepository } from './repositories/meeting.repository';
 import { GetMeetingRecordsParams } from './types';
 import { MeetingRecordResponseDto } from './dto/meeting-record.dto';
@@ -65,20 +65,20 @@ export class MeetingService {
     // 转换DTO到repository数据格式
     const createData = {
       platform: params.platform,
-      meetingId: params.platformMeetingId, // 改为 meetingId
+      meetingId: params.platformMeetingId,
       title: params.title,
       meetingCode: params.meetingCode || '',
       type: params.type,
-      hostPlatformUserId: params.hostUserId || '', // 改为 hostPlatformUserId
-      startTime: params.actualStartAt
+      hostId: params.hostUserId || '',
+      startAt: params.actualStartAt
         ? new Date(params.actualStartAt)
         : new Date(),
-      endTime: params.endedAt ? new Date(params.endedAt) : new Date(),
+      endAt: params.endedAt ? new Date(params.endedAt) : new Date(),
       durationSeconds: params.duration || 0,
       hasRecording: params.hasRecording || false,
       recordingStatus: params.recordingStatus || ProcessingStatus.PENDING,
       processingStatus: params.processingStatus || ProcessingStatus.PENDING,
-      metadata: params.metadata as unknown,
+      metadata: params.metadata as Prisma.InputJsonValue,
     };
 
     return this.meetingRepository.create(createData);
@@ -119,19 +119,19 @@ export class MeetingService {
       updateData.type = params.type;
     }
     if (params.hostUserId !== undefined) {
-      updateData.hostPlatformUserId = params.hostUserId; // 改为 hostPlatformUserId
+      updateData.hostId = params.hostUserId;
     }
     if (params.actualStartAt !== undefined) {
-      updateData.startAt = new Date(params.actualStartAt); // 改为 startAt
+      updateData.startAt = new Date(params.actualStartAt);
     }
     if (params.endedAt !== undefined) {
-      updateData.endAt = new Date(params.endedAt); // 改为 endAt
+      updateData.endAt = new Date(params.endedAt);
     }
     if (params.duration !== undefined) {
-      updateData.durationSeconds = params.duration; // 改为 durationSeconds
+      updateData.durationSeconds = params.duration;
     }
     if (params.metadata !== undefined) {
-      updateData.metadata = params.metadata as unknown;
+      updateData.metadata = params.metadata as Prisma.InputJsonValue;
     }
 
     return this.meetingRepository.update(id, updateData);
