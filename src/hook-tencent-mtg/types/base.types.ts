@@ -10,6 +10,7 @@
  */
 
 import { TencentMeetingType } from '../enums/tencent-base.enum';
+import { MeetingParticipantDetail } from '@/integrations/tencent-meeting/types';
 
 export interface EventBase {
   trace_id: string;
@@ -27,4 +28,9 @@ export interface MeetingInfoBase {
 
 export interface PayloadBase {
   operate_time: number;
+}
+
+export interface MeetingParticipantsResult {
+  uniqueParticipants: MeetingParticipantDetail[];
+  allParticipants: MeetingParticipantDetail[];
 }
