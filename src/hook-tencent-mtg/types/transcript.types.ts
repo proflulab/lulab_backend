@@ -20,8 +20,6 @@ export interface CreateTranscriptResult {
 
 export interface ParagraphData {
   paragraph: RecordingTranscriptParagraph;
-  speakerId?: string;
-  transcriptId: string;
   index: string;
 }
 

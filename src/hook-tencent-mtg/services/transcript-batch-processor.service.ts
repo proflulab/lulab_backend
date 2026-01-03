@@ -1,13 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { Platform, PlatformUser } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
-import { PrismaTransaction } from '@/hook-tencent-mtg/types';
-import { RecordingTranscriptParagraph } from '@/integrations/tencent-meeting/types';
-import { ParagraphData, SentenceData } from '@/hook-tencent-mtg/types';
-import { ParagraphRepository } from '@/hook-tencent-mtg/repositories/paragraph.repository';
-import { SentenceRepository } from '@/hook-tencent-mtg/repositories/sentence.repository';
-import { WordRepository } from '@/hook-tencent-mtg/repositories/word.repository';
-import { SpeakerService } from '@/hook-tencent-mtg/services/speaker.service';
-import { MeetingParticipantDetail } from '@/integrations/tencent-meeting/types';
+import { PlatformUserRepository } from '@/user-platform/repositories/platform-user.repository';
+import {
+  ParagraphRepository,
+  SentenceRepository,
+  WordRepository,
+} from '@/hook-tencent-mtg/repositories';
+import {
+  PrismaTransaction,
+  NewRecordingTranscriptParagraph,
+  ParagraphData,
+  SentenceData,
+} from '@/hook-tencent-mtg/types';
 
 @Injectable()
 export class TranscriptBatchProcessor {
@@ -19,34 +24,43 @@ export class TranscriptBatchProcessor {
     private readonly paragraphRepository: ParagraphRepository,
     private readonly sentenceRepository: SentenceRepository,
     private readonly wordRepository: WordRepository,
-    private readonly speakerService: SpeakerService,
+    private readonly ptUserRepository: PlatformUserRepository,
   ) {}
 
   async processParagraphsInBatches(
-    paragraphs: RecordingTranscriptParagraph[],
+    paragraphs: NewRecordingTranscriptParagraph[],
     transcriptId: string,
-    participants: MeetingParticipantDetail[],
   ): Promise<void> {
     for (let i = 0; i < paragraphs.length; i += this.PARAGRAPH_BATCH_SIZE) {
       const batch = paragraphs.slice(i, i + this.PARAGRAPH_BATCH_SIZE);
-      await this.processParagraphBatch(batch, transcriptId, participants);
+      await this.processParagraphBatch(batch, transcriptId);
     }
   }
 
   private async processParagraphBatch(
-    batch: RecordingTranscriptParagraph[],
+    batch: NewRecordingTranscriptParagraph[],
     transcriptId: string,
-    participants: MeetingParticipantDetail[],
   ): Promise<void> {
     return this.prisma.$transaction(async (tx) => {
       const paragraphDataList: Array<ParagraphData> = [];
 
       for (const paragraph of batch) {
-        const speakerId = await this.speakerService.findOrCreateSpeaker(
-          tx,
-          paragraph.speaker_info,
-          participants,
-        );
+        const speakerInfo = paragraph.speaker_info;
+        const ptUnionId = speakerInfo.uuid;
+
+        let platformUser: PlatformUser | null = null;
+        if (ptUnionId) {
+          platformUser = await this.ptUserRepository.upsert(
+            { platform: Platform.TENCENT_MEETING, ptUnionId },
+            {
+              displayName: speakerInfo.username,
+              ptUserId: speakerInfo.userid,
+              phone: speakerInfo.phone,
+            },
+          );
+        }
+
+        const speakerId = platformUser?.id;
 
         const createdParagraph = await this.paragraphRepository.create(tx, {
           pid: parseInt(paragraph.pid, 10),
@@ -58,8 +72,6 @@ export class TranscriptBatchProcessor {
 
         paragraphDataList.push({
           paragraph,
-          speakerId,
-          transcriptId,
           index: createdParagraph.id,
         });
       }

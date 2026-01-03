@@ -11,6 +11,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { TencentApiService } from '@/integrations/tencent-meeting/api.service';
+import { ContentUtils } from '../utils/content.utils';
 
 /**
  * 会议内容接口
@@ -135,7 +136,7 @@ export class RecordingContentService {
         recordFileId,
         userId,
       );
-      return this.decodeBase64Content(response.ai_summary);
+      return ContentUtils.decodeBase64Content(response.ai_summary);
     } catch (error) {
       throw new MeetingContentError(
         ErrorType.API_ERROR,
@@ -168,25 +169,6 @@ export class RecordingContentService {
       throw new MeetingContentError(
         ErrorType.API_ERROR,
         `获取会议纪要失败: ${error instanceof Error ? error.message : String(error)}`,
-        error,
-      );
-    }
-  }
-
-  /**
-   * 解码Base64内容
-   * @param base64Content Base64编码的内容
-   * @returns 解码后的字符串
-   */
-  private decodeBase64Content(base64Content: string): string {
-    try {
-      return base64Content
-        ? Buffer.from(base64Content, 'base64').toString('utf-8')
-        : '';
-    } catch (error) {
-      throw new MeetingContentError(
-        ErrorType.DECODING_ERROR,
-        `Base64解码失败: ${error instanceof Error ? error.message : String(error)}`,
         error,
       );
     }
