@@ -71,9 +71,10 @@ export class MeetingBitableService {
 
       return result.data?.record?.record_id || '';
     } catch (error) {
-      throw new Error(
+      this.logger.debug(
         `Failed to upsert meeting user record for user ${participant.uuid}: ${(error as Error).message}`,
       );
+      return '';
     }
   }
 

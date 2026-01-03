@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2026-01-04 00:02:31
+ * @LastEditTime: 2026-01-04 04:44:42
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -13,25 +13,24 @@ import { Injectable } from '@nestjs/common';
 import { BaseEventHandler } from '../base/base-event.handler';
 import { RecordingCompletedPayload } from '../../types/tencent-event.types';
 import { NumberRecordBitableRepository } from '@/integrations/lark/repositories';
-import { MeetingParticipantDetail } from '@/integrations/tencent-meeting/types';
 import { OpenaiService } from '@/integrations/openai/openai.service';
 import { RecordingContentService } from '../../services/recording-content.service';
 import { TranscriptService } from '../../services/transcript.service';
 import { MeetingBitableService } from '../../services/meeting-bitable.service';
 import { MeetingParticipantService } from '../../services/meeting-participant.service';
+import { SpeakerService } from '../../services/speaker.service';
 import { MeetingRecordingRepository } from '../../repositories/meeting-recording.repository';
 import { MeetingRepository } from '@/meeting/repositories/meeting.repository';
 import { PARTICIPANT_SUMMARY_PROMPT } from '../../constants/prompts';
 import { ParticipantSummaryRepository } from '../../repositories/participant-summary.repository';
 import { MeetingSummaryRepository } from '../../repositories/meeting-summary.repository';
 import { TranscriptBatchProcessor } from '../../services/transcript-batch-processor.service';
-import { PrismaService } from '@/prisma/prisma.service';
 import { TranscriptRepository } from '../../repositories/transcript.repository';
 import { PlatformUserRepository } from '@/user-platform/repositories/platform-user.repository';
 import {
-  RecordingTranscriptParagraph,
-  SpeakerInfo,
-} from '@/integrations/tencent-meeting/types';
+  NewSpeakerInfo,
+  NewRecordingTranscriptParagraph,
+} from '@/hook-tencent-mtg/types';
 import {
   Prisma,
   MeetingRecording,
@@ -57,11 +56,11 @@ export class RecordingCompletedHandler extends BaseEventHandler {
     private readonly transcriptService: TranscriptService,
     private readonly bitableService: MeetingBitableService,
     private readonly participantService: MeetingParticipantService,
+    private readonly speakerService: SpeakerService,
     private readonly meetingRecordingRepository: MeetingRecordingRepository,
     private readonly meetingRepository: MeetingRepository,
     private readonly participantSummaryRepository: ParticipantSummaryRepository,
     private readonly meetingSummaryRepository: MeetingSummaryRepository,
-    private readonly prisma: PrismaService,
     private readonly transcriptRepository: TranscriptRepository,
     private readonly batchProcessor: TranscriptBatchProcessor,
     private readonly platformUserRepository: PlatformUserRepository,
@@ -102,11 +101,13 @@ export class RecordingCompletedHandler extends BaseEventHandler {
 
       try {
         // 获取智能摘要、待办事项和会议纪要
-        let { fullsummary = '', todo = '', ai_minutes = '' } = {};
+        let fullsummary = '';
+        let ai_minutes = '';
+        let todo = '';
         // 获取录音转写内容
         let formattedText = '';
-        let uniqueSpeakerInfos: SpeakerInfo[] = [];
-        let paragraphs: RecordingTranscriptParagraph[] = [];
+        let uniqueSpeakerInfos: NewSpeakerInfo[] = [];
+        let paragraphs: NewRecordingTranscriptParagraph[] = [];
 
         const [meetingContentResult, transcriptResult] =
           await Promise.allSettled([
@@ -129,6 +130,27 @@ export class RecordingCompletedHandler extends BaseEventHandler {
           formattedText = transcriptResult.value.formattedText;
           uniqueSpeakerInfos = transcriptResult.value.uniqueSpeakerInfos;
           paragraphs = transcriptResult.value.paragraphs;
+
+          // 扩展 speaker info 信息
+          uniqueSpeakerInfos = await Promise.all(
+            uniqueSpeakerInfos.map((speakerInfo) =>
+              this.speakerService.enrichSpeakerInfo(
+                speakerInfo,
+                uniqueParticipants,
+              ),
+            ),
+          );
+
+          // 扩展 paragraphs 中的 speaker info
+          paragraphs = await Promise.all(
+            paragraphs.map(async (paragraph) => ({
+              ...paragraph,
+              speaker_info: await this.speakerService.enrichSpeakerInfo(
+                paragraph.speaker_info,
+                uniqueParticipants,
+              ),
+            })),
+          );
         } else {
           this.logger.warn(`获取录音转写失败: ${fileId}`);
         }
@@ -179,15 +201,26 @@ export class RecordingCompletedHandler extends BaseEventHandler {
             version: 1,
             isLatest: true,
           });
-        }
 
-        await this.saveTranscriptToDatabase(
-          fileId,
-          paragraphs,
-          uniqueParticipants,
-          meeting_id,
-          sub_meeting_id,
-        );
+          const existingTranscript =
+            await this.transcriptRepository.findByRecordingId(recording.id);
+
+          if (!existingTranscript) {
+            const transcript = await this.transcriptRepository.create({
+              source: `tencent-meeting:${fileId}`,
+              rawJson: paragraphs as unknown as Prisma.InputJsonValue,
+              status: 2,
+              recordingId: recording.id,
+            });
+
+            await this.batchProcessor.processParagraphsInBatches(
+              paragraphs,
+              transcript.id,
+            );
+          } else {
+            this.logger.log(`转写记录已存在，跳过处理: ${fileId}`);
+          }
+        }
 
         // 对参会者逐个进行会议总结
 
@@ -262,63 +295,5 @@ export class RecordingCompletedHandler extends BaseEventHandler {
         // 不抛出错误，避免影响主流程
       }
     }
-  }
-
-  private async saveTranscriptToDatabase(
-    recordFileId: string,
-    paragraphs: RecordingTranscriptParagraph[],
-    participants: MeetingParticipantDetail[],
-    meetingId: string,
-    subMeetingId?: string,
-  ): Promise<void> {
-    if (paragraphs.length === 0) {
-      this.logger.warn(`转写内容为空: ${recordFileId}`);
-      return;
-    }
-
-    const { transcriptId, exists } = await this.prisma.$transaction(
-      async (tx) => {
-        const recordingId =
-          await this.meetingRecordingRepository.findOrCreateByExternalId(
-            tx,
-            recordFileId,
-            meetingId,
-            subMeetingId,
-          );
-
-        const existingTranscript =
-          await this.transcriptRepository.findByRecordingId(recordingId);
-
-        if (existingTranscript) {
-          return {
-            transcriptId: existingTranscript.id,
-            exists: true,
-          };
-        }
-
-        const transcript = await this.transcriptRepository.create(tx, {
-          source: `tencent-meeting:${recordFileId}`,
-          rawJson: paragraphs as unknown as Prisma.InputJsonValue,
-          status: 2,
-          recordingId: recordingId,
-        });
-
-        return {
-          transcriptId: transcript.id,
-          exists: false,
-        };
-      },
-    );
-
-    if (exists) {
-      this.logger.log(`转写记录已存在，跳过处理: ${recordFileId}`);
-      return;
-    }
-
-    await this.batchProcessor.processParagraphsInBatches(
-      paragraphs,
-      transcriptId,
-      participants,
-    );
   }
 }

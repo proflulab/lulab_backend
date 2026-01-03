@@ -139,4 +139,30 @@ export class PlatformUserRepository {
       data: { active: true },
     });
   }
+
+  async findByPtUserId(
+    platform: Platform,
+    ptUserId: string,
+  ): Promise<PlatformUser | null> {
+    return this.prisma.platformUser.findFirst({
+      where: {
+        platform,
+        ptUserId,
+        active: true,
+      },
+    });
+  }
+
+  async findByPtName(
+    platform: Platform,
+    displayName: string,
+  ): Promise<PlatformUser | null> {
+    return this.prisma.platformUser.findFirst({
+      where: {
+        platform,
+        displayName,
+        active: true,
+      },
+    });
+  }
 }
