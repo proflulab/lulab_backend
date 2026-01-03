@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-24 00:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2026-01-04 00:29:27
+ * @LastEditTime: 2026-01-04 01:12:17
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/meeting-participant.service.ts
  * @Description: 会议参与者服务，负责处理会议参与者相关逻辑
  *
@@ -78,35 +78,4 @@ export class MeetingParticipantService {
       };
     }
   }
-
-  // /**
-  //  * 更新用户记录
-  //  * @param participants 参与者列表
-  //  * @param meetingUserBitable 用户记录仓库
-  //  */
-  // async updateUserRecords(
-  //   participants: MeetingParticipantDetail[],
-  //   meetingUserBitable: MeetingUserBitableRepository,
-  // ): Promise<void> {
-  //   for (const participant of participants) {
-  //     try {
-  //       await meetingUserBitable.upsertMeetingUserRecord({
-  //         userid: participant.userid,
-  //         uuid: participant.uuid,
-  //         user_name: participant.user_name,
-  //         phone_hase: participant.phone,
-  //         is_enterprise_user: participant.is_enterprise_user,
-  //       });
-
-  //       this.logger.log(
-  //         `用户记录已创建/更新: ${participant.user_name} (${participant.uuid})`,
-  //       );
-  //     } catch (error: unknown) {
-  //       this.logger.warn(
-  //         `更新用户记录失败: ${participant.user_name} (${participant.uuid})`,
-  //         error,
-  //       );
-  //     }
-  //   }
-  // }
 }
