@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-24
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2026-01-03 04:36:31
+ * @LastEditTime: 2026-01-04 01:50:50
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/meeting-database.service.ts
  * @Description: 会议数据库服务，处理会议记录的创建和更新
  *
@@ -15,9 +15,9 @@ import {
   Meetuser,
 } from '../types/tencent-event.types';
 import { TencentEventUtils } from '../utils/tencent-event.utils';
-import { TencentMeetingRepository } from '../repositories/tencent-meeting.repository';
 import { PlatformUserRepository } from '@/user-platform/repositories/platform-user.repository';
-import { Platform, ProcessingStatus } from '@prisma/client';
+import { MeetingRepository } from '@/meeting/repositories/meeting.repository';
+import { Platform, PlatformUser, ProcessingStatus } from '@prisma/client';
 
 /**
  * 会议数据库服务
@@ -26,8 +26,8 @@ import { Platform, ProcessingStatus } from '@prisma/client';
 @Injectable()
 export class MeetingDatabaseService {
   constructor(
-    private readonly tencentMeetingRepository: TencentMeetingRepository,
-    private readonly platformUserRepository: PlatformUserRepository,
+    private readonly ptUserRepository: PlatformUserRepository,
+    private readonly meetingRepository: MeetingRepository,
   ) {}
 
   /**
@@ -47,7 +47,9 @@ export class MeetingDatabaseService {
       meeting_info.meeting_type as number,
     );
 
-    await this.tencentMeetingRepository.upsertMeetingWithPlatformUsers(
+    const creatorUser = await this.upsertPlatformUser(creator);
+
+    await this.meetingRepository.upsert(
       Platform.TENCENT_MEETING,
       meeting_info.meeting_id,
       meeting_info.sub_meeting_id || '__ROOT__',
@@ -55,26 +57,14 @@ export class MeetingDatabaseService {
         title: meeting_info.subject,
         meetingCode: meeting_info.meeting_code,
         type: meetingType,
-        scheduledStartAt: new Date(meeting_info.start_time * 1000),
-        scheduledEndAt: new Date(meeting_info.end_time * 1000),
+        hostId: creatorUser.id,
+        createdById: creatorUser.id,
         startAt: new Date(meeting_info.start_time * 1000),
         endAt: new Date(meeting_info.end_time * 1000),
         durationSeconds: meeting_info.end_time - meeting_info.start_time,
         hasRecording: false,
         recordingStatus: ProcessingStatus.PENDING,
         processingStatus: ProcessingStatus.PENDING,
-      },
-      {
-        platformUuid: creator.uuid,
-        platformUserId: creator.userid,
-        platform: Platform.TENCENT_MEETING,
-        userName: creator.user_name,
-      },
-      {
-        platformUuid: creator.uuid,
-        platformUserId: creator.userid,
-        platform: Platform.TENCENT_MEETING,
-        userName: creator.user_name,
       },
     );
   }
@@ -83,7 +73,7 @@ export class MeetingDatabaseService {
    * 创建或更新平台用户记录
    * @param user 用户信息
    */
-  async upsertPlatformUser(user: Meetuser) {
+  async upsertPlatformUser(user: Meetuser): Promise<PlatformUser> {
     if (!user.uuid) {
       throw new Error(
         `User UUID is required but not provided for user ${user.user_name || 'unknown'}`,
@@ -91,7 +81,7 @@ export class MeetingDatabaseService {
     }
 
     try {
-      await this.platformUserRepository.upsert(
+      const result = await this.ptUserRepository.upsert(
         {
           platform: Platform.TENCENT_MEETING,
           ptUnionId: user.uuid,
@@ -105,6 +95,7 @@ export class MeetingDatabaseService {
           },
         },
       );
+      return result;
     } catch (error) {
       throw new Error(
         `Failed to upsert platform user for user ${user.uuid}: ${(error as Error).message}`,
