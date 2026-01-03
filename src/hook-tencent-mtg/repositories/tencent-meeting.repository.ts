@@ -170,23 +170,4 @@ export class TencentMeetingRepository {
       });
     }
   }
-
-  /**
-   * Find meeting by platform and meeting identifiers
-   */
-  async findMeeting(
-    platform: MeetingPlatform,
-    meetingId: string,
-    subMeetingId: string,
-  ) {
-    return this.prisma.meeting.findUnique({
-      where: {
-        platform_meetingId_subMeetingId: {
-          platform,
-          meetingId,
-          subMeetingId,
-        },
-      },
-    });
-  }
 }

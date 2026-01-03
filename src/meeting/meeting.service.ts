@@ -28,14 +28,14 @@ export class MeetingService {
     limit: number;
     totalPages: number;
   }> {
-    return this.meetingRepository.getMeetingRecords(params);
+    return this.meetingRepository.get(params);
   }
 
   /**
    * 获取会议记录详情
    */
   async getMeetingRecordById(id: string): Promise<MeetingRecordResponseDto> {
-    const record = await this.meetingRepository.findMeetingById(id);
+    const record = await this.meetingRepository.findById(id);
     if (!record) {
       throw new MeetingRecordNotFoundException(id);
     }
@@ -49,7 +49,7 @@ export class MeetingService {
     params: CreateMeetingRecordDto,
   ): Promise<MeetingRecordResponseDto> {
     // 检查是否已存在
-    const existing = await this.meetingRepository.findMeetingByPlatformId(
+    const existing = await this.meetingRepository.findByPtId(
       params.platform,
       params.platformMeetingId,
       '', // Default empty subMeetingId
@@ -81,7 +81,7 @@ export class MeetingService {
       metadata: params.metadata as unknown,
     };
 
-    return this.meetingRepository.createMeetingRecord(createData);
+    return this.meetingRepository.create(createData);
   }
 
   /**
@@ -91,7 +91,7 @@ export class MeetingService {
     id: string,
     params: UpdateMeetingRecordDto,
   ): Promise<MeetingRecordResponseDto> {
-    const record = await this.meetingRepository.findMeetingById(id);
+    const record = await this.meetingRepository.findById(id);
     if (!record) {
       throw new MeetingRecordNotFoundException(id);
     }
@@ -134,18 +134,18 @@ export class MeetingService {
       updateData.metadata = params.metadata as unknown;
     }
 
-    return this.meetingRepository.updateMeetingRecord(id, updateData);
+    return this.meetingRepository.update(id, updateData);
   }
 
   /**
    * 删除会议记录
    */
   async deleteMeetingRecord(id: string): Promise<void> {
-    const record = await this.meetingRepository.findMeetingById(id);
+    const record = await this.meetingRepository.findById(id);
     if (!record) {
       throw new MeetingRecordNotFoundException(id);
     }
-    await this.meetingRepository.deleteMeetingRecord(id);
+    await this.meetingRepository.delete(id);
   }
 
   /**
@@ -170,13 +170,13 @@ export class MeetingService {
    * 重新处理会议记录
    */
   async reprocessMeetingRecord(id: string): Promise<MeetingRecordResponseDto> {
-    const record = await this.meetingRepository.findMeetingById(id);
+    const record = await this.meetingRepository.findById(id);
     if (!record) {
       throw new MeetingRecordNotFoundException(id);
     }
 
     // 重置处理状态
-    await this.meetingRepository.updateMeetingRecord(id, {
+    await this.meetingRepository.update(id, {
       processingStatus: ProcessingStatus.PROCESSING,
     });
 

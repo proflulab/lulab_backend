@@ -39,7 +39,9 @@ export class TranscriptFormatterService {
    * @param transcript 转写响应数据
    * @returns 格式化后的转写文本和唯一用户名
    */
-  formatTranscript(transcript?: RecordingTranscriptParagraph[]): FormattedTranscriptResult {
+  formatTranscript(
+    transcript?: RecordingTranscriptParagraph[],
+  ): FormattedTranscriptResult {
     if (!transcript?.length) {
       return {
         formattedText: '',
@@ -53,7 +55,9 @@ export class TranscriptFormatterService {
     // 提取所有唯一的发言人信息
     for (const paragraph of transcript) {
       const speakerInfo = paragraph.speaker_info;
-      const exists = speakerInfos.some((info) => info.username === speakerInfo.username);
+      const exists = speakerInfos.some(
+        (info) => info.username === speakerInfo.username,
+      );
       if (!exists) {
         speakerInfos.push(speakerInfo);
       }

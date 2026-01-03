@@ -107,7 +107,9 @@ describe('TranscriptFormatterService', () => {
       ];
 
       const result = service.formatTranscript(transcript);
-      expect(result.formattedText).toBe('张三(01:00:00)：大家好，今天我们讨论项目进展');
+      expect(result.formattedText).toBe(
+        '张三(01:00:00)：大家好，今天我们讨论项目进展',
+      );
       expect(result.speakerInfos).toHaveLength(1);
       expect(result.speakerInfos[0].username).toBe('张三');
     });
@@ -199,7 +201,9 @@ describe('TranscriptFormatterService', () => {
       ];
 
       const result = service.formatTranscript(transcript);
-      expect(result.formattedText).toBe('李四(01:01:05)：首先，我来介绍一下这个功能。');
+      expect(result.formattedText).toBe(
+        '李四(01:01:05)：首先，我来介绍一下这个功能。',
+      );
       expect(result.speakerInfos).toHaveLength(1);
       expect(result.speakerInfos[0].username).toBe('李四');
     });

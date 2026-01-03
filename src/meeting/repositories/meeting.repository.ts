@@ -14,7 +14,7 @@ export class MeetingRepository {
   /**
    * Find meeting record by platform and meeting ID
    */
-  async findMeetingByPlatformId(
+  async findByPtId(
     platform: MeetingPlatform,
     meetingId: string,
     subMeetingId: string,
@@ -33,7 +33,7 @@ export class MeetingRepository {
   /**
    * Find meeting record by ID
    */
-  async findMeetingById(id: string) {
+  async findById(id: string) {
     return this.prisma.meeting.findUnique({
       where: { id },
       include: {
@@ -45,7 +45,7 @@ export class MeetingRepository {
   /**
    * Create meeting record
    */
-  async createMeetingRecord(data: CreateMeetingRecordData) {
+  async create(data: CreateMeetingRecordData) {
     return this.prisma.meeting.create({
       data,
     });
@@ -54,7 +54,7 @@ export class MeetingRepository {
   /**
    * Update meeting record
    */
-  async updateMeetingRecord(id: string, data: UpdateMeetingRecordData) {
+  async update(id: string, data: UpdateMeetingRecordData) {
     return this.prisma.meeting.update({
       where: { id },
       data,
@@ -64,7 +64,7 @@ export class MeetingRepository {
   /**
    * Upsert meeting record - create if not exists, update if exists
    */
-  async upsertMeetingRecord(
+  async upsert(
     platform: MeetingPlatform,
     meetingId: string,
     subMeetingId: string,
@@ -94,7 +94,7 @@ export class MeetingRepository {
   /**
    * Delete meeting record
    */
-  async deleteMeetingRecord(id: string) {
+  async delete(id: string) {
     return this.prisma.meeting.delete({
       where: { id },
     });
@@ -103,7 +103,7 @@ export class MeetingRepository {
   /**
    * Get meeting records list
    */
-  async getMeetingRecords(params: GetMeetingRecordsParams): Promise<{
+  async get(params: GetMeetingRecordsParams): Promise<{
     records: any[];
     total: number;
     page: number;

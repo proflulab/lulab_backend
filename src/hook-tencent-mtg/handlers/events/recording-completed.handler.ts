@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2026-01-03 22:26:12
+ * @LastEditTime: 2026-01-04 00:02:31
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -19,8 +19,8 @@ import { RecordingContentService } from '../../services/recording-content.servic
 import { TranscriptService } from '../../services/transcript.service';
 import { MeetingBitableService } from '../../services/meeting-bitable.service';
 import { MeetingParticipantService } from '../../services/meeting-participant.service';
-import { TencentMeetingRepository } from '../../repositories/tencent-meeting.repository';
 import { MeetingRecordingRepository } from '../../repositories/meeting-recording.repository';
+import { MeetingRepository } from '@/meeting/repositories/meeting.repository';
 import { PARTICIPANT_SUMMARY_PROMPT } from '../../constants/prompts';
 import { ParticipantSummaryRepository } from '../../repositories/participant-summary.repository';
 import { MeetingSummaryRepository } from '../../repositories/meeting-summary.repository';
@@ -28,7 +28,10 @@ import { TranscriptBatchProcessor } from '../../services/transcript-batch-proces
 import { PrismaService } from '@/prisma/prisma.service';
 import { TranscriptRepository } from '../../repositories/transcript.repository';
 import { PlatformUserRepository } from '@/user-platform/repositories/platform-user.repository';
-import { RecordingTranscriptParagraph, SpeakerInfo } from '@/integrations/tencent-meeting/types';
+import {
+  RecordingTranscriptParagraph,
+  SpeakerInfo,
+} from '@/integrations/tencent-meeting/types';
 import {
   Prisma,
   MeetingRecording,
@@ -54,8 +57,8 @@ export class RecordingCompletedHandler extends BaseEventHandler {
     private readonly transcriptService: TranscriptService,
     private readonly bitableService: MeetingBitableService,
     private readonly participantService: MeetingParticipantService,
-    private readonly tencentMeetingRepository: TencentMeetingRepository,
     private readonly meetingRecordingRepository: MeetingRecordingRepository,
+    private readonly meetingRepository: MeetingRepository,
     private readonly participantSummaryRepository: ParticipantSummaryRepository,
     private readonly meetingSummaryRepository: MeetingSummaryRepository,
     private readonly prisma: PrismaService,
@@ -143,7 +146,7 @@ export class RecordingCompletedHandler extends BaseEventHandler {
             formattedText,
           );
 
-        const meeting = await this.tencentMeetingRepository.findMeeting(
+        const meeting = await this.meetingRepository.findByPtId(
           MeetingPlatform.TENCENT_MEETING,
           meeting_id,
           sub_meeting_id || '__ROOT__',
@@ -192,7 +195,9 @@ export class RecordingCompletedHandler extends BaseEventHandler {
         for (const u of uniqueParticipants) {
           const uId = await this.bitableService.safeUpsertMeetingUserRecord(u);
 
-          if (uniqueSpeakerInfos.find((uInfo) => uInfo.username === u.user_name)) {
+          if (
+            uniqueSpeakerInfos.find((uInfo) => uInfo.username === u.user_name)
+          ) {
             // 构建参会者的会议总结提示词
             const participantSummaryPrompt = PARTICIPANT_SUMMARY_PROMPT(
               meeting_info.subject,
