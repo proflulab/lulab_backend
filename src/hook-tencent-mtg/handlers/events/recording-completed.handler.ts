@@ -89,8 +89,7 @@ export class RecordingCompletedHandler extends BaseEventHandler {
     const { meeting_id, sub_meeting_id } = meeting_info;
     const creatorUserId = meeting_info.creator.userid || '';
 
-    // 获取会议参与者列表并根据 uuid 去重
-    const uniqueParticipants: MeetingParticipantDetail[] =
+    const { uniqueParticipants } =
       await this.participantService.getUniqueParticipants(
         meeting_id,
         creatorUserId,
