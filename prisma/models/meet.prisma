@@ -220,6 +220,9 @@ model MeetingParticipant {
   userRole    Int? // 平台用户角色
   sessionData Json? // 本次参会的特定数据
 
+  // 关联关系
+  participantSummaries ParticipantSummary[] // 关联个人总结
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -312,4 +315,92 @@ enum ProcessingStatus {
   COMPLETED // 已完成
   FAILED // 处理失败
   SKIPPED // 已跳过
+}
+
+
+// 参与者会议总结表（包含单次会议和周期性总结）
+model ParticipantSummary {
+  id String @id @default(cuid())
+
+  // 平台用户ID
+  platformUserId String?
+  platformUser   PlatformUser? @relation(fields: [platformUserId], references: [id], onDelete: Restrict)
+
+  // 用户ID
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 周期类型
+  periodType PeriodType
+
+  // 单次会议字段
+  meetingParticipantId String? // 对应 MeetingParticipant 的 ID
+  meetingParticipant   MeetingParticipant? @relation(fields: [meetingParticipantId], references: [id], onDelete: SetNull)
+
+  meetingId String? // 对应 Meeting 的 ID
+  meeting   Meeting? @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+
+  // 通用字段 
+  startAt DateTime @db.Timestamptz(6)  // 总结时间段开始（必填）
+  endAt   DateTime @db.Timestamptz(6)  // 总结时间段结束（必填）
+
+  partName    String @db.VarChar(100) // 参会人信息 
+  partSummary String @db.Text // 总结内容
+
+  // 关系
+  asParent SummaryRelation[] @relation("ParentSummary") // 作为父级总结，包含哪些子级总结
+  asChild  SummaryRelation[] @relation("ChildSummary") // 作为子级总结，属于哪些父级总结
+
+  // 软删除
+  deletedAt DateTime? // 软删除时间戳
+
+  // 时间戳
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([platformUserId])
+  @@index([userId]) // 用户查询优化
+  @@index([periodType]) // 周期类型查询优化
+  @@index([createdAt])
+  @@index([deletedAt]) // 软删除查询优化
+  @@index([startAt, endAt])  // 按时间段范围查询优化
+  @@index([startAt])
+  @@index([endAt])
+  @@map("participant_summaries")
+}
+
+
+// 周期类型枚举（包含单次）
+enum PeriodType {
+  SINGLE // 单次会议
+  DAILY // 每日
+  WEEKLY // 每周
+  MONTHLY // 每月
+  QUARTERLY // 每季度
+  YEARLY // 每年
+}
+
+// 总结关系表（记录总结之间的层级关系）
+// 支持：单次→每日、每日→每周、每周→每月、每月→每年等
+model SummaryRelation {
+  id String @id @default(cuid())
+
+  // 父级总结ID（更高层级的总结，如每日、每周、每月）
+  parentSummaryId String
+  parentSummary   ParticipantSummary @relation("ParentSummary", fields: [parentSummaryId], references: [id], onDelete: Cascade)
+
+  // 子级总结ID（更低层级的总结，如单次、每日、每周）
+  childSummaryId String
+  childSummary   ParticipantSummary @relation("ChildSummary", fields: [childSummaryId], references: [id], onDelete: Cascade)
+
+  // 父级周期类型（方便查询，表示父级是什么类型的总结）
+  parentPeriodType PeriodType
+
+  createdAt DateTime @default(now())
+
+  @@unique([parentSummaryId, childSummaryId]) // 防止重复关联
+  @@index([parentSummaryId])
+  @@index([childSummaryId])
+  @@index([parentPeriodType])
+  @@map("summary_relations")
 }

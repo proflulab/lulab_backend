@@ -48,6 +48,7 @@ model User {
   // 会议相关关联
   platformUsers          PlatformUser[] // 平台用户关联
   uploadedStorageObjects StorageObject[]
+  participantSummaries ParticipantSummary[] // 周期性总结
 
   // 登录日志关联
   loginLogs LoginLog[] // 登录日志

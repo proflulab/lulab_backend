@@ -26,6 +26,7 @@ import {
   createRefunds,
   createMeetings,
   createAllRelations,
+  createParticipantSummaries,
 } from './seeds/index';
 
 const prisma = new PrismaClient();
@@ -277,6 +278,20 @@ async function seedDatabase(): Promise<void> {
     console.log('\n🎯 步骤 3: 创建会议数据');
     const meetingData = await createMeetings(prisma);
 
+    // 步骤 4: 创建参与者总结数据
+    console.log('\n📝 步骤 4: 创建参与者总结数据');
+    const participantSummaryData = await createParticipantSummaries(
+      prisma,
+      meetingData,
+    );
+
+    // 步骤 4: 创建参与者总结数据
+    console.log('\n📝 步骤 4: 创建参与者总结数据');
+    const participantSummaryData = await createParticipantSummaries(
+      prisma,
+      meetingData,
+    );
+
     printSeedStatistics(
       userData,
       permissionData,
@@ -288,6 +303,7 @@ async function seedDatabase(): Promise<void> {
       orders,
       refunds,
       meetingData,
+      participantSummaryData,
     );
   } catch (error) {
     console.error('❌ 种子数据初始化失败:', error);
@@ -375,6 +391,7 @@ function printSeedStatistics(
   orders: any[],
   refunds: any[],
   meetingData?: any,
+  participantSummaryData?: any,
 ): void {
   console.log('\n✅ 数据库种子数据初始化完成！');
   console.log('\n📊 统计信息:');
@@ -406,6 +423,11 @@ function printSeedStatistics(
   }
 }
 
+// ==================== 数据库分析功能 ====================
+
+/**
+ * 分析数据库表结构（调试用）
+ */
 async function analyzeDatabase(): Promise<void> {
   console.log('🔍 正在分析数据库结构...');
 
