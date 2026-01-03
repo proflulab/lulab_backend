@@ -19,7 +19,10 @@ interface CurriculumConfig {
 }
 
 class CurriculumSeedError extends Error {
-  constructor(message: string, public readonly context?: unknown) {
+  constructor(
+    message: string,
+    public readonly context?: unknown,
+  ) {
     super(message);
     this.name = 'CurriculumSeedError';
   }
@@ -283,7 +286,10 @@ export async function createCurriculums(
   console.log('📖 开始创建课程数据...');
 
   try {
-    const missingProjectIds = validateProjectReferences(projects, CURRICULUM_CONFIGS);
+    const missingProjectIds = validateProjectReferences(
+      projects,
+      CURRICULUM_CONFIGS,
+    );
     logMissingProjects(missingProjectIds);
 
     const curriculumPromises = CURRICULUM_CONFIGS.map((config) => {
@@ -304,9 +310,6 @@ export async function createCurriculums(
     return { curriculums };
   } catch (error) {
     console.error('❌ 创建课程数据失败:', error);
-    throw new CurriculumSeedError(
-      'Failed to create curriculum data',
-      error,
-    );
+    throw new CurriculumSeedError('Failed to create curriculum data', error);
   }
 }

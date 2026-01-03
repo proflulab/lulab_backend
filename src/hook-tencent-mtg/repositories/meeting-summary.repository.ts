@@ -1,32 +1,31 @@
+/*
+ * @Author: 杨仕明 shiming.y@qq.com
+ * @Date: 2026-01-03 08:11:41
+ * @LastEditors: 杨仕明 shiming.y@qq.com
+ * @LastEditTime: 2026-01-03 09:24:31
+ * @FilePath: /lulab_backend/src/hook-tencent-mtg/repositories/meeting-summary.repository.ts
+ * @Description:
+ *
+ * Copyright (c) 2026 by LuLab-Team, All Rights Reserved.
+ */
+
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { GenerationMethod, ProcessingStatus, Prisma } from '@prisma/client';
+
+type CreateInput = Prisma.MeetingSummaryUncheckedCreateInput;
 
 @Injectable()
 export class MeetingSummaryRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createMeetingSummary(data: {
-    meetingId: string;
-    recordingId: string;
-    content: string;
-    generatedBy?: GenerationMethod;
-    aiModel?: string;
-    status?: ProcessingStatus;
-    processingTime?: number;
-    language?: string;
-    version?: number;
-    isLatest?: boolean;
-  }) {
+  async create(data: CreateInput) {
     return this.prisma.meetingSummary.create({
       data: {
-        meetingId: data.meetingId,
-        recordingId: data.recordingId,
-        content: data.content,
+        ...data,
         generatedBy: data.generatedBy || GenerationMethod.AI,
         aiModel: data.aiModel || 'tencent-meeting-ai',
         status: data.status || ProcessingStatus.COMPLETED,
-        processingTime: data.processingTime,
         language: data.language || 'zh-CN',
         version: data.version || 1,
         isLatest: data.isLatest !== undefined ? data.isLatest : true,
@@ -34,20 +33,7 @@ export class MeetingSummaryRepository {
     });
   }
 
-  async upsertMeetingSummary(data: {
-    meetingId: string;
-    recordingId: string;
-    content?: string;
-    aiMinutes?: Prisma.InputJsonValue;
-    actionItems?: Prisma.InputJsonValue;
-    generatedBy?: GenerationMethod;
-    aiModel?: string;
-    status?: ProcessingStatus;
-    processingTime?: number;
-    language?: string;
-    version?: number;
-    isLatest?: boolean;
-  }) {
+  async upsert(data: CreateInput) {
     const existingSummary = await this.prisma.meetingSummary.findFirst({
       where: {
         meetingId: data.meetingId,
@@ -74,15 +60,10 @@ export class MeetingSummaryRepository {
     } else {
       return this.prisma.meetingSummary.create({
         data: {
-          meetingId: data.meetingId,
-          recordingId: data.recordingId,
-          content: data.content || '',
-          aiMinutes: data.aiMinutes,
-          actionItems: data.actionItems,
+          ...data,
           generatedBy: data.generatedBy || GenerationMethod.AI,
           aiModel: data.aiModel || 'tencent-meeting-ai',
           status: data.status || ProcessingStatus.COMPLETED,
-          processingTime: data.processingTime,
           language: data.language || 'zh-CN',
           version: data.version || 1,
           isLatest: data.isLatest !== undefined ? data.isLatest : true,

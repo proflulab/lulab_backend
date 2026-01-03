@@ -173,7 +173,9 @@ export async function createOrders(
   }
 
   if (normalUsers.length < 5) {
-    throw new Error(`Expected at least 5 normal users, but got ${normalUsers.length}`);
+    throw new Error(
+      `Expected at least 5 normal users, but got ${normalUsers.length}`,
+    );
   }
 
   const generateOrderCode = (index: number) => {
@@ -187,7 +189,10 @@ export async function createOrders(
     return `${date}${timestamp}${index.toString().padStart(3, '0')}`;
   };
 
-  const calculateBenefitDaysRemaining = (activeDays: number, benefitDurationDays: number) => {
+  const calculateBenefitDaysRemaining = (
+    activeDays: number,
+    benefitDurationDays: number,
+  ) => {
     return benefitDurationDays - activeDays;
   };
 
@@ -196,7 +201,8 @@ export async function createOrders(
       const product = products[config.productIndex];
       const channel = channels[config.channelIndex];
       const user = config.userIndex >= 0 ? normalUsers[config.userIndex] : null;
-      const customerEmail = config.customerEmail || (user ? user.email : undefined);
+      const customerEmail =
+        config.customerEmail || (user ? user.email : undefined);
 
       if (!product) {
         throw new Error(`Product at index ${config.productIndex} not found`);
@@ -218,7 +224,9 @@ export async function createOrders(
           channelId: channel.id,
           currentOwnerId: financeUser.id,
           financialCloserId: config.financialClosed ? adminUser.id : null,
-          financialClosedAt: config.financialClosedAt ? new Date(config.financialClosedAt) : null,
+          financialClosedAt: config.financialClosedAt
+            ? new Date(config.financialClosedAt)
+            : null,
           financialClosed: config.financialClosed,
           amount: config.amount,
           currency: config.currency,
@@ -228,7 +236,10 @@ export async function createOrders(
           benefitStartDate: new Date(config.effectiveDate),
           benefitDurationDays: config.benefitDurationDays,
           activeDays: config.activeDays,
-          benefitDaysRemaining: calculateBenefitDaysRemaining(config.activeDays, config.benefitDurationDays),
+          benefitDaysRemaining: calculateBenefitDaysRemaining(
+            config.activeDays,
+            config.benefitDurationDays,
+          ),
         },
       });
     }),

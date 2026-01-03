@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2026-01-03 04:34:39
+ * @LastEditTime: 2026-01-03 09:32:55
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -155,17 +155,16 @@ export class RecordingCompletedHandler extends BaseEventHandler {
           this.logger.warn(
             `找到会议记录: ${meeting_id} ${sub_meeting_id || '__ROOT__'}`,
           );
-          recording =
-            await this.meetingRecordingRepository.upsertMeetingRecording({
-              meetingId: meeting.id,
-              externalId: fileId,
-              source: RecordingSource.PLATFORM_AUTO,
-              status: RecordingStatus.COMPLETED,
-              startAt: meeting.startAt || undefined,
-              endAt: meeting.endAt || undefined,
-            });
+          recording = await this.meetingRecordingRepository.upsert({
+            meetingId: meeting.id,
+            externalId: fileId,
+            source: RecordingSource.PLATFORM_AUTO,
+            status: RecordingStatus.COMPLETED,
+            startAt: meeting.startAt || undefined,
+            endAt: meeting.endAt || undefined,
+          });
 
-          await this.meetingSummaryRepository.upsertMeetingSummary({
+          await this.meetingSummaryRepository.upsert({
             meetingId: meeting.id,
             recordingId: recording.id,
             content: fullsummary,
@@ -237,7 +236,7 @@ export class RecordingCompletedHandler extends BaseEventHandler {
                 },
               );
 
-              await this.participantSummaryRepository.upsertParticipantSummary({
+              await this.participantSummaryRepository.upsert({
                 periodType: 'SINGLE',
                 platformUserId: platformUser.id,
                 meetingId: meeting.id,
@@ -280,7 +279,7 @@ export class RecordingCompletedHandler extends BaseEventHandler {
     const { transcriptId, exists } = await this.prisma.$transaction(
       async (tx) => {
         const recordingId =
-          await this.meetingRecordingRepository.findOrCreateRecordingByFileId(
+          await this.meetingRecordingRepository.findOrCreateByExternalId(
             tx,
             recordFileId,
             meetingId,

@@ -11,7 +11,7 @@ type PrismaTransaction = Omit<
 export class MeetingRecordingRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findRecording(meetingId: string, externalId: string) {
+  async find(meetingId: string, externalId: string) {
     return this.prisma.meetingRecording.findFirst({
       where: {
         meetingId,
@@ -20,7 +20,7 @@ export class MeetingRecordingRepository {
     });
   }
 
-  async upsertMeetingRecording(data: {
+  async upsert(data: {
     meetingId: string;
     externalId: string;
     source?: RecordingSource;
@@ -28,10 +28,7 @@ export class MeetingRecordingRepository {
     startAt?: Date;
     endAt?: Date;
   }) {
-    const existingRecording = await this.findRecording(
-      data.meetingId,
-      data.externalId,
-    );
+    const existingRecording = await this.find(data.meetingId, data.externalId);
 
     if (existingRecording) {
       return this.prisma.meetingRecording.update({
@@ -57,7 +54,7 @@ export class MeetingRecordingRepository {
     }
   }
 
-  async findOrCreateRecordingByFileId(
+  async findOrCreateByExternalId(
     tx: PrismaTransaction,
     recordFileId: string,
     meetingId?: string,
