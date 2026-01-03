@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-06-27 05:18:41
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-30 10:47:30
+ * @LastEditTime: 2026-01-03 20:56:50
  * @FilePath: /lulab_backend/src/main.ts
  * @Description:
  *
@@ -13,7 +13,6 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -36,8 +35,6 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-
-  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
