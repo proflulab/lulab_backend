@@ -100,7 +100,10 @@ export class UserRepository {
   }
 
   updateUserPassword(id: string, password: string): Promise<User> {
-    return this.prisma.user.update({ where: { id }, data: { passwordHash: password } });
+    return this.prisma.user.update({
+      where: { id },
+      data: { passwordHash: password },
+    });
   }
 
   updateUserWithProfileUpsert(

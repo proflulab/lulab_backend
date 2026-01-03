@@ -6,7 +6,7 @@ import { GenerationMethod, PeriodType } from '@prisma/client';
 export class ParticipantSummaryRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createParticipantSummary(data: {
+  async create(data: {
     periodType: PeriodType;
     platformUserId?: string;
     meetingId?: string;
@@ -38,7 +38,7 @@ export class ParticipantSummaryRepository {
     });
   }
 
-  async upsertParticipantSummary(data: {
+  async upsert(data: {
     periodType: PeriodType;
     platformUserId?: string;
     meetingId?: string;
