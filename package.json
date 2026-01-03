@@ -35,6 +35,8 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:status": "prisma migrate status",
+    "db:migrate:prod": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
     "db:seed": "tsx prisma/seed.ts",
@@ -76,6 +78,7 @@
     "dotenv": "^17.2.2",
     "graphql": "^16.11.0",
     "ioredis": "^5.4.1",
+    "nest-winston": "^1.10.2",
     "nodemailer": "^7.0.3",
     "openai": "^5.23.2",
     "passport": "^0.7.0",
@@ -83,7 +86,9 @@
     "passport-local": "^1.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@compodoc/compodoc": "^1.1.30",

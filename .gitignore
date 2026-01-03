@@ -11,6 +11,7 @@ pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+daily-log
 
 # OS
 .DS_Store
@@ -47,6 +48,7 @@ lerna-debug.log*
 # temp directory
 .temp
 .tmp
+/temp-data
 
 # Database (if using local files)
 *.db

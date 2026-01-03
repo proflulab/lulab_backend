@@ -1,0 +1,8 @@
+model UserPreference {
+  id String @id @default(cuid())
+
+  data Json
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

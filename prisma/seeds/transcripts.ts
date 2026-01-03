@@ -212,10 +212,10 @@ export async function createSimulatedTranscript(
     const paragraphRecord = await prisma.paragraph.create({
       data: {
         transcriptId: transcript.id,
-        pid: paragraph.pid,
+        pid: parseInt(paragraph.pid, 10),
         startTimeMs: BigInt(paragraph.start_time),
         endTimeMs: BigInt(paragraph.end_time),
-        speakerId: speakerId, // 使用传入的 speakerId 而不是固定值
+        speakerId: speakerId,
       },
     });
 
@@ -225,7 +225,7 @@ export async function createSimulatedTranscript(
       const sentenceRecord = await prisma.sentence.create({
         data: {
           paragraphId: paragraphRecord.id,
-          sid: sentence.sid,
+          sid: parseInt(sentence.sid, 10),
           startTimeMs: BigInt(sentence.start_time),
           endTimeMs: BigInt(sentence.end_time),
           text: sentence.words.map((w) => w.text).join(''),
@@ -235,8 +235,7 @@ export async function createSimulatedTranscript(
       // 4. Process Words
       const wordsData = sentence.words.map((word, idx) => ({
         sentenceId: sentenceRecord.id,
-        wid: word.wid,
-        order: idx,
+        wid: parseInt(word.wid, 10),
         startTimeMs: BigInt(word.start_time),
         endTimeMs: BigInt(word.end_time),
         text: word.text,

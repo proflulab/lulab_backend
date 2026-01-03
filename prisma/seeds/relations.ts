@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-06-20 21:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-15 20:20:13
+ * @LastEditTime: 2026-01-03 06:37:28
  * @FilePath: /lulab_backend/prisma/seeds/relations.ts
  * @Description: 关联表种子数据模块
  *
@@ -88,7 +88,12 @@ export async function createUserOrganizationRelations(
 // 创建角色权限关联数据
 export async function createRolePermissionRelations(
   prisma: PrismaClient,
-  users: CreatedUsers,
+  roles: {
+    admin: { id: string };
+    finance: { id: string };
+    customerService: { id: string };
+    user: { id: string };
+  },
 ): Promise<void> {
   // 获取所有权限
   const permissions = await prisma.permission.findMany();
@@ -103,13 +108,13 @@ export async function createRolePermissionRelations(
     await prisma.rolePermission.upsert({
       where: {
         roleId_permissionId: {
-          roleId: users.roles.admin.id,
+          roleId: roles.admin.id,
           permissionId: permission.id,
         },
       },
       update: {},
       create: {
-        roleId: users.roles.admin.id,
+        roleId: roles.admin.id,
         permissionId: permission.id,
       },
     });
@@ -128,13 +133,13 @@ export async function createRolePermissionRelations(
     await prisma.rolePermission.upsert({
       where: {
         roleId_permissionId: {
-          roleId: users.roles.finance.id,
+          roleId: roles.finance.id,
           permissionId: permission.id,
         },
       },
       update: {},
       create: {
-        roleId: users.roles.finance.id,
+        roleId: roles.finance.id,
         permissionId: permission.id,
       },
     });
@@ -153,13 +158,13 @@ export async function createRolePermissionRelations(
     await prisma.rolePermission.upsert({
       where: {
         roleId_permissionId: {
-          roleId: users.roles.customerService.id,
+          roleId: roles.customerService.id,
           permissionId: permission.id,
         },
       },
       update: {},
       create: {
-        roleId: users.roles.customerService.id,
+        roleId: roles.customerService.id,
         permissionId: permission.id,
       },
     });
@@ -174,13 +179,13 @@ export async function createRolePermissionRelations(
     await prisma.rolePermission.upsert({
       where: {
         roleId_permissionId: {
-          roleId: users.roles.user.id,
+          roleId: roles.user.id,
           permissionId: permission.id,
         },
       },
       update: {},
       create: {
-        roleId: users.roles.user.id,
+        roleId: roles.user.id,
         permissionId: permission.id,
       },
     });
@@ -242,6 +247,10 @@ export async function createUserPermissionRelations(
 // 创建数据权限关联数据（示例）
 export async function createDataPermissionRelations(
   prisma: PrismaClient,
+  roles: {
+    admin: { id: string };
+    finance: { id: string };
+  },
   users: CreatedUsers,
 ): Promise<void> {
   // 获取数据权限规则
@@ -259,13 +268,13 @@ export async function createDataPermissionRelations(
     await prisma.roleDataPermission.upsert({
       where: {
         roleId_ruleId: {
-          roleId: users.roles.admin.id,
+          roleId: roles.admin.id,
           ruleId: rule.id,
         },
       },
       update: {},
       create: {
-        roleId: users.roles.admin.id,
+        roleId: roles.admin.id,
         ruleId: rule.id,
       },
     });
@@ -283,13 +292,13 @@ export async function createDataPermissionRelations(
     await prisma.roleDataPermission.upsert({
       where: {
         roleId_ruleId: {
-          roleId: users.roles.finance.id,
+          roleId: roles.finance.id,
           ruleId: rule.id,
         },
       },
       update: {},
       create: {
-        roleId: users.roles.finance.id,
+        roleId: roles.finance.id,
         ruleId: rule.id,
       },
     });
@@ -319,18 +328,24 @@ export async function createAllRelations(
   prisma: PrismaClient,
   organizationId: string,
   users: CreatedUsers,
+  roles: {
+    admin: { id: string };
+    finance: { id: string };
+    customerService: { id: string };
+    user: { id: string };
+  },
 ): Promise<void> {
   console.log('Creating user organization relations...');
   await createUserOrganizationRelations(prisma, organizationId, users);
 
   console.log('Creating role permission relations...');
-  await createRolePermissionRelations(prisma, users);
+  await createRolePermissionRelations(prisma, roles);
 
   console.log('Creating user permission relations...');
   await createUserPermissionRelations(prisma, users);
 
   console.log('Creating data permission relations...');
-  await createDataPermissionRelations(prisma, users);
+  await createDataPermissionRelations(prisma, roles, users);
 
   console.log('All relations created successfully!');
 }

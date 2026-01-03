@@ -1,13 +1,13 @@
 import {
-  TencentEventMeetingInfo,
   TencentMeetingCreateFrom,
   TencentMeetingType,
   TencentInstanceType,
-  TencentMeetingIdType,
-} from '../types/tencent-base.types';
+  TencentMeetingEventType,
+} from '../enums/tencent-base.enum';
 import {
   TencentMeetingEvent,
-  TencentMeetingEventType,
+  TencentEventMeetingInfo,
+  TencentEventOperator,
 } from '../types/tencent-event.types';
 import { MeetingType } from '@prisma/client';
 
@@ -24,10 +24,7 @@ export class TencentEventUtils {
    * 判断是否为子会议
    */
   static isSubMeeting(meetingInfo: TencentEventMeetingInfo): boolean {
-    return (
-      meetingInfo.meeting_id_type === TencentMeetingIdType.BREAKOUT ||
-      !!meetingInfo.sub_meeting_id
-    );
+    return !!meetingInfo.sub_meeting_id;
   }
 
   /**
@@ -131,16 +128,56 @@ export class TencentEventUtils {
       return false;
     }
 
-    return event.payload.every(
-      (payload) =>
-        payload.operate_time &&
-        payload.operator &&
-        payload.meeting_info &&
-        payload.meeting_info.meeting_id &&
-        payload.meeting_info.meeting_code &&
-        payload.meeting_info.subject &&
-        payload.meeting_info.creator,
-    );
+    return event.payload.every((payload) => {
+      if (!payload.operate_time) {
+        return false;
+      }
+
+      const eventType = event.event as TencentMeetingEventType;
+
+      switch (eventType) {
+        case TencentMeetingEventType.MEETING_STARTED:
+        case TencentMeetingEventType.MEETING_PARTICIPANT_JOINED:
+        case TencentMeetingEventType.MEETING_PARTICIPANT_LEFT:
+        case TencentMeetingEventType.MEETING_END:
+        case TencentMeetingEventType.SMART_TRANSCRIPTS: {
+          const p = payload as {
+            operator?: unknown;
+            meeting_info?: unknown;
+          };
+          return (
+            !!p.operator &&
+            !!p.meeting_info &&
+            !!(p.meeting_info as TencentEventMeetingInfo).meeting_id &&
+            !!(p.meeting_info as TencentEventMeetingInfo).meeting_code &&
+            !!(p.meeting_info as TencentEventMeetingInfo).subject &&
+            !!(p.meeting_info as TencentEventMeetingInfo).creator
+          );
+        }
+        case TencentMeetingEventType.RECORDING_COMPLETED: {
+          const p = payload as {
+            meeting_info?: unknown;
+            recording_files?: unknown;
+          };
+          return (
+            !!p.meeting_info &&
+            !!(p.meeting_info as TencentEventMeetingInfo).meeting_id &&
+            !!(p.meeting_info as TencentEventMeetingInfo).meeting_code &&
+            !!(p.meeting_info as TencentEventMeetingInfo).subject &&
+            !!(p.meeting_info as TencentEventMeetingInfo).creator &&
+            !!p.recording_files
+          );
+        }
+        case TencentMeetingEventType.SMART_FULLSUMMARY: {
+          const p = payload as {
+            recording_files?: unknown;
+          };
+          return !!p.recording_files;
+        }
+        default:
+          return false;
+      }
+    });
   }
 
   /**
@@ -171,27 +208,66 @@ export class TencentEventUtils {
     const payload = event.payload?.[0];
     if (!payload) return '未知事件';
 
-    const meetingInfo = payload.meeting_info;
-    const operator = payload.operator;
-
     const eventType = event.event as TencentMeetingEventType;
+
     switch (eventType) {
-      case TencentMeetingEventType.MEETING_START:
-        return `会议「${meetingInfo.subject}」开始，由 ${operator.user_name} 触发`;
+      case TencentMeetingEventType.MEETING_STARTED:
+      case TencentMeetingEventType.MEETING_PARTICIPANT_JOINED:
+      case TencentMeetingEventType.MEETING_PARTICIPANT_LEFT:
       case TencentMeetingEventType.MEETING_END:
-        return `会议「${meetingInfo.subject}」结束，由 ${operator.user_name} 触发`;
-      case TencentMeetingEventType.MEETING_JOIN:
-        return `${operator.user_name} 加入会议「${meetingInfo.subject}」`;
-      case TencentMeetingEventType.MEETING_LEAVE:
-        return `${operator.user_name} 离开会议「${meetingInfo.subject}」`;
-      case TencentMeetingEventType.RECORDING_START:
-        return `会议「${meetingInfo.subject}」开始录制`;
-      case TencentMeetingEventType.RECORDING_END:
-        return `会议「${meetingInfo.subject}」结束录制`;
-      case TencentMeetingEventType.RECORDING_READY:
-        return `会议「${meetingInfo.subject}」录制文件已就绪`;
+      case TencentMeetingEventType.SMART_TRANSCRIPTS: {
+        const p = payload as {
+          operator?: TencentEventOperator;
+          meeting_info?: TencentEventMeetingInfo;
+        };
+        const meetingInfo = p.meeting_info;
+        const operator = p.operator;
+
+        if (!meetingInfo || !operator) {
+          switch (eventType) {
+            case TencentMeetingEventType.MEETING_STARTED:
+              return '会议开始';
+            case TencentMeetingEventType.MEETING_END:
+              return '会议结束';
+            case TencentMeetingEventType.MEETING_PARTICIPANT_JOINED:
+              return '用户加入会议';
+            case TencentMeetingEventType.MEETING_PARTICIPANT_LEFT:
+              return '用户离开会议';
+            case TencentMeetingEventType.SMART_TRANSCRIPTS:
+              return '智能转写生成完成';
+            default:
+              return '未知事件';
+          }
+        }
+
+        switch (eventType) {
+          case TencentMeetingEventType.MEETING_STARTED:
+            return `会议「${meetingInfo.subject}」开始，由 ${operator.user_name || '未知用户'} 触发`;
+          case TencentMeetingEventType.MEETING_END:
+            return `会议「${meetingInfo.subject}」结束，由 ${operator.user_name || '未知用户'} 触发`;
+          case TencentMeetingEventType.MEETING_PARTICIPANT_JOINED:
+            return `${operator.user_name || '未知用户'} 加入会议「${meetingInfo.subject}」`;
+          case TencentMeetingEventType.MEETING_PARTICIPANT_LEFT:
+            return `${operator.user_name || '未知用户'} 离开会议「${meetingInfo.subject}」`;
+          case TencentMeetingEventType.SMART_TRANSCRIPTS:
+            return `会议「${meetingInfo.subject}」智能转写生成完成`;
+          default:
+            return '未知事件';
+        }
+      }
+      case TencentMeetingEventType.RECORDING_COMPLETED: {
+        const p = payload as {
+          meeting_info?: TencentEventMeetingInfo;
+        };
+        const meetingInfo = p.meeting_info;
+
+        if (!meetingInfo) return '会议录制完成';
+        return `会议「${meetingInfo.subject}」录制完成`;
+      }
+      case TencentMeetingEventType.SMART_FULLSUMMARY:
+        return '智能纪要生成完成';
       default:
-        return `会议「${meetingInfo.subject}」${event.event}事件`;
+        return `${event.event}事件`;
     }
   }
 }

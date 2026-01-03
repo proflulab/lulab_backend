@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-18 20:10:49
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-18 20:15:14
+ * @LastEditTime: 2025-12-31 18:00:50
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/types/tencent-event.types.ts
  * @Description:
  *
@@ -10,45 +10,173 @@
  */
 
 import {
-  TencentEventOperator,
-  TencentEventMeetingInfo,
+  TencentMeetingCreateMode,
+  TencentMeetingCreateFrom,
   TencentMeetingEndType,
-  TencentRecordingFile,
-} from './tencent-base.types';
+} from '../enums/tencent-base.enum';
+import { EventBase, MeetingInfoBase, PayloadBase } from './base.types';
 
-// 腾讯会议事件
-export interface TencentMeetingEvent {
-  event: string; // 事件名
-  trace_id: string; // 事件的唯一序列值
-  payload: TencentEventPayload[];
+// 会议开始事件
+export interface StartedEvent extends EventBase {
+  event: 'meeting.started';
+  payload: StartedPayload[];
 }
 
-// 腾讯会议事件载荷
-export interface TencentEventPayload {
-  operate_time: number; // 毫秒级别事件操作时间戳
-  operator: TencentEventOperator; // 事件操作者
-  meeting_info: TencentEventMeetingInfo; // 会议信息
-  meeting_end_type?: TencentMeetingEndType; // 结束类型（仅 meeting.end 事件）
-  recording_files?: TencentRecordingFile[]; // 录制文件（某些事件类型包含）
+export interface StartedPayload extends PayloadBase {
+  operator: Meetuser;
+  meeting_info: StartedMeetingInfo;
 }
 
-// 腾讯会议事件类型枚举
-export enum TencentMeetingEventType {
-  MEETING_START = 'meeting.start',
-  MEETING_END = 'meeting.end',
-  MEETING_JOIN = 'meeting.join',
-  MEETING_LEAVE = 'meeting.leave',
-  RECORDING_START = 'recording.start',
-  RECORDING_END = 'recording.end',
-  RECORDING_READY = 'recording.ready',
-  MEETING_UPDATE = 'meeting.update', // 会议更新事件
-  MEETING_DELETE = 'meeting.delete', // 会议删除事件
-  SUB_MEETING_START = 'sub_meeting.start', // 子会议开始（周期性会议）
-  SUB_MEETING_END = 'sub_meeting.end', // 子会议结束（周期性会议）
+// export type MeetingMeetuser = Omit<TencentEventOperator, 'nick_name'>;
+
+export interface StartedMeetingInfo extends MeetingInfoBase {
+  creator: Meetuser;
+  sub_meeting_id?: string;
+  sub_meeting_start_time?: number;
+  sub_meeting_end_time?: number;
+  meeting_create_mode?: TencentMeetingCreateMode;
+  meeting_create_from?: TencentMeetingCreateFrom;
 }
 
-// 腾讯会议事件处理器接口
-export interface TencentMeetingEventHandler {
-  handle(event: TencentMeetingEvent): Promise<void>;
-  supports(eventType: string): boolean;
+export interface Meetuser {
+  userid: string;
+  user_name: string;
+  uuid: string;
+  instance_id: string;
+  ms_open_id: string;
 }
+
+// 会议参与者加入事件
+export interface ParticipantJoinedEvent extends EventBase {
+  event: 'meeting.participant-joined';
+  payload: ParticipantJoinedPayload[];
+}
+
+export interface ParticipantJoinedPayload extends PayloadBase {
+  operator: Meetuser;
+  meeting_info: StartedMeetingInfo;
+}
+
+// 会议参与者离开事件
+export interface ParticipantLeftEvent extends EventBase {
+  event: 'meeting.participant-left';
+  payload: ParticipantLeftPayload[];
+}
+
+export interface ParticipantLeftPayload extends PayloadBase {
+  operator: Meetuser;
+  meeting_info: StartedMeetingInfo;
+}
+
+// 会议结束事件
+export interface MeetingEndEvent extends EventBase {
+  event: 'meeting.end';
+  payload: MeetingEndPayload[];
+}
+
+export interface MeetingEndPayload extends PayloadBase {
+  operator: Meetuser;
+  meeting_info: StartedMeetingInfo;
+  meeting_end_type: TencentMeetingEndType;
+}
+
+// 会议记录完成事件
+export interface RecordingCompletedEvent extends EventBase {
+  event: 'recording.completed';
+  payload: RecordingCompletedPayload[];
+}
+
+export interface RecordingCompletedPayload extends PayloadBase {
+  operator: Pick<Meetuser, 'instance_id'>;
+  meeting_info: StartedMeetingInfo;
+  recording_files: RecordingFile[];
+}
+
+// 智能会议纪要事件
+export interface SmartFullSummaryEvent extends EventBase {
+  event: 'smart.fullsummary';
+  payload: SmartFullSummaryPayload[];
+}
+export interface SmartFullSummaryPayload extends PayloadBase {
+  meeting_info: SmartFullSummaryMeetingInfo;
+  recording_files: RecordingFile[];
+}
+
+export interface SmartFullSummaryMeetingInfo extends MeetingInfoBase {
+  creator: Pick<Meetuser, 'uuid'>;
+  meeting_create_mode?: TencentMeetingCreateMode;
+  media_set_type?: number;
+}
+
+// 智能会议转写事件
+export interface SmartTranscriptsEvent extends EventBase {
+  event: 'smart.transcripts';
+  payload: SmartTranscriptsPayload[];
+  result: number;
+}
+
+export interface SmartTranscriptsPayload extends PayloadBase {
+  meeting_info: SmartTranscriptsMeetingInfo;
+  recording_files: RecordingFile[];
+}
+
+export interface SmartTranscriptsMeetingInfo extends MeetingInfoBase {
+  creator: Pick<Meetuser, 'uuid'>;
+  meeting_create_mode?: TencentMeetingCreateMode;
+  media_set_type?: number;
+}
+
+// -----------------------------------------
+
+export interface EventOperator {
+  userid?: string;
+  open_id?: string;
+  uuid?: string;
+  user_name?: string;
+  nick_name?: string;
+  ms_open_id?: string;
+  instance_id: string;
+}
+
+export interface MeetingCreator {
+  userid: string;
+  uuid: string;
+  user_name: string;
+  ms_open_id?: string;
+  instance_id?: string;
+}
+
+export interface RecordingFile {
+  record_file_id: string;
+  lang?: string;
+}
+
+export type TencentMeetingEvent =
+  | StartedEvent
+  | ParticipantJoinedEvent
+  | ParticipantLeftEvent
+  | MeetingEndEvent
+  | RecordingCompletedEvent
+  | SmartFullSummaryEvent
+  | SmartTranscriptsEvent;
+
+export type TencentEventPayload =
+  | StartedPayload
+  | ParticipantJoinedPayload
+  | ParticipantLeftPayload
+  | MeetingEndPayload
+  | RecordingCompletedPayload
+  | SmartFullSummaryPayload
+  | SmartTranscriptsPayload;
+
+export type TencentEventOperator = Meetuser;
+
+export type TencentEventMeetingInfo = StartedMeetingInfo;
+
+export type TencentMeetingCreator = Meetuser;
+
+export type TencentMeetingInfoPayload = StartedPayload;
+
+export type MeetingParticipantJoinedPayload = ParticipantJoinedPayload;
+
+export type MeetingStartedPayload = StartedPayload;

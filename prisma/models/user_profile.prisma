@@ -1,6 +1,5 @@
 model UserProfile {
-  id     String @id @default(cuid())
-  userId String @unique
+  id String @id @default(cuid())
 
   // 个人展示信息
   name   String?
@@ -19,10 +18,11 @@ model UserProfile {
   website     String?
 
   // 关联到用户
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@index([userId]) // 用户关联查询优化
   @@map("user_profiles")

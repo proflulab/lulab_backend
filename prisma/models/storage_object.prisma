@@ -7,11 +7,12 @@ model StorageObject {
   contentType    String?         @map("content_type")
   sizeBytes      BigInt          @default(0) @map("size_bytes")
   checksumSha256 String?         @map("checksum_sha256")
-  createdBy      String?         @map("created_by")
-  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   // 关联关系
-  uploader User? @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  createdBy String? @map("created_by")
+  uploader  User?   @relation(fields: [createdBy], references: [id], onDelete: SetNull)
 
   // 反向关联
   recordingFiles MeetingRecordingFile[]

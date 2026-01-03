@@ -1,14 +1,19 @@
 model User {
   id       String  @id @default(cuid())
   username String? @unique @db.VarChar(50) // 用户名
-  password String?
+
+  // password 密码相关字段
+  passwordHash   String?   @map("password_hash") @db.VarChar(255)
+  passwordAlgo   String?   @map("password_algo") @db.VarChar(32) // "bcrypt" | "argon2id" | ...
+  passwordParams Json?     @map("password_params") // { "cost": 12 } / argon2 参数等
+  passwordSetAt  DateTime? @map("password_set_at") @db.Timestamptz(6) // 可选：审计/排查很好用
 
   email           String?   @unique @db.VarChar(255)
-  emailVerifiedAt DateTime?
+  emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamptz(6) // 邮箱验证时间
 
   countryCode     String? // 国家代码 如 +86
   phone           String? // 电话号码
-  phoneVerifiedAt DateTime? // 电话验证时间
+  phoneVerifiedAt DateTime? @map("phone_verified_at") @db.Timestamptz(6) // 电话验证时间
 
   active Boolean @default(true)
 
@@ -19,7 +24,9 @@ model User {
   refreshTokens RefreshToken[] // User's refresh tokens
 
   // 个人详细信息
-  profile UserProfile?
+  profile     UserProfile?
+  settings    UserSettings?
+  preferences UserPreference?
 
   // 订单相关关联
   orders                Order[]       @relation("UserOrders") // 用户的订单

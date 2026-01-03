@@ -52,6 +52,7 @@ export class MeetingService {
     const existing = await this.meetingRepository.findMeetingByPlatformId(
       params.platform,
       params.platformMeetingId,
+      '', // Default empty subMeetingId
     );
 
     if (existing) {

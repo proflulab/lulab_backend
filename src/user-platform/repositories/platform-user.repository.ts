@@ -18,7 +18,7 @@ export class PlatformUserRepository {
     return this.prisma.platformUser.create({
       data: {
         ...data,
-        isActive: data.isActive ?? true,
+        active: data.active ?? true,
       },
     });
   }
@@ -38,57 +38,60 @@ export class PlatformUserRepository {
     });
   }
 
-  async upsertPlatformUser(
-    where: { platform: Platform; platformUuid: string },
-    create: Omit<
+  async upsert(
+    where: { platform: Platform; ptUnionId: string },
+    data: Omit<
       PlatformUserCreateInput,
-      'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
-    >,
-    update: Partial<
-      Omit<
-        PlatformUserUpdateInput,
-        'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
-      >
+      'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'platform' | 'ptUnionId'
     >,
   ): Promise<PlatformUser> {
-    // 首先查找是否存在相同 platformUuid 的记录
-    const existingUser = await this.prisma.platformUser.findFirst({
-      where: {
-        platform: where.platform,
-        platformUuid: where.platformUuid,
-      },
+    const now = new Date();
+    const { platform, ptUnionId } = where;
+    return this.prisma.platformUser.upsert({
+      where: { unique_platform_union_user: { platform, ptUnionId } },
+      create: { ...data, platform, ptUnionId, lastSeenAt: now },
+      update: { ...data, lastSeenAt: now },
     });
-
-    if (existingUser) {
-      // 如果存在，则更新
-      return this.prisma.platformUser.update({
-        where: { id: existingUser.id },
-        data: {
-          ...update,
-          lastSeenAt: new Date(),
-        },
-      });
-    } else {
-      // 如果不存在，则创建
-      return this.prisma.platformUser.create({
-        data: {
-          ...create,
-          platform: where.platform,
-          platformUuid: where.platformUuid,
-          lastSeenAt: new Date(),
-        },
-      });
-    }
   }
 
-  async findPlatformUserByPlatformAndId(
+  async upsertMany(
+    items: Array<{
+      where: { platform: Platform; ptUnionId: string };
+      data: Omit<
+        PlatformUserCreateInput,
+        | 'id'
+        | 'createdAt'
+        | 'updatedAt'
+        | 'deletedAt'
+        | 'platform'
+        | 'ptUnionId'
+      >;
+    }>,
+  ): Promise<PlatformUser[]> {
+    const now = new Date();
+
+    return this.prisma.$transaction(
+      items.map(({ where, data }) => {
+        const { platform, ptUnionId } = where;
+        return this.prisma.platformUser.upsert({
+          where: { unique_platform_union_user: { platform, ptUnionId } },
+          create: { ...data, platform, ptUnionId, lastSeenAt: now },
+          update: { ...data, lastSeenAt: now },
+        });
+      }),
+    );
+  }
+
+  async findPlatformUserByPlatformAndUnionId(
     platform: Platform,
-    platformUserId: string,
+    ptUnionId: string,
   ): Promise<PlatformUser | null> {
-    return this.prisma.platformUser.findFirst({
+    return this.prisma.platformUser.findUnique({
       where: {
-        platform,
-        platformUserId,
+        unique_platform_union_user: {
+          platform,
+          ptUnionId,
+        },
       },
     });
   }
@@ -101,7 +104,7 @@ export class PlatformUserRepository {
 
   async findPlatformUserByUserId(userId: string): Promise<PlatformUser[]> {
     return this.prisma.platformUser.findMany({
-      where: { userId },
+      where: { user: { id: userId } },
     });
   }
 
@@ -111,7 +114,7 @@ export class PlatformUserRepository {
     return this.prisma.platformUser.findMany({
       where: {
         platform,
-        isActive: true,
+        active: true,
       },
     });
   }
@@ -126,14 +129,14 @@ export class PlatformUserRepository {
   async deactivatePlatformUser(id: string): Promise<PlatformUser> {
     return this.prisma.platformUser.update({
       where: { id },
-      data: { isActive: false },
+      data: { active: false },
     });
   }
 
   async activatePlatformUser(id: string): Promise<PlatformUser> {
     return this.prisma.platformUser.update({
       where: { id },
-      data: { isActive: true },
+      data: { active: true },
     });
   }
 }

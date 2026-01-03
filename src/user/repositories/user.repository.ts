@@ -79,7 +79,7 @@ export class UserRepository {
         email: data.email ?? null,
         phone: data.phone ?? null,
         countryCode: data.countryCode ?? null,
-        password: data.password,
+        passwordHash: data.password,
         emailVerifiedAt: data.emailVerifiedAt ?? null,
         phoneVerifiedAt: data.phoneVerifiedAt ?? null,
         profile: {
@@ -100,7 +100,10 @@ export class UserRepository {
   }
 
   updateUserPassword(id: string, password: string): Promise<User> {
-    return this.prisma.user.update({ where: { id }, data: { password } });
+    return this.prisma.user.update({
+      where: { id },
+      data: { passwordHash: password },
+    });
   }
 
   updateUserWithProfileUpsert(
