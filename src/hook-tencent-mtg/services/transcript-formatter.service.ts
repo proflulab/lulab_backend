@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-24 00:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-24 08:24:20
+ * @LastEditTime: 2026-01-03 22:09:28
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/transcript-formatter.service.ts
  * @Description: 转写格式化服务，负责格式化录音转写内容
  *
@@ -11,10 +11,11 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import {
-  RecordingTranscriptResponse,
   RecordingTranscriptSentence,
   RecordingTranscriptWord,
-} from '@/integrations/tencent-meeting/types';
+  RecordingTranscriptParagraph,
+  SpeakerInfo,
+} from '@/integrations/tencent-meeting/types/transcript.types';
 import { FormatUtils } from '../utils/format.utils';
 
 /**
@@ -22,7 +23,7 @@ import { FormatUtils } from '../utils/format.utils';
  */
 export interface FormattedTranscriptResult {
   formattedText: string;
-  uniqueUsernames: Set<string>;
+  speakerInfos: SpeakerInfo[];
 }
 
 /**
@@ -38,22 +39,28 @@ export class TranscriptFormatterService {
    * @param transcript 转写响应数据
    * @returns 格式化后的转写文本和唯一用户名
    */
-  formatTranscript(transcript?: RecordingTranscriptResponse): string {
-    if (!transcript?.minutes?.paragraphs) {
-      return '';
+  formatTranscript(transcript?: RecordingTranscriptParagraph[]): FormattedTranscriptResult {
+    if (!transcript?.length) {
+      return {
+        formattedText: '',
+        speakerInfos: [],
+      };
     }
 
-    const uniqueUsernames = new Set<string>();
+    const speakerInfos: SpeakerInfo[] = [];
     const formattedLines: string[] = [];
 
-    // 提取所有唯一的用户名
-    for (const paragraph of transcript.minutes.paragraphs) {
-      const speakerName = paragraph.speaker_info?.username || '未知发言人';
-      uniqueUsernames.add(speakerName);
+    // 提取所有唯一的发言人信息
+    for (const paragraph of transcript) {
+      const speakerInfo = paragraph.speaker_info;
+      const exists = speakerInfos.some((info) => info.username === speakerInfo.username);
+      if (!exists) {
+        speakerInfos.push(speakerInfo);
+      }
     }
 
     // 格式化转写内容为指定格式 - 将每个段落的所有句子组合成段落
-    for (const paragraph of transcript.minutes.paragraphs) {
+    for (const paragraph of transcript) {
       const speakerName = paragraph.speaker_info?.username || '未知发言人';
 
       // 转换第一个句子的时间戳为小时:分钟:秒格式
@@ -79,9 +86,12 @@ export class TranscriptFormatterService {
 
     const formattedTranscript = formattedLines.join('\n\n');
     this.logger.log(
-      `格式化转写成功, 共 ${formattedLines.length} 条记录, 提取到 ${uniqueUsernames.size} 个唯一用户名`,
+      `格式化转写成功, 共 ${formattedLines.length} 条记录, 提取到 ${speakerInfos.length} 个唯一发言人`,
     );
 
-    return formattedTranscript;
+    return {
+      formattedText: formattedTranscript,
+      speakerInfos,
+    };
   }
 }

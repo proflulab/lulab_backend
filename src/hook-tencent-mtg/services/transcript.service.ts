@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-24 00:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-24 19:05:00
+ * @LastEditTime: 2026-01-03 22:18:37
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/transcript.service.ts
  * @Description: 转写服务，负责获取和格式化录音转写内容
  *
@@ -10,17 +10,22 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { TencentApiService } from '@/integrations/tencent-meeting/api.service';
-import { RecordingTranscriptResponse } from '@/integrations/tencent-meeting/types';
 import { TranscriptFormatterService } from './transcript-formatter.service';
+import { TencentApiService } from '@/integrations/tencent-meeting/api.service';
+import {
+  RecordingTranscriptResponse,
+  RecordingTranscriptParagraph,
+  SpeakerInfo,
+} from '@/integrations/tencent-meeting/types';
 
 /**
  * 转写结果接口
  */
 export interface TranscriptResult {
-  transcriptResponse: RecordingTranscriptResponse | null;
-  uniqueUsernames: string[];
-  formattedTranscript: string;
+  paragraphs: RecordingTranscriptParagraph[];
+  uniqueSpeakerInfos: SpeakerInfo[];
+  formattedText: string;
+  keywords: string[];
 }
 
 /**
@@ -40,7 +45,7 @@ export class TranscriptService {
    * 获取录音转写内容
    * @param recordFileId 录制文件ID
    * @param userId 用户ID
-   * @returns 包含原始响应、唯一用户名和格式化转写的结果
+   * @returns 包含原始响应、唯一用户名、格式化转写和关键词的结果
    */
   async getTranscript(
     recordFileId: string,
@@ -58,27 +63,40 @@ export class TranscriptService {
         userId,
       );
 
-      // 提取唯一用户名
-      const uniqueUsernames = this.extractUniqueUsernames(transcriptResponse);
+      if (!transcriptResponse?.minutes?.paragraphs) {
+        return {
+          paragraphs: [],
+          uniqueSpeakerInfos: [],
+          formattedText: '',
+          keywords: [],
+        };
+      }
+
+      // 提取关键词
+      const keywords = this.extractKeywords(transcriptResponse);
 
       // 格式化转写内容
       const formattedTranscript =
-        this.transcriptFormatterService.formatTranscript(transcriptResponse);
+        this.transcriptFormatterService.formatTranscript(
+          transcriptResponse.minutes.paragraphs,
+        );
 
       const duration = Date.now() - startTime;
       this.logger.log('获取录音转写成功', {
         ...context,
         duration,
-        uniqueUsernamesCount: uniqueUsernames.length,
+        uniqueSpeakerInfosCount: formattedTranscript.speakerInfos.length,
+        keywordsCount: keywords.length,
         formattedLinesCount: formattedTranscript
-          ? formattedTranscript.split('\n\n').length
+          ? formattedTranscript.formattedText.split('\n\n').length
           : 0,
       });
 
       return {
-        transcriptResponse,
-        uniqueUsernames,
-        formattedTranscript,
+        paragraphs: transcriptResponse.minutes.paragraphs,
+        uniqueSpeakerInfos: formattedTranscript.speakerInfos,
+        formattedText: formattedTranscript.formattedText,
+        keywords,
       };
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
@@ -89,33 +107,27 @@ export class TranscriptService {
 
       // 返回空结果而不是抛出错误，以保持主流程继续
       return {
-        transcriptResponse: null,
-        uniqueUsernames: [],
-        formattedTranscript: '',
+        paragraphs: [],
+        uniqueSpeakerInfos: [],
+        formattedText: '',
+        keywords: [],
       };
     }
   }
 
   /**
-   * 提取唯一用户名
+   * 提取关键词
    * @param transcriptResponse 转写响应数据
-   * @returns 唯一用户名数组
+   * @returns 关键词数组
    */
-  private extractUniqueUsernames(
+  private extractKeywords(
     transcriptResponse?: RecordingTranscriptResponse,
   ): string[] {
-    if (!transcriptResponse?.minutes?.paragraphs) {
+    if (!transcriptResponse?.minutes?.keywords) {
       return [];
     }
 
-    const uniqueUsernames = new Set<string>();
-
-    for (const paragraph of transcriptResponse.minutes.paragraphs) {
-      const speakerName = paragraph.speaker_info?.username || '未知发言人';
-      uniqueUsernames.add(speakerName);
-    }
-
-    return Array.from(uniqueUsernames);
+    return transcriptResponse.minutes.keywords;
   }
 
   /**

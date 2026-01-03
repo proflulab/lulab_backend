@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2026-01-03 09:32:55
+ * @LastEditTime: 2026-01-03 22:26:12
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -27,8 +27,8 @@ import { MeetingSummaryRepository } from '../../repositories/meeting-summary.rep
 import { TranscriptBatchProcessor } from '../../services/transcript-batch-processor.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { TranscriptRepository } from '../../repositories/transcript.repository';
-import { RecordingTranscriptResponse } from '@/integrations/tencent-meeting/types';
 import { PlatformUserRepository } from '@/user-platform/repositories/platform-user.repository';
+import { RecordingTranscriptParagraph, SpeakerInfo } from '@/integrations/tencent-meeting/types';
 import {
   Prisma,
   MeetingRecording,
@@ -102,9 +102,9 @@ export class RecordingCompletedHandler extends BaseEventHandler {
         // 获取智能摘要、待办事项和会议纪要
         let { fullsummary = '', todo = '', ai_minutes = '' } = {};
         // 获取录音转写内容
-        let formattedTranscript = '';
-        let uniqueUsernames: string[] = [];
-        let transcriptResponse: RecordingTranscriptResponse | null = null;
+        let formattedText = '';
+        let uniqueSpeakerInfos: SpeakerInfo[] = [];
+        let paragraphs: RecordingTranscriptParagraph[] = [];
 
         const [meetingContentResult, transcriptResult] =
           await Promise.allSettled([
@@ -124,9 +124,9 @@ export class RecordingCompletedHandler extends BaseEventHandler {
 
         // 处理转写内容结果
         if (transcriptResult.status === 'fulfilled') {
-          formattedTranscript = transcriptResult.value.formattedTranscript;
-          uniqueUsernames = transcriptResult.value.uniqueUsernames;
-          transcriptResponse = transcriptResult.value.transcriptResponse;
+          formattedText = transcriptResult.value.formattedText;
+          uniqueSpeakerInfos = transcriptResult.value.uniqueSpeakerInfos;
+          paragraphs = transcriptResult.value.paragraphs;
         } else {
           this.logger.warn(`获取录音转写失败: ${fileId}`);
         }
@@ -139,8 +139,8 @@ export class RecordingCompletedHandler extends BaseEventHandler {
             fullsummary,
             todo,
             ai_minutes,
-            uniqueUsernames.join(','),
-            formattedTranscript,
+            uniqueSpeakerInfos.map((u) => u.username).join(','),
+            formattedText,
           );
 
         const meeting = await this.tencentMeetingRepository.findMeeting(
@@ -179,22 +179,20 @@ export class RecordingCompletedHandler extends BaseEventHandler {
           });
         }
 
-        if (transcriptResponse) {
-          await this.saveTranscriptToDatabase(
-            fileId,
-            transcriptResponse,
-            uniqueParticipants,
-            meeting_id,
-            sub_meeting_id,
-          );
-        }
+        await this.saveTranscriptToDatabase(
+          fileId,
+          paragraphs,
+          uniqueParticipants,
+          meeting_id,
+          sub_meeting_id,
+        );
 
         // 对参会者逐个进行会议总结
 
         for (const u of uniqueParticipants) {
           const uId = await this.bitableService.safeUpsertMeetingUserRecord(u);
 
-          if (uniqueUsernames.find((uName) => uName === u.user_name)) {
+          if (uniqueSpeakerInfos.find((uInfo) => uInfo.username === u.user_name)) {
             // 构建参会者的会议总结提示词
             const participantSummaryPrompt = PARTICIPANT_SUMMARY_PROMPT(
               meeting_info.subject,
@@ -203,7 +201,7 @@ export class RecordingCompletedHandler extends BaseEventHandler {
               u.user_name,
               ai_minutes || '暂无会议纪要',
               todo || '暂无待办事项',
-              formattedTranscript || '暂无录音转写',
+              formattedText || '暂无录音转写',
             );
 
             // 调用OpenAI生成个性化总结
@@ -264,13 +262,11 @@ export class RecordingCompletedHandler extends BaseEventHandler {
 
   private async saveTranscriptToDatabase(
     recordFileId: string,
-    transcriptResponse: RecordingTranscriptResponse,
+    paragraphs: RecordingTranscriptParagraph[],
     participants: MeetingParticipantDetail[],
     meetingId: string,
     subMeetingId?: string,
   ): Promise<void> {
-    const paragraphs = transcriptResponse.minutes?.paragraphs || [];
-
     if (paragraphs.length === 0) {
       this.logger.warn(`转写内容为空: ${recordFileId}`);
       return;
@@ -292,21 +288,19 @@ export class RecordingCompletedHandler extends BaseEventHandler {
         if (existingTranscript) {
           return {
             transcriptId: existingTranscript.id,
-            recordingId,
             exists: true,
           };
         }
 
         const transcript = await this.transcriptRepository.create(tx, {
           source: `tencent-meeting:${recordFileId}`,
-          rawJson: transcriptResponse as unknown as Prisma.InputJsonValue,
+          rawJson: paragraphs as unknown as Prisma.InputJsonValue,
           status: 2,
           recordingId: recordingId,
         });
 
         return {
           transcriptId: transcript.id,
-          recordingId,
           exists: false,
         };
       },
