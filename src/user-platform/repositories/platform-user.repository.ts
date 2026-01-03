@@ -9,7 +9,7 @@ type PlatformUserUpdateInput = Prisma.PlatformUserUncheckedUpdateInput;
 export class PlatformUserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createPlatformUser(
+  async create(
     data: Omit<
       PlatformUserCreateInput,
       'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
@@ -23,7 +23,7 @@ export class PlatformUserRepository {
     });
   }
 
-  async updatePlatformUser(
+  async update(
     id: string,
     data: Partial<
       Omit<
@@ -82,7 +82,7 @@ export class PlatformUserRepository {
     );
   }
 
-  async findPlatformUserByPlatformAndUnionId(
+  async findByPlatformAndUnionId(
     platform: Platform,
     ptUnionId: string,
   ): Promise<PlatformUser | null> {
@@ -96,13 +96,13 @@ export class PlatformUserRepository {
     });
   }
 
-  async findPlatformUserById(id: string): Promise<PlatformUser | null> {
+  async findById(id: string): Promise<PlatformUser | null> {
     return this.prisma.platformUser.findUnique({
       where: { id },
     });
   }
 
-  async findPlatformUserByUserId(userId: string): Promise<PlatformUser[]> {
+  async findByUserId(userId: string): Promise<PlatformUser[]> {
     return this.prisma.platformUser.findMany({
       where: { user: { id: userId } },
     });

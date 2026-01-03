@@ -86,7 +86,7 @@ describe('MeetingRepository', () => {
         mockCreatedMeeting,
       );
 
-      const result = await repository.upsertMeetingRecord(
+      const result = await repository.upsert(
         platform,
         platformMeetingId,
         '', // Default empty subMeetingId
@@ -145,7 +145,7 @@ describe('MeetingRepository', () => {
         mockUpdatedMeeting,
       );
 
-      const result = await repository.upsertMeetingRecord(
+      const result = await repository.upsert(
         platform,
         platformMeetingId,
         '', // Default empty subMeetingId
@@ -194,7 +194,7 @@ describe('MeetingRepository', () => {
         mockFeishuMeeting,
       );
 
-      const result = await repository.upsertMeetingRecord(
+      const result = await repository.upsert(
         feishuPlatform,
         feishuMeetingId,
         '', // Default empty subMeetingId
@@ -225,7 +225,7 @@ describe('MeetingRepository', () => {
       (prismaService.meeting.upsert as jest.Mock).mockRejectedValue(error);
 
       await expect(
-        repository.upsertMeetingRecord(
+        repository.upsert(
           platform,
           platformMeetingId,
           '', // Default empty subMeetingId
@@ -270,7 +270,7 @@ describe('MeetingRepository', () => {
         mockMinimalMeeting,
       );
 
-      const result = await repository.upsertMeetingRecord(
+      const result = await repository.upsert(
         platform,
         platformMeetingId,
         '', // Default empty subMeetingId
