@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-12-24 00:00:00
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2025-12-24 08:26:07
+ * @LastEditTime: 2026-01-03 09:54:55
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/services/transcript-formatter.service.spec.ts
  * @Description: 转写格式化服务测试
  *
@@ -457,28 +457,6 @@ describe('TranscriptFormatterService', () => {
 
       const result = service.formatTranscript(transcript);
       expect(result).toBe('测试用户(00:00:30)：');
-    });
-  });
-
-  describe('formatTimestamp', () => {
-    it('should format timestamp correctly', () => {
-      // 使用反射访问私有方法进行测试
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const serviceInstance = service as any;
-
-      // 测试各种时间戳
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      expect(serviceInstance.formatTimestamp(0)).toBe('00:00:00');
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      expect(serviceInstance.formatTimestamp(1000)).toBe('00:00:01');
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      expect(serviceInstance.formatTimestamp(60000)).toBe('00:01:00');
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      expect(serviceInstance.formatTimestamp(3600000)).toBe('01:00:00');
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      expect(serviceInstance.formatTimestamp(3661000)).toBe('01:01:01');
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      expect(serviceInstance.formatTimestamp(86399000)).toBe('23:59:59'); // 23小时59分59秒
     });
   });
 });

@@ -15,6 +15,7 @@ import {
   RecordingTranscriptSentence,
   RecordingTranscriptWord,
 } from '@/integrations/tencent-meeting/types';
+import { FormatUtils } from '../utils/format.utils';
 
 /**
  * 格式化后的转写结果
@@ -59,7 +60,7 @@ export class TranscriptFormatterService {
       const firstSentence = paragraph.sentences[0];
       if (firstSentence) {
         const startTime = firstSentence.start_time;
-        const timeString = this.formatTimestamp(startTime);
+        const timeString = FormatUtils.formatTimestamp(startTime);
 
         // 将段落中的所有句子组合成一个段落文本
         const paragraphText = paragraph.sentences
@@ -82,20 +83,5 @@ export class TranscriptFormatterService {
     );
 
     return formattedTranscript;
-  }
-
-  /**
-   * 格式化时间戳为 HH:MM:SS 格式
-   * @param timestamp 时间戳（毫秒）
-   * @returns 格式化后的时间字符串
-   */
-  private formatTimestamp(timestamp: number): string {
-    const hours = Math.floor(timestamp / 3600000); // 转换为小时
-    const minutes = Math.floor((timestamp % 3600000) / 60000); // 剩余的分钟
-    const seconds = Math.floor((timestamp % 60000) / 1000); // 剩余的秒
-
-    return `${hours.toString().padStart(2, '0')}:${minutes
-      .toString()
-      .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
 }
