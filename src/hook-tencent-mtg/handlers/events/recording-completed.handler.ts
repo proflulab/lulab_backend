@@ -2,7 +2,7 @@
  * @Author: 杨仕明 shiming.y@qq.com
  * @Date: 2025-09-13 02:54:40
  * @LastEditors: 杨仕明 shiming.y@qq.com
- * @LastEditTime: 2026-01-04 04:44:42
+ * @LastEditTime: 2026-01-04 08:15:03
  * @FilePath: /lulab_backend/src/hook-tencent-mtg/handlers/events/recording-completed.handler.ts
  * @Description: 录制完成事件处理器
  *
@@ -267,7 +267,7 @@ export class RecordingCompletedHandler extends BaseEventHandler {
                 {
                   ptUserId: u.userid,
                   displayName: u.user_name,
-                  phone: u.phone,
+                  phoneHash: u.phone,
                 },
               );
 
