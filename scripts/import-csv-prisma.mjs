@@ -8,8 +8,8 @@ const prisma = new PrismaClient();
 /**
  * 用法:
  *   node scripts/import-csv-prisma.mjs --model=User --file=./data.csv --batch=1000 --skipDuplicates=true
- *   node scripts/import-csv-prisma.mjs --model=User --file=scripts/user.csv --batch=1000 --skipDuplicates=true
- *   // PlatformUser
+ *   node scripts/import-csv-prisma.mjs --model=User --file=scripts/csv_data/user.csv --batch=1000 --skipDuplicates=true
+ *   node scripts/import-csv-prisma.mjs --model=PlatformUser --file=scripts/csv_data/data.csv --batch=1000 --skipDuplicates=true
  *
  * 说明:
  *   - --model 必填: Prisma 的 Model 名（区分大小写，如 User / Post）
